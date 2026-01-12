@@ -24,15 +24,16 @@ aivideogen/media/assets/
 aivideogen/media/music/
 aivideogen/media/output/
 
-# Archivos pesados por extensión (solo en carpetas de datos)
-*.mp4
-*.mp3
+# Archivos pesados por defecto (a menos que se permitan abajo)
 *.zip
 *.exe
+# *.mp4 - Movido abajo para permitir overlays
+# *.mp3 - Movido abajo para permitir sfx
 
-# --- NO IGNORAR (Esenciales para el Software) ---
-!aivideogen/media/sfx/
-!aivideogen/media/overlays/
+# --- PERMITIR ESENCIALES (Tracked in Git) ---
+!aivideogen/media/sfx/*.mp3
+!aivideogen/media/overlays/*.mp4
+!aivideogen/media/overlays/*.png
 !aivideogen/generator/static/
 !aivideogen/researcher/static/
 !aivideogen/docs/
@@ -40,3 +41,10 @@ aivideogen/media/output/
 !VERSIONES.md
 !README.md
 !MANUAL_DE_USUARIO.md
+
+# Bloqueo global de videos/audio fuera de sfx/overlays
+aivideogen/media/assets/*.png
+aivideogen/media/assets/*.jpg
+aivideogen/media/assets/*.mp4
+aivideogen/media/assets/*.mp3
+aivideogen/media/music/*.mp3
