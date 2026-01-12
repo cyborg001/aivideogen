@@ -1,5 +1,0 @@
-django==5.2.5
-moviepy
-elevenlabs
-python-dotenv
-edge-tts==7.2.5
