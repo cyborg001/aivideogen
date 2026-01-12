@@ -16,13 +16,20 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Multimedia Dinámica (Generada)
+# Multimedia Dinámica y Pesada (Generada o Acumulada)
 aivideogen/media/temp_audio/
 aivideogen/media/thumbnails/
-aivideogen/media/videos/output/
-aivideogen/media/output/
+aivideogen/media/videos/
+aivideogen/media/assets/
+aivideogen/media/music/
+/media/
 *.mp4
 *.mp3
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.zip
 
 # Compilación y Distribución
 build/
