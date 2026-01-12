@@ -16,33 +16,27 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Multimedia Dinámica y Pesada (Generada o Acumulada)
+# Multimedia y Assets Pesados (Excluidos de Git)
 aivideogen/media/temp_audio/
 aivideogen/media/thumbnails/
 aivideogen/media/videos/
 aivideogen/media/assets/
 aivideogen/media/music/
-/media/
+aivideogen/media/output/
+
+# Archivos pesados por extensión (solo en carpetas de datos)
 *.mp4
 *.mp3
-*.png
-*.jpg
-*.jpeg
-*.gif
 *.zip
-
-# Compilación y Distribución
-build/
-dist/
 *.exe
-*.spec
 
-# LOGS
-*.log
-nuitka_log.txt
-
-# --- NO IGNORAR (Base Assets) ---
+# --- NO IGNORAR (Esenciales para el Software) ---
 !aivideogen/media/sfx/
-!aivideogen/media/music/
 !aivideogen/media/overlays/
-!aivideogen/media/assets/
+!aivideogen/generator/static/
+!aivideogen/researcher/static/
+!aivideogen/docs/
+!aivideogen/guiones_pro/
+!VERSIONES.md
+!README.md
+!MANUAL_DE_USUARIO.md
