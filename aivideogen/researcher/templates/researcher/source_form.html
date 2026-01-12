@@ -1,0 +1,139 @@
+{% extends 'generator/base.html' %}
+
+{% block content %}
+<div class="research-container">
+    <div class="header-section">
+        <div style="text-align: left; margin-bottom: 1rem;">
+            <a href="{% url 'researcher:news_list' %}"
+                style="color: #4facfe; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left"></i> Volver al Hub de Noticias
+            </a>
+        </div>
+        <h1 class="premium-title">Añadir Fuente de Noticias</h1>
+        <p class="premium-subtitle">Introduce los detalles de una fuente de investigación segura</p>
+    </div>
+
+    <div class="action-bar" style="max-width: 600px; margin: 0 auto;">
+        <form method="post" style="width: 100%;">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Nombre de la Fuente:</label>
+                <input type="text" name="name" class="premium-input" required placeholder="Ejemplo: Blog de IA">
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>URL de la Fuente:</label>
+                <input type="url" name="url" class="premium-input" required placeholder="https://ejemplo.com/blog">
+                <p class="input-hint">💡 Para mejores resultados, usa el feed XML. <b>Ejemplos:</b><br>
+                    <code>https://feeds.weblogssl.com/xataka2</code><br>
+                    <code>https://rss.arxiv.org/rss/cs.AI</code><br>
+                    <code>https://openai.com/blog/rss.xml</code>
+                </p>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Categoría (opcional):</label>
+                <input type="text" name="category_name" class="premium-input" list="existing-categories"
+                    placeholder="Ej: IA, Ciencia, Tecnología" autocomplete="off">
+
+                <!-- Autocomplete con categorías existentes -->
+                <datalist id="existing-categories">
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}">
+                        {% endfor %}
+                </datalist>
+
+                <p class="input-hint">💡 Las categorías se crean automáticamente. Escribe el nombre o selecciona una
+                    existente.</p>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" name="is_secure" id="is_secure" style="width: auto;" checked>
+                <label for="is_secure">Marcar como Fuente Verificada Segura</label>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" name="is_rss" id="is_rss" style="width: auto;">
+                <label for="is_rss">Es un feed RSS (ej: Arxiv XML)</label>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button type="submit" class="premium-btn">Guardar Fuente</button>
+                <a href="{% url 'researcher:source_list' %}" class="premium-btn"
+                    style="background: rgba(255,255,255,0.1); text-decoration: none;">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .research-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .premium-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .premium-subtitle {
+        color: #888;
+        font-size: 1.1rem;
+    }
+
+    .action-bar {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .premium-input,
+    .premium-select {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .input-hint {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 0.4rem;
+    }
+
+    .input-hint code {
+        color: #4facfe;
+    }
+
+    .premium-btn {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border: none;
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .premium-btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

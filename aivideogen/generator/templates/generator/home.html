@@ -1,0 +1,90 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<h1>Mis Proyectos</h1>
+
+<!-- Search Bar -->
+<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <form method="get" action="" style="display: flex; gap: 10px; flex-grow: 1; max-width: 600px;">
+        <input type="text" name="q" placeholder="Buscar por título..." value="{{ search_query }}"
+            style="margin-bottom: 0;">
+        <button type="submit" class="btn">🔍 Buscar</button>
+        {% if search_query %}
+        <a href="{% url 'generator:home' %}" class="btn btn-secondary"
+            style="display: flex; align-items: center; justify-content: center; text-decoration: none;">✕ Limpiar</a>
+        {% endif %}
+    </form>
+    <a href="{% url 'generator:create_project' %}" class="btn" style="white-space: nowrap;">+ Nuevo Proyecto</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Creado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in page_obj %}
+            <tr>
+                <td>{{ project.title }}</td>
+                <td><span class="status-badge status-{{ project.status }}">{{ project.status_label }}</span></td>
+                <td>{{ project.created_at|date:"d M Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'generator:project_detail' project.id %}" class="btn"
+                        style="padding: 5px 10px; font-size: 0.8rem;">Ver</a>
+                    {% if project.status == 'completed' and project.output_exists %}
+                    <a href="{% url 'generator:youtube_upload' project.id %}" class="btn" target="_blank"
+                        style="background-color: #ff0000; border-color: #ff0000; padding: 5px 10px; font-size: 0.8rem; margin-left: 5px;">YouTube</a>
+                    {% endif %}
+                    <form action="{% url 'generator:delete_project' project.id %}" method="post" style="display:inline;"
+                        onsubmit="return confirm('¿Estás seguro de que quieres eliminar este proyecto?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn"
+                            style="background-color: #cf6679; margin-left: 5px; padding: 5px 10px; font-size: 0.8rem;">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 30px;">
+                    {% if search_query %}
+                    No se encontraron proyectos con "{{ search_query }}".
+                    {% else %}
+                    No hay proyectos aún. ¡Crea el primero!
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination"
+        style="margin-top: 20px; text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-secondary"
+                style="padding: 5px 10px;">&laquo; Primera</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                class="btn btn-secondary" style="padding: 5px 10px;">Anterior</a>
+            {% endif %}
+
+            <span class="current" style="margin: 0 15px; font-weight: bold; color: #03dac6;">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                class="btn btn-secondary" style="padding: 5px 10px;">Siguiente</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                class="btn btn-secondary" style="padding: 5px 10px;">Última &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

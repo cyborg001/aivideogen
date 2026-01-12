@@ -1,0 +1,112 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1>Gestión de Efectos de Sonido (SFX)</h1>
+    <a href="{% url 'generator:upload_sfx' %}" class="btn" style="background-color: #bb86fc; color: #000;">
+        + Subir Nuevo SFX
+    </a>
+</div>
+
+<div class="card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        {% for sfx in sfx_items %}
+        <div style="background: #2d2d2d; padding: 20px; border-radius: 12px; border: 1px solid #444; position: relative; overflow: hidden; transition: transform 0.2s;"
+            onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <h3 style="margin: 0 0 10px 0; font-size: 1.1rem; color: #fff;">{{ sfx.name }}</h3>
+            <p style="font-size:0.8rem;color:#aaa;margin-bottom:15px">FECHA: {{sfx.uploaded_at|date:"d/m/Y"}}</p>
+
+            <audio controls preload="none" style="width: 100%; height: 35px; border-radius: 5px; margin-bottom: 15px;">
+                {% if sfx.file_exists %}
+                <source src="{{ sfx.file.url }}" type="audio/mpeg">
+                {% endif %}
+                Tu navegador no soporta el audio o el archivo no existe.
+            </audio>
+
+            {% if not sfx.file_exists %}
+            <p style="color: #cf6679; font-weight: bold; font-size: 0.8rem; margin-top: -10px; margin-bottom: 10px;">⚠️
+                Archivo no encontrado en el sistema</p>
+            {% endif %}
+
+            <form method="post" action="{% url 'generator:delete_sfx' sfx.id %}"
+                onsubmit="return confirm('¿Seguro que quieres eliminar este efecto?')">
+                {% csrf_token %}
+                <button type="submit"
+                    style="background: none; border: none; color: #cf6679; cursor: pointer; font-size: 0.85rem; padding: 0; text-decoration: underline;">
+                    Eliminar efecto
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #aaa;">
+            <p>No hay efectos de sonido disponibles todavía.</p>
+            <p style="font-size: 0.9rem;">¡Sube tus mejores SFX para darle vida a tus videos!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'generator:home' %}" style="color: #bb86fc; text-decoration: none;"> Volver al Inicio</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const audios = document.querySelectorAll('audio');
+
+        audios.forEach(audio => {
+            audio.releasing = false;
+
+            audio.addEventListener('error', function () {
+                if (this.releasing) return;
+                const container = this.closest('div');
+                if (!container.querySelector('.audio-error')) {
+                    const errorMsg = document.createElement('p');
+                    errorMsg.className = 'audio-error';
+                    errorMsg.style.cssText = 'color: #cf6679; font-size: 0.8rem; margin-top: 5px;';
+                    errorMsg.textContent = '❌ Error de conexión con el archivo.';
+                    container.appendChild(errorMsg);
+                }
+            });
+
+            audio.addEventListener('play', function (e) {
+                const container = this.closest('div');
+                const prevError = container.querySelector('.audio-error');
+                if (prevError) prevError.remove();
+
+                audios.forEach(a => {
+                    if (a !== e.target) {
+                        releaseAudio(a);
+                    }
+                });
+            });
+        });
+
+        function releaseAudio(a) {
+            if (a.paused && (a.src === '' || a.src === window.location.href)) return;
+            a.releasing = true;
+            a.pause();
+            const sourceElement = a.querySelector('source');
+            const currentSrc = sourceElement ? sourceElement.src : a.src;
+            a.src = '';
+            try { a.load(); } catch (e) { }
+            setTimeout(() => {
+                a.removeAttribute('src');
+                if (sourceElement && currentSrc) {
+                    sourceElement.src = currentSrc;
+                } else if (currentSrc) {
+                    a.src = currentSrc;
+                }
+                a.load();
+                a.releasing = false;
+            }, 200);
+        }
+
+        function stopAllAndClean() {
+            audios.forEach(a => releaseAudio(a));
+        }
+
+        window.addEventListener('beforeunload', stopAllAndClean);
+        window.addEventListener('pagehide', stopAllAndClean);
+    });
+</script>
+{% endblock %}

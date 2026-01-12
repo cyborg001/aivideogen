@@ -1,0 +1,51 @@
+# --- AIVideogen3 Standalone GitIgnore ---
+
+# Entorno y Configuración
+.env
+.agent/
+.venv/
+.vscode/
+.idea/
+
+# Base de Datos Local
+db.sqlite3
+
+# Python y Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Carpetas pesadas que NO se suben a Git
+aivideogen/media/assets/
+aivideogen/media/music/
+aivideogen/media/videos/
+aivideogen/media/thumbnails/
+aivideogen/media/temp_audio/
+aivideogen/media/output/
+build/
+dist/
+aivideogen/dist/
+aivideogen/build/
+
+# Otros archivos generados
+.venv/
+.env
+db.sqlite3
+__pycache__/
+*.pyc
+*.zip
+*.exe
+*.spec
+nuitka_log.txt
+
+# --- SÍ SE SUBEN (Esenciales y UI) ---
+!aivideogen/media/sfx/
+!aivideogen/media/overlays/
+!aivideogen/generator/static/
+!aivideogen/researcher/static/
+!aivideogen/docs/
+!aivideogen/guiones_pro/
+!VERSIONES.md
+!README.md
+!MANUAL_DE_USUARIO.md
