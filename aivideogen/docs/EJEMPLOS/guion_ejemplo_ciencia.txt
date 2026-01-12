@@ -1,0 +1,25 @@
+<avgl title="Misterios del Cosmos">
+    <bloque title="Parte 1: El Enigma" music="space_ambient">
+        <scene title="Nebulosas Lejanas">
+            <ambient state="start" type="cosmic_wind" volume="0.15" />
+            <asset type="nebula.png" zoom="1.0:1.3" />
+            <voice name="es-DO-EmilioNeural">
+                En el rincón más oscuro del universo, nace la luz. <pause duration="1.0" />
+                <sfx type="shimmer" />
+                [EPICO] Las estrellas son los ojos de la creación. [/EPICO]
+            </voice>
+        </scene>
+    </bloque>
+    <bloque title="Parte 2: La Ecuación" music="tense_strings">
+        <scene title="Fórmulas Infinitas">
+            <asset type="math_board.png" move="VER:0:100" />
+            <voice name="es-DO-RamonaNeural">
+                Todo se resume a un solo número. <pause duration="0.8" />
+                <sfx type="clock_tick" />
+                ¿Qué pasaría si hoy... descubrimos el final?
+                <pause duration="0.5" />
+                Y recuerda... ¡el futuro es hoy!
+            </voice>
+        </scene>
+    </bloque>
+</avgl>

@@ -1,0 +1,7 @@
+def upload_asset(request):
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        for f in files:
+            Asset.objects.create(file=f)
+        return redirect('generator:asset_list')
+    return render(request, 'generator/upload_asset.html')

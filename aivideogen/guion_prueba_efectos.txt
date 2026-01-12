@@ -1,0 +1,10 @@
+Nuevo Sistema de Efectos | banner_notiaci.png | ZOOM_IN | Hoy te presento el revolucionario sistema de efectos para tus videos
+Inteligencia Artificial | gemini_3_launch.png | HOR:0:100 | Observa cómo la imagen se desplaza suavemente de izquierda a derecha
+Visión del Futuro | agi_future_glow.png | VER:100:0 | Ahora mira este elegante desplazamiento de abajo hacia arriba
+Tecnología Avanzada | hardware_nvidia_blackwell.png | ZOOM_IN:1.0:2.0 | Este efecto crea un impacto visual increíble acercándose al doscientos porciento
+Innovación | corporate_ia.png | HOR:20:80+ZOOM_IN:1.0:1.5 | La combinación perfecta de movimiento horizontal y acercamiento
+Ciudad del Futuro | future_city_micro.png | HOR:0:100+VER:0:100 | Un movimiento diagonal que da sensación de profundidad
+Efecto Cinematográfico | deep_think_mode.png | HOR:0:100+VER:100:0+ZOOM_IN:1.0:1.8 | El efecto más complejo: diagonal inversa con zoom cinematográfico
+Pausa Dramática | black_hole_intro.png |  | [PAUSA:1.5]
+Historia de la IA | dartmouth_1956.png |  | Y aquí una imagen completamente estática sin ningún efecto
+Cierre Impactante | despedida_notiaci.png | ZOOM_OUT | Esto es solo el comienzo de lo que puedes crear

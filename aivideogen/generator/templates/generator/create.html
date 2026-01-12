@@ -1,0 +1,203 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<h1>Crear Nuevo Video</h1>
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        <label>Título del Proyecto:</label>
+        <input type="text" name="title" id="project-title" required placeholder="Mi Video Genial" value="{{ retry_data.title|default:initial_title }}">
+
+        <label>Motor de Voz:</label>
+        <select name="engine">
+            <option value="edge" {% if retry_data.engine == 'edge' or not retry_data.engine %}selected{% endif %}>Edge TTS (Gratis)</option>
+            <option value="elevenlabs" {% if retry_data.engine == 'elevenlabs' %}selected{% endif %}>ElevenLabs (Requiere API Key)</option>
+        </select>
+
+        <label>Formato de Video:</label>
+        <select name="aspect_ratio">
+            <option value="landscape" {% if retry_data.aspect_ratio == 'landscape' or not retry_data.aspect_ratio %}selected{% endif %}>Horizontal (YouTube 16:9)</option>
+            <option value="portrait" {% if retry_data.aspect_ratio == 'portrait' %}selected{% endif %}>Vertical (YouTube Shorts / TikTok 9:16)</option>
+        </select>
+
+        <label>ID de Voz o Nombre (Opcional):</label>
+        <input type="text" name="voice_id" placeholder="Ej: es-ES-AlvaroNeural o JBFqnCBsd6RMkjVDRZzb" value="{{ retry_data.voice_id|default:'' }}">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <label>Música de Fondo:</label>
+                <select name="background_music">
+                    <option value="">Sin música</option>
+                    {% for music in all_music %}
+                    <option value="{{ music.id }}" {% if retry_data.background_music_id == music.id %}selected{% endif %}>{{ music.name }}</option>
+                    {% endfor %}
+                </select>
+                <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">
+                    Gestiona tu música en la sección de <a href="{% url 'generator:music_list' %}"
+                        style="color: #03dac6;">Audio Hub</a>
+                </p>
+            </div>
+            <div>
+                <label>Volumen de Música: <span id="vol-label">{% if retry_data.music_volume_percent %}{{ retry_data.music_volume_percent }}{% else %}15{% endif %}%</span></label>
+                <input type="range" name="music_volume" min="0" max="1" step="0.05" value="{{ retry_data.music_volume|default:0.15 }}"
+                    oninput="document.getElementById('vol-label').innerText = Math.round(this.value * 100) + '%'">
+            </div>
+        </div>
+
+
+        <!-- Selector Visual -->
+        <div
+            style="background: #2d2d2d; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #444;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 1rem;">📁 Selección de Archivos</h3>
+                <button type="button" class="btn" style="background-color: #03dac6; color: #000;"
+                    onclick="browseFile()">
+                    📂 Seleccionar Guion del Disco
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.8rem; color: #aaa;">Carpeta de Assets (Automática):</label>
+                    <input type="text" name="source_path" id="source_path" placeholder="Esperando selección..." readonly
+                        style="background-color: #222; cursor: not-allowed;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: #aaa;">Archivo de Guion:</label>
+                    <input type="text" name="script_file" id="script_file" placeholder="Esperando selección..." readonly
+                        style="background-color: #222; cursor: not-allowed;">
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function browseFile() {
+                fetch("{% url 'generator:browse_script' %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            document.getElementById('source_path').value = data.path;
+                            document.getElementById('script_file').value = data.filename;
+                            
+                            // Update textarea
+                            const editor = document.getElementById('script-editor');
+                            editor.value = data.content;
+                            
+                            // Trigger analytics & title extraction
+                            updateAnalytics();
+                        } else if (data.status === 'error') {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(err => alert('Error de conexión: ' + err));
+            }
+        </script>
+
+        <label>Arquitectura AVGL v3.0 Plus Plus (Capa de Cebolla: Raíz > Bloque > Escena):</label>
+        <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0 15px 0; line-height: 1.5;">
+            📌 <b>ESTRUCTURA JERÁRQUICA:</b><br>
+            • <b>Raíz:</b> <code>&lt;avgl title="Nombre"&gt;</code> (Autosincroniza el título del proyecto)<br>
+            • <b>Bloque:</b> <code>&lt;bloque music="audio"&gt;</code> (Agrupa escenas con una misma atmósfera musical)<br>
+            • <b>Escena:</b> <code>&lt;scene title="Capitulo"&gt;</code> (Contenedor de activos y texto de voz)<br>
+            • <b>Activos:</b> <code>&lt;asset type="img" zoom="1.0:1.3" move="HOR:0:100" /&gt;</code> (En medio del texto)<br>
+            • <b>Audio:</b> <code>&lt;sfx type="sonido" /&gt;</code> | <code>&lt;ambient state="start" type="ruido" /&gt;</code>
+        </p>
+
+        <!-- NEW: AI Visual Prompts Section -->
+        {% if ai_visual_prompts %}
+        <div
+            style="background: rgba(3, 218, 198, 0.1); padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px dashed #03dac6;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 1rem; color: #03dac6;">✨ Prompts Visuales Sugeridos</h3>
+                <button type="button" class="btn" style="padding: 5px 10px; font-size: 0.8rem;"
+                    onclick="copyPrompts()">Copiar</button>
+            </div>
+            <textarea id="ai-prompts" name="visual_prompts" rows="6"
+                style="background: rgba(0,0,0,0.2); font-size: 0.85rem; border-color: rgba(3, 218, 198, 0.3);">{{ ai_visual_prompts }}</textarea>
+            <script>
+                function copyPrompts() {
+                    const el = document.getElementById('ai-prompts');
+                    el.select();
+                    document.execCommand('copy');
+                    alert('Prompts copiados');
+                }
+            </script>
+        </div>
+        {% endif %}
+
+        <!-- Script Analytics Bar -->
+        <div id="analytics-bar"
+            style="background: #1e1e1e; padding: 10px; border-radius: 5px 5px 0 0; border: 1px solid #444; border-bottom: none; display: flex; gap: 20px; font-size: 0.9rem;">
+            <span>📝 Palabras: <b id="word-count">0</b></span>
+            <span>⏱️ Duración Est.: <b id="est-duration">0m 0s</b></span>
+            <span style="color: #03dac6;">🧪 Motor: <b>AVGL v3.0 Plus</b></span>
+        </div>
+
+        <textarea id="script-editor" name="script" rows="15"
+            style="font-family: monospace; border-top-left-radius: 0; border-top-right-radius: 0;">{{ default_script }}</textarea>
+
+        <script>
+            function updateAnalytics() {
+                const text = document.getElementById('script-editor').value;
+                
+                // 1. EXTRAER TÍTULO DE <avgl title="...">
+                const avglMatch = text.match(/<avgl\s+title="([^"]+)"/i);
+                if (avglMatch && avglMatch[1]) {
+                    document.getElementById('project-title').value = avglMatch[1];
+                }
+
+                // 2. CONTAR PALABRAS DENTRO DE <scene>
+                // Buscamos el contenido entre </scene> y el siguiente <scene> o el final, 
+                // o mejor, entre etiquetas de cierre y apertura.
+                let totalWords = 0;
+                
+                // Regex para extraer todo el texto que está DENTRO de las escenas
+                const sceneRegex = /<scene[^>]*>(.*?)<\/scene>/gis;
+                let match;
+                while ((match = sceneRegex.exec(text)) !== null) {
+                    let content = match[1];
+                    // Limpiar etiquetas internas (<asset />, <sfx />, etc.)
+                    let cleanText = content.replace(/<[^>]+>/g, ' ');
+                    // Limpiar corchetes de emoción [EPICO]
+                    cleanText = cleanText.replace(/\[.*?\]/g, ' ');
+                    
+                    const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+                    totalWords += words.length;
+                }
+
+                document.getElementById('word-count').innerText = totalWords;
+                const totalSeconds = Math.round((totalWords / 140) * 60);
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                document.getElementById('est-duration').innerText = `${mins}m ${secs}s`;
+            }
+
+            // Listen for typing
+            document.getElementById('script-editor').addEventListener('input', updateAnalytics);
+
+            // Initial run
+            window.addEventListener('load', function () {
+                setTimeout(updateAnalytics, 100);
+            });
+        </script>
+
+        <div style="background: rgba(255, 0, 0, 0.1); padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid rgba(255, 0, 0, 0.3); display: flex; align-items: center; gap: 15px;">
+            <input type="checkbox" name="auto_upload_youtube" id="auto_upload" style="width: 25px; height: 25px; margin: 0; cursor: pointer;">
+            <label for="auto_upload" style="margin: 0; cursor: pointer; font-weight: bold; color: #ff5252;">🚀 Subir automáticamente a YouTube al finalizar</label>
+        </div>
+
+        <button type="submit" class="btn">Generar Video</button>
+    </form>
+</div>
+
+<script>
+    // ======================================================
+    // FORM PERSISTENCE - REMOVED (v2.21.0)
+    // ======================================================
+    // Previous behavior: localStorage saved form data between sessions
+    // New behavior: Always fresh start when accessing /create/
+    // Exception: Continuing a canceled project works via server-side template
+    
+    // Note: {{ default_script }} is injected by Django template
+    // All other fields start blank every time
+</script>
+{% endblock %}

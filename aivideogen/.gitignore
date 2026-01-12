@@ -1,0 +1,36 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+dist/
+build/
+*.spec
+
+# Python
+.venv/
+env/
+venv/
+ENV/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# MoviePy / Temp files
+temp_audio/
+temp_video/
+*.tmp
+cursor.png
+cursor_v2.png
+cursor_v3.png
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,8 @@
+Bienvenido a AI Video PRO | 01_dashboard_homepage.jpg | HOR:0:100 | Presentamos AI Video Generator PRO. La solución definitiva para la creación automatizada de contenido.
+Potencia sin límites | 02_create_video_form.jpg | VER:0:100 | Una interfaz intuitiva que pone el poder de la inteligencia artificial en tus manos, sin complicaciones técnicas.
+Efectos Cinematográficos | 03_script_editor_effects.jpg | ZOOM_IN | [PAUSA:1.0] Domina el movimiento con nuestro exclusivo sistema HOR, VER y ZOOM. Control total sobre cada píxel.
+Investigación Inteligente | 04_ai_hub_news.jpg | HOR:100:0 | El AI Hub integrado investiga las noticias más relevantes y genera guiones optimizados por ti en segundos.
+Voces Humanas | 07_audio_settings.jpg | VER:100:0 | Elige entre voces naturales gratuitas o integra ElevenLabs para resultados ultra-realistas que cautivan a tu audiencia.
+Poder Local | 05_project_generating.jpg | HOR:0:100+VER:0:100 | Generación local ultra-rápida. Sin suscripciones, sin límites de nubes y con total privacidad de tus datos.
+Resultados Virales | 06_video_completed.jpg | ZOOM_OUT | [PAUSA:0.5] Videos profesionales listos para YouTube, TikTok y Reels. Calidad HD garantizada en cada exportación.
+Descarga Ahora | 08_responsive_mobile.jpg | HOR+VER+ZOOM_IN | No pierdas la oferta de lanzamiento. Únete a la nueva era de la creación de contenido por solo nueve dólares.

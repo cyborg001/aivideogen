@@ -1,0 +1,49 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Assets Disponibles</h1>
+    <a href="{% url 'generator:upload_asset' %}" class="btn">Subir Nuevos</a>
+</div>
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Vista Previa</th>
+                <th>Nombre</th>
+                <th>Subido</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr>
+                <td>
+                    {% if asset.file_exists %}
+                    <a href="{{ asset.file.url }}" target="_blank">
+                        Ver
+                    </a>
+                    {% else %}
+                    <span style="color: #cf6679; font-weight: bold;">⚠️ Archivo no encontrado</span>
+                    {% endif %}
+                </td>
+                <td>{{ asset.name }}</td>
+                <td>{{ asset.uploaded_at|date:"d M H:i" }}</td>
+                <td>
+                    <form method="post" action="{% url 'generator:delete_asset' asset.id %}"
+                        onsubmit="return confirm('¿Seguro que quieres eliminar este registro?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn"
+                            style="background-color: #cf6679; padding: 5px 10px; font-size: 0.8rem;">
+                            Eliminar {% if not asset.file_exists %}Registro{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No hay assets.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

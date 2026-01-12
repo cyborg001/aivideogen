@@ -1,0 +1,39 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 100px auto; text-align: center;">
+    <h1 style="color: #4caf50;">✅ Video Subido a YouTube</h1>
+    <p style="font-size: 1.2rem; margin: 20px 0;">
+        Tu video se ha subido exitosamente.
+    </p>
+    {% if video_url %}
+    <a href="{{ video_url }}" target="_blank" class="btn" style="margin: 10px;">
+        Ver en YouTube
+    </a>
+    {% endif %}
+    <p style="color: #666; margin-top: 20px;">
+        Esta ventana se cerrará automáticamente en <span id="countdown">3</span> segundos...
+    </p>
+    <button onclick="window.close()" class="btn" style="margin-top: 10px; background-color: #666;">
+        Cerrar Ahora
+    </button>
+</div>
+
+<script>
+    let count = 3;
+    const countdownEl = document.getElementById('countdown');
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownEl.textContent = count;
+        } else {
+            clearInterval(interval);
+            window.close();
+            // Fallback: if window.close() doesn't work, redirect to main app
+            setTimeout(() => {
+                window.location.href = "{{ fallback_url }}";
+            }, 500);
+        }
+    }, 1000);
+</script>
+{% endblock %}
