@@ -43,17 +43,26 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
     move_start = int(move_parts[1]) if len(move_parts) > 1 else 50
     move_end = int(move_parts[2]) if len(move_parts) > 2 else move_start
     
-    # OPTIMIZATION: Pre-scale image to working size (1.5x target)
+    # OPTIMIZATION: Pre-scale image to working size (preserves aspect ratio)
     img = Image.open(image_path)
-    max_zoom = max(zoom_start, zoom_end)
-    working_scale = 1.5 * max_zoom
-    working_size = (int(target_size[0] * working_scale), int(target_size[1] * working_scale))
+    img_w_orig, img_h_orig = img.size
     
-    # Resize once
+    # Calculate scale needed to cover/fit target at zoom=1.0
+    scale_factor_cover = max(target_size[0] / img_w_orig, target_size[1] / img_h_orig)
+    
+    # We want extra resolution for zoom
+    max_zoom = max(zoom_start, zoom_end)
+    working_scale = scale_factor_cover * max_zoom * 1.2  # 1.2x buffer (reduced from 1.5x for RAM)
+    
+    working_w = int(img_w_orig * working_scale)
+    working_h = int(img_h_orig * working_scale)
+    working_size = (working_w, working_h)
+    
+    # Resize once (High quality)
     img_resized = img.resize(working_size, Image.Resampling.LANCZOS)
     img_np = np.array(img_resized)
     
-    # Calculate base scale to cover frame
+    # Update dimensions for calc
     img_h, img_w = img_np.shape[:2]
     target_w, target_h = target_size
     scale_to_cover = max(target_w / img_w, target_h / img_h)
