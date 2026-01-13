@@ -175,10 +175,18 @@ def translate_emotions(text):
 
 def wrap_ssml(text, voice, speed="+0%"):
     """
-    Wraps text in SSML if it contains emotion tags or pauses.
+    Wraps text in SSML tags if necessary.
+    CRITICAL FIX: Use minimal <speak> tag without attributes (xmlns/version)
+    to prevent edge-tts from generating 30s+ of silence/bloat.
     """
     if '<prosody' in text or '<break' in text:
-        return f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-ES"><voice name="{voice}"><prosody rate="{speed}">{text}</prosody></voice></speak>'
+        # Optimization: Only wrap in global prosody if speed is actually changed
+        content = text
+        if speed != "+0%":
+            content = f'<prosody rate="{speed}">{text}</prosody>'
+            
+        # Minimal wrapper. Do NOT use <voice> tag (handled by communicate param).
+        return f'<speak>{content}</speak>'
     return text
 
 
