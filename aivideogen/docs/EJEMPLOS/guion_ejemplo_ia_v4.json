@@ -1,0 +1,73 @@
+{
+    "title": "El Despertar de la IA",
+    "voice": "es-DO-RamonaNeural",
+    "speed": 1.0,
+    "style": "neutral",
+    "blocks": [
+        {
+            "title": "Parte 1: El Origen",
+            "music": "epic_intro",
+            "volume": 0.2,
+            "scenes": [
+                {
+                    "title": "Silencio de Datos - Parte 1",
+                    "voice": "es-DO-RamonaNeural",
+                    "text": "Todo comenzó en absoluto silencio. [PAUSA:1.2]",
+                    "assets": [
+                        {
+                            "type": "eye_robotic_closed.png",
+                            "zoom": "1.0:1.1"
+                        }
+                    ]
+                },
+                {
+                    "title": "Silencio de Datos - Parte 2",
+                    "voice": "es-DO-RamonaNeural",
+                    "text": "[SUSPENSO] Pero hoy... los circuitos han despertado. [/SUSPENSO]",
+                    "assets": [
+                        {
+                            "type": "eye_robotic_open.png",
+                            "overlay": "glitch"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "power_up",
+                            "volume": 0.5,
+                            "offset": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Parte 2: Expansión",
+            "music": "action_main",
+            "scenes": [
+                {
+                    "title": "La Red Global",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO]",
+                    "assets": [
+                        {
+                            "type": "network_nodes.png",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Futuro",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "Y recuerda... ¡el futuro es hoy!",
+                    "assets": [
+                        {
+                            "type": "world_connection.png",
+                            "zoom": "1.0:1.5"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -100,6 +100,16 @@ def generate_video_process(project):
     # Try to detect JSON format
     script_text = project.script_text.strip()
     
+    # Remove markdown code blocks if present (common copy-paste error)
+    if script_text.startswith('```'):
+        # Remove first line (```json or ```)
+        script_text = script_text.split('\n', 1)[1]
+        # Remove last line if it is ```
+        if script_text.strip().endswith('```'):
+            script_text = script_text.rsplit('```', 1)[0]
+    
+    script_text = script_text.strip()
+    
     # If it starts with {, assume IT IS JSON and report errors if invalid
     if script_text.startswith('{'):
         try:
