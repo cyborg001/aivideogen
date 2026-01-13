@@ -1,0 +1,150 @@
+{
+    "title": "El Amanecer de la Nueva IA",
+    "voice": "es-ES-AlvaroNeural",
+    "speed": 1.05,
+    "blocks": [
+        {
+            "title": "Intro: El Despertar",
+            "music": "Space Station Experience - Unicorn Heads.mp3",
+            "volume": 0.15,
+            "scenes": [
+                {
+                    "title": "Hook Impactante",
+                    "text": "[TENSO]¿Sabías que la inteligencia artificial acaba de lograr algo que los científicos creían imposible?[/TENSO]",
+                    "assets": [
+                        {
+                            "type": "earth_from_space_dark.png",
+                            "zoom": "1.0:1.4",
+                            "move": "HOR:0:100",
+                            "overlay": "dust"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Debris_Hits.mp3",
+                            "volume": 0.5,
+                            "offset": 0
+                        }
+                    ]
+                },
+                {
+                    "title": "La Revelación",
+                    "text": "DeepMind ha anunciado que su nueva IA puede razonar, crear y aprender [EPICO]exactamente como un ser humano[/EPICO].",
+                    "assets": [
+                        {
+                            "type": "doomsday_countdown_clock.png",
+                            "zoom": "1.1:1.5",
+                            "move": "VER:20:80"
+                        }
+                    ],
+                    "pause": 1.0
+                },
+                {
+                    "title": "El Contexto",
+                    "text": "Durante décadas, la IA ha sido solo una herramienta. [SUSPENSO]Pero ahora... todo ha cambiado.[/SUSPENSO]",
+                    "assets": [
+                        {
+                            "type": "earth_from_space_dark.png",
+                            "zoom": "1.3:1.0"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Desarrollo: Las Capacidades",
+            "music": "Space Station Experience - Unicorn Heads.mp3",
+            "volume": 0.2,
+            "scenes": [
+                {
+                    "title": "Capacidad 1: Razonamiento",
+                    "text": "Esta IA puede analizar problemas complejos y encontrar soluciones que ni los expertos habían considerado.",
+                    "assets": [
+                        {
+                            "type": "doomsday_countdown_clock.png",
+                            "zoom": "1.0:1.3",
+                            "overlay": "light_leaks"
+                        }
+                    ]
+                },
+                {
+                    "title": "Capacidad 2: Creatividad",
+                    "text": "Puede escribir novelas, componer música y diseñar arte [EPICO]indistinguible del humano[/EPICO].",
+                    "voice": "es-ES-ElviraNeural",
+                    "assets": [
+                        {
+                            "type": "earth_from_space_dark.png",
+                            "zoom": "1.2:1.6",
+                            "move": "HOR:40:60"
+                        }
+                    ],
+                    "pause": 0.8
+                },
+                {
+                    "title": "Capacidad 3: Aprendizaje",
+                    "text": "Y lo más impresionante: [TENSO]aprende de sus propios errores sin intervención humana[/TENSO].",
+                    "assets": [
+                        {
+                            "type": "doomsday_countdown_clock.png",
+                            "zoom": "1.0:1.4",
+                            "move": "VER:30:70",
+                            "overlay": "dust"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Cierre: El Impacto",
+            "music": "Space Station Experience - Unicorn Heads.mp3",
+            "volume": 0.25,
+            "scenes": [
+                {
+                    "title": "Las Implicaciones",
+                    "text": "Esto significa que en menos de 5 años, la IA podría estar diseñando medicamentos, resolviendo la crisis climática... [SUSPENSO]o incluso tomando decisiones que afecten a millones.[/SUSPENSO]",
+                    "assets": [
+                        {
+                            "type": "earth_from_space_dark.png",
+                            "zoom": "1.1:1.5",
+                            "overlay": "film_grain"
+                        }
+                    ],
+                    "pause": 1.5
+                },
+                {
+                    "title": "La Pregunta Final",
+                    "text": "La pregunta ya no es [GRITANDO]¿PUEDE la IA hacerlo?[/GRITANDO]",
+                    "voice": "es-ES-ElviraNeural",
+                    "speed": 0.95,
+                    "assets": [
+                        {
+                            "type": "doomsday_countdown_clock.png",
+                            "zoom": "1.2:1.7",
+                            "move": "HOR:50:50"
+                        }
+                    ],
+                    "pause": 0.5
+                },
+                {
+                    "title": "El Cierre",
+                    "text": "[SUSURRO]La pregunta es... ¿estamos listos?[/SUSURRO]",
+                    "assets": [
+                        {
+                            "type": "earth_from_space_dark.png",
+                            "zoom": "1.3:1.0",
+                            "move": "VER:50:50"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Debris_Hits.mp3",
+                            "volume": 0.3,
+                            "offset": 3
+                        }
+                    ],
+                    "pause": 2.0
+                }
+            ]
+        }
+    ]
+}
