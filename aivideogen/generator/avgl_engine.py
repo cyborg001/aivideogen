@@ -167,14 +167,17 @@ def translate_emotions(text):
         replacement = rf'<prosody {attr_str}>\1</prosody>'
         processed_text = re.sub(pattern, replacement, processed_text, flags=re.IGNORECASE | re.DOTALL)
     
+    # Process [PAUSA:X.X] -> <break time="X.Xs"/>
+    processed_text = re.sub(r'\[PAUSA:([\d\.]+)\]', r'<break time="\1s"/>', processed_text, flags=re.IGNORECASE)
+    
     return processed_text
 
 
 def wrap_ssml(text, voice, speed="+0%"):
     """
-    Wraps text in SSML if it contains emotion tags.
+    Wraps text in SSML if it contains emotion tags or pauses.
     """
-    if '<prosody' in text:
+    if '<prosody' in text or '<break' in text:
         return f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-ES"><voice name="{voice}"><prosody rate="{speed}">{text}</prosody></voice></speak>'
     return text
 

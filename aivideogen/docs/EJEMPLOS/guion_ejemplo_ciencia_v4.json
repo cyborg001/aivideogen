@@ -6,7 +6,7 @@
     "blocks": [
         {
             "title": "Parte 1: El Enigma",
-            "music": "space_ambient",
+            "music": "Im_Giving_Up_-_Everet_Almond",
             "volume": 0.2,
             "scenes": [
                 {
@@ -31,7 +31,7 @@
         },
         {
             "title": "Parte 2: La Ecuación",
-            "music": "tense_strings",
+            "music": "Final_Girl_-_Jeremy_Blake",
             "scenes": [
                 {
                     "title": "Fórmulas Infinitas",
