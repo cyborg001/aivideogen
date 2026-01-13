@@ -117,19 +117,23 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
         progress = t / duration
         scale = get_frame_scale(t)
         
-        # Calculate scaled dimensions
+        # Calculate scaled dimensions based on current scale
         scaled_w = img_w * scale
         scaled_h = img_h * scale
         
         # Calculate position based on movement
         if move_dir.upper() == 'HOR':
-            # Horizontal pan
+            # Horizontal pan: map start:end % to pixels
+            # 0% = left edge, 100% = right edge of the cropped area
             pos_start_pct = move_start / 100.0
             pos_end_pct = move_end / 100.0
             current_pct = pos_start_pct + (pos_end_pct - pos_start_pct) * progress
             
-            max_offset_x = (scaled_w - target_w) / 2
-            x = (target_w / 2) - (scaled_w / 2) + (max_offset_x * (2 * current_pct - 1))
+            # The range of motion is the difference between scaled size and target size
+            max_offset_x = max(0, scaled_w - target_w)
+            # x position: starts at (target_w - scaled_w) * current_pct
+            x = (target_w - scaled_w) * current_pct
+            # Center vertically
             y = (target_h - scaled_h) / 2
         else:
             # Vertical pan
@@ -137,33 +141,26 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
             pos_end_pct = move_end / 100.0
             current_pct = pos_start_pct + (pos_end_pct - pos_start_pct) * progress
             
-            max_offset_y = (scaled_h - target_h) / 2
+            max_offset_y = max(0, scaled_h - target_h)
             x = (target_w - scaled_w) / 2
-            y = (target_h / 2) - (scaled_h / 2) + (max_offset_y * (2 * current_pct - 1))
+            y = (target_h - scaled_h) * current_pct
         
         return (x, y)
     
     # Create ImageClip from pre-scaled array
     base_clip = ImageClip(img_np, duration=duration)
     
-    # ═══════════════════════════════════════════════════════════════════
-    # KEN BURNS IMPLEMENTATION
-    # ═══════════════════════════════════════════════════════════════════
-    # In MoviePy 2.x, we use fl (frame lambda) or resized with a function
-    # that returns the new (w, h) tuple.
-    
-    def resizer(t):
-        scale = get_frame_scale(t)
-        return (int(img_w * scale), int(img_h * scale))
-
     # Apply dynamic resizing and positioning
-    clip = base_clip.resized(resizer)
+    # IMPORTANT: We use a lambda that returns the (w, h) tuple for resized
+    clip = base_clip.resized(lambda t: (int(img_w * get_frame_scale(t)), int(img_h * get_frame_scale(t))))
     clip = clip.with_position(get_frame_pos)
+    
+    # Wrap in CompositeVideoClip to ensure transformations are rendered correctly
+    clip = CompositeVideoClip([clip], size=target_size)
     
     # Apply overlay if specified
     if overlay_path and os.path.exists(overlay_path):
         overlay = VideoFileClip(overlay_path, has_mask=True)
-        # Fix: use vfx.Loop instead of .loop()
         overlay = overlay.with_effects([vfx.Loop(duration=duration)])
         overlay = overlay.resized(target_size)
         clip = CompositeVideoClip([clip, overlay], size=target_size)
@@ -230,52 +227,32 @@ def generate_video_avgl(project):
     all_scenes = script.get_all_scenes()
     audio_files = []
     
+    audio_files = []
     for i, scene in enumerate(all_scenes):
         logger.log(f"  Escena {i+1}/{len(all_scenes)}: {scene.title}")
         
         if not scene.text:
             continue
         
-        # Prepare text - Use clean mode (no SSML) for Edge TTS to prevent instructions leakage
-        # until the service-side SSML issues are resolved.
-        use_ssml = (project.engine == 'eleven') # ElevenLabs handles tags/strips them safely
+        # Prepare text - Use clean mode (no SSML) for Edge TTS for now
+        use_ssml = (project.engine == 'eleven')
         text_with_emotions = translate_emotions(scene.text, use_ssml=use_ssml)
         
         # Generate audio
         audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
         
         if project.engine == 'edge':
-            # Edge TTS supports SSML
             speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
             ssml_text = wrap_ssml(text_with_emotions, scene.voice, speed_rate)
             
-            # DEBUG LOGS
-            logger.log(f"  🔍 Text Raw: {scene.text[:50]}...")
-            if ssml_text.startswith('<speak'):
-                logger.log(f"  🔍 SSML Generated: {ssml_text[:100]}...")
-            
-            # Run async
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             success = loop.run_until_complete(
                 generate_audio_edge(ssml_text, audio_path, scene.voice, speed_rate)
             )
             loop.close()
-            
-            if not success:
-                logger.log(f"❌ Error crítico generando audio para escena '{scene.title}'")
-                project.status = 'error'
-                project.save()
-                return # Stop generation
         else:
-            # ElevenLabs
             api_key = os.getenv('ELEVENLABS_API_KEY')
-            if not api_key:
-                logger.log("❌ ELEVENLABS_API_KEY no configurada")
-                project.status = 'error'
-                project.save()
-                return
-            
             voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL')
             
             loop = asyncio.new_event_loop()
@@ -290,168 +267,151 @@ def generate_video_avgl(project):
         else:
             logger.log(f"  ⚠️ Error generando audio para escena {i+1}")
     
-    # Update project with music if defined in script but not in project
-    if not project.background_music and script.blocks and script.blocks[0].music:
-        from .models import Music
-        try:
-            m_name = script.blocks[0].music
-            # Try to find music by filename or name
-            m_obj = Music.objects.filter(file__icontains=m_name).first()
-            if m_obj:
-                project.background_music = m_obj
-                project.save()
-        except:
-            pass
-    
-    # Generate video clips
-    logger.log("🎬 Generando clips de video...")
-    clips = []
+    # Check if we have audio
+    if not audio_files:
+        logger.log("❌ No se generó audio para ninguna escena.")
+        project.status = 'error'; project.save()
+        return
+
+    # ═══════════════════════════════════════════════════════════════════
+    # BLOCK-LEVEL GENERATION (Music switching)
+    # ═══════════════════════════════════════════════════════════════════
+    from moviepy import afx
+    block_clips = []
+    audio_idx = 0
     current_time = 0
     timestamps_list = []
     
-    for scene, audio_path in audio_files:
-        # Get audio duration
-        audio_clip = AudioFileClip(audio_path)
-        total_scene_duration = audio_clip.duration + scene.pause
+    for b_idx, block in enumerate(script.blocks):
+        logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
+        block_scene_clips = []
         
-        # ═══════════════════════════════════════════════════════════════════
-        # MULTI-ASSET SCENE SUPPORT
-        # ═══════════════════════════════════════════════════════════════════
-        scene_clips = []
-        if scene.assets:
-            n_assets = len(scene.assets)
-            duration_per_asset = total_scene_duration / n_assets
+        for scene in block.scenes:
+            if audio_idx >= len(audio_files): break
+            # Find matching audio by scene object (safe if object identity maintained)
+            # or simply follow the order (safe because all_scenes is deterministic)
+            s_obj, audio_path = audio_files[audio_idx]
+            audio_idx += 1
             
-            for asset_idx, asset in enumerate(scene.assets):
+            # Load audio for duration
+            audio_clip = AudioFileClip(audio_path)
+            duration = audio_clip.duration + scene.pause
+            
+            # REVERT: Use only the first asset
+            if scene.assets:
+                asset = scene.assets[0]
                 asset_path = os.path.join(assets_dir, asset.type)
                 
+                # Tolerance for common extensions
                 if not os.path.exists(asset_path):
-                    # Check for common extensions if not specified
-                    found = False
-                    for ext in ['.png', '.jpg', '.jpeg']:
+                    for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
                         if os.path.exists(asset_path + ext):
-                            asset_path += ext
-                            found = True
-                            break
-                    
-                    if not found:
-                        logger.log(f"  ⚠️ Asset no encontrado: {asset.type}")
-                        # Black frame fallback
-                        clip_item = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration_per_asset)
-                        scene_clips.append(clip_item)
-                        continue
+                            asset_path += ext; break
 
-                # Get overlay path if specified
-                overlay_path = None
-                if asset.overlay:
-                    overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
-                    if not os.path.exists(overlay_path):
-                        overlay_path = None
-                
-                # Apply Ken Burns
-                clip_item = apply_ken_burns(
-                    asset_path,
-                    duration_per_asset,
-                    target_size,
-                    zoom=asset.zoom or "1.0:1.0",
-                    move=asset.move or "HOR:50:50",
-                    overlay_path=overlay_path,
-                    fit=asset.fit
-                )
-                scene_clips.append(clip_item)
-        else:
-            # No assets - black frame
-            clip_item = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=total_scene_duration)
-            scene_clips.append(clip_item)
-        
-        # Combine all assets in the scene
-        if len(scene_clips) > 1:
-            scene_video = concatenate_videoclips(scene_clips, method="chain")
-        else:
-            scene_video = scene_clips[0]
+                if not os.path.exists(asset_path):
+                    logger.log(f"  ⚠️ Asset no encontrado: {asset.type}. Fondo negro.")
+                    clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
+                else:
+                    # Overlay
+                    overlay_path = None
+                    if asset.overlay:
+                        overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
+                        if not os.path.exists(overlay_path): overlay_path = None
+                    
+                    # Apply Ken Burns (now with fixed move logic)
+                    clip = apply_ken_burns(
+                        asset_path, duration, target_size,
+                        zoom=asset.zoom or "1.0:1.0",
+                        move=asset.move or "HOR:50:50",
+                        overlay_path=overlay_path, fit=asset.fit
+                    )
+            else:
+                clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
             
-        # Set audio
-        scene_video = scene_video.with_audio(audio_clip)
-        clips.append(scene_video)
-        
-        current_time += total_scene_duration
-        
-        # Track Timestamps (Start Time of Scene)
-        mins, secs = divmod(int(current_time - total_scene_duration), 60)
-        timestamps_list.append(f"{mins:02d}:{secs:02d} - {scene.title}")
-        
-        logger.log(f"  ✅ Clip generado: {scene.title} ({total_scene_duration:.1f}s, {len(scene.assets)} assets)")
-    
-    # Concatenate all clips
-    logger.log("🔗 Concatenando clips...")
-    final_video = concatenate_videoclips(clips, method="compose")
-    
-    # ═══════════════════════════════════════════════════════════════════
-    # MUSIC LAYERING IMPLEMENTATION
-    # ═══════════════════════════════════════════════════════════════════
-    from moviepy import afx
-    
-    bg_music_obj = project.background_music
-    if bg_music_obj:
-        try:
-            logger.log(f"🎵 Agregando música de fondo: {bg_music_obj.name}")
-            bg_music_path = bg_music_obj.file.path
+            # Set audio & append
+            clip = clip.with_audio(audio_clip)
+            block_scene_clips.append(clip)
             
-            if os.path.exists(bg_music_path):
-                bg_audio = AudioFileClip(bg_music_path)
+            # Timestamps
+            mins, secs = divmod(int(current_time), 60)
+            timestamps_list.append(f"{mins:02d}:{secs:02d} - {scene.title}")
+            current_time += duration
+        
+        if not block_scene_clips: continue
+        
+        # Concatenate block scenes
+        block_video = concatenate_videoclips(block_scene_clips, method="compose")
+        
+        # Apply Block Music
+        # Priority: block.music > project.background_music (if set)
+        music_to_use = block.music
+        if not music_to_use and project.background_music:
+            music_to_use = os.path.basename(project.background_music.file.name)
+
+        if music_to_use:
+            try:
+                from .models import Music
+                m_obj = Music.objects.filter(file__icontains=music_to_use).first() or \
+                        Music.objects.filter(name__icontains=music_to_use).first()
                 
-                # Loop music to cover video duration
-                loops = int(final_video.duration / bg_audio.duration) + 1
-                bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
-                
-                # Set volume
-                bg_audio_final = bg_audio_looped.with_effects([afx.MultiplyVolume(project.music_volume)])
-                
-                # Mix with original audio
-                final_audio = CompositeAudioClip([final_video.audio, bg_audio_final])
-                final_video = final_video.with_audio(final_audio)
-        except Exception as e:
-            logger.log(f"⚠️ Error al mezclar música: {e}")
+                if m_obj and os.path.exists(m_obj.file.path):
+                    logger.log(f"  🎵 Música bloque: {m_obj.name}")
+                    bg_audio = AudioFileClip(m_obj.file.path)
+                    
+                    loops = int(block_video.duration / bg_audio.duration) + 1
+                    bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
+                    
+                    vol = block.volume if block.volume is not None else project.music_volume
+                    bg_audio_final = bg_audio_looped.with_effects([afx.MultiplyVolume(vol)])
+                    
+                    # Mix with original block voice
+                    final_audio = CompositeAudioClip([block_video.audio, bg_audio_final])
+                    block_video = block_video.with_audio(final_audio)
+            except Exception as e:
+                logger.log(f"  ⚠️ Error música bloque: {e}")
+        
+        block_clips.append(block_video)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # EXPORT
+    # ═══════════════════════════════════════════════════════════════════
+    if not block_clips:
+        logger.log("❌ Error fatal: No se generaron clips de bloques.")
+        project.status = 'failed'; project.save()
+        return
+
+    logger.log("🔗 Concatenando bloques y exportando...")
+    final_video = concatenate_videoclips(block_clips, method="compose")
     
-    # Export
-    output_path = os.path.join(settings.MEDIA_ROOT, 'videos', f'project_{project.id}.mp4')
+    output_filename = f"project_{project.id}.mp4"
+    output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
-    logger.log("💾 Exportando video...")
     final_video.write_videofile(
-        output_path,
-        fps=30,
-        codec='libx264',
-        audio_codec='aac',
-        preset='medium',
-        threads=4
+        output_path, fps=30, codec='libx264', audio_codec='aac', 
+        preset='medium', threads=4
     )
     
-    # Update project
-    project.output_video.name = f'videos/project_{project.id}.mp4'
+    # Total stats
+    total_time = time.time() - start_time
+    project.output_video.name = f"videos/{output_filename}"
+    project.duration = final_video.duration
+    project.timestamps = "\n".join(timestamps_list)
     project.status = 'completed'
-    
-    # Save Timestamps (YouTube Chapters)
-    if timestamps_list:
-        project.timestamps = "\n".join(timestamps_list)
-        
     project.save()
     
-    elapsed = time.time() - start_time
-    logger.log(f"✅ Video generado exitosamente en {int(elapsed)}s ({int(elapsed/60)}:{int(elapsed%60):02d})")
+    logger.log(f"✨ ¡Generación exitosa en {total_time:.1f}s!")
     
-    # Cleanup temp audio
-    logger.log("🧹 Limpiando archivos temporales de audio...")
-    
-    # Close clips first to release file locks (Critical on Windows)
+    # Cleanup
     try:
         final_video.close()
-        for clip in clips:
-            clip.close()
-            if clip.audio:
-                clip.audio.close()
-    except Exception as e:
-        logger.log(f"⚠️ Error cerrando clips: {e}")
+        for bc in block_clips: bc.close()
+        for _, path in audio_files:
+            if os.path.exists(path): os.remove(path)
+    except:
+        pass
+        
+    return output_path
 
     # Delete files
     cleaned_count = 0
