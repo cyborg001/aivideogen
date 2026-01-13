@@ -146,10 +146,19 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
     # Create ImageClip from pre-scaled array
     base_clip = ImageClip(img_np, duration=duration)
     
-    # Apply Ken Burns by compositing with dynamic resize and position
-    # Use fl (frame lambda) for dynamic transformations
-    clip = base_clip.resized(lambda t: get_frame_scale(t))
-    clip = clip.with_position(lambda t: get_frame_pos(t))
+    # ═══════════════════════════════════════════════════════════════════
+    # KEN BURNS IMPLEMENTATION
+    # ═══════════════════════════════════════════════════════════════════
+    # In MoviePy 2.x, we use fl (frame lambda) or resized with a function
+    # that returns the new (w, h) tuple.
+    
+    def resizer(t):
+        scale = get_frame_scale(t)
+        return (int(img_w * scale), int(img_h * scale))
+
+    # Apply dynamic resizing and positioning
+    clip = base_clip.resized(resizer)
+    clip = clip.with_position(get_frame_pos)
     
     # Apply overlay if specified
     if overlay_path and os.path.exists(overlay_path):
@@ -227,8 +236,10 @@ def generate_video_avgl(project):
         if not scene.text:
             continue
         
-        # Prepare text
-        text_with_emotions = translate_emotions(scene.text)
+        # Prepare text - Use clean mode (no SSML) for Edge TTS to prevent instructions leakage
+        # until the service-side SSML issues are resolved.
+        use_ssml = (project.engine == 'eleven') # ElevenLabs handles tags/strips them safely
+        text_with_emotions = translate_emotions(scene.text, use_ssml=use_ssml)
         
         # Generate audio
         audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
@@ -279,47 +290,57 @@ def generate_video_avgl(project):
         else:
             logger.log(f"  ⚠️ Error generando audio para escena {i+1}")
     
+    # Update project with music if defined in script but not in project
+    if not project.background_music and script.blocks and script.blocks[0].music:
+        from .models import Music
+        try:
+            m_name = script.blocks[0].music
+            # Try to find music by filename or name
+            m_obj = Music.objects.filter(file__icontains=m_name).first()
+            if m_obj:
+                project.background_music = m_obj
+                project.save()
+        except:
+            pass
+    
     # Generate video clips
     logger.log("🎬 Generando clips de video...")
     clips = []
     current_time = 0
+    timestamps_list = []
     
     for scene, audio_path in audio_files:
         # Get audio duration
         audio_clip = AudioFileClip(audio_path)
-        duration = audio_clip.duration + scene.pause
+        total_scene_duration = audio_clip.duration + scene.pause
         
-        # Get asset (use first asset, or create black frame)
+        # ═══════════════════════════════════════════════════════════════════
+        # MULTI-ASSET SCENE SUPPORT
+        # ═══════════════════════════════════════════════════════════════════
+        scene_clips = []
         if scene.assets:
-            asset = scene.assets[0]
-            asset_path = os.path.join(assets_dir, asset.type)
+            n_assets = len(scene.assets)
+            duration_per_asset = total_scene_duration / n_assets
             
-            if not os.path.exists(asset_path):
-                logger.log(f"  ⚠️ Asset no encontrado: {asset.type}")
-                # Create Placeholder Frame (Text on Color)
-                from moviepy import TextClip, ColorClip, CompositeVideoClip
+            for asset_idx, asset in enumerate(scene.assets):
+                asset_path = os.path.join(assets_dir, asset.type)
                 
-                # Background (Dark Red to indicate error)
-                bg_clip = ColorClip(size=target_size, color=(50, 0, 0), duration=duration)
-                
-                # Text
-                try:
-                    txt_clip = TextClip(
-                        text=f"MISSING ASSET:\n{asset.type}",
-                        font="Arial",
-                        font_size=70,
-                        color='white',
-                        method='caption',
-                        size=(target_size[0]-100, target_size[1]//2),
-                        text_align="center"
-                    ).with_position('center').with_duration(duration)
+                if not os.path.exists(asset_path):
+                    # Check for common extensions if not specified
+                    found = False
+                    for ext in ['.png', '.jpg', '.jpeg']:
+                        if os.path.exists(asset_path + ext):
+                            asset_path += ext
+                            found = True
+                            break
                     
-                    clip = CompositeVideoClip([bg_clip, txt_clip], size=target_size)
-                except Exception as e:
-                    # Fallback to simple black if TextClip fails (e.g. missing ImageMagick)
-                    logger.log(f"  ⚠️ Error creando placeholder: {e}")
-                    clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
-            else:
+                    if not found:
+                        logger.log(f"  ⚠️ Asset no encontrado: {asset.type}")
+                        # Black frame fallback
+                        clip_item = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration_per_asset)
+                        scene_clips.append(clip_item)
+                        continue
+
                 # Get overlay path if specified
                 overlay_path = None
                 if asset.overlay:
@@ -327,33 +348,70 @@ def generate_video_avgl(project):
                     if not os.path.exists(overlay_path):
                         overlay_path = None
                 
-                # Apply Ken Burns with caching
-                clip = apply_ken_burns(
+                # Apply Ken Burns
+                clip_item = apply_ken_burns(
                     asset_path,
-                    duration,
+                    duration_per_asset,
                     target_size,
                     zoom=asset.zoom or "1.0:1.0",
                     move=asset.move or "HOR:50:50",
                     overlay_path=overlay_path,
                     fit=asset.fit
                 )
+                scene_clips.append(clip_item)
         else:
             # No assets - black frame
-            clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
+            clip_item = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=total_scene_duration)
+            scene_clips.append(clip_item)
         
+        # Combine all assets in the scene
+        if len(scene_clips) > 1:
+            scene_video = concatenate_videoclips(scene_clips, method="chain")
+        else:
+            scene_video = scene_clips[0]
+            
         # Set audio
-        clip = clip.with_audio(audio_clip)
-        clips.append(clip)
+        scene_video = scene_video.with_audio(audio_clip)
+        clips.append(scene_video)
         
-        current_time += duration
-        logger.log(f"  ✅ Clip generado: {scene.title} ({duration:.1f}s)")
+        current_time += total_scene_duration
+        
+        # Track Timestamps (Start Time of Scene)
+        mins, secs = divmod(int(current_time - total_scene_duration), 60)
+        timestamps_list.append(f"{mins:02d}:{secs:02d} - {scene.title}")
+        
+        logger.log(f"  ✅ Clip generado: {scene.title} ({total_scene_duration:.1f}s, {len(scene.assets)} assets)")
     
     # Concatenate all clips
     logger.log("🔗 Concatenando clips...")
     final_video = concatenate_videoclips(clips, method="compose")
     
-    # Add background music if specified
-    # TODO: Implement music layering
+    # ═══════════════════════════════════════════════════════════════════
+    # MUSIC LAYERING IMPLEMENTATION
+    # ═══════════════════════════════════════════════════════════════════
+    from moviepy import afx
+    
+    bg_music_obj = project.background_music
+    if bg_music_obj:
+        try:
+            logger.log(f"🎵 Agregando música de fondo: {bg_music_obj.name}")
+            bg_music_path = bg_music_obj.file.path
+            
+            if os.path.exists(bg_music_path):
+                bg_audio = AudioFileClip(bg_music_path)
+                
+                # Loop music to cover video duration
+                loops = int(final_video.duration / bg_audio.duration) + 1
+                bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
+                
+                # Set volume
+                bg_audio_final = bg_audio_looped.with_effects([afx.MultiplyVolume(project.music_volume)])
+                
+                # Mix with original audio
+                final_audio = CompositeAudioClip([final_video.audio, bg_audio_final])
+                final_video = final_video.with_audio(final_audio)
+        except Exception as e:
+            logger.log(f"⚠️ Error al mezclar música: {e}")
     
     # Export
     output_path = os.path.join(settings.MEDIA_ROOT, 'videos', f'project_{project.id}.mp4')
@@ -372,6 +430,11 @@ def generate_video_avgl(project):
     # Update project
     project.output_video.name = f'videos/project_{project.id}.mp4'
     project.status = 'completed'
+    
+    # Save Timestamps (YouTube Chapters)
+    if timestamps_list:
+        project.timestamps = "\n".join(timestamps_list)
+        
     project.save()
     
     elapsed = time.time() - start_time

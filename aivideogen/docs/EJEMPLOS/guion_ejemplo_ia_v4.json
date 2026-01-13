@@ -59,7 +59,7 @@
                 {
                     "title": "El Futuro",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "Y recuerda... ¡el futuro es hoy!",
+                    "text": "Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
                     "assets": [
                         {
                             "type": "world_connection.png",

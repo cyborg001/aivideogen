@@ -88,6 +88,7 @@ def create_project(request):
         script_file = request.POST.get('script_file', '').strip()
         music_id = request.POST.get('background_music')
         music_volume = request.POST.get('music_volume', '0.15')
+        script_hashtags = request.POST.get('script_hashtags', '').strip()
         
         background_music = None
         if music_id:
@@ -119,6 +120,7 @@ def create_project(request):
             background_music=background_music,
             music_volume=float(music_volume),
             visual_prompts=visual_prompts,
+            script_hashtags=script_hashtags,
             auto_upload_youtube=auto_upload
         )
         
@@ -129,48 +131,29 @@ def create_project(request):
         
         return redirect('generator:project_detail', project_id=project.id)
         
-    # Default script template with Hierarchical AVGL v3.0 (Plus)
-    default_script = """<avgl title="El Despertar de la IA">
-    <bloque title="Parte 1: El Origen" music="epic_intro">
-        <scene title="Silencio de Datos">
-            <ambient state="start" type="laboratory_hum" volume="0.2" />
-            <asset type="eye_robotic_closed.png" zoom="1.0:1.1" />
-            <voice name="es-DO-RamonaNeural">
-                Todo comenzó en absoluto silencio. <pause duration="1.2" />
-                <sfx type="power_up" />
-                <asset type="eye_robotic_open.png" overlay="glitch" />
-                [SUSPENSO] Pero hoy... los circuitos han despertado. [/SUSPENSO]
-            </voice>
-        </scene>
-    </bloque>
-    <bloque title="Parte 2: Expansión" music="action_main">
-        <scene title="La Red Global">
-            <asset type="network_nodes.png" move="HOR:0:100" overlay="grain" />
-            <voice name="es-DO-EmilioNeural">
-                [EPICO] La información fluye a la velocidad de la luz. [/EPICO]
-                <asset type="world_connection.png" zoom="1.0:1.5" />
-                Y recuerda... ¡el futuro es hoy!
-            </voice>
-        </scene>
-    </bloque>
-</avgl>"""
+    # v2.18.0 - Load default script from external file
+    default_script_path = os.path.join(settings.BASE_DIR, 'docs', 'EJEMPLOS', 'guion_defecto.json')
+    default_script = ""
+    
+    try:
+        if os.path.exists(default_script_path):
+            with open(default_script_path, 'r', encoding='utf-8') as f:
+                default_script = f.read().strip()
+                logger.debug("✨ Guion de defecto cargado desde archivo JSON.")
+        else:
+            # Emergency fallback if file is missing
+            default_script = '{"title": "Nuevo Proyecto", "blocks": []}'
+            logger.warning(f"⚠️ Archivo de defecto no encontrado en {default_script_path}")
+    except Exception as e:
+        default_script = "{}"
+        logger.error(f"⚠️ Error cargando guion de defecto: {e}")
 
-    # If news_id is provided, use AI to generate script
+    # 1. OPTIONAL: Overwrite with news suggestion or specific example if needed
+    # (Existing logic below handles news_id and retry)
     news_id = request.GET.get('news_id')
     ai_generated_script = ""
     ai_visual_prompts = ""
     initial_title = ""
-    
-    # 1. TRY TO LOAD DEFAULT SCRIPT FROM FILE (v2.18.0)
-    # This is the base default if no news_id is present
-    try:
-        example_path = os.path.join(settings.BASE_DIR, 'docs', 'EJEMPLOS', 'guion_ejemplo_ia.txt')
-        if os.path.exists(example_path):
-            with open(example_path, 'r', encoding='utf-8') as f:
-                default_script = f.read().strip()
-                logger.debug("✨ Guion de ejemplo cargado desde archivo externo.")
-    except Exception as e:
-        logger.error(f"⚠️ No se pudo cargar guion de ejemplo desde archivo: {e}")
 
     if news_id:
         from researcher.models import NewsItem
@@ -178,7 +161,7 @@ def create_project(request):
         news_item = get_object_or_404(NewsItem, id=news_id)
         initial_title = news_item.title[:200]
         
-        script, prompts, music_suggestion = generate_script_ai(news_item)
+        script, prompts, music_suggestion, ai_hashtags = generate_script_ai(news_item)
         if script:
             ai_generated_script = script
             if isinstance(prompts, list):
@@ -200,6 +183,9 @@ def create_project(request):
         else:
             messages.warning(request, f"No se pudo generar el guion con IA: {prompts}. Usando plantilla por defecto.")
             ai_generated_script = default_script
+            ai_hashtags = ""
+    else:
+        ai_hashtags = ""
 
     # DETERMINE WHICH SCRIPT TO SHOW
     # Priority: Retry project > AI-generated (if from news) > Default example
@@ -219,7 +205,8 @@ def create_project(request):
                 'background_music_id': retry_project.background_music.id if retry_project.background_music else None,
                 'music_volume': retry_project.music_volume,
                 'music_volume_percent': int(retry_project.music_volume * 100),  # Calculate here
-                'visual_prompts': retry_project.visual_prompts or ''
+                'visual_prompts': retry_project.visual_prompts or '',
+                'script_hashtags': retry_project.script_hashtags or ''
             }
             display_script = retry_project.script_text
             initial_title = retry_project.title
@@ -235,6 +222,7 @@ def create_project(request):
     return render(request, 'generator/create.html', {
         'default_script': display_script,
         'ai_visual_prompts': ai_visual_prompts,
+        'ai_hashtags': ai_hashtags,
         'initial_title': initial_title,
         'all_music': all_music,
         'retry_data': retry_data  # Pass retry data to template
@@ -367,9 +355,31 @@ def upload_to_youtube_view(request, project_id):
         from .youtube_utils import generate_youtube_description
         description = generate_youtube_description(project)
         
-        logger.info(f"[YouTube] Iniciando subida: {title}")
+        # EXTRACT TAGS LOGIC (Replicated from utils/youtube_utils because we need list format)
+        script_tags = project.script_hashtags or "" # Use saved field first
+        if not script_tags:
+            from .utils import extract_hashtags_from_script
+            script_tags = extract_hashtags_from_script(project.script_text)
+            
+        fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
+        if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
+           (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
+            fixed_tags = fixed_tags[1:-1].strip()
+            
+        # Merge lists
+        tags_list = []
+        # Add script tags
+        tags_list.extend([t.strip().replace('#', '') for t in script_tags.split() if t.strip()])
+        # Add fixed tags
+        tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
         
-        result = upload_video(youtube, video_path, title, description)
+        # Deduplicate and limit (YouTube allows max ~500 chars total, usually ~15-20 tags)
+        final_tags = list(dict.fromkeys(tags_list))[:20]
+
+        logger.info(f"[YouTube] Iniciando subida: {title}")
+        logger.info(f"[YouTube] Tags: {final_tags}")
+        
+        result = upload_video(youtube, video_path, title, description, tags=final_tags)
         
         if result and 'id' in result:
             video_id = result['id']

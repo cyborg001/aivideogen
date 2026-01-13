@@ -67,6 +67,14 @@
                         style="background-color: #222; cursor: not-allowed;">
                 </div>
             </div>
+            
+            <div style="margin-top: 10px;">
+                <label style="font-size: 0.8rem; color: #aaa;">Hashtags (Para YouTube):</label>
+                <input type="text" name="script_hashtags" id="script_hashtags" 
+                    placeholder="#IA #Tecnologia #Futuro" 
+                    value="{{ retry_data.script_hashtags|default:ai_hashtags }}"
+                    style="background-color: #222; color: #03dac6; border: 1px solid #444;">
+            </div>
         </div>
 
         <script>
@@ -168,6 +176,15 @@
                             if (voiceInput) {
                                 voiceInput.value = data.voice;
                             }
+                        }
+
+                        // Auto-fill Hashtags
+                        if (data.hashtags) {
+                             const tagsInput = document.getElementById('script_hashtags');
+                             if (tagsInput) {
+                                 let tagsVal = Array.isArray(data.hashtags) ? data.hashtags.join(' ') : data.hashtags;
+                                 tagsInput.value = tagsVal;
+                             }
                         }
 
                         // Count Words

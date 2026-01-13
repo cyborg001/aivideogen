@@ -136,6 +136,12 @@ MYMEMORY_EMAIL = os.getenv('MYMEMORY_EMAIL')
 
 YOUTUBE_REDIRECT_URI = os.getenv('YOUTUBE_REDIRECT_URI', 'http://127.0.0.1:8888/youtube/callback/')
 
+# YouTube Default Metadata
+YOUTUBE_FIXED_HASHTAGS = os.getenv(
+    'YOUTUBE_FIXED_HASHTAGS',
+    '#IA #notiaci #ciencia #tecnologia #noticias #avances #avancesmedicos #carlosramirez #descubrimientos'
+)
+
 # File upload limits
 DATA_UPLOAD_MAX_NUMBER_FILES = 1000  # Maximum number of files that can be uploaded at once
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB maximum size for in-memory uploads

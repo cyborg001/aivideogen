@@ -46,7 +46,7 @@ def get_youtube_client():
     youtube = build('youtube', 'v3', credentials=credentials)
     return youtube
 
-def upload_video(youtube, video_path, title, description, category_id="28", privacy_status="unlisted"):
+def upload_video(youtube, video_path, title, description, category_id="28", privacy_status="unlisted", tags=None):
     """
     Uploads a video to YouTube.
     category_id "28" is Science & Technology.
@@ -54,12 +54,15 @@ def upload_video(youtube, video_path, title, description, category_id="28", priv
     import logging
     logger = logging.getLogger(__name__)
     
+    if tags is None:
+        tags = ['noticias', 'ia', 'ciencias']
+
     try:
         body = {
             'snippet': {
                 'title': title,
                 'description': description,
-                'tags': ['noticias', 'ia', 'ciencias'],
+                'tags': tags,
                 'categoryId': category_id
             },
             'status': {

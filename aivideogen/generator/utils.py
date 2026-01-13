@@ -39,11 +39,11 @@ Título: {news_item.title}
 Resumen: {news_item.summary}
 Fuente: {news_item.source.name}
 
-RESPUESTA REQUERIDA (Formato JSON):
-Debes responder con un objeto JSON que tenga tres campos de primer nivel:
+RESPUESTA REQUERIDA (Formato JSON): Debes responder con un objeto JSON que tenga los siguientes campos:
 1. "script": El guion completo siguiendo el formato TITULO | imagen.png | Texto
-2. "prompts": Una lista de objetos, donde cada objeto tenga "file" (nombre del archivo sugerido en el guion) y "prompt" (la descripción detallada).
-3. "music_suggestion": Una cadena de texto breve describiendo el estilo de música ideal para este video (ej: "Cinemática épica con toques electrónicos" o "Lo-fi relajante para tutoriales").
+2. "prompts": Una lista de objetos con "file" y "prompt".
+3. "music_suggestion": Breve descripción del estilo musical.
+4. "hashtags": Una lista de 10-12 hashtags sugeridos (mix de marca, tema y contenido).
 
 Responde ÚNICAMENTE el JSON.
 """
@@ -66,11 +66,48 @@ Responde ÚNICAMENTE el JSON.
             content = result['candidates'][0]['content']['parts'][0]['text']
             import json
             data = json.loads(content)
-            return data.get('script'), data.get('prompts'), data.get('music_suggestion')
+            
+            # Extract hashtags
+            hashtags_list = data.get('hashtags', [])
+            hashtags_str = " ".join(hashtags_list) if hashtags_list else ""
+            
+            return data.get('script'), data.get('prompts'), data.get('music_suggestion'), hashtags_str
         else:
             return None, f"Error de API Gemini: {response.status_code} - {response.text}", None
     except Exception as e:
         return None, f"Error durante la generación con IA: {str(e)}", None
+
+def extract_sources_from_script(script_text):
+    """
+    Extracts source information from the script text.
+    Looks for lines starting with 'Fuente:', 'Sources:', etc.
+    """
+    if not script_text:
+        return ""
+    
+    import re
+    # Look for "Fuente: X" or "Source: X"
+    # Capture the rest of the line
+    match = re.search(r'(?:Fuente|Source|Basado en):\s*(.*)', script_text, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+        
+    return ""
+
+def extract_hashtags_from_script(script_text):
+    """
+    Extracts hashtags from the script text.
+    """
+    if not script_text:
+        return ""
+        
+    import re
+    # Find all words starting with #
+    hashtags = re.findall(r'#\w+', script_text)
+    
+    # Return as space-separated string unique tags
+    unique_tags = list(set(hashtags))
+    return " ".join(unique_tags)
 
 class ProjectLogger:
     def __init__(self, project):
@@ -211,14 +248,25 @@ def generate_video_legacy(project):
             audio_path = os.path.join(temp_audio_dir, f"{project.id}_audio_{i}.mp3")
             
             if project.engine == 'edge':
+                # NEW (v3.0.1): Support cleaned emotions in legacy mode
+                from .avgl_engine import translate_emotions, wrap_ssml
+                
+                # Default rate for legacy is from .env (usually +15%) or overridden here
+                rate = os.getenv("EDGE_RATE", "+0%")
+                
+                # Use clean mode (use_ssml=False) to avoid instructions leakage
+                clean_text = translate_emotions(section['text'], use_ssml=False)
+                # wrap_ssml will see no tags and return text as is
+                final_text = wrap_ssml(clean_text, voice_to_use, rate)
+                
                 # Run async in sync context safely
                 try:
-                    asyncio.run(generate_audio_edge(section['text'], audio_path, voice_to_use))
+                    asyncio.run(generate_audio_edge(final_text, audio_path, voice_to_use))
                 except RuntimeError:
                     # Fallback if there is already a running loop in this thread
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    loop.run_until_complete(generate_audio_edge(section['text'], audio_path, voice_to_use))
+                    loop.run_until_complete(generate_audio_edge(final_text, audio_path, voice_to_use))
                     loop.close()
             else:
                 from elevenlabs.client import ElevenLabs
