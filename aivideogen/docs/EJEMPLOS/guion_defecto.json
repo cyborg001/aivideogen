@@ -6,17 +6,12 @@
             "music": "epic_intro",
             "scenes": [
                 {
-                    "title": "Silencio de Datos",
-                    "text": "Todo comenzó en absoluto silencio. [PAUSA:1.2] [TENSO] Pero hoy... los circuitos han despertado. [/TENSO]",
+                    "title": "Silencio de Datos - Ojos Cerrados",
+                    "text": "Todo comenzó en absoluto silencio. [PAUSA:1.2]",
                     "assets": [
                         {
                             "type": "eye_robotic_closed.png",
-                            "zoom": "1.0:1.1",
-                            "fit": "cover"
-                        },
-                        {
-                            "type": "eye_robotic_open.png",
-                            "overlay": "grain",
+                            "zoom": "1.0:1.2",
                             "fit": "cover"
                         }
                     ],
@@ -24,6 +19,19 @@
                         {
                             "type": "Power_Tool_Electrical_Buzz",
                             "volume": 0.5
+                        }
+                    ],
+                    "voice": "es-DO-RamonaNeural"
+                },
+                {
+                    "title": "El Despertar - Ojos Abiertos",
+                    "text": "[TENSO] Pero hoy... los circuitos han despertado. [/TENSO]",
+                    "assets": [
+                        {
+                            "type": "eye_robotic_open.png",
+                            "overlay": "grain",
+                            "zoom": "1.0:1.3",
+                            "fit": "cover"
                         }
                     ],
                     "voice": "es-DO-RamonaNeural"
@@ -36,14 +44,21 @@
             "scenes": [
                 {
                     "title": "La Red Global",
-                    "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO] Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
+                    "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO]",
                     "assets": [
                         {
                             "type": "network_nodes.png",
                             "move": "HOR:0:100",
                             "overlay": "grain",
                             "fit": "cover"
-                        },
+                        }
+                    ],
+                    "voice": "es-DO-EmilioNeural"
+                },
+                {
+                    "title": "El Futuro",
+                    "text": "Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
+                    "assets": [
                         {
                             "type": "world_connection.png",
                             "zoom": "1.0:1.5",

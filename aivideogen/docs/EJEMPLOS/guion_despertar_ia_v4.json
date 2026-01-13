@@ -6,21 +6,29 @@
             "music": "epic_intro",
             "scenes": [
                 {
-                    "title": "Silencio de Datos",
-                    "text": "Todo comenzó en absoluto silencio. [PAUSA:1.2] [TENSO] Pero hoy... los circuitos han despertado. [/TENSO]",
+                    "title": "Silencio de Datos - Inicio",
+                    "text": "Todo comenzó en absoluto silencio. [PAUSA:1.2]",
                     "assets": [
                         {
-                            "id": "eye_robotic_closed.png",
-                            "zoom": "1.0:1.1",
-                            "fit": "cover"
-                        },
-                        {
-                            "id": "eye_robotic_open.png",
-                            "overlay": "grain",
+                            "type": "eye_robotic_closed.png",
+                            "zoom": "1.0:1.3",
                             "fit": "cover"
                         }
                     ],
                     "sfx": "Power_Tool_Electrical_Buzz",
+                    "voice": "es-DO-RamonaNeural"
+                },
+                {
+                    "title": "El Despertar - Acción",
+                    "text": "[TENSO] Pero hoy... los circuitos han despertado. [/TENSO]",
+                    "assets": [
+                        {
+                            "type": "eye_robotic_open.png",
+                            "overlay": "grain",
+                            "zoom": "1.1:1.5",
+                            "fit": "cover"
+                        }
+                    ],
                     "voice": "es-DO-RamonaNeural"
                 }
             ]
@@ -31,17 +39,24 @@
             "scenes": [
                 {
                     "title": "La Red Global",
-                    "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO] Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
+                    "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO]",
                     "assets": [
                         {
-                            "id": "network_nodes.png",
+                            "type": "network_nodes.png",
                             "move": "HOR:0:100",
                             "overlay": "grain",
                             "fit": "cover"
-                        },
+                        }
+                    ],
+                    "voice": "es-DO-EmilioNeural"
+                },
+                {
+                    "title": "El Futuro Hoy",
+                    "text": "Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
+                    "assets": [
                         {
-                            "id": "world_connection.png",
-                            "zoom": "1.0:1.5",
+                            "type": "world_connection.png",
+                            "zoom": "1.0:1.6",
                             "fit": "cover"
                         }
                     ],
@@ -50,4 +65,27 @@
             ]
         }
     ]
+}
+            "scenes": [
+    {
+        "title": "La Red Global",
+        "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO] Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
+        "assets": [
+            {
+                "id": "network_nodes.png",
+                "move": "HOR:0:100",
+                "overlay": "grain",
+                "fit": "cover"
+            },
+            {
+                "id": "world_connection.png",
+                "zoom": "1.0:1.5",
+                "fit": "cover"
+            }
+        ],
+        "voice": "es-DO-EmilioNeural"
+    }
+]
+}
+]
 }
