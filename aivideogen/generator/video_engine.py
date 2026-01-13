@@ -231,7 +231,7 @@ def generate_video_avgl(project):
         text_with_emotions = translate_emotions(scene.text)
         
         # Generate audio
-        audio_path = os.path.join(temp_audio_dir, f"scene_{i:03d}.mp3")
+        audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
         
         if project.engine == 'edge':
             # Edge TTS supports SSML

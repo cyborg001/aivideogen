@@ -15,7 +15,7 @@
                     "text": "En el rincón más oscuro del universo, nace la luz. [PAUSA:1.0] [EPICO] Las estrellas son los ojos de la creación. [/EPICO]",
                     "assets": [
                         {
-                            "type": "astronaut_moon_surface_artemispng",
+                            "type": "astronaut_moon_surface_artemis.png",
                             "zoom": "1.0:1.3"
                         }
                     ],
