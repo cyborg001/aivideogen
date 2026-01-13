@@ -126,6 +126,7 @@ def generate_video_avgl(project):
     """
     from moviepy import ImageClip, AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip
     from .avgl_engine import parse_avgl_json, translate_emotions, wrap_ssml, generate_audio_edge, generate_audio_elevenlabs
+    from .utils import ProjectLogger  # Import existing logger
     import asyncio
     import numpy as np
     
@@ -134,16 +135,8 @@ def generate_video_avgl(project):
     project.status = 'processing'
     project.save()
     
-    # Project logger (create simple logger if not exists)
-    class SimpleLogger:
-        def __init__(self, project):
-            self.project = project
-        
-        def log(self, message):
-            print(f"[Project {self.project.id}] {message}")
-            # Optionally save to project.generation_log
-    
-    logger = SimpleLogger(project)
+    # Use ProjectLogger from utils.py (saves to DB)
+    logger = ProjectLogger(project)
     logger.log("🚀 Iniciando generación AVGL v4.0")
     
     # Parse script

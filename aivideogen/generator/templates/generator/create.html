@@ -92,14 +92,16 @@
             }
         </script>
 
-        <label>Arquitectura AVGL v3.0 Plus Plus (Capa de Cebolla: Raíz > Bloque > Escena):</label>
+        <label>AVGL v4.0 (JSON Format) - Motor Robusto y Validable:</label>
         <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0 15px 0; line-height: 1.5;">
-            📌 <b>ESTRUCTURA JERÁRQUICA:</b><br>
-            • <b>Raíz:</b> <code>&lt;avgl title="Nombre"&gt;</code> (Autosincroniza el título del proyecto)<br>
-            • <b>Bloque:</b> <code>&lt;bloque music="audio"&gt;</code> (Agrupa escenas con una misma atmósfera musical)<br>
-            • <b>Escena:</b> <code>&lt;scene title="Capitulo"&gt;</code> (Contenedor de activos y texto de voz)<br>
-            • <b>Activos:</b> <code>&lt;asset type="img" zoom="1.0:1.3" move="HOR:0:100" /&gt;</code> (En medio del texto)<br>
-            • <b>Audio:</b> <code>&lt;sfx type="sonido" /&gt;</code> | <code>&lt;ambient state="start" type="ruido" /&gt;</code>
+            📌 <b>FORMATO JSON ESTRUCTURADO:</b><br>
+            • <b>Root:</b> <code>{"title": "...", "voice": "...", "blocks": [...]}</code><br>
+            • <b>Block:</b> Capítulos con música: <code>{"title": "...", "music": "...", "scenes": [...]}</code><br>
+            • <b>Scene:</b> Escenas con texto y assets: <code>{"title": "...", "text": "...", "assets": [...]}</code><br>
+            • <b>Assets:</b> Ken Burns: <code>{"type": "img.png", "zoom": "1.0:1.3", "overlay": "dust"}</code><br>
+            • <b>SFX:</b> Efectos de sonido: <code>{"type": "whoosh", "volume": 0.5, "offset": 0}</code><br>
+            📘 <a href="/docs/AVGL_MANUAL_v4_JSON.md" target="_blank" style="color: #03dac6;">Ver Manual Completo</a> | 
+            📋 <a href="/docs/AVGL_CHEATSHEET_v4_JSON.md" target="_blank" style="color: #03dac6;">CheatSheet</a>
         </p>
 
         <!-- NEW: AI Visual Prompts Section -->
@@ -129,11 +131,31 @@
             style="background: #1e1e1e; padding: 10px; border-radius: 5px 5px 0 0; border: 1px solid #444; border-bottom: none; display: flex; gap: 20px; font-size: 0.9rem;">
             <span>📝 Palabras: <b id="word-count">0</b></span>
             <span>⏱️ Duración Est.: <b id="est-duration">0m 0s</b></span>
-            <span style="color: #03dac6;">🧪 Motor: <b>AVGL v3.0 Plus</b></span>
+            <span style="color: #03dac6;">🧪 Motor: <b>AVGL v4.0 JSON</b></span>
         </div>
 
         <textarea id="script-editor" name="script" rows="15"
-            style="font-family: monospace; border-top-left-radius: 0; border-top-right-radius: 0;">{{ default_script }}</textarea>
+            style="font-family: monospace; border-top-left-radius: 0; border-top-right-radius: 0;">{
+  "title": "Mi Primer Video AVGL v4.0",
+  "voice": "es-ES-AlvaroNeural",
+  "blocks": [
+    {
+      "title": "Intro",
+      "scenes": [
+        {
+          "title": "Hook Inicial",
+          "text": "¡Bienvenido a AVGL v4.0! El nuevo formato basado en JSON.",
+          "assets": [
+            {
+              "type": "earth_from_space_dark.png",
+              "zoom": "1.0:1.3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</textarea>
 
         <script>
             function updateAnalytics() {

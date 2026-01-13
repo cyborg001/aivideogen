@@ -24,7 +24,7 @@ def browse_script(request):
         
         file_path = filedialog.askopenfilename(
             title="Seleccionar archivo de guion",
-            filetypes=[("Text/Markdown", "*.txt *.md"), ("All files", "*.*")]
+            filetypes=[("JSON/Text", "*.json *.txt"), ("All files", "*.*")]
         )
         
         root.destroy()
