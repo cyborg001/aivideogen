@@ -45,15 +45,18 @@
 
 ---
 
-## Otras Reglas de Oro
+## Dependencias y Versiones (CRÍTICO)
 
-### Documentación
-- Todo cambio importante debe documentarse en CHANGELOG.md
-- Ejemplos deben usar assets reales del proyecto
-- Manuales deben reflejar el código real
+### ⚠️ REGLA #3: VERIFICAR VERSIONES DE LIBRERÍAS
+**NUNCA asumir que la API de una librería es la que conoces de memoria.**
 
-### Testing
-- Probar cambios antes de commit
-- Verificar sintaxis de Python antes de guardar
-- No asumir que el código funciona sin probarlo
+**Antes de usar una librería externa compleja (como MoviePy, Pandas, etc.):**
+1. **Verificar versión instalada:** Ejecutar `pip show <libreria>`
+2. **Chequear "Breaking Changes":** Si la versión es reciente (ej: v2.x vs v1.x), buscar cambios de sintaxis.
+3. **Introspección:** Si hay duda, crear un pequeño script con `dir()` para ver los métodos disponibles.
+4. **No "alucinar" métodos:** Si un método falla (ej: `AttributeError`), no intentar "adivinar" el nombre. Verificarlo.
+
+**Ejemplo del error a evitar:**
+- Usar `.resize()` (v1.x) cuando la versión instalada es v2.x y usa `.resized()`.
+
 
