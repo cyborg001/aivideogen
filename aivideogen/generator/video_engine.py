@@ -377,4 +377,29 @@ def generate_video_avgl(project):
     elapsed = time.time() - start_time
     logger.log(f"✅ Video generado exitosamente en {int(elapsed)}s ({int(elapsed/60)}:{int(elapsed%60):02d})")
     
+    # Cleanup temp audio
+    logger.log("🧹 Limpiando archivos temporales de audio...")
+    
+    # Close clips first to release file locks (Critical on Windows)
+    try:
+        final_video.close()
+        for clip in clips:
+            clip.close()
+            if clip.audio:
+                clip.audio.close()
+    except Exception as e:
+        logger.log(f"⚠️ Error cerrando clips: {e}")
+
+    # Delete files
+    cleaned_count = 0
+    for _, audio_path in audio_files:
+        try:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+                cleaned_count += 1
+        except Exception as e:
+            logger.log(f"⚠️ Error borrando {os.path.basename(audio_path)}: {e}")
+            
+    logger.log(f"✨ Se eliminaron {cleaned_count} archivos de audio temporales.")
+    
     return output_path
