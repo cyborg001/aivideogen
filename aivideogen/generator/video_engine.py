@@ -110,13 +110,13 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
     
     # Apply Ken Burns by compositing with dynamic resize and position
     # Use fl (frame lambda) for dynamic transformations
-    clip = base_clip.resize(lambda t: get_frame_scale(t))
+    clip = base_clip.resized(lambda t: get_frame_scale(t))
     clip = clip.set_position(lambda t: get_frame_pos(t))
     
     # Apply overlay if specified
     if overlay_path and os.path.exists(overlay_path):
         overlay = VideoFileClip(overlay_path, has_mask=True)
-        overlay = overlay.loop(duration=duration).resize(target_size)
+        overlay = overlay.loop(duration=duration).resized(target_size)
         clip = CompositeVideoClip([clip, overlay], size=target_size)
     
     return clip
