@@ -99,24 +99,25 @@ def generate_video_process(project):
     
     # Try to detect JSON format
     script_text = project.script_text.strip()
-    is_json = False
     
-    # Check if script starts with { (JSON)
+    # If it starts with {, assume IT IS JSON and report errors if invalid
     if script_text.startswith('{'):
         try:
             json.loads(script_text)
-            is_json = True
-        except:
-            pass
-    
-    if is_json:
-        # Use AVGL v4.0 JSON engine
-        print(f"[Project {project.id}] Detected AVGL v4.0 JSON format")
-        return generate_video_avgl(project)
-    else:
-        # Use legacy column-based engine
-        print(f"[Project {project.id}] Detected legacy column format")
-        return generate_video_legacy(project)
+            print(f"[Project {project.id}] Detected AVGL v4.0 JSON format")
+            return generate_video_avgl(project)
+        except json.JSONDecodeError as e:
+            # IT IS JSON, BUT INVALID. DO NOT FALLBACK TO LEGACY.
+            logger = ProjectLogger(project)
+            logger.log(f"❌ Error CRÍTICO en formato JSON: {e}")
+            logger.log(f"   Línea {e.lineno}: {e.msg}")
+            project.status = 'error'
+            project.save()
+            return  # Stop here
+            
+    # If not JSON, assume legacy
+    print(f"[Project {project.id}] Detected legacy column format")
+    return generate_video_legacy(project)
 
 
 def generate_video_legacy(project):
