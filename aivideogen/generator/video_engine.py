@@ -250,6 +250,12 @@ def generate_video_avgl(project):
                 generate_audio_edge(ssml_text, audio_path, scene.voice, speed_rate)
             )
             loop.close()
+            
+            if not success:
+                logger.log(f"❌ Error crítico generando audio para escena '{scene.title}'")
+                project.status = 'error'
+                project.save()
+                return # Stop generation
         else:
             # ElevenLabs
             api_key = os.getenv('ELEVENLABS_API_KEY')
