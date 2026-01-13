@@ -14,7 +14,7 @@ from django.conf import settings
 # Ken Burns Effect (Optimized with Pre-Scaling)
 # ═══════════════════════════════════════════════════════════════════
 
-def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR:50:50", overlay_path=None):
+def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR:50:50", overlay_path=None, fit=False):
     """
     Applies optimized Ken Burns effect with pre-scaling.
     
@@ -25,12 +25,51 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
         zoom: "start:end" zoom factor (e.g., "1.0:1.3")
         move: "DIR:start:end" pan direction (e.g., "HOR:0:100")
         overlay_path: Optional overlay video path
+        fit: If True, fit image within frame (no crop) and disable Ken Burns
     
     Returns:
         VideoClip with Ken Burns effect applied
     """
     from moviepy import ImageClip, VideoFileClip, CompositeVideoClip, vfx
     from PIL import Image
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # FIT MODE (Static, No Crop)
+    # ═══════════════════════════════════════════════════════════════════
+    if fit:
+        img = Image.open(image_path)
+        img_w_orig, img_h_orig = img.size
+        
+        # Calculate scale to FIT within target
+        scale_factor = min(target_size[0] / img_w_orig, target_size[1] / img_h_orig)
+        new_size = (int(img_w_orig * scale_factor), int(img_h_orig * scale_factor))
+        
+        # Resize
+        img_resized = img.resize(new_size, Image.Resampling.LANCZOS)
+        img_np = np.array(img_resized)
+        
+        # Create clip centered on black background
+        clip = ImageClip(img_np, duration=duration)
+        
+        # Create background (black)
+        bg_np = np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8)
+        bg_clip = ImageClip(bg_np, duration=duration)
+        
+        # Composite
+        final_clip = CompositeVideoClip([bg_clip, clip.with_position("center")], size=target_size)
+    
+        # Apply overlay if specified
+        if overlay_path and os.path.exists(overlay_path):
+            overlay = VideoFileClip(overlay_path, has_mask=True)
+            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
+            overlay = overlay.resized(target_size)
+            final_clip = CompositeVideoClip([final_clip, overlay], size=target_size)
+            
+        return final_clip
+
+    # ═══════════════════════════════════════════════════════════════════
+    # KEN BURNS MODE (Crop & Pan)
+    # ═══════════════════════════════════════════════════════════════════
     
     # Parse zoom parameters
     zoom_parts = zoom.split(':') if zoom else ['1.0', '1.0']
@@ -263,7 +302,8 @@ def generate_video_avgl(project):
                     target_size,
                     zoom=asset.zoom or "1.0:1.0",
                     move=asset.move or "HOR:50:50",
-                    overlay_path=overlay_path
+                    overlay_path=overlay_path,
+                    fit=asset.fit
                 )
         else:
             # No assets - black frame
