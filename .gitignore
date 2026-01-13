@@ -2,7 +2,6 @@
 
 # Entorno y Configuración
 .env
-.agent/
 .venv/
 .vscode/
 .idea/

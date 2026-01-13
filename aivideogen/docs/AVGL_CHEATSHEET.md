@@ -29,18 +29,31 @@ Cambia la imagen/video en cualquier punto. Los efectos son independientes y se m
 
 ## 4. Control de Narrativa
 - `<pause duration="1.5" />`: Silencio dramático de X segundos.
+- `<camera zoom="1.1:1.0" move="VER:10:90" />`: Re-encuadre sin cambiar imagen.
+
+## 🎙️ Emociones (Voice FX)
+Encierra el texto para cambiar el sentimiento de Bill:
+- `[TENSO]...[/TENSO]` (Serio/Lento)
+- `[EPICO]...[/EPICO]` (Enérgico/Fuerte)
+- `[SUSPENSO]...[/SUSPENSO]` (Tétrico/Pausado)
+- `[GRITANDO]...[/GRITANDO]` (Máximo Volumen)
+- `[SUSURRO]...[/SUSURRO]` (Misterioso/Bajo)
 
 ---
 
 ## 🎬 Ejemplo de "Programación Visual"
 ```xml
-<scene title="La Revelación">
-  <asset type="scientist.png" zoom="1.1:1.3" />
-  Él lo sabía... <pause duration="0.8" />
-  <sfx type="glitch" />
-  <asset type="formula.png" zoom="1.0:1.5" overlay="glitch" />
-  La fecha es inevitable.
-</scene>
+<avgl title="Demo Rápida">
+  <scene title="La Revelación">
+    <asset type="eye_robotic_closed.png" zoom="1.1:1.3" />
+    <voice name="es-ES-AlvaroNeural">
+      Él lo sabía... <pause duration="0.8" />
+      <sfx type="Webdriver_Torso" />
+      <asset type="eye_robotic_open.png" zoom="1.0:1.5" overlay="grain" />
+      [SUSURRO] La fecha es inevitable. [/SUSURRO]
+    </voice>
+  </scene>
+</avgl>
 ```
 
 > [!TIP]
