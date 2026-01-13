@@ -29,7 +29,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
     Returns:
         VideoClip with Ken Burns effect applied
     """
-    from moviepy import ImageClip, VideoFileClip, CompositeVideoClip
+    from moviepy import ImageClip, VideoFileClip, CompositeVideoClip, vfx
     from PIL import Image
     
     # Parse zoom parameters
@@ -98,26 +98,17 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.0", move="HOR
     # Create ImageClip from pre-scaled array
     base_clip = ImageClip(img_np, duration=duration)
     
-    # Create a function that generates frames with Ken Burns applied
-    def make_frame(t):
-        """Generate frame at time t with Ken Burns effect"""
-        # Get scale and position for this time
-        scale = get_frame_scale(t)
-        pos = get_frame_pos(t)
-        
-        # Since we're working with a static image, we just return the pre-scaled array
-        # The actual scaling/positioning will be handled by moviepy's resize and set_position
-        return img_np
-    
     # Apply Ken Burns by compositing with dynamic resize and position
     # Use fl (frame lambda) for dynamic transformations
     clip = base_clip.resized(lambda t: get_frame_scale(t))
-    clip = clip.set_position(lambda t: get_frame_pos(t))
+    clip = clip.with_position(lambda t: get_frame_pos(t))
     
     # Apply overlay if specified
     if overlay_path and os.path.exists(overlay_path):
         overlay = VideoFileClip(overlay_path, has_mask=True)
-        overlay = overlay.loop(duration=duration).resized(target_size)
+        # Fix: use vfx.Loop instead of .loop()
+        overlay = overlay.with_effects([vfx.Loop(duration=duration)])
+        overlay = overlay.resized(target_size)
         clip = CompositeVideoClip([clip, overlay], size=target_size)
     
     return clip
