@@ -183,7 +183,7 @@ def generate_video_avgl(project):
         # Generate audio
         audio_path = os.path.join(temp_audio_dir, f"scene_{i:03d}.mp3")
         
-        if project.voice_engine == 'edge':
+        if project.engine == 'edge':
             # Edge TTS supports SSML
             speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
             ssml_text = wrap_ssml(text_with_emotions, scene.voice, speed_rate)
@@ -287,7 +287,7 @@ def generate_video_avgl(project):
     )
     
     # Update project
-    project.video.name = f'videos/project_{project.id}.mp4'
+    project.output_video.name = f'videos/project_{project.id}.mp4'
     project.status = 'completed'
     project.save()
     

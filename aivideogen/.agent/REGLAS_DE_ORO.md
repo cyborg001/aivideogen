@@ -28,6 +28,23 @@
 
 ---
 
+## Servidor Django (CRÍTICO)
+
+### ⚠️ REGLA #2: NUNCA AUTO-LANZAR EL SERVIDOR
+**El usuario SIEMPRE lanza el servidor manualmente.**
+
+**NUNCA hacer:**
+- ❌ `run_command` con `python manage.py runserver`
+- ❌ Lanzar el servidor "para ayudar"
+- ❌ Asumir que el servidor debe estar corriendo
+
+**SIEMPRE hacer:**
+- ✅ Informar al usuario que puede lanzar el servidor
+- ✅ Esperar a que el usuario lo lance por su cuenta
+- ✅ Solo mencionar: "Puedes iniciar con: `python manage.py runserver`"
+
+---
+
 ## Otras Reglas de Oro
 
 ### Documentación
@@ -39,3 +56,4 @@
 - Probar cambios antes de commit
 - Verificar sintaxis de Python antes de guardar
 - No asumir que el código funciona sin probarlo
+
