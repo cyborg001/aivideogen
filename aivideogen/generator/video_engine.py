@@ -285,8 +285,29 @@ def generate_video_avgl(project):
             
             if not os.path.exists(asset_path):
                 logger.log(f"  ⚠️ Asset no encontrado: {asset.type}")
-                # Create black frame
-                clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
+                # Create Placeholder Frame (Text on Color)
+                from moviepy import TextClip, ColorClip, CompositeVideoClip
+                
+                # Background (Dark Red to indicate error)
+                bg_clip = ColorClip(size=target_size, color=(50, 0, 0), duration=duration)
+                
+                # Text
+                try:
+                    txt_clip = TextClip(
+                        text=f"MISSING ASSET:\n{asset.type}",
+                        font="Arial",
+                        font_size=70,
+                        color='white',
+                        method='caption',
+                        size=(target_size[0]-100, target_size[1]//2),
+                        text_align="center"
+                    ).with_position('center').with_duration(duration)
+                    
+                    clip = CompositeVideoClip([bg_clip, txt_clip], size=target_size)
+                except Exception as e:
+                    # Fallback to simple black if TextClip fails (e.g. missing ImageMagick)
+                    logger.log(f"  ⚠️ Error creando placeholder: {e}")
+                    clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
             else:
                 # Get overlay path if specified
                 overlay_path = None

@@ -325,7 +325,7 @@ En el campo `text`, puedes usar tags especiales para controlar el tono:
         },
         {
           "title": "La Revelación",
-          "text": "DeepMind acaba de anunciar que su nueva IA, [EPICO]Gemini Ultra 2.0[/EPICO], puede razonar como un ser humano.",
+          "text": "DeepMind acaba de anunciar que su nueva IA, [GRITANDO]Gemini Ultra 2.0[/GRITANDO], puede razonar como un ser humano.",
           "assets": [
             {
               "type": "deepmind_lab.png",
@@ -334,52 +334,6 @@ En el campo `text`, puedes usar tags especiales para controlar el tono:
             }
           ],
           "pause": 1.0
-        }
-      ]
-    },
-    {
-      "title": "Desarrollo: Las Implicaciones",
-      "music": "ambient_mystery.mp3",
-      "volume": 0.2,
-      "scenes": [
-        {
-          "title": "El Cambio de Paradigma",
-          "text": "Esto significa que en menos de 5 años, la IA podría estar diseñando medicamentos, [SUSPENSO]resolviendo crisis climáticas[/SUSPENSO]... o incluso tomando decisiones éticas.",
-          "assets": [
-            {
-              "type": "futuristic_city.png",
-              "zoom": "1.0:1.3",
-              "overlay": "light_leaks"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Cierre: La Reflexión",
-      "music": "hopeful_ending.mp3",
-      "volume": 0.25,
-      "scenes": [
-        {
-          "title": "Mensaje Final",
-          "text": "La pregunta ya no es [GRITANDO]¿PUEDE la IA hacerlo?[/GRITANDO] La pregunta es... ¿estamos listos?",
-          "voice": "es-ES-ElviraNeural",
-          "speed": 0.95,
-          "assets": [
-            {
-              "type": "human_ai_handshake.png",
-              "zoom": "1.1:1.5",
-              "move": "HOR:50:50"
-            }
-          ],
-          "sfx": [
-            {
-              "type": "heartbeat",
-              "volume": 0.4,
-              "offset": 5
-            }
-          ],
-          "pause": 2.0
         }
       ]
     }
