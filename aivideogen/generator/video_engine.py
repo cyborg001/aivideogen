@@ -6,6 +6,7 @@ Handles the complete video rendering pipeline with optimizations
 import os
 import time
 import re
+import numpy as np
 from django.conf import settings
 
 
@@ -305,7 +306,3 @@ def generate_video_avgl(project):
     logger.log(f"✅ Video generado exitosamente en {int(elapsed)}s ({int(elapsed/60)}:{int(elapsed%60):02d})")
     
     return output_path
-
-
-# Import numpy at module level for performance
-import numpy as np
