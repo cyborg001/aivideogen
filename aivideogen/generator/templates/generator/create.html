@@ -159,35 +159,89 @@
 
         <script>
             function updateAnalytics() {
-                const text = document.getElementById('script-editor').value;
-                
-                // 1. EXTRAER TÍTULO DE <avgl title="...">
-                const avglMatch = text.match(/<avgl\s+title="([^"]+)"/i);
-                if (avglMatch && avglMatch[1]) {
-                    document.getElementById('project-title').value = avglMatch[1];
-                }
-
-                // 2. CONTAR PALABRAS DENTRO DE <scene>
-                // Buscamos el contenido entre </scene> y el siguiente <scene> o el final, 
-                // o mejor, entre etiquetas de cierre y apertura.
+                const text = document.getElementById('script-editor').value.trim();
                 let totalWords = 0;
-                
-                // Regex para extraer todo el texto que está DENTRO de las escenas
-                const sceneRegex = /<scene[^>]*>(.*?)<\/scene>/gis;
-                let match;
-                while ((match = sceneRegex.exec(text)) !== null) {
-                    let content = match[1];
-                    // Limpiar etiquetas internas (<asset />, <sfx />, etc.)
-                    let cleanText = content.replace(/<[^>]+>/g, ' ');
-                    // Limpiar corchetes de emoción [EPICO]
-                    cleanText = cleanText.replace(/\[.*?\]/g, ' ');
-                    
-                    const words = cleanText.split(/\s+/).filter(w => w.length > 0);
-                    totalWords += words.length;
+                let isJson = false;
+
+                // 1. TRY JSON FORMAT (AVGL v4.0)
+                if (text.startsWith('{')) {
+                    try {
+                        let data = JSON.parse(text);
+                        isJson = true;
+
+                        // Support AI Wrapper format (contains "script" key)
+                        if (data.script && typeof data.script === 'object') {
+                            data = data.script;
+                        }
+
+                        // Auto-fill Title
+                        if (data.title) {
+                            document.getElementById('project-title').value = data.title;
+                        }
+
+                        // Auto-fill Voice Logic
+                        if (data.voice) {
+                            // Check if standard voice (Edge vs Eleven)
+                            // Ideally we just put it in voice_id field
+                            const voiceInput = document.querySelector('input[name="voice_id"]');
+                            // Only overwrite if empty or user just pasted
+                            if (voiceInput) {
+                                voiceInput.value = data.voice;
+                            }
+                        }
+
+                        // Count Words
+                        if (data.blocks) {
+                            data.blocks.forEach(block => {
+                                if (block.scenes) {
+                                    block.scenes.forEach(scene => {
+                                        if (scene.text) {
+                                            let clean = scene.text.replace(/\[.*?\]/g, ' '); // Remove emotion tags
+                                            clean = clean.replace(/<[^>]+>/g, ' '); // Remove SSML if any
+                                            const words = clean.split(/\s+/).filter(w => w.length > 0);
+                                            totalWords += words.length;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        
+                        // Update Engine Indicator
+                        const engineLabel = document.getElementById('analytics-bar').querySelector('span:last-child');
+                        if (engineLabel) engineLabel.innerHTML = '🧪 Motor: <b>AVGL v4.0 JSON</b>';
+
+                    } catch (e) {
+                        // Invalid JSON, ignore
+                    }
                 }
 
+                // 2. LEGACY LOGIC (If not JSON)
+                if (!isJson) {
+                    // Title from <avgl title="...">
+                    const avglMatch = text.match(/<avgl\s+title="([^"]+)"/i);
+                    if (avglMatch && avglMatch[1]) {
+                        document.getElementById('project-title').value = avglMatch[1];
+                    }
+
+                    // Count from <scene> tags
+                    const sceneRegex = /<scene[^>]*>(.*?)<\/scene>/gis;
+                    let match;
+                    while ((match = sceneRegex.exec(text)) !== null) {
+                        let content = match[1];
+                        let cleanText = content.replace(/<[^>]+>/g, ' ');
+                        cleanText = cleanText.replace(/\[.*?\]/g, ' ');
+                        const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+                        totalWords += words.length;
+                    }
+                    
+                    // Reset indicator
+                    const engineLabel = document.getElementById('analytics-bar').querySelector('span:last-child');
+                    if (engineLabel) engineLabel.innerHTML = '📜 Motor: <b>Legacy XML</b>';
+                }
+
+                // Update Stats UI
                 document.getElementById('word-count').innerText = totalWords;
-                const totalSeconds = Math.round((totalWords / 140) * 60);
+                const totalSeconds = Math.round((totalWords / 140) * 60); // Approx 140 wpm
                 const mins = Math.floor(totalSeconds / 60);
                 const secs = totalSeconds % 60;
                 document.getElementById('est-duration').innerText = `${mins}m ${secs}s`;
