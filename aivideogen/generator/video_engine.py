@@ -238,6 +238,11 @@ def generate_video_avgl(project):
             speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
             ssml_text = wrap_ssml(text_with_emotions, scene.voice, speed_rate)
             
+            # DEBUG LOGS
+            logger.log(f"  🔍 Text Raw: {scene.text[:50]}...")
+            if ssml_text.startswith('<speak'):
+                logger.log(f"  🔍 SSML Generated: {ssml_text[:100]}...")
+            
             # Run async
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

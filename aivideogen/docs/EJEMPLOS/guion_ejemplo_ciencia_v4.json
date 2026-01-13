@@ -15,7 +15,7 @@
                     "text": "En el rincón más oscuro del universo, nace la luz. [PAUSA:1.0] [EPICO] Las estrellas son los ojos de la creación. [/EPICO]",
                     "assets": [
                         {
-                            "type": "nebula.png",
+                            "type": "astronaut_moon_surface_artemispng",
                             "zoom": "1.0:1.3"
                         }
                     ],
@@ -39,7 +39,7 @@
                     "text": "Todo se resume a un solo número. [PAUSA:0.8] ¿Qué pasaría si hoy... descubrimos el final? [PAUSA:0.5] Y recuerda... ¡el futuro es hoy!",
                     "assets": [
                         {
-                            "type": "math_board.png",
+                            "type": "xai_company_overview.png",
                             "move": "VER:0:100"
                         }
                     ],
