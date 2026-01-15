@@ -53,4 +53,7 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 | 2.24.0 | 2026-01-11 | **Auto-YouTube Integration** | **Auto-Upload:** Nueva opción para subir automáticamente a YouTube tras el render. <br> **Quick Access:** Botón directo de YouTube en la lista de proyectos. <br> **Unified Description:** Motor centralizado de generación de descripciones pro. |
 
 ---
-*Actualizado al 11-01-2026*
+| 2.25.0 | 2026-01-15 | **Robust Audio & Asset Shield** | **Dynamic Volume:** Control de volumen de música por bloque (ej. silencio dramático). <br> **Asset Shield:** Normalización automática de nombres de assets (arranque seguro ante timestamps). <br> **SFX Precision:** Control de volumen granular para efectos de sonido. |
+
+---
+*Actualizado al 15-01-2026*
