@@ -162,9 +162,10 @@
                             data = data.script;
                         }
 
-                        // Auto-fill Title
+                        // Auto-fill Title (Always update if present in JSON)
+                        const titleInput = document.getElementById('project-title');
                         if (data.title) {
-                            document.getElementById('project-title').value = data.title;
+                            titleInput.value = data.title;
                         }
 
                         // Auto-fill Voice Logic
@@ -261,6 +262,42 @@
         <button type="submit" class="btn">Generar Video</button>
     </form>
 </div>
+
+<script>
+    // ==========================================
+    // LIVE SYNC: UI MUSIC -> JSON SCRIPT
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const musicSelect = document.querySelector('select[name="background_music"]');
+        const volInput = document.querySelector('input[name="music_volume"]');
+        const editor = document.getElementById('script-editor');
+
+        function updateScriptJson() {
+            try {
+                const text = editor.value;
+                if (!text.trim().startsWith('{')) return; // Only if JSON
+                
+                let json = JSON.parse(text);
+                
+                // Get selected music name
+                if (musicSelect.selectedIndex > 0) { // If not "Sin música"
+                     const selectedOption = musicSelect.options[musicSelect.selectedIndex];
+                     json.background_music = selectedOption.text.trim();
+                     json.music_volume = parseFloat(volInput.value);
+                     
+                     // Write back nicely formatted
+                     editor.value = JSON.stringify(json, null, 4);
+                }
+            } catch (e) {
+                // Ignore parsing errors while typing
+            }
+        }
+
+        // Listen for UI changes
+        if (musicSelect) musicSelect.addEventListener('change', updateScriptJson);
+        if (volInput) volInput.addEventListener('change', updateScriptJson);
+    });
+</script>
 
 <script>
     // ======================================================

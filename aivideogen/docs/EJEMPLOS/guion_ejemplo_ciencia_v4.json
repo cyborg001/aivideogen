@@ -55,20 +55,3 @@
         }
     ]
 }
-            "music": "Final_Girl_-_Jeremy_Blake",
-"scenes": [
-    {
-        "title": "Fórmulas Infinitas",
-        "voice": "es-DO-RamonaNeural",
-        "text": "Todo se resume a un solo número. [PAUSA:0.8] ¿Qué pasaría si hoy... descubrimos el final? [PAUSA:0.5] Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
-        "assets": [
-            {
-                "type": "xai_company_overview.png",
-                "move": "VER:0:100"
-            }
-        ]
-    }
-]
-}
-]
-}

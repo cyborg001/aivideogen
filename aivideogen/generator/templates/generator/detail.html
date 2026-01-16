@@ -26,29 +26,43 @@
     {% else %}
     {% if project.status == 'processing' or project.status == 'pending' %}
     <p>El video se está generando. Esta página se recargará automáticamente.</p>
-    <div
-        style="width: 100%; background-color: #333; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
-        <div style="width: 100%; height: 100%; background-color: var(--primary-color); animation: loading 2s infinite;">
-        </div>
+    <div style="text-align: center; padding: 40px;">
+        <div class="loader"></div>
+        <p style="margin-top: 20px; color: #00ff00; font-family: monospace;">Generando video... Por favor espera.</p>
     </div>
 
-    <form action="{% url 'generator:stop_project' project.id %}" method="post" style="margin-bottom: 20px;">
-        {% csrf_token %}
-        <button type="submit" class="btn" style="background-color: #f44336; border-color: #f44336; width: 100%;">🛑
-            Detener Generación</button>
-    </form>
+    <div style="text-align: center; margin-top: 20px;">
+        <form action="{% url 'generator:stop_project' project.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background-color: #ff4444; border-color: #ff4444;">🛑 Detener
+                Generación</button>
+        </form>
+    </div>
 
     <style>
-        @keyframes loading {
+        .loader {
+            border: 5px solid #1a1a1a;
+            /* Dark grey */
+            border-top: 5px solid #00ff00;
+            /* Neon Green */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
             0% {
-                transform: translateX(-100%);
+                transform: rotate(0deg);
             }
 
             100% {
-                transform: translateX(100%);
+                transform: rotate(360deg);
             }
         }
     </style>
+
     <script>
         setTimeout(function () {
             window.location.reload(1);

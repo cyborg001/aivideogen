@@ -109,6 +109,41 @@ def extract_hashtags_from_script(script_text):
     unique_tags = list(set(hashtags))
     return " ".join(unique_tags)
 
+def generate_contextual_tags(project):
+    """
+    Intelligently generates contextual tags based on title and script content.
+    Returns a list of unique tags (without #).
+    """
+    import re
+    tags = []
+    
+    # 1. From Title
+    if project.title:
+        # Remove common stop words and punctuation
+        clean_title = re.sub(r'[^\w\s]', '', project.title)
+        # Add significant words (>3 chars)
+        tags.extend([w.lower() for w in clean_title.split() if len(w) > 3])
+
+    # 2. From Script Keywords (Neuralink, SpaceX, etc.)
+    # Look for known high-impact entities in the script
+    entities = [
+        'Neuralink', 'SpaceX', 'Starship', 'Musk', 'AGI', 'IA', 'AI', 
+        'NASA', 'Artemis', 'Robot', 'Humanoid', 'Cancer', 'Salud',
+        'Elon', 'Mars', 'Marte', 'Luna', 'Moon', 'Tesla'
+    ]
+    
+    script_lower = project.script_text.lower()
+    for entity in entities:
+        if entity.lower() in script_lower:
+            tags.append(entity.lower())
+
+    # 3. Deduplicate and clean
+    # Remove common irrelevant words if title extraction was too broad
+    stop_words = {'video', 'resumen', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre', '2026', '2025'}
+    final_tags = [t for t in dict.fromkeys(tags) if t not in stop_words]
+    
+    return final_tags
+
 class ProjectLogger:
     def __init__(self, project):
         self.project = project
@@ -152,7 +187,7 @@ def generate_video_process(project):
         try:
             json.loads(script_text)
             print(f"[Project {project.id}] Detected AVGL v4.0 JSON format")
-            return generate_video_avgl(project)
+            generate_video_avgl(project)
         except json.JSONDecodeError as e:
             # IT IS JSON, BUT INVALID. DO NOT FALLBACK TO LEGACY.
             logger = ProjectLogger(project)
@@ -161,10 +196,25 @@ def generate_video_process(project):
             project.status = 'error'
             project.save()
             return  # Stop here
-            
-    # If not JSON, assume legacy
-    print(f"[Project {project.id}] Detected legacy column format")
-    return generate_video_legacy(project)
+    else:
+        # If not JSON, assume legacy
+        print(f"[Project {project.id}] Detected legacy column format")
+        generate_video_legacy(project)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # POST-PROCESSING: Automatic YouTube Upload
+    # ═══════════════════════════════════════════════════════════════════
+    # Refresh project to get latest status if it was modified elsewhere
+    project.refresh_from_db()
+
+    if project.status == 'completed' and project.auto_upload_youtube:
+        try:
+            from .youtube_utils import trigger_auto_upload
+            trigger_auto_upload(project)
+        except Exception as e:
+            print(f"[YouTube] Error fatal disparando subida automática: {e}")
+            project.log_output += f"\n[YouTube] ❌ Error fatal disparando subida automática: {e}"
+            project.save(update_fields=['log_output'])
 
 
 def generate_video_legacy(project):

@@ -1,0 +1,100 @@
+{
+    "title": "Artemis II: Regreso a la Luna",
+    "voice": "es-DO-EmilioNeural",
+    "speed": 1.15,
+    "style": "excited",
+    "blocks": [
+        {
+            "title": "Noticia Confirmada",
+            "music": "Final_Girl_-_Jeremy_Blake",
+            "volume": 0.25,
+            "scenes": [
+                {
+                    "title": "Gancho Épico",
+                    "text": "[EPICO] ¡Noticia Confirmada! [/EPICO] [PAUSA:0.2] La humanidad regresa a la Luna el próximo 6 de febrero. [PAUSA:0.4]",
+                    "assets": [
+                        {
+                            "type": "artemis_sls_launch_pad.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:0:100",
+                            "fit": "cover",
+                            "overlay": "light_leaks"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Debris_Hits",
+                            "volume": 0.6,
+                            "offset": 1
+                        }
+                    ]
+                },
+                {
+                    "title": "Detalles Técnicos",
+                    "text": "La NASA acaba de fijar la fecha para Artemis 2, la misión que llevará a cuatro astronautas a orbitar nuestro satélite. [PAUSA:0.3]",
+                    "assets": [
+                        {
+                            "type": "artemis_astronauts_crew.png",
+                            "move": "HOR:0:100 + VER:50:50",
+                            "zoom": "1.0:1.15"
+                        }
+                    ],
+                    "voice": "es-DO-EmilioNeural"
+                },
+                {
+                    "title": "La Nave y el Viaje",
+                    "text": "A bordo de la nave Orion, estos pioneros viajarán más lejos de lo que nadie ha llegado jamás, preparando el terreno para el próximo gran alunizaje. [PAUSA:0.3]",
+                    "assets": [
+                        {
+                            "type": "orion_spacecraft_lunar.png",
+                            "zoom": "2.0:1.0",
+                            "move": "HOR:100:0 + VER:10:40",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "Poder Nuclear",
+                    "text": "[GRITANDO] El cohete más potente del mundo [/GRITANDO] [PAUSA:0.1] está listo para hacer historia en menos de un mes. [PAUSA:0.4]",
+                    "assets": [
+                        {
+                            "type": "sls_rocket_engines_fire.png",
+                            "move": "VER:0:100",
+                            "zoom": "1.0:1.5",
+                            "overlay": "dust"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "rocket",
+                            "volume": 0.1,
+                            "offset": 2
+                        }
+                    ]
+                },
+                {
+                    "title": "Llamada a la Acción",
+                    "text": "[TENSO] ¿Estás listo para volver a la Luna? [/TENSO] [PAUSA:0.2] Déjalo en los comentarios.",
+                    "assets": [
+                        {
+                            "type": "notiaci_news_end.png",
+                            "zoom": "1.0:1.15",
+                            "move": "HOR:50:50",
+                            "overlay": "light_leaks"
+                        }
+                    ]
+                },
+                {
+                    "title": "Despedida",
+                    "text": "No olvides dar like y suscribirte. [PAUSA:0.5] Y recuerda, ¡el futuro es hoy!",
+                    "assets": [
+                        {
+                            "type": "suscribete.mp4",
+                            "fit": "contain"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

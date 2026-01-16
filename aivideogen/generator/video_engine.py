@@ -248,10 +248,32 @@ def generate_video_avgl(project):
             
         # Prepare text - Use clean mode (no SSML) for Edge TTS for now
         use_ssml = (project.engine == 'eleven')
-        text_with_emotions = translate_emotions(scene.text, use_ssml=use_ssml)
+        
+        # CLEANUP: Strip Character Tags [NAME] from start of text
+        # This prevents TTS from reading "[ETHAN]" and fixes potential "No audio" errors
+        curr_text = scene.text
+        if curr_text.startswith('['):
+            # Check if it's likely a name tag (short, uppercase, no closing tag later?)
+            # Actually, standard format is "[NAME] Text".
+            # But we must preserve "[TENSO] Text [/TENSO]" logic?
+            # Emotion tags wrap the content. Name tags just prefix.
+            # Names usually don't have a closing tag. 
+            # Safe regex: Remove [NAME] at start if it's followed by space
+            curr_text = re.sub(r'^\[[^\]]+\]\s*', '', curr_text)
+
+        # CLEANUP: Strip Stage Directions (Parentheses)
+        # Prevents reading "(Susurrando)" aloud.
+        curr_text = re.sub(r'\(.*?\)', '', curr_text).strip()
+
+        text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
         
         if project.engine == 'edge':
             speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
+            
+            # DEBUG: Log exact params being sent
+            clean_debug = text_with_emotions.replace('<', '{').replace('>', '}')
+            logger.log(f"    🎤 DEBUG EdgeTTS: Voice='{scene.voice}' Rate='{speed_rate}' Text='{clean_debug[:50]}...'")
+
             ssml_text = wrap_ssml(text_with_emotions, scene.voice, speed_rate)
             
             loop = asyncio.new_event_loop()
@@ -313,7 +335,18 @@ def generate_video_avgl(project):
         block_voice_intervals = []
         block_cursor = 0.0
         
+        # Continuity Tracking (Per Block)
+        last_asset_path = None
+        last_zoom_end = 1.0
+        last_move = None
+        
         for s_idx, scene in enumerate(block.scenes):
+            # 0. GRANULAR CANCELLATION CHECK (v2.25.1)
+            project.refresh_from_db()
+            if project.status == 'cancelled':
+                logger.log("🛑 Generación detenida por usuario (en bucle de escenas).")
+                return
+
             # 1. Audio Retrieval (Robust)
             audio_clip = None
             voice_duration = 0.0
@@ -343,9 +376,16 @@ def generate_video_avgl(project):
                 if not os.path.exists(asset_path):
                     logger.log(f"  ⚠️ Asset no encontrado: {asset.type}. Fondo negro.")
                     clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
+                    
+                    # Reset continuity on missing asset
+                    last_asset_path = None
+                    last_zoom_end = 1.0
+                    last_move = None
+                    
                 else:
                     eff_zoom = asset.zoom or "1.0:1.3"
                     eff_move = asset.move or "HOR:50:50"
+
                     logger.log(f"  🎬 Escena {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                     
                     # Overlay
@@ -577,58 +617,59 @@ def generate_video_avgl(project):
                     current_offset += b_dur
 
                 # 3. Global Ducking & Muting & Volume Automation Function
-                duck_factor = 0.12
-                attack_t = 0.3; release_t = 1.5
+                # Legacy "Snappy" Ducking (Precision Calibration v2.26 - Aggressive)
+                duck_factor = 0.25  # Duck to 25% of peak (0.20 * 0.25 = 0.05 Target - "Almost Null")
+                fade_t = 0.25       # Attack Time (Fast but smooth)
+                release_t = 1.6     # Release Time (Slow - Prevents pumping in short pauses)
                 fade_muting = 0.5 
 
                 def volume_global(t):
                     # Helper for scalar/vector t
                     args = t if isinstance(t, np.ndarray) else np.array([t])
                     
-                    # 1. Base Volume (Constant -> Dynamic Per Block)
-                    # Instead of a constant default_vol, we map time to block volumes
+                    # 1. Base Volume (From JSON or Block Override)
+                    # For simplicity and "Snappy" feel, we stick to Global Peak mostly, 
+                    # but allow Block Logic to override the CEILING.
                     vol_arr = np.full(args.shape, default_vol)
                     
-                    # Apply Block Specific Volumes
+                    # Apply Block Specific Volumes (e.g. Conclusion = 0.05)
                     for start, end, b_vol in block_time_ranges:
-                        # Find indices within this block duration
                         mask_block = (args >= start) & (args < end)
                         if np.any(mask_block):
                             vol_arr[mask_block] = b_vol
 
-                    # 2. Ducking (Voices)
+                    # 2. Ducking (Voices) - Linear Transformation relative to Base
                     for start, end in global_voice_intervals:
-                        # We need to duck relative to the CURRENT volume at that moment, not just default
+                        # Find Base Volume at this moment (Dynamic Baseline)
+                        # We use a simplified approach: calculate ducked target from the CURRENT base
+                        
+                        # Full Duck Region
                         mask_voice = (args >= start) & (args <= end)
                         if np.any(mask_voice):
-                            # Duck to 12% of the CURRENT block volume (e.g. if block is 0.2 -> 0.024)
                             vol_arr[mask_voice] *= duck_factor
                         
-                        # Attack
-                        mask_out = (args >= (start - attack_t)) & (args < start)
+                        # Attack (Fade Out: Base -> Duck)
+                        mask_out = (args >= (start - fade_t)) & (args < start)
                         if np.any(mask_out):
-                            prog = (args[mask_out] - (start - attack_t)) / attack_t
-                            # We want to interpolate between Current Vol -> (Current Vol * duck)
-                            # Ideally we should read the current vol from the array, assuming it was set by block logic
-                            # Simplified linear ducking for now
-                            current_vals = vol_arr[mask_out]
-                            target_vals = current_vals * duck_factor
-                            vol_arr[mask_out] = current_vals - (prog * (current_vals - target_vals))
-                            
-                        # Release
+                            # Linear progression 0.0 -> 1.0
+                            prog = (args[mask_out] - (start - fade_t)) / fade_t
+                            curr_base = vol_arr[mask_out] # This is currently High
+                            target_duck = curr_base * duck_factor
+                            vol_arr[mask_out] = curr_base - (prog * (curr_base - target_duck))
+
+                        # Release (Fade In: Duck -> Base)
                         mask_in = (args > end) & (args <= (end + release_t))
                         if np.any(mask_in):
+                            # Linear progression 0.0 -> 1.0
                             prog = (args[mask_in] - end) / release_t
-                            # We are returning TO the block volume
-                            # Since we haven't modified the underlying block volume in this region yet (except via ducking above which didn't touch this region),
-                            # we can just use the values currently in vol_arr (which are Block Vol) as target
-                            target_vals = vol_arr[mask_in] # This requires valid block vol in this region
-                            ducked_vals = target_vals * duck_factor
-                            vol_arr[mask_in] = ducked_vals + (prog * (target_vals - ducked_vals))
+                            # For Release, we want to go FROM Duck TO Base
+                            # But vol_arr in this region is currently Base (untouched by mask_voice)
+                            curr_base = vol_arr[mask_in]
+                            base_duck = curr_base * duck_factor
+                            vol_arr[mask_in] = base_duck + (prog * (curr_base - base_duck))
 
                     # 3. Muting (Local Music Blocks)
                     for start, end in mute_intervals:
-                        # Hard mute
                         vol_arr[(args >= start) & (args <= end)] = 0
                         # Fade out
                         mask_out = (args >= (start - fade_muting)) & (args < start)
@@ -660,6 +701,14 @@ def generate_video_avgl(project):
     output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
+    # FINAL CANCELLATION CHECK BEFORE RENDER (v2.25.1)
+    project.refresh_from_db()
+    if project.status == 'cancelled':
+        logger.log("🛑 Renderizado abortado por usuario.")
+        try: final_video.close()
+        except: pass
+        return
+
     final_video.write_videofile(
         output_path, fps=30, codec='libx264', audio_codec='aac', 
         preset='ultrafast', threads=8

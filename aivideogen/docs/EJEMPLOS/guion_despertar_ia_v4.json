@@ -66,26 +66,3 @@
         }
     ]
 }
-            "scenes": [
-    {
-        "title": "La Red Global",
-        "text": "[EPICO] La información fluye a la velocidad de la luz. [/EPICO] Y recuerda... [GRITANDO]¡el futuro es hoy![/GRITANDO]",
-        "assets": [
-            {
-                "id": "network_nodes.png",
-                "move": "HOR:0:100",
-                "overlay": "grain",
-                "fit": "cover"
-            },
-            {
-                "id": "world_connection.png",
-                "zoom": "1.0:1.5",
-                "fit": "cover"
-            }
-        ],
-        "voice": "es-DO-EmilioNeural"
-    }
-]
-}
-]
-}

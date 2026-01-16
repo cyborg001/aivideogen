@@ -60,6 +60,8 @@ class AVGLScript:
         self.voice = "es-ES-AlvaroNeural"
         self.speed = 1.0
         self.style = "neutral"
+        self.background_music = None
+        self.music_volume = 0.18
         self.blocks = []  # List of AVGLBlock
     
     def get_all_scenes(self):
@@ -89,6 +91,8 @@ def parse_avgl_json(json_text):
     script.voice = data.get("voice", "es-ES-AlvaroNeural")
     script.speed = data.get("speed", 1.0)
     script.style = data.get("style", "neutral")
+    script.background_music = data.get("background_music")
+    script.music_volume = data.get("music_volume", 0.18)
     
     # Parse blocks
     blocks_data = data.get("blocks", [])
@@ -182,12 +186,17 @@ def parse_avgl_json(json_text):
 # Emotion Translator (SSML for Edge TTS)
 # ═══════════════════════════════════════════════════════════════════
 
-def translate_emotions(text, use_ssml=True):
+def translate_emotions(text, use_ssml=False):
     """
-    Translates custom emotion tags like [TENSO] into SSML or clean text.
-    If use_ssml=False, it strips tags and uses ellipsis for pauses to prevent
-    Edge TTS from reading instructions aloud.
+    Translates custom emotion tags into SSML (legacy) or prepares for segmented mode.
+    In the new v4.0 overhaul, we prefer segmented mode (use_ssml=False).
     """
+    if not use_ssml:
+        # We don't strip here because generate_audio_edge will use the tags to split
+        return text
+
+    # Legacy SSML translation (kept for fallback)
+    import xml.sax.saxutils as saxutils
     emotions = {
         'TENSO': {'pitch': '-10Hz', 'rate': '-15%'},
         'EPICO': {'pitch': '+5Hz', 'rate': '+10%', 'volume': '+15%'},
@@ -195,30 +204,13 @@ def translate_emotions(text, use_ssml=True):
         'GRITANDO': {'pitch': '+15Hz', 'rate': '+20%', 'volume': 'loud'},
         'SUSURRO': {'pitch': '-12Hz', 'rate': '-20%', 'volume': '-30%'},
     }
-    
-    import xml.sax.saxutils as saxutils
-    
-    if not use_ssml:
-        # CLEAN MODE: Strip all tags and replace [PAUSA] with ...
-        clean_text = text
-        for tag in emotions.keys():
-            clean_text = re.sub(rf'\[{tag}\](.*?)\[/{tag}\]', r'\1', clean_text, flags=re.IGNORECASE | re.DOTALL)
-        # Replace [PAUSA:X.X] with ...
-        clean_text = re.sub(r'\[PAUSA:[\d\.]+\]', '...', clean_text, flags=re.IGNORECASE)
-        return clean_text
-
-    # SSML MODE:
     processed_text = saxutils.escape(text)
-    
     for tag, attrs in emotions.items():
         pattern = rf'\[{tag}\](.*?)\[/{tag}\]'
         attr_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
         replacement = rf'<prosody {attr_str}>\1</prosody>'
         processed_text = re.sub(pattern, replacement, processed_text, flags=re.IGNORECASE | re.DOTALL)
-    
-    # Process [PAUSA:X.X] -> <break time="X.Xs"/>
     processed_text = re.sub(r'\[PAUSA:([\d\.]+)\]', r'<break time="\1s"/>', processed_text, flags=re.IGNORECASE)
-    
     return processed_text
 
 
@@ -246,29 +238,104 @@ def wrap_ssml(text, voice, speed="+0%"):
 
 async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rate="+0%"):
     """
-    Generate audio using Edge TTS.
-    NOTE: SSML support in Edge TTS is currently unstable (bloats or leaks).
-    We use a clean mode to ensure reliability.
+    New Segmented Audio Engine (v4.0 Overhaul)
+    Avoids SSML bloating by splitting text into blocks and joining them.
     """
     import edge_tts
-    import re
-    try:
-        # If it's SSML, we strip it and use the plain text parameters
-        # to avoid the service reading "prosody" or bloating to 30s.
-        if text.strip().startswith('<speak'):
-            # 1. Strip all XML tags
-            clean_text = re.sub(r'<[^>]+>', '', text)
-            # 2. Heuristic: replace multiple spaces with single space
-            clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-            # 3. Use plain communication
-            communicate = edge_tts.Communicate(clean_text, voice, rate=rate)
-        else:
-            communicate = edge_tts.Communicate(text, voice, rate=rate)
+    from moviepy import AudioFileClip, concatenate_audioclips, AudioClip
+    import numpy as np
+
+    emotions_config = {
+        'TENSO': {'rate': '-15%', 'volume': '+0%'},
+        'EPICO': {'rate': '+10%', 'volume': '+15%'},
+        'SUSPENSO': {'rate': '-25%', 'volume': '+0%'},
+        'GRITANDO': {'rate': '+20%', 'volume': '+30%'},
+        'SUSURRO': {'rate': '-20%', 'volume': '-30%'},
+    }
+
+    # 1. Parse Segments
+    segments = []
+    # Regex to find [TAG]text[/TAG] or [PAUSA:X.X] or plain text
+    # We use a non-greedy approach for tags
+    pattern = r'(\[PAUSA:[\d\.]+\]|\[([A-Z]+)\](.*?)\[/\2\])'
+    
+    last_end = 0
+    for match in re.finditer(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+        # Plain text before the match
+        if match.start() > last_end:
+            plain = text[last_end:match.start()].strip()
+            if plain:
+                segments.append(('plain', plain))
         
-        await communicate.save(output_path)
-        return True
+        full_match = match.group(0)
+        if full_match.upper().startswith('[PAUSA'):
+            dur = float(re.search(r'[\d\.]+', full_match).group())
+            segments.append(('pause', dur))
+        else:
+            tag = match.group(2).upper()
+            content = match.group(3).strip()
+            segments.append((tag, content))
+        
+        last_end = match.end()
+    
+    # Remaining text after last match
+    if last_end < len(text):
+        plain = text[last_end:].strip()
+        if plain:
+            segments.append(('plain', plain))
+
+    if not segments:
+        segments = [('plain', text)]
+
+    # 2. Generate and store clips
+    audio_clips = []
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_segments')
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    project_prefix = f"seg_{int(time.time())}_{random.randint(100,999)}"
+
+    try:
+        for i, (tag, content) in enumerate(segments):
+            if tag == 'pause':
+                # Create silence clip
+                # Fix: Use np.zeros(2) for stereo and set fps to match typical audio
+                silence = AudioClip(lambda t: np.zeros(2), duration=content).with_fps(44100)
+                audio_clips.append(silence)
+                continue
+            
+            # Text segment
+            seg_path = os.path.join(temp_dir, f"{project_prefix}_{i}.mp3")
+            
+            # Apply emotion settings
+            seg_rate = rate
+            seg_vol = "+0%"
+            
+            if tag in emotions_config:
+                seg_rate = emotions_config[tag].get('rate', rate)
+                seg_vol = emotions_config[tag].get('volume', '+0%')
+            
+            # Edge TTS call
+            communicate = edge_tts.Communicate(content, voice, rate=seg_rate, volume=seg_vol)
+            await communicate.save(seg_path)
+            
+            if os.path.exists(seg_path):
+                clip = AudioFileClip(seg_path)
+                audio_clips.append(clip)
+
+        # 3. Join Clips
+        if audio_clips:
+            final_audio = concatenate_audioclips(audio_clips)
+            final_audio.write_audiofile(output_path, logger=None)
+            
+            # Cleanup
+            for clip in audio_clips:
+                clip.close()
+            
+            return True
+        return False
+        
     except Exception as e:
-        print(f"Error in generate_audio_edge: {e}")
+        print(f"❌ Error en segmentación de audio: {e}")
         return False
 
 

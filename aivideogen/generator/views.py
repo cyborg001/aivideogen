@@ -93,6 +93,24 @@ def create_project(request):
         background_music = None
         if music_id:
             background_music = Music.objects.get(id=music_id)
+            
+            # SYNC UI -> JSON SCRIPT (User Request)
+            # If user selected music in UI, force it into the JSON script
+            if script:
+                try:
+                    import json
+                    script_json = json.loads(script)
+                    
+                    # Update fields
+                    # We use the filename/name for the script reference
+                    script_json['background_music'] = background_music.name
+                    script_json['music_volume'] = float(music_volume)
+                    
+                    # Save back to string
+                    script = json.dumps(script_json, indent=4, ensure_ascii=False)
+                except Exception as e:
+                    # If script isn't valid JSON, we can't inject. Proceed as is.
+                    print(f"Error syncing music to JSON: {e}")
         
         # If script is empty but source path and script file are provided, try to load it
         if not script and source_path and script_file:
@@ -101,8 +119,17 @@ def create_project(request):
                 if os.path.exists(full_path):
                     with open(full_path, 'r', encoding='utf-8') as f:
                         script = f.read()
+                        
+                        # Apply Sync Logic here too if loaded from file late
+                        if background_music:
+                            try:
+                                import json
+                                script_json = json.loads(script)
+                                script_json['background_music'] = background_music.name
+                                script_json['music_volume'] = float(music_volume)
+                                script = json.dumps(script_json, indent=4, ensure_ascii=False)
+                            except: pass
             except Exception as e:
-                # If loading fails, we proceed with empty/default script, logic will fail later or user sees empty
                 pass
  
         visual_prompts = request.POST.get('visual_prompts', '')
@@ -333,81 +360,32 @@ def upload_to_youtube_view(request, project_id):
             'already_uploaded': True
         })
     
+    if not project.output_video or not project.output_exists:
+        messages.error(request, "❌ El video aún no se ha generado o el archivo no existe.")
+        return redirect('generator:project_detail', project_id=project.id)
+
     try:
-        youtube = get_youtube_client()
+        from .youtube_utils import trigger_auto_upload, get_youtube_client
         
-        if not youtube:
+        # Check authorization first for better user feedback
+        if not get_youtube_client():
             messages.warning(request, "⚠️ Primero debes autorizar tu cuenta de YouTube.")
             return redirect('generator:youtube_authorize')
-        
-        if not project.output_video:
-            messages.error(request, "❌ El video aún no se ha generado.")
-            return redirect('generator:project_detail', project_id=project.id)
-        
-        if not project.output_video.storage.exists(project.output_video.name):
-            messages.error(request, "❌ El archivo de video no existe en el sistema.")
-            return redirect('generator:project_detail', project_id=project.id)
 
-        # Upload the video
-        video_path = project.output_video.path
-        title = project.title
+        # Use the shared logic
+        success = trigger_auto_upload(project)
         
-        from .youtube_utils import generate_youtube_description
-        description = generate_youtube_description(project)
-        
-        # EXTRACT TAGS LOGIC (Replicated from utils/youtube_utils because we need list format)
-        script_tags = project.script_hashtags or "" # Use saved field first
-        if not script_tags:
-            from .utils import extract_hashtags_from_script
-            script_tags = extract_hashtags_from_script(project.script_text)
-            
-        fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
-        if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
-           (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
-            fixed_tags = fixed_tags[1:-1].strip()
-            
-        # Merge lists
-        tags_list = []
-        # Add script tags
-        tags_list.extend([t.strip().replace('#', '') for t in script_tags.split() if t.strip()])
-        # Add fixed tags
-        tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
-        
-        # Deduplicate and limit (YouTube allows max ~500 chars total, usually ~15-20 tags)
-        final_tags = list(dict.fromkeys(tags_list))[:20]
-
-        logger.info(f"[YouTube] Iniciando subida: {title}")
-        logger.info(f"[YouTube] Tags: {final_tags}")
-        
-        result = upload_video(youtube, video_path, title, description, tags=final_tags)
-        
-        if result and 'id' in result:
-            video_id = result['id']
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
-            
-            # Save YouTube video ID to prevent duplicate uploads
-            project.youtube_video_id = video_id
-            project.log_output += f"\n[YouTube] ✅ Video subido con éxito: {title}\nURL: {video_url}"
-            project.save()
-            
-            logger.info(f"[YouTube] Upload exitoso - Video ID: {video_id}")
-            
-            # Show auto-closing success page
+        if success and project.youtube_video_id:
+            video_url = f"https://www.youtube.com/watch?v={project.youtube_video_id}"
             return render(request, 'generator/youtube_upload_success.html', {
                 'video_url': video_url,
                 'fallback_url': request.build_absolute_uri('/')
             })
         else:
-            messages.warning(request, "⚠️ La subida se completó pero no se obtuvo ID del video.")
-            project.log_output += f"\n[YouTube] ⚠️ Upload completado sin confirmation ID"
-            project.save()
+            # Errors are already logged to project.log_output by trigger_auto_upload
+            messages.error(request, "❌ No se pudo subir el video. Revisa el log del proyecto para más detalles.")
+            return redirect('generator:project_detail', project_id=project.id)
             
-            # Show auto-closing success page without URL
-            return render(request, 'generator/youtube_upload_success.html', {
-                'video_url': None,
-                'fallback_url': request.build_absolute_uri('/')
-            })
-        
     except FileNotFoundError as e:
         messages.error(request, f"❌ Error de configuración de YouTube: {str(e)}")
         logger.error(f"[YouTube] FileNotFoundError: {e}")

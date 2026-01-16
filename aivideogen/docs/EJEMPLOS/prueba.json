@@ -1,0 +1,30 @@
+{
+    "title": "El Despertar de la IA",
+    "blocks": [
+        {
+            "title": "Parte 1: El Origen",
+            "scenes": [
+                {
+                    "title": "Silencio de Datos",
+                    "text": "comenzó [GRITANDO]comenzó[/GRITANDO] [SUSURRO]el proyecto.[/SUSURRO] [PAUSA:1.2]",
+                    "assets": [
+                        {
+                            "type": "eye_robotic_closed.png",
+                            "zoom": "1.0:2.3",
+                            "move": "HOR:0:100 + VER:0:100",
+                            "fit": "cover"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Power_Tool_Electrical_Buzz",
+                            "volume": 0.0,
+                            "offset": 1
+                        }
+                    ],
+                    "voice": "es-DO-RamonaNeural"
+                }
+            ]
+        }
+    ]
+}

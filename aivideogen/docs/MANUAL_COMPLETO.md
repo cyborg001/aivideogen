@@ -22,7 +22,14 @@ El corazón de la app es el editor de guiones. Usa el formato de 5 columnas:
 - **PAUSA**: (Opcional) Segundos de silencio tras el texto (ej: `1.5`).
   - Durante las pausas, la música sube automáticamente y el efecto visual continúa.
 
-### 2.1 COMENTARIOS Y HASHTAGS (Nuevo)
+### 2.2 LIMPIEZA AUTOMÁTICA DE TEXTO (Nuevo v2.25)
+El sistema limpia automáticamente el texto antes de generar el audio para evitar que la IA lea cosas extrañas:
+- **Etiquetas de Nombre**: `[ETHAN] Hola` -> La IA lee solo "Hola".
+- **Acotaciones**: `(Susurrando) Hola` -> La IA lee solo "Hola".
+Esto es útil para guiones técnicos donde indicamos quién habla o cómo, pero no queremos que se escuche.
+- **Excepción**: Las etiquetas de emoción `[TENSO]...[/TENSO]` SÍ se procesan como instrucciones de voz.
+
+### 2.3 COMENTARIOS Y HASHTAGS (Nuevo)
 Puedes usar el símbolo `#` para organizar tu guion o configurar YouTube:
 - `# HASHTAGS: #ia #ciencia`: Estos hashtags se usarán automáticamente en la descripción de YouTube (se suman a los que tengas fijos en el `.env`).
 - `# MÚSICA: Cinematic`: Sugerencia de estilo que aparecerá en los logs.

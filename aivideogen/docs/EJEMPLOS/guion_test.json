@@ -1,0 +1,29 @@
+{
+    "title": "Lo que ya se ha logrado en Enero 2026",
+    "voice": "es-DO-EmilioNeural",
+    "speed": 1.12,
+    "style": "excited",
+    "background_music": "Im_Giving_Up_-_Everet_Almond",
+    "music_volume": 0.18,
+    "blocks": [
+        {
+            "title": "Introducción",
+            "volume": 0.22,
+            "scenes": [
+                {
+                    "title": "Gancho Inicial",
+                    "text": "[EPICO] ¡El 2026 no ha perdido ni un segundo! [/EPICO] [PAUSA:0.5] Bienvenidos a NotIACi. [PAUSA:0.5] En solo 15 días, la humanidad ha fijado su regreso a la Luna, ha puesto en marcha fábricas de humanos aumentados y ha declarado la guerra final contra el cáncer. [PAUSA:0.8] Prepárate, porque lo que vas a ver hoy no es ciencia ficción... es tu presente.[PAUSA:2.5]",
+                    "assets": [
+                        {
+                            "type": "intro_resumen_2026.png",
+                            "zoom": "1.0:1.1",
+                            "move": "HOR:0:50",
+                            "fit": "cover"
+                        }
+                    ]
+                }
+            ]
+        }
+
+    ]
+}
