@@ -308,64 +308,75 @@
                     <div class="bg-gray-800 p-3 rounded border border-gray-700">
                         <label class="block text-xs text-blue-300 mb-2 font-bold">Movimiento de Cámara</label>
 
-                        <!-- Fit Checkbox (Decoupled) -->
+                        <!-- Fit Checkbox -->
                         <div class="mb-3 pb-3 border-b border-gray-700">
                             <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-yellow-300 font-bold">
+                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-yellow-300 font-bold"
+                                :class="{'opacity-50 cursor-not-allowed': isVideo}">
                                 <input type="checkbox" x-model="formData.fit"
-                                    class="text-yellow-500 rounded focus:ring-0">
+                                    class="text-yellow-500 rounded focus:ring-0" :disabled="isVideo">
                                 <span>Ajustar a Pantalla (Fit)</span>
                             </label>
-                            <p class="text-[10px] text-gray-500 ml-5">Evita recortes. Ideal para capturas de pantalla o
-                                diagramas.</p>
                         </div>
 
-                        <div class="space-y-2">
+                        <!-- ZOOM SECTION -->
+                        <div class="mb-3 pb-3 border-b border-gray-700" :class="{'opacity-50': isVideo}">
                             <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
-                                <input type="radio" name="moveType" value="NONE" x-model="moveType"
-                                    class="text-blue-500">
-                                <span>Estático (Sin movimiento)</span>
+                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-200 mb-2">
+                                <input type="checkbox" x-model="formData.useZoom"
+                                    class="text-blue-500 rounded focus:ring-0" :disabled="isVideo">
+                                <span class="font-bold">Zoom (Escala)</span>
                             </label>
-                            <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
-                                <input type="radio" name="moveType" value="ZOOM_IN" x-model="moveType"
-                                    class="text-blue-500">
-                                <span>Zoom (Acercar)</span>
-                            </label>
-                            <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
-                                <input type="radio" name="moveType" value="ZOOM_OUT" x-model="moveType"
-                                    class="text-blue-500">
-                                <span>Zoom (Alejar)</span>
-                            </label>
-                            <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
-                                <input type="radio" name="moveType" value="HOR_PAN" x-model="moveType"
-                                    class="text-blue-500">
-                                <span>Panorámica Horizontal</span>
-                            </label>
-                            <label
-                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
-                                <input type="radio" name="moveType" value="VER_PAN" x-model="moveType"
-                                    class="text-blue-500">
-                                <span>Panorámica Vertical (Scroll)</span>
-                            </label>
+
+                            <div x-show="formData.useZoom" class="grid grid-cols-2 gap-2 pl-6" x-transition>
+                                <div>
+                                    <label class="text-[10px] text-gray-400 block">Inicio</label>
+                                    <input type="number" step="0.1" x-model="formData.zoomStart"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400 block">Fin</label>
+                                    <input type="number" step="0.1" x-model="formData.zoomEnd"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Zoom Controls -->
-                        <div x-show="moveType.includes('ZOOM')"
-                            class="mt-3 pt-3 border-t border-gray-700 grid grid-cols-2 gap-2" x-transition>
-                            <div>
-                                <label class="text-[10px] text-gray-400 block">Zoom Inicio</label>
-                                <input type="number" step="0.1" x-model="formData.zoomStart"
-                                    class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono">
+                        <!-- PAN/MOVE SECTION -->
+                        <div :class="{'opacity-50': isVideo}">
+                            <label
+                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-200 mb-2">
+                                <input type="checkbox" x-model="formData.usePan"
+                                    class="text-green-500 rounded focus:ring-0" :disabled="isVideo">
+                                <span class="font-bold">Paneo (Movimiento)</span>
+                            </label>
+
+                            <div x-show="formData.usePan" class="space-y-2 pl-6" x-transition>
+                                <div>
+                                    <label class="text-[10px] text-gray-400 block">Dirección</label>
+                                    <select x-model="formData.panDir"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-xs">
+                                        <option value="HOR">Horizontal</option>
+                                        <option value="VER">Vertical</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-[10px] text-gray-400 block">Inicio (%)</label>
+                                        <input type="number" step="10" x-model="formData.panStart"
+                                            class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-gray-400 block">Fin (%)</label>
+                                        <input type="number" step="10" x-model="formData.panEnd"
+                                            class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-[10px] text-gray-400 block">Zoom Fin</label>
-                                <input type="number" step="0.1" x-model="formData.zoomEnd"
-                                    class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono">
-                            </div>
+                        </div>
+
+                        <div x-show="isVideo" class="mt-2 text-[10px] text-red-400 italic">
+                            * Efectos de movimiento desactivados para video.
                         </div>
                     </div>
 
@@ -398,17 +409,32 @@
             editIndex: null, // null = new, int = index in script.blocks[0].scenes
 
             // Form Data Model
-            moveType: 'NONE', // Helper logic
             formData: {
                 title: '',
                 asset_type: '',
                 text: '',
                 pause: 0.5,
                 subtitle: '',
+                fit: false,
+
+                // Zoom
+                useZoom: false,
                 zoomStart: 1.0,
                 zoomEnd: 1.2,
-                move: '',
+
+                // Pan/Move
+                usePan: false,
+                panDir: 'HOR',
+                panStart: 50,
+                panEnd: 50,
+
                 overlay: ''
+            },
+
+            get isVideo() {
+                if (!this.formData.asset_type) return false;
+                const ext = this.formData.asset_type.split('.').pop().toLowerCase();
+                return ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext);
             },
 
             init() {
@@ -417,12 +443,13 @@
                 setInterval(() => { if (!this.showModal) this.saveScript(true); }, 60000);
             },
 
+            // ... (loadScript, saveScript, deleteScene, export/import unchanged) ...
+
             async loadScript() {
                 try {
                     const res = await fetch(`/generator/api/project/${this.projectId}/script/`);
                     const data = await res.json();
 
-                    // Validate basic structure
                     if (!data.blocks) data.blocks = [{ title: "Bloque Principal", scenes: [] }];
                     if (!data.blocks[0].scenes) data.blocks[0].scenes = [];
 
@@ -432,6 +459,7 @@
                 }
             },
 
+            // Re-declaring saveScript to be safe or assuming it exists, I'll paste the context needed
             async saveScript(silent = false) {
                 if (!silent) this.isSaving = true;
                 try {
@@ -443,7 +471,6 @@
                         },
                         body: JSON.stringify(this.script)
                     });
-
                     if (!res.ok) throw new Error("Save failed");
                 } catch (e) {
                     if (!silent) alert("Error guardando el guion: " + e.message);
@@ -457,11 +484,9 @@
                 this.showModal = true;
 
                 if (mode === 'edit' && index !== null) {
-                    // Load Scene Data
                     const scene = this.script.blocks[0].scenes[index];
                     const asset = scene.assets && scene.assets.length > 0 ? scene.assets[0] : {};
 
-                    // Parse complex logic back to form
                     this.formData = {
                         title: scene.title || '',
                         asset_type: asset.type || '',
@@ -469,27 +494,37 @@
                         pause: scene.pause || 0.5,
                         subtitle: scene.subtitle || '',
                         overlay: asset.overlay || '',
-                        fit: asset.fit || false, // Load fit
+                        fit: asset.fit || false,
 
-                        // Default logic helpers
+                        useZoom: false,
                         zoomStart: 1.0,
-                        zoomEnd: 1.2
+                        zoomEnd: 1.2,
+                        usePan: false,
+                        panDir: 'HOR',
+                        panStart: 50,
+                        panEnd: 50
                     };
 
-                    // Parse Move/Zoom
+                    // Load Zoom
                     if (asset.zoom) {
+                        this.formData.useZoom = true;
                         const parts = asset.zoom.split(':');
-                        this.moveType = parts[0] >= parts[1] ? 'ZOOM_OUT' : 'ZOOM_IN'; // Rough guess
-                        if (parts.length > 1) {
+                        if (parts.length >= 2) {
                             this.formData.zoomStart = parseFloat(parts[0]);
                             this.formData.zoomEnd = parseFloat(parts[1]);
                         }
-                    } else if (asset.move) {
-                        if (asset.move.includes('HOR')) this.moveType = 'HOR_PAN';
-                        else if (asset.move.includes('VER')) this.moveType = 'VER_PAN';
-                        else this.moveType = 'NONE';
-                    } else {
-                        this.moveType = 'NONE';
+                    }
+
+                    // Load Move
+                    if (asset.move) {
+                        this.formData.usePan = true;
+                        const parts = asset.move.split(':');
+                        // Expecting DIR:START:END or just some variation
+                        if (parts.length >= 3) {
+                            this.formData.panDir = parts[0] || 'HOR';
+                            this.formData.panStart = parseFloat(parts[1]);
+                            this.formData.panEnd = parseFloat(parts[2]);
+                        }
                     }
 
                 } else {
@@ -500,12 +535,18 @@
                         text: '',
                         pause: 1.0,
                         subtitle: '',
+                        fit: false,
+                        overlay: '',
+
+                        useZoom: true, // Default active for images
                         zoomStart: 1.0,
                         zoomEnd: 1.2,
-                        overlay: '',
-                        fit: false
+
+                        usePan: false,
+                        panDir: 'HOR',
+                        panStart: 50,
+                        panEnd: 50
                     };
-                    this.moveType = 'ZOOM_IN';
                 }
             },
 
@@ -515,7 +556,6 @@
 
             insertSubtitleTag() {
                 if (this.formData.subtitle) {
-                    // Ensure space before
                     const tag = ` [SUB: ${this.formData.subtitle}] `;
                     this.formData.text += tag;
                 }
@@ -525,16 +565,20 @@
                 // Construct Asset Object
                 const assetObj = {
                     type: this.formData.asset_type || 'placeholder.png',
-                    fit: this.formData.fit // Save fit
+                    fit: this.formData.fit
                 };
 
-                // Construct Effects
-                if (this.moveType === 'ZOOM_IN' || this.moveType === 'ZOOM_OUT') {
+                // Video Logic Check
+                const isVid = this.isVideo;
+
+                // Zoom
+                if (this.formData.useZoom && !isVid) {
                     assetObj.zoom = `${this.formData.zoomStart}:${this.formData.zoomEnd}`;
-                } else if (this.moveType === 'HOR_PAN') {
-                    assetObj.move = "HOR:0:100"; // Default, could add slider
-                } else if (this.moveType === 'VER_PAN') {
-                    assetObj.move = "VER:0:100";
+                }
+
+                // Move
+                if (this.formData.usePan && !isVid) {
+                    assetObj.move = `${this.formData.panDir}:${this.formData.panStart}:${this.formData.panEnd}`;
                 }
 
                 if (this.formData.overlay) {
@@ -546,7 +590,7 @@
                     title: this.formData.title || 'Nueva Escena',
                     text: this.formData.text,
                     pause: parseFloat(this.formData.pause),
-                    subtitle: this.formData.subtitle, // Save explicitly
+                    subtitle: this.formData.subtitle,
                     assets: [assetObj]
                 };
 
@@ -559,10 +603,9 @@
                     scenes.push(newScene);
                 }
 
-                // Force Alpine to notice change
                 this.script.blocks[0].scenes = [...scenes];
 
-                this.saveScript(false); // Trigger visual save
+                this.saveScript(false);
                 this.closeModal();
             },
 
