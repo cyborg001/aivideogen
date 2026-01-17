@@ -536,6 +536,7 @@ def get_project_script_json(request, project_id):
     
     return JsonResponse(data, safe=False)
 
+@csrf_exempt
 def save_project_script_json(request, project_id):
     """API: Saves the sent JSON back to the project script_text."""
     if request.method != 'POST':
@@ -544,13 +545,45 @@ def save_project_script_json(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     try:
         import json
-        body = json.loads(request.body)
-        # Basic validation could go here
+        data = json.loads(request.body)
         
-        # Save prettified
-        project.script_text = json.dumps(body, indent=4, ensure_ascii=False)
+        # 1. Update Script JSON
+        script_data = data
+        if 'script' in data:
+            script_data = data['script']
+        
+        project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
+        
+        # 2. Update Project Settings (if present)
+        if 'settings' in data:
+            settings_data = data['settings']
+            
+            if 'title' in settings_data:
+                project.title = settings_data['title']
+                
+            if 'music_volume' in settings_data:
+                try: 
+                    project.music_volume = float(settings_data['music_volume'])
+                except: 
+                    pass
+            
+            # Global Music (filename string)
+            if 'background_music' in settings_data:
+                bg_music_name = settings_data['background_music']
+                if not bg_music_name:
+                     project.background_music = None
+                else:
+                     from .models import Music
+                     # Try exact match first, then contains
+                     m = Music.objects.filter(file__iexact=bg_music_name).first() or \
+                         Music.objects.filter(name__iexact=bg_music_name).first() or \
+                         Music.objects.filter(file__icontains=bg_music_name).first()
+                     if m: 
+                         project.background_music = m
+
         project.save()
-        return JsonResponse({'status': 'saved'})
+        return JsonResponse({'status': 'saved', 'title': project.title})
+        
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 

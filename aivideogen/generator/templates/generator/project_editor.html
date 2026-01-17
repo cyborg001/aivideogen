@@ -36,7 +36,8 @@
     </style>
 </head>
 
-<body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden" x-data="scriptEditor({{ project.id }})">
+<body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
+    x-data="scriptEditor({{ project.id }}, '{{ project.title|escapejs }}', {{ project.music_volume }}, '{{ project.background_music.file.name|default:''|escapejs }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -48,13 +49,17 @@
             <span class="text-gray-600">|</span>
             <span class="text-xl font-bold text-gray-200">Editor Visual</span>
             <span class="text-gray-600">/</span>
-            <span class="text-blue-400 font-mono text-sm truncate max-w-[200px]">{{ project.title }}</span>
+            <span class="text-blue-400 font-mono text-sm truncate max-w-[200px] nav-title">{{ project.title }}</span>
         </div>
         <div class="flex items-center gap-3">
             <!-- File Operations -->
             <input type="file" x-ref="jsonFile" class="hidden" @change="importScript($event)">
             <button @click="$refs.jsonFile.click()"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">📂 Cargar JSON</button>
+            <button @click="showSettingsModal = true"
+                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">⚙️ Configuración</button>
+
+            <div class="w-px h-6 bg-gray-600 mx-2"></div>
 
             <span x-show="isSaving" class="text-yellow-400 text-sm font-mono animate-pulse" x-cloak>Guardando...</span>
             <button @click="saveScript()"
@@ -189,6 +194,64 @@
                 {% endif %}
             </div>
 
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div x-show="showSettingsModal" style="display: none;"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        x-transition.opacity x-cloak>
+        <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md p-6 animate-scale"
+            @click.away="showSettingsModal = false">
+            <h2 class="text-xl font-bold text-gray-200 mb-6 flex items-center gap-2">
+                <span>⚙️</span> Configuración del Proyecto
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Project Title -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Nombre del Proyecto</label>
+                    <input type="text" x-model="projectSettings.title"
+                        class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <!-- Music Volume -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1 flex justify-between">
+                        <span>Volumen Música Global</span>
+                        <span class="text-xs font-mono text-blue-400" x-text="projectSettings.music_volume"></span>
+                    </label>
+                    <input type="range" min="0" max="1" step="0.05" x-model="projectSettings.music_volume"
+                        class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Global Speed -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Velocidad de Voz Global</label>
+                    <input type="text" x-model="projectSettings.voice_speed"
+                        class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white font-mono placeholder-gray-600 text-sm"
+                        placeholder="Ej: +10% o vacio">
+                    <p class="text-[10px] text-gray-500 mt-1">Afecta a todo el guion si la escena no tiene override.</p>
+                </div>
+
+                <!-- Background Music -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Música de Fondo (Nombre Archivo)</label>
+                    <input type="text" x-model="projectSettings.background_music"
+                        class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white font-mono text-xs placeholder-gray-600"
+                        placeholder="Ej: nombre_archivo.mp3">
+                    <p class="text-[10px] text-gray-500 mt-1">Debe coincidir con un archivo en biblioteca.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3 border-t border-gray-800 pt-4">
+                <button @click="showSettingsModal = false"
+                    class="px-4 py-2 rounded text-gray-400 hover:text-white transition text-xs font-bold uppercase tracking-wider">Cancelar</button>
+                <button @click="saveSettings()"
+                    class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold transition text-xs uppercase tracking-wider shadow-lg shadow-blue-900/50">
+                    Guardar Configuración
+                </button>
+            </div>
         </div>
     </div>
 
@@ -399,14 +462,23 @@
 </body>
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('scriptEditor', (projectId) => ({
+        Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName) => ({
             projectId: projectId,
             script: {},
             isSaving: false,
 
             // Modal State
             showModal: false,
+            showSettingsModal: false,
             editIndex: null, // null = new, int = index in script.blocks[0].scenes
+
+            // Settings Model
+            projectSettings: {
+                title: initialTitle,
+                music_volume: initialVol,
+                background_music: initialMusicName,
+                voice_speed: '+0%' // Stored in script, init later
+            },
 
             // Form Data Model
             formData: {
@@ -440,7 +512,7 @@
             init() {
                 this.loadScript();
                 // Auto-save setup (every 60s)
-                setInterval(() => { if (!this.showModal) this.saveScript(true); }, 60000);
+                setInterval(() => { if (!this.showModal && !this.showSettingsModal) this.saveScript(true); }, 60000);
             },
 
             // ... (loadScript, saveScript, deleteScene, export/import unchanged) ...
@@ -454,6 +526,12 @@
                     if (!data.blocks[0].scenes) data.blocks[0].scenes = [];
 
                     this.script = data;
+
+                    // Sync Script Settings
+                    if (this.script.voice_speed) this.projectSettings.voice_speed = this.script.voice_speed;
+                    // Sync loaded music/volume if script overrides project default? For now, trust project default or script settings if present.
+                    // But init args take precedence for UI initial state currently.
+
                 } catch (e) {
                     console.error("Error loading script:", e);
                 }
@@ -462,21 +540,40 @@
             // Re-declaring saveScript to be safe or assuming it exists, I'll paste the context needed
             async saveScript(silent = false) {
                 if (!silent) this.isSaving = true;
+
+                // SYNC Settings to Script Object
+                this.script.voice_speed = this.projectSettings.voice_speed;
+                // We keep background_music in projectSettings mainly for the Save endpoint side-effect
+
                 try {
+                    const payload = {
+                        script: this.script,
+                        settings: this.projectSettings
+                    };
+
                     const res = await fetch(`/generator/api/project/${this.projectId}/script/save/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
-                        body: JSON.stringify(this.script)
+                        body: JSON.stringify(payload)
                     });
+
+                    const jsonRes = await res.json();
                     if (!res.ok) throw new Error("Save failed");
+                    if (jsonRes.title) document.querySelector('.nav-title').innerText = jsonRes.title;
+
                 } catch (e) {
                     if (!silent) alert("Error guardando el guion: " + e.message);
                 } finally {
                     if (!silent) setTimeout(() => { this.isSaving = false; }, 500);
                 }
+            },
+
+            saveSettings() {
+                this.saveScript();
+                this.showSettingsModal = false;
             },
 
             openModal(mode, index = null) {
