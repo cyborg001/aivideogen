@@ -4,7 +4,7 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 
 | Versión | Fecha | Hito Técnico | Cambios Realizados |
 | :--- | :--- | :--- | :--- |
-| **3.0.0-ALPHA** | 2026-01-12 | **The AVGL Birth** | **Rebranding:** App renombrada a AIVideogen. <br> **Arquitectura:** Migración de columnas a etiquetas XML-Style. <br> **Infraestructura:** Creación de entorno de desarrollo `aivideogen3`. |
+| **3.0.0** | 2026-01-16 | **Unified Engine Era** | **Legacy Removed:** Eliminación total del motor antiguo. Todo el renderizado pasa por AVGL v4. <br> **Smart Text Bridge:** Soporte nativo de `FIT`, `ZOOM`, `OVERLAY` en guiones de texto (5 columnas) mediante conversión automática a JSON. <br> **Single Pipeline:** Unificación de lógica de renderizado para máxima consistencia. |
 | 2.24.4 | 2026-01-11 | **Smart Title Cleaner** | Mejora de limpieza de títulos con Regex (Strips emojis & prefixes). |
 | 2.0.0 | 2025-12-27 | Lanzamiento Dist | Creación de la versión independiente (dist) con sistema de migraciones automáticas. |
 | 2.1.0 | 2025-12-28 | IA Scripting | Integración de Gemini Pro para generación automática de guiones y prompts visuales. |

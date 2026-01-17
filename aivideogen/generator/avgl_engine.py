@@ -42,6 +42,8 @@ class AVGLScene:
         self.assets = []  # List of AVGLAsset
         self.sfx = []  # List of AVGLSFX
         self.pause = 0.0
+        self.subtitle = ""
+
 
 
 class AVGLBlock:
@@ -79,12 +81,20 @@ class AVGLScript:
 def parse_avgl_json(json_text):
     """
     Parses AVGL v4.0 JSON format into AVGLScript object.
-    Raises ValueError if JSON is invalid.
+    Now supports Legacy 5-column text by auto-converting if JSON validation fails.
     """
+    data = None
     try:
         data = json.loads(json_text)
     except json.JSONDecodeError as e:
-        raise ValueError(f"JSON inválido en línea {e.lineno}: {e.msg}")
+        # Fallback: Try to convert from 5-column text
+        # Only if it looks like a script (contains pipes)
+        if '|' in json_text:
+             # We assume title is handled downstream or we extract it?
+             # For now use default title or update later
+             data = convert_text_to_avgl_json(json_text)
+        else:
+             raise ValueError(f"Formato desconocido (No es JSON ni Guion de Texto válido): {e.msg}")
     
     # Create script with metadata
     script = AVGLScript(title=data.get("title", "Video Sin Título"))
@@ -97,7 +107,9 @@ def parse_avgl_json(json_text):
     # Parse blocks
     blocks_data = data.get("blocks", [])
     if not blocks_data:
-        raise ValueError("El script debe tener al menos un 'block'")
+        # Tolerance for empty scripts or just created
+        pass
+        # raise ValueError("El script debe tener al menos un 'block'")
     
     for block_data in blocks_data:
         if not isinstance(block_data, dict):
@@ -130,6 +142,7 @@ def parse_avgl_json(json_text):
             scene.voice = scene_data.get("voice", script.voice)
             scene.speed = scene_data.get("speed", script.speed)
             scene.pause = scene_data.get("pause", 0.0)
+            scene.subtitle = scene_data.get("subtitle", "")
             
             # Parse assets
             assets_data = scene_data.get("assets", [])
@@ -359,5 +372,125 @@ async def generate_audio_elevenlabs(text, output_path, voice_id, api_key):
     except Exception as e:
         print(f"Error in generate_audio_elevenlabs: {e}")
         return False
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Text-to-JSON Converter (Unified Engine Bridge)
+# ═══════════════════════════════════════════════════════════════════
+
+def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
+    """
+    Converts legacy 5-column text script into AVGL v4 JSON structure.
+    Enables FIT, ZOOM and OVERLAY support for text-mode scripts.
+    
+    Format: TITULO | ASSET | DIRECTION/EFFECT | TEXT | PAUSE
+    """
+    script = {
+        "title": title,
+        "voice": "es-ES-AlvaroNeural",
+        "speed": 1.0,
+        "style": "neutral",
+        "blocks": []
+    }
+    
+    # Single block for text-converted scripts
+    block = {
+        "title": "Capítulo Principal",
+        "scenes": []
+    }
+    
+    lines = text_script.strip().split('\n')
+    
+    for line in lines:
+        if not line.strip() or line.strip().startswith('#'):
+            continue
+            
+        parts = [p.strip() for p in line.split('|')]
+        if len(parts) < 3:
+            continue
+            
+        # Parse fields
+        s_title = parts[0]
+        s_asset = parts[1]
+        
+        # Direction/Effect logic
+        s_dir = ""
+        s_text = ""
+        s_pause = 0.0
+        
+        # Smart detection of columns based on content
+        # Legacy 3-col: TITLE | ASSET | TEXT
+        # Legacy 4-col: TITLE | ASSET | DIR | TEXT
+        # Pro 5-col:    TITLE | ASSET | DIR | TEXT | PAUSE
+        
+        if len(parts) == 3:
+            # Ambiguity: Is p[2] text or direction? 
+            # Legacy engine assumed Text. We stick to that.
+            s_text = parts[2]
+            
+        elif len(parts) >= 4:
+            s_dir = parts[2] # "FIT + ZOOM..."
+            s_text = parts[3]
+            
+            if len(parts) >= 5:
+                try: s_pause = float(parts[4])
+                except: s_pause = 0.0
+
+        # Subtitle Extraction [SUB: Text]
+        s_subtitle = ""
+        sub_match = re.search(r'\[SUB:\s*(.*?)\]', s_text)
+        if sub_match:
+            s_subtitle = sub_match.group(1).strip()
+            s_text = re.sub(r'\[SUB:\s*.*?\]', '', s_text).strip()
+            # Clean up double spaces if any
+            s_text = re.sub(r'\s+', ' ', s_text)
+        
+        # Process Direction/Effect into Asset Params
+        # Syntax: "FIT + ZOOM:1.0:1.3 + OVERLAY:dust"
+        asset_obj = {
+            "type": s_asset,
+            "fit": False
+        }
+        
+        if 'FIT' in s_dir.upper():
+            asset_obj['fit'] = True
+            
+        # Extract ZOOM
+        # Looking for ZOOM:X:Y or ZOOM_IN:X:Y
+        # For simplicity, we just pass the param strings to logic if found
+        # But we need to separate them for the JSON fields
+        
+        # Split by '+'
+        dir_parts = [d.strip() for d in s_dir.split('+')]
+        
+        zoom_val = "1.0:1.3" # Default if not specified but some FX present? 
+        # Actually AVGL default is handled in engine if None.
+        
+        for part in dir_parts:
+            up = part.upper()
+            if 'ZOOM' in up:
+                # Extract value
+                if ':' in part:
+                    asset_obj['zoom'] = part.split(':', 1)[1]
+            # FIX: Use startswith to avoid matching 'O-VER-LAY'
+            if up.startswith('HOR') or up.startswith('VER'):
+                asset_obj['move'] = part
+            if 'OVERLAY' in up:
+                # OVERLAY:name:vol -> "name"
+                subparts = part.split(':')
+                if len(subparts) > 1:
+                    asset_obj['overlay'] = subparts[1]
+        
+        scene = {
+            "title": s_title,
+            "text": s_text,
+            "assets": [asset_obj],
+            "pause": s_pause,
+            "subtitle": s_subtitle
+        }
+        block['scenes'].append(scene)
+        
+    script['blocks'].append(block)
+    return script
 
 

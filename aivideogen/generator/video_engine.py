@@ -209,10 +209,21 @@ def generate_video_avgl(project):
         return
     
     # Update project title if specified and NOT already set by user manually
-    # (Assuming "Video Sin Título" or empty means it's safe to overwrite from script)
     if script.title and project.title in ["Sin Título", "Video Sin Título", "Proyecto sin título", ""]:
         project.title = script.title
         project.save()
+
+    # FORCE OVERRIDE: Apply Project Voice to Script
+    # This ensures "Dominican" request overrides "Alvaro" default in parse_avgl_json
+    if project.voice_id:
+        logger.log(f"🎤 Forzando voz del proyecto: {project.voice_id}")
+        script.voice = project.voice_id
+        # Propagate to all existing scenes that have default/None
+        for block in script.blocks:
+            for scene in block.scenes:
+                # If scene specific voice is same as default or empty, override
+                if not scene.voice or scene.voice == "es-ES-AlvaroNeural":
+                    scene.voice = project.voice_id
     
     # Setup directories
     temp_audio_dir = os.path.join(settings.MEDIA_ROOT, 'temp_audio')
@@ -268,8 +279,17 @@ def generate_video_avgl(project):
         text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
         
         if project.engine == 'edge':
-            speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
+            # SPEED LOGIC:
+            # 1. If scene.speed != 1.0, use it.
+            # 2. Else, check EDGE_TTS_RATE env var default.
             
+            env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
+            
+            if scene.speed != 1.0:
+                speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
+            else:
+                speed_rate = env_rate
+
             # DEBUG: Log exact params being sent
             clean_debug = text_with_emotions.replace('<', '{').replace('>', '}')
             logger.log(f"    🎤 DEBUG EdgeTTS: Voice='{scene.voice}' Rate='{speed_rate}' Text='{clean_debug[:50]}...'")
@@ -451,6 +471,39 @@ def generate_video_avgl(project):
             if scene_sfx_clips:
                 final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
                 audio_clip = final_scene_audio
+
+            # SUBTITLE RENDERING (New Feature)
+            if hasattr(scene, 'subtitle') and scene.subtitle:
+                try:
+                    # Style: Modern Sans-Serif, White, Bottom Center
+                    # Using 'Arial-Bold' or 'Impact' fallback
+                    font = 'Arial-Bold' if 'Arial-Bold' in TextClip.list('font') else 'Arial'
+                    
+                    # Create TextClip
+                    # Size: Proportional to height (e.g. 5%)
+                    fontsize = int(target_size[1] * 0.05) 
+                    
+                    txt_clip = TextClip(
+                        scene.subtitle,
+                        fontsize=fontsize,
+                        color='white',
+                        font=font,
+                        app=None, # Use default method
+                        stroke_color='black',
+                        stroke_width=2,
+                        method='caption',
+                        size=(int(target_size[0]*0.8), None) # Wrap width 80%
+                    )
+                    
+                    # Position: Bottom Center (with margin)
+                    txt_clip = txt_clip.with_position(('center', 0.85), relative=True).with_duration(duration)
+                    
+                    # Composite
+                    clip = CompositeVideoClip([clip, txt_clip])
+                    logger.log(f"    📝 Subtítulo añadido: '{scene.subtitle}'")
+                    
+                except Exception as e:
+                    logger.log(f"    ⚠️ Error renderizando subtítulo: {e}")
 
             # Set audio & append
             clip = clip.with_audio(audio_clip)
