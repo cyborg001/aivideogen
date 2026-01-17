@@ -24,6 +24,7 @@ urlpatterns = [
     path('sfx/<int:sfx_id>/delete/', views.delete_sfx, name='delete_sfx'),
     
     # Feature: Visual Script Editor
+    path('script/new/', views.create_script_draft, name='create_script_draft'),
     path('project/<int:project_id>/editor/', views.project_editor, name='project_editor'),
     path('api/project/<int:project_id>/script/', views.get_project_script_json, name='get_project_script_json'),
     path('api/project/<int:project_id>/script/save/', views.save_project_script_json, name='save_project_script_json'),

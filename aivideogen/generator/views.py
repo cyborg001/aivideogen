@@ -488,6 +488,29 @@ def delete_sfx(request, sfx_id):
 # VISUAL SCRIPT EDITOR (Feature: visual-editor)
 # -------------------------------------------------------------------------
 
+def create_script_draft(request):
+    """Creates a blank draft project and redirects to the editor."""
+    from django.utils import timezone
+    title = f"Nuevo Guion {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+    
+    # Initialize with a basic JSON template
+    default_script = {
+        "blocks": [
+            {
+                "title": "Bloque 1",
+                "scenes": []
+            }
+        ]
+    }
+    import json
+    
+    project = VideoProject.objects.create(
+        title=title,
+        status='pending', # Using pending as generic "draft" for now, or add specific choice later
+        script_text=json.dumps(default_script, indent=4)
+    )
+    return redirect('generator:project_editor', project_id=project.id)
+
 def project_editor(request, project_id):
     """Renders the main visual editor interface."""
     project = get_object_or_404(VideoProject, id=project_id)

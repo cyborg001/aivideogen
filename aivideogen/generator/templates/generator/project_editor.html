@@ -49,6 +49,15 @@
             </a>
         </div>
         <div class="flex items-center gap-3">
+            <!-- File Operations -->
+            <input type="file" x-ref="jsonFile" class="hidden" @change="importScript($event)">
+            <button @click="$refs.jsonFile.click()"
+                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">📂 Cargar JSON</button>
+            <button @click="exportScript()"
+                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">⬇️ Descargar</button>
+
+            <div class="w-px h-6 bg-gray-600 mx-2"></div>
+
             <span x-show="isSaving" class="text-yellow-400 text-sm font-mono animate-pulse" x-cloak>Guardando...</span>
             <button @click="saveScript()"
                 class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded shadow flex items-center gap-2 font-bold transition">
@@ -546,6 +555,42 @@
                     this.script.blocks[0].scenes.splice(index, 1);
                     this.saveScript();
                 }
+            },
+
+            exportScript() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.script, null, 4));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                const name = "guion_" + new Date().toISOString().slice(0, 10) + ".json";
+                downloadAnchorNode.setAttribute("download", name);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            },
+
+            importScript(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        if (!json.blocks && !json.scenes) throw new Error("Formato JSON inválido");
+
+                        // Basic norm
+                        if (!json.blocks) json.blocks = [{ title: "Bloque Importado", scenes: json.scenes || [] }];
+
+                        this.script = json;
+                        this.saveScript(); // Save to DB
+                        alert("✅ Guion cargado correctamente.");
+                    } catch (err) {
+                        alert("Error cargando JSON: " + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                // Reset input
+                event.target.value = '';
             }
 
         }));
