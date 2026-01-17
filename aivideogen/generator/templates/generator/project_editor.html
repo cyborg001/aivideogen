@@ -53,10 +53,6 @@
             <input type="file" x-ref="jsonFile" class="hidden" @change="importScript($event)">
             <button @click="$refs.jsonFile.click()"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">📂 Cargar JSON</button>
-            <button @click="exportScript()"
-                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">⬇️ Descargar</button>
-
-            <div class="w-px h-6 bg-gray-600 mx-2"></div>
 
             <span x-show="isSaving" class="text-yellow-400 text-sm font-mono animate-pulse" x-cloak>Guardando...</span>
             <button @click="saveScript()"
@@ -555,17 +551,6 @@
                     this.script.blocks[0].scenes.splice(index, 1);
                     this.saveScript();
                 }
-            },
-
-            exportScript() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.script, null, 4));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                const name = "guion_" + new Date().toISOString().slice(0, 10) + ".json";
-                downloadAnchorNode.setAttribute("download", name);
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
             },
 
             importScript(event) {
