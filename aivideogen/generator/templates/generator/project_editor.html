@@ -41,12 +41,14 @@
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
         <div class="flex items-center gap-4">
-            <a href="{% url 'generator:home' %}" class="text-xl font-bold text-gray-200 hover:text-white">aiVideoGen</a>
-            <span class="text-gray-600">/</span>
-            <a href="{% url 'generator:project_detail' project.id %}"
-                class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
-                <span>&larr;</span> {{ project.title }}
+            <a href="{% url 'generator:home' %}"
+                class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-2">
+                <span>🔙</span> Volver
             </a>
+            <span class="text-gray-600">|</span>
+            <span class="text-xl font-bold text-gray-200">Editor Visual</span>
+            <span class="text-gray-600">/</span>
+            <span class="text-blue-400 font-mono text-sm truncate max-w-[200px]">{{ project.title }}</span>
         </div>
         <div class="flex items-center gap-3">
             <!-- File Operations -->
@@ -306,12 +308,24 @@
                     <div class="bg-gray-800 p-3 rounded border border-gray-700">
                         <label class="block text-xs text-blue-300 mb-2 font-bold">Movimiento de Cámara</label>
 
+                        <!-- Fit Checkbox (Decoupled) -->
+                        <div class="mb-3 pb-3 border-b border-gray-700">
+                            <label
+                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-yellow-300 font-bold">
+                                <input type="checkbox" x-model="formData.fit"
+                                    class="text-yellow-500 rounded focus:ring-0">
+                                <span>Ajustar a Pantalla (Fit)</span>
+                            </label>
+                            <p class="text-[10px] text-gray-500 ml-5">Evita recortes. Ideal para capturas de pantalla o
+                                diagramas.</p>
+                        </div>
+
                         <div class="space-y-2">
                             <label
                                 class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
                                 <input type="radio" name="moveType" value="NONE" x-model="moveType"
                                     class="text-blue-500">
-                                <span>Estático / Fit</span>
+                                <span>Estático (Sin movimiento)</span>
                             </label>
                             <label
                                 class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-300">
@@ -455,6 +469,7 @@
                         pause: scene.pause || 0.5,
                         subtitle: scene.subtitle || '',
                         overlay: asset.overlay || '',
+                        fit: asset.fit || false, // Load fit
 
                         // Default logic helpers
                         zoomStart: 1.0,
@@ -487,7 +502,8 @@
                         subtitle: '',
                         zoomStart: 1.0,
                         zoomEnd: 1.2,
-                        overlay: ''
+                        overlay: '',
+                        fit: false
                     };
                     this.moveType = 'ZOOM_IN';
                 }
@@ -509,7 +525,7 @@
                 // Construct Asset Object
                 const assetObj = {
                     type: this.formData.asset_type || 'placeholder.png',
-                    fit: false
+                    fit: this.formData.fit // Save fit
                 };
 
                 // Construct Effects
@@ -534,13 +550,17 @@
                     assets: [assetObj]
                 };
 
+                // REACTIVITY FIX: Mutate array reference
+                const scenes = this.script.blocks[0].scenes;
+
                 if (this.editIndex !== null) {
-                    // Update
-                    this.script.blocks[0].scenes[this.editIndex] = newScene;
+                    scenes[this.editIndex] = newScene;
                 } else {
-                    // Append
-                    this.script.blocks[0].scenes.push(newScene);
+                    scenes.push(newScene);
                 }
+
+                // Force Alpine to notice change
+                this.script.blocks[0].scenes = [...scenes];
 
                 this.saveScript(false); // Trigger visual save
                 this.closeModal();
