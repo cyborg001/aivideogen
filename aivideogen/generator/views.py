@@ -483,3 +483,65 @@ def delete_sfx(request, sfx_id):
         else:
             messages.success(request, f"Efecto '{sfx_name}' eliminado de la biblioteca.")
     return redirect('generator:sfx_list')
+
+# -------------------------------------------------------------------------
+# VISUAL SCRIPT EDITOR (Feature: visual-editor)
+# -------------------------------------------------------------------------
+
+def project_editor(request, project_id):
+    """Renders the main visual editor interface."""
+    project = get_object_or_404(VideoProject, id=project_id)
+    return render(request, 'generator/project_editor.html', {'project': project})
+
+def get_project_script_json(request, project_id):
+    """API: Returns the project script as JSON. Auto-validates/initializes."""
+    project = get_object_or_404(VideoProject, id=project_id)
+    import json
+    from .avgl_engine import convert_text_to_avgl_json
+
+    data = {}
+    try:
+        # Try parse as JSON
+        data = json.loads(project.script_text)
+    except:
+        # Fallback: Convert text -> JSON on fly
+        if project.script_text:
+            try:
+                data = convert_text_to_avgl_json(project.script_text, title=project.title)
+            except Exception as e:
+                return JsonResponse({'error': f"Failed to convert script: {str(e)}"}, status=400)
+    
+    return JsonResponse(data, safe=False)
+
+def save_project_script_json(request, project_id):
+    """API: Saves the sent JSON back to the project script_text."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    project = get_object_or_404(VideoProject, id=project_id)
+    try:
+        import json
+        body = json.loads(request.body)
+        # Basic validation could go here
+        
+        # Save prettified
+        project.script_text = json.dumps(body, indent=4, ensure_ascii=False)
+        project.save()
+        return JsonResponse({'status': 'saved'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def scene_form(request, project_id):
+    """HTMX: Returns the modal form content for adding/editing a scene."""
+    # Context data from GET params (pre-fill)
+    index = request.GET.get('index', '') # If empty -> Add Mode
+    
+    # Normally we'd fetch scene data from DB, but here the Frontend 
+    # will pass data into the form via JS or we construct an empty one.
+    # For now, we render a generic form.
+    
+    return render(request, 'generator/scene_form.html', {
+        'project_id': project_id,
+        'index': index,
+        'assets': Asset.objects.all().order_by('-uploaded_at') # Check context size!
+    })

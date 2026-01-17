@@ -1,8 +1,13 @@
 {% extends 'generator/base.html' %}
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1>{{ project.title }}</h1>
-    <span class="status-badge status-{{ project.status }}" style="font-size: 1rem;">{{ project.status_label }}</span>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1>{{ project.title }}</h1>
+        <span class="status-badge status-{{ project.status }}" style="font-size: 1rem;">{{ project.status_label
+            }}</span>
+    </div>
+    <a href="{% url 'generator:project_editor' project.id %}" class="btn"
+        style="background-color: #4f46e5; border-color: #4f46e5;">✨ Abrir Editor Visual</a>
 </div>
 
 <div class="card">
@@ -77,8 +82,12 @@
         ❌ La generación de este video falló. Revisa los logs arriba.
         {% endif %}
     </div>
-    <a href="{% url 'generator:create_project' %}?retry_project={{ project.id }}" class="btn"
-        style="width: 100%; margin-bottom: 20px;">Reintentar Edición (Cargar datos)</a>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'generator:create_project' %}?retry_project={{ project.id }}" class="btn"
+            style="flex: 1;">Reintentar Edición</a>
+        <a href="{% url 'generator:project_editor' project.id %}" class="btn"
+            style="flex: 1; background-color: #4f46e5; border-color: #4f46e5;">✨ Editor Visual (BETA)</a>
+    </div>
     {% endif %}
     {% endif %}
 </div>
