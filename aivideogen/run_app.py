@@ -43,7 +43,7 @@ if __name__ == "__main__":
     
     # Get configuration
     port = os.getenv('PORT', '8888')
-    version = "3.0.0-ALPHA"
+    version = "2.26.1-STABLE"
     
     print(f"═══════════════════════════════════════════════════════")
     print(f"      AIVideogen v{version} - MOTOR DE EVENTOS")

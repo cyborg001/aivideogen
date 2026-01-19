@@ -348,12 +348,13 @@ En el campo `text`, puedes usar tags especiales para controlar el tono:
 ### ✅ DO (Hacer)
 - Usa nombres de archivo descriptivos en `assets`
 - Combina zoom + pan para dinamismo
+- **Raccord de Zoom**: Si repites imagen, inicia el zoom donde terminó el anterior (ej. 1.1 -> 1.1)
+- **Overlay Continuo**: Mantén el mismo overlay en escenas consecutivas del mismo lugar
 - Usa `pause` para momentos dramáticos
 - Alterna voces en diálogos (`voice` override)
-- Usa overlays para atmósfera cinematográfica
 
 ### ❌ DON'T (Evitar)
-- No uses zoom estático (`"1.0:1.0"`) - es innecesario
+- No rompas el movimiento (ej. terminar en zoom 1.4 y saltar a 1.0 en la misma imagen)
 - No abuses de `[EMOTION]` tags - úsalos estratégicamente
 - No pongas `pause` muy largos (>3 seg) - aburren
 - No combines demasiados overlays en una misma escena

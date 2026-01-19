@@ -1,0 +1,106 @@
+{% extends 'generator/base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1>{{ project.title }}</h1>
+        <span class="status-badge status-{{ project.status }}" style="font-size: 1rem;">{{ project.get_status_display
+            }}</span>
+    </div>
+    <a href="{% url 'generator:project_editor' project.id %}" class="btn"
+        style="background-color: #4f46e5; border-color: #4f46e5;">✨ Abrir Editor Visual</a>
+</div>
+
+<div class="card">
+    {% if project.output_video and project.output_exists %}
+    <h3>Video Generado</h3>
+    <div class="video-preview"
+        style="margin-bottom: 30px; display: flex; justify-content: center; background: #000; border-radius: 10px; overflow: hidden; max-height: 70vh;">
+        <video controls style="max-width: 100%; max-height: 70vh; display: block;">
+            <source src="{{ project.output_video.url }}" type="video/mp4">
+            Tu navegador no soporta el video.
+        </video>
+    </div>
+    <br><br>
+    <a href="{{ project.output_video.url }}" download class="btn">Descargar Video</a>
+    <a href="{% url 'generator:youtube_upload' project.id %}" class="btn" target="_blank"
+        style="background-color: #ff0000; border-color: #ff0000; margin-left: 10px;">Subir a YouTube</a>
+    {% elif project.output_video %}
+    <div class="alert alert-warning" style="margin-bottom: 30px;">
+        ⚠️ El archivo de video generado ya no existe en el sistema.
+    </div>
+    {% else %}
+    {% if project.status == 'processing' or project.status == 'pending' %}
+    <p>El video se está generando. Esta página se recargará automáticamente.</p>
+    <div style="text-align: center; padding: 40px;">
+        <div class="loader"></div>
+        <p style="margin-top: 20px; color: #00ff00; font-family: monospace;">Generando video... Por favor espera.</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <form action="{% url 'generator:stop_project' project.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background-color: #ff4444; border-color: #ff4444;">🛑 Detener
+                Generación</button>
+        </form>
+    </div>
+
+    <style>
+        .loader {
+            border: 5px solid #1a1a1a;
+            /* Dark grey */
+            border-top: 5px solid #00ff00;
+            /* Neon Green */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <script>
+        setTimeout(function () {
+            window.location.reload(1);
+        }, 5000);
+    </script>
+    {% elif project.status == 'cancelled' or project.status == 'failed' or project.status == 'error' %}
+    <div class="alert alert-{% if project.status == 'cancelled' %}info{% else %}danger{% endif %}"
+        style="margin-bottom: 20px;">
+        {% if project.status == 'cancelled' %}
+        🛑 La generación de este video fue detenida manualmente.
+        {% else %}
+        ❌ La generación de este video falló. Revisa los logs arriba.
+        {% endif %}
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <!-- Option 1: Retry Logic (Sends back to creation flow with params, if supported) -->
+        <a href="{% url 'generator:create_project' %}?retry_project={{ project.id }}" class="btn"
+            style="flex: 1;">Reintentar con mismos parámetros</a>
+
+        <!-- Option 2: Open Editor -->
+        <a href="{% url 'generator:project_editor' project.id %}" class="btn"
+            style="flex: 1; background-color: #4f46e5; border-color: #4f46e5;">✨ Editar y Corregir</a>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Registro de Proceso (Logs)</h3>
+    <pre
+        style="background: #000; padding: 10px; overflow: auto; max-height: 300px; font-size: 0.9rem; color: #0f0;">{{ project.log_output }}</pre>
+</div>
+
+<a href="{% url 'generator:home' %}" class="btn btn-secondary">← Volver</a>
+{% endblock %}

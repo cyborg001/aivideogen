@@ -274,7 +274,11 @@ def generate_video_avgl(project):
 
         # CLEANUP: Strip Stage Directions (Parentheses)
         # Prevents reading "(Susurrando)" aloud.
-        curr_text = re.sub(r'\(.*?\)', '', curr_text).strip()
+        curr_text = re.sub(r'\(.*?\)', '', curr_text)
+        
+        # CLEANUP: Strip Subtitle Tags [SUB:...] 
+        # These are handled by the video renderer, but must be hidden from TTS
+        curr_text = re.sub(r'\[SUB:.*?\]', '', curr_text).strip()
 
         text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
         
@@ -292,14 +296,15 @@ def generate_video_avgl(project):
 
             # DEBUG: Log exact params being sent
             clean_debug = text_with_emotions.replace('<', '{').replace('>', '}')
-            logger.log(f"    🎤 DEBUG EdgeTTS: Voice='{scene.voice}' Rate='{speed_rate}' Text='{clean_debug[:50]}...'")
+            logger.log(f"    🎤 DEBUG EdgeTTS: Voice='{scene.voice}' Rate='{speed_rate}' Pitch='{scene.pitch}' Text='{clean_debug[:50]}...'")
 
-            ssml_text = wrap_ssml(text_with_emotions, scene.voice, speed_rate)
+            # CRITICAL FIX: Do NOT wrap in SSML here. generate_audio_edge handles segmentation manually.
+            # Wrapping it in SSML breaks the regex for [TAGS] inside.
             
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            success = loop.run_until_complete(
-                generate_audio_edge(ssml_text, audio_path, scene.voice, speed_rate)
+            success, intervals = loop.run_until_complete(
+                generate_audio_edge(text_with_emotions, audio_path, scene.voice, rate=speed_rate, pitch=scene.pitch or "+0Hz")
             )
             loop.close()
         else:
@@ -308,16 +313,27 @@ def generate_video_avgl(project):
             
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            # ElevenLabs doesn't support segmented intervals yet, so we treat it as 1 single block
             success = loop.run_until_complete(
                 generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key)
             )
             loop.close()
+            intervals = [] # Will be handled by fallback if empty
         
         if success:
-            audio_files.append((scene, audio_path))
+            # We store the intervals along with the path
+            audio_files.append({
+                "scene": scene,
+                "path": audio_path,
+                "intervals": intervals
+            })
         else:
             logger.log(f"  ⚠️ Error generando audio para escena {i+1}")
-            audio_files.append((scene, None))
+            audio_files.append({
+                "scene": scene,
+                "path": None,
+                "intervals": []
+            })
     
     # Check if we have at least some audio or scenes
     if not audio_files:
@@ -334,14 +350,15 @@ def generate_video_avgl(project):
     # ═══════════════════════════════════════════════════════════════════
     # SCENE-BY-SCENE GENERATION (Robust Sync)
     # ═══════════════════════════════════════════════════════════════════
-    from moviepy import afx, AudioClip
+    from moviepy import afx, AudioClip, AudioFileClip, CompositeAudioClip, TextClip, concatenate_videoclips, ImageClip
     block_clips = []
     block_metadata = []
     current_time = 0
     timestamps_list = []
     
     # Create a Scene-to-Audio mapping to prevent desync
-    scene_audio_map = {scene: audio for scene, audio in audio_files}
+    # Now it maps scene to a dict with 'path' and 'intervals'
+    scene_audio_map = {item['scene']: item for item in audio_files}
     
     for b_idx, block in enumerate(script.blocks):
         # CHECK CANCELLATION
@@ -369,23 +386,40 @@ def generate_video_avgl(project):
 
             # 1. Audio Retrieval (Robust)
             audio_clip = None
-            voice_duration = 0.0
-            if scene in scene_audio_map and scene_audio_map[scene]:
-                audio_path = scene_audio_map[scene]
-                audio_clip = AudioFileClip(audio_path)
-                voice_duration = audio_clip.duration
+            scene_intervals = []
+            if scene in scene_audio_map:
+                audio_entry = scene_audio_map[scene]
+                if audio_entry['path']:
+                    audio_clip = AudioFileClip(audio_entry['path'])
+                    scene_intervals = audio_entry.get('intervals', [])
             
             # Fallback for missing audio (ensures sync)
             if not audio_clip:
                 logger.log(f"  ⚠️ Audio NO generado per escena {s_idx+1}. Usando silencio.")
                 audio_clip = AudioClip(lambda t: [0,0], duration=1.0)
+                # If no intervals, we treat as a single block if it's fallback
+                scene_intervals = [(0, audio_clip.duration)]
             
+            # If engine didn't provide intervals (e.g. ElevenLabs or single block fallback)
+            if not scene_intervals:
+                scene_intervals = [(0, audio_clip.duration)]
+
             duration = audio_clip.duration + scene.pause
             
             # REVERT: Use only the first asset
             if scene.assets:
                 asset = scene.assets[0]
-                asset_path = os.path.join(assets_dir, asset.type)
+                
+                # CRITICAL FIX v2.26.1: Check if asset.type is valid before join
+                if not asset.type:
+                     logger.log(f"  ⚠️ Asset sin tipo definido en escena {s_idx+1}. Ignorando.")
+                     asset_path = "__INVALID__"
+                else:
+                     # Check if it's already an absolute path or exists relative to CWD
+                     if os.path.exists(asset.type) or os.path.isabs(asset.type):
+                         asset_path = asset.type
+                     else:
+                         asset_path = os.path.join(assets_dir, asset.type)
                 
                 # Tolerance for common extensions
                 if not os.path.exists(asset_path):
@@ -394,7 +428,7 @@ def generate_video_avgl(project):
                             asset_path += ext; break
 
                 if not os.path.exists(asset_path):
-                    logger.log(f"  ⚠️ Asset no encontrado: {asset.type}. Fondo negro.")
+                    logger.log(f"  ⚠️ Asset no encontrado o inválido: {asset.type}. Fondo negro.")
                     clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
                     
                     # Reset continuity on missing asset
@@ -472,38 +506,114 @@ def generate_video_avgl(project):
                 final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
                 audio_clip = final_scene_audio
 
-            # SUBTITLE RENDERING (New Feature)
-            if hasattr(scene, 'subtitle') and scene.subtitle:
+            # SUBTITLE RENDERING v3.2 (Calculated Offsets)
+            scene_subtitles = []
+            if hasattr(scene, 'subtitles') and scene.subtitles:
+                scene_subtitles = scene.subtitles
+            elif hasattr(scene, 'subtitle') and scene.subtitle:
+                # Compatibility with old single subtitle format
+                scene_subtitles = [{"text": scene.subtitle, "offset": 0, "duration": duration}]
+
+            if scene_subtitles:
                 try:
-                    # Style: Modern Sans-Serif, White, Bottom Center
-                    # Using 'Arial-Bold' or 'Impact' fallback
-                    font = 'Arial-Bold' if 'Arial-Bold' in TextClip.list('font') else 'Arial'
+                    from moviepy import CompositeVideoClip
                     
-                    # Create TextClip
-                    # Size: Proportional to height (e.g. 5%)
-                    fontsize = int(target_size[1] * 0.05) 
+                    # Font selection
+                    font = 'Arial'
+                    font_candidates = [
+                        r'C:\Windows\Fonts\arial.ttf',
+                        r'C:\Windows\Fonts\Arial.ttf',
+                        r'C:\Windows\Fonts\segoeui.ttf',
+                        r'C:\Windows\Fonts\verdana.ttf'
+                    ]
+                    for candidate in font_candidates:
+                        if os.path.exists(candidate):
+                            font = candidate; break
                     
-                    txt_clip = TextClip(
-                        scene.subtitle,
-                        fontsize=fontsize,
-                        color='white',
-                        font=font,
-                        app=None, # Use default method
-                        stroke_color='black',
-                        stroke_width=2,
-                        method='caption',
-                        size=(int(target_size[0]*0.8), None) # Wrap width 80%
-                    )
+                    # Calculate Word Duration for Sync
+                    # Logic: (audio_duration / word_count)
+                    clean_text = re.sub(r'\[.*?\]', '', scene.text)
+                    words = clean_text.split()
+                    word_count = len(words)
                     
-                    # Position: Bottom Center (with margin)
-                    txt_clip = txt_clip.with_position(('center', 0.85), relative=True).with_duration(duration)
+                    # Prevent division by zero, use a safe default if no words
+                    word_duration = (audio_clip.duration / word_count) if word_count > 0 else 0.5
                     
-                    # Composite
-                    clip = CompositeVideoClip([clip, txt_clip])
-                    logger.log(f"    📝 Subtítulo añadido: '{scene.subtitle}'")
+                    subtitle_clips = []
+                    fontsize = int(target_size[1] * 0.06) 
+                    
+                    for sub in scene_subtitles:
+                        sub_text = sub.get('text', '')
+                        if not sub_text: continue
+                        
+                        # Calculate Timing v4.0 (Word Count Based)
+                        # START TIME: word_index * word_duration
+                        sub_start = sub.get('offset', 0) * word_duration
+                        
+                        # DURATION: word_count * word_duration
+                        sub_word_count = sub.get('word_count')
+                        if sub_word_count:
+                            sub_dur = int(sub_word_count) * word_duration
+                        else:
+                            sub_dur = 3 # Fallback (v4.5 standard)
+                            
+                        # Ensure it fits in scene (Grace period of 0.1s)
+                        final_dur = min(sub_dur, (duration + 0.1) - sub_start)
+                        if final_dur < 0.1: continue 
+                        
+                        # Ensure start is within scene
+                        if sub_start >= duration: continue
+                        
+                        # STYLE v4.3 PRO (Compatibility Fix)
+                        from moviepy import ColorClip
+                        
+                        try:
+                            txt_content = sub_text.upper()
+                            
+                            # BOX DIMENSIONS: Force Integer!
+                            temp_size_txt = TextClip(text=txt_content, font_size=fontsize, font=font, color='yellow', method='label')
+                            box_w = int(temp_size_txt.w + 120)
+                            box_h = int(temp_size_txt.h + 60)
+                            temp_size_txt.close()
+                            
+                            # 1. Create Text Clip using 'caption'
+                            # 'align' is removed due to compatibility error in this environment
+                            txt_clip = TextClip(
+                                text=txt_content,
+                                font_size=fontsize,
+                                color='yellow',
+                                font=font,
+                                stroke_color='black',
+                                stroke_width=2,
+                                method='caption',
+                                size=(box_w, box_h)
+                            )
+                            
+                            # 2. Black Background: Force Integer!
+                            bg_clip = ColorClip(size=(int(box_w), int(box_h)), color=(0,0,0)).with_opacity(1.0)
+                            
+                            # 3. Composite (Stacking)
+                            sub_box = CompositeVideoClip([bg_clip, txt_clip], size=(int(box_w), int(box_h)))
+                            
+                            # 4. Final Timing & Positioning
+                            final_sub = sub_box.with_position(('center', 0.80), relative=True)\
+                                               .with_start(sub_start)\
+                                               .with_duration(final_dur)\
+                                               .with_end(sub_start + final_dur)
+                            
+                            subtitle_clips.append(final_sub)
+                            logger.log(f"    📝 Subtítulo v4.3: '{sub_text}' ({sub_start:.2f}s, words:{sub_word_count})")
+                        except Exception as sub_err:
+                            logger.log(f"    ⚠️ Error v4.3 Rendering: {sub_err}")
+                            # Fallback
+                            txt_clip = TextClip(text=sub_text, font_size=fontsize, color='yellow', bg_color='black', method='caption', size=(int(target_size[0]*0.8), None))
+                            subtitle_clips.append(txt_clip.with_position(('center', 0.80), relative=True).with_start(sub_start).with_duration(final_dur).with_end(sub_start + final_dur))
+
+                    if subtitle_clips:
+                        clip = CompositeVideoClip([clip] + subtitle_clips)
                     
                 except Exception as e:
-                    logger.log(f"    ⚠️ Error renderizando subtítulo: {e}")
+                    logger.log(f"    ⚠️ Error renderizando subtítulos: {e}")
 
             # Set audio & append
             clip = clip.with_audio(audio_clip)
@@ -514,8 +624,9 @@ def generate_video_avgl(project):
             timestamps_list.append(f"{mins:02d}:{secs:02d} - {scene.title}")
             
             # Track voice interval for ducking (relative to block start)
-            if voice_duration > 0:
-                block_voice_intervals.append((block_cursor, block_cursor + voice_duration))
+            # SMART DUCKING: Shift all sub-intervals by the block_cursor
+            for v_start, v_end in scene_intervals:
+                block_voice_intervals.append((block_cursor + v_start, block_cursor + v_end))
             
             current_time += duration
             block_cursor += duration

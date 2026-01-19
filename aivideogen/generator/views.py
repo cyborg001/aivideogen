@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 from .models import Asset, VideoProject, YouTubeToken, Music, SFX
 from .utils import generate_video_process
 from .youtube_utils import get_flow, get_youtube_client, upload_video
@@ -117,6 +118,23 @@ def create_project(request):
             try:
                 full_path = os.path.join(source_path, script_file)
                 if os.path.exists(full_path):
+                    # CRITICAL: Do NOT read file content into script_text here if we want to rely on the file.
+                    # Or read it just for immediate caching, but ensure source_path is set.
+                    # The `source_path` is already passed in POST and saved to the model.
+                    # We just need to make sure `source_path` points to the FILE if it's a file selection.
+                    
+                    # Fix: backend expects source_path to be the asset root usually, but here it might be the script specific path?
+                    # In `create.html`, browse_script returns `path` (dir) and `filename`.
+                    # The POST sends `source_path` (dir) and `script_file` (filename).
+                    
+                    # We should concatenate them for the Project.source_path if we want strictly file-based.
+                    # But the model says source_path is "folder containing script and assets".
+                    # However, my new `_get_script_file_path` handles directory input by looking for [title].json.
+                    # But if we have the specific filename, we should probably save it.
+                    
+                    # Let's save the FULL path to source_path if it's a specific script file project.
+                    source_path = full_path 
+                    
                     with open(full_path, 'r', encoding='utf-8') as f:
                         script = f.read()
                         
@@ -127,6 +145,7 @@ def create_project(request):
                                 script_json = json.loads(script)
                                 script_json['background_music'] = background_music.name
                                 script_json['music_volume'] = float(music_volume)
+                                # We DO Update the file content in memory (and potentially save back? No, let's just initialize the DB text)
                                 script = json.dumps(script_json, indent=4, ensure_ascii=False)
                             except: pass
             except Exception as e:
@@ -151,10 +170,8 @@ def create_project(request):
             auto_upload_youtube=auto_upload
         )
         
-        # Start generation in background
-        thread = threading.Thread(target=generate_video_process, args=(project,))
-        thread.daemon = True
-        thread.start()
+        # NOTE: Auto-start removed by user request (v2.25.0)
+        # User must click "Generar" in detail view.
         
         return redirect('generator:project_detail', project_id=project.id)
         
@@ -259,6 +276,97 @@ def project_detail(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     return render(request, 'generator/detail.html', {'project': project})
 
+def delete_project(request, project_id):
+    project = get_object_or_404(VideoProject, id=project_id)
+    if request.method == 'POST':
+        # 1. Stop if running
+        if project.status in ['processing', 'pending']:
+             project.status = 'cancelled'
+             project.save()
+        
+        # 2. Cleanup Files
+        if project.output_video and project.output_exists:
+            try: os.remove(project.output_video.path)
+            except: pass
+            
+        if project.thumbnail and os.path.exists(project.thumbnail.path):
+            try: os.remove(project.thumbnail.path)
+            except: pass
+            
+        # 3. Delete DB Record
+        project.delete()
+        messages.success(request, "Proyecto eliminado y archivos limpiados.")
+    return redirect('generator:home')
+
+def start_project(request, project_id):
+    """Manually starts the video generation process."""
+    project = get_object_or_404(VideoProject, id=project_id)
+    
+    if request.method == 'POST':
+        if project.status == 'processing':
+            messages.warning(request, "El proyecto ya se está procesando.")
+        else:
+            # Reset logs/status
+            project.status = 'processing'
+            project.log_output = "🚀 Iniciando generación manual (v3.3)..."
+            project.save()
+            
+            # Start Thread
+            thread = threading.Thread(target=generate_video_process, args=(project,))
+            thread.daemon = True
+            thread.start()
+            
+            messages.success(request, "Generación iniciada.")
+            
+    return redirect('generator:project_detail', project_id=project.id)
+
+def reset_project(request, project_id):
+    """Deletes existing output and resets status to pending."""
+    project = get_object_or_404(VideoProject, id=project_id)
+    if request.method == 'POST':
+        # 1. Cleanup Files
+        if project.output_video and project.output_exists:
+            try: os.remove(project.output_video.path)
+            except: pass
+        if project.thumbnail and os.path.exists(project.thumbnail.path):
+            try: os.remove(project.thumbnail.path)
+            except: pass
+            
+        # 2. Reset Status/Metadata
+        project.status = 'pending'
+        project.output_video = None
+        project.thumbnail = None
+        project.timestamps = ""
+        project.log_output = "♻️ Proyecto reiniciado para nueva generación."
+        project.save()
+        
+        messages.success(request, "Proyecto reiniciado. Puedes volver a generarlo ahora.")
+    return redirect('generator:project_detail', project_id=project.id)
+
+def clone_project(request, project_id):
+    """Creates a deep copy of the project and its settings."""
+    original = get_object_or_404(VideoProject, id=project_id)
+    if request.method == 'POST':
+        # Deep Copy
+        new_project = VideoProject.objects.create(
+            title=f"{original.title} (Copia)",
+            script_text=original.script_text,
+            engine=original.engine,
+            aspect_ratio=original.aspect_ratio,
+            voice_id=original.voice_id,
+            background_music=original.background_music,
+            music_volume=original.music_volume,
+            source_path=original.source_path,
+            visual_prompts=original.visual_prompts,
+            script_hashtags=original.script_hashtags,
+            auto_upload_youtube=original.auto_upload_youtube,
+            status='pending'
+        )
+        
+        messages.success(request, f"Versión clonada: {new_project.title}")
+        return redirect('generator:project_detail', project_id=new_project.id)
+    return redirect('generator:project_detail', project_id=original.id)
+
 def stop_project(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     if request.method == 'POST':
@@ -266,7 +374,7 @@ def stop_project(request, project_id):
             project.status = 'cancelled'
             project.log_output += "\n🛑 GENERACIÓN DETENIDA POR EL USUARIO."
             project.save()
-            messages.info(request, "Generación cancelada correctamente.")
+            messages.info(request, "Generación cancelada. El proceso se detendrá en el próximo paso seguro.")
     return redirect('generator:project_detail', project_id=project.id)
 
 def delete_asset(request, asset_id):
@@ -488,33 +596,89 @@ def delete_sfx(request, sfx_id):
 # VISUAL SCRIPT EDITOR (Feature: visual-editor)
 # -------------------------------------------------------------------------
 
-def create_script_draft(request):
-    """Creates a blank draft project and redirects to the editor."""
-    from django.utils import timezone
-    title = f"Nuevo Guion {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+@csrf_exempt
+def create_project_from_editor(request):
+    """API: Creates a new project from the provided JSON script and settings."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
     
-    # Initialize with a basic JSON template
-    default_script = {
-        "blocks": [
-            {
-                "title": "Bloque 1",
-                "scenes": []
-            }
-        ]
-    }
-    import json
-    
-    project = VideoProject.objects.create(
-        title=title,
-        status='pending', # Using pending as generic "draft" for now, or add specific choice later
-        script_text=json.dumps(default_script, indent=4)
-    )
-    return redirect('generator:project_editor', project_id=project.id)
+    try:
+        import json
+        data = json.loads(request.body)
+        script = data.get('script', {})
+        settings = data.get('settings', {})
+        
+        # Determine Title
+        title = settings.get('title') or script.get('title') or "Nuevo Proyecto"
+        
+        # Cleanup Title (Reuse logic from create_project)
+        import re
+        title = re.sub(r'^[^\w\s]*\s*(GUION|TÍTULO|TITLE|SCENE|ESCENA)\s*:?\s*', '', title, flags=re.IGNORECASE).strip()
+        
+        # Determine Voice (fallback chain)
+        voice_id = settings.get('voice_id') or script.get('voice') or ""
+        
+        from .models import VideoProject
+        project = VideoProject.objects.create(
+            title=title,
+            status='pending',
+            script_text=json.dumps(script, indent=4, ensure_ascii=False),
+            voice_id=voice_id,
+            music_volume=float(settings.get('music_volume', 0.15)),
+            auto_upload_youtube=bool(settings.get('auto_upload', False))
+        )
+        
+        # Handle Music
+        bg_music_name = settings.get('background_music') or script.get('background_music')
+        if bg_music_name:
+            from .models import Music
+            m = Music.objects.filter(file__iexact=bg_music_name).first() or \
+                Music.objects.filter(name__iexact=bg_music_name).first() or \
+                Music.objects.filter(file__icontains=bg_music_name).first()
+            if m:
+                project.background_music = m
+                project.save()
+        
+        return JsonResponse({'status': 'created', 'project_id': project.id})
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating project from editor: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
 
 def project_editor(request, project_id):
     """Renders the main visual editor interface."""
     project = get_object_or_404(VideoProject, id=project_id)
     return render(request, 'generator/project_editor.html', {'project': project})
+
+@csrf_exempt
+def json_to_text_api(request):
+    """API: Converts JSON script to legacy-style text (preserving metadata)."""
+    if request.method != 'POST': return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        import json
+        from .avgl_engine import convert_avgl_json_to_text
+        data = json.loads(request.body)
+        text = convert_avgl_json_to_text(data)
+        return JsonResponse({'text': text})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+def text_to_json_api(request):
+    """API: Converts legacy-style text (with tags) back to structured JSON."""
+    if request.method != 'POST': return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        import json
+        from .avgl_engine import convert_text_to_avgl_json
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        title = data.get('title', 'Imported Script')
+        json_data = convert_text_to_avgl_json(text, title=title)
+        return JsonResponse(json_data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def get_project_script_json(request, project_id):
     """API: Returns the project script as JSON. Auto-validates/initializes."""
@@ -533,6 +697,22 @@ def get_project_script_json(request, project_id):
                 data = convert_text_to_avgl_json(project.script_text, title=project.title)
             except Exception as e:
                 return JsonResponse({'error': f"Failed to convert script: {str(e)}"}, status=400)
+    
+    # --- AUTO-REPAIR ASSETS ---
+    repaired = False
+    for block in data.get('blocks', []):
+        for scene in block.get('scenes', []):
+            for asset in scene.get('assets', []):
+                # Case 1: ID is missing, but TYPE contains the filename (Legacy Bug)
+                if not asset.get('id') and asset.get('type') and '.' in asset['type']:
+                    asset['id'] = asset['type']
+                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi')) else 'image'
+                    repaired = True
+                # Case 2: Both present but ID is generic while TYPE has filename
+                elif asset.get('id') in ['image', 'video'] and asset.get('type') and '.' in asset['type']:
+                    asset['id'] = asset['type']
+                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi')) else 'image'
+                    repaired = True
     
     return JsonResponse(data, safe=False)
 
@@ -578,8 +758,15 @@ def save_project_script_json(request, project_id):
                      m = Music.objects.filter(file__iexact=bg_music_name).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
                          Music.objects.filter(file__icontains=bg_music_name).first()
-                     if m: 
-                         project.background_music = m
+                     if m: project.background_music = m
+
+            # Global Voice ID
+            if 'voice_id' in settings_data:
+                project.voice_id = settings_data['voice_id']
+
+            # Auto Upload
+            if 'auto_upload' in settings_data:
+                project.auto_upload_youtube = bool(settings_data['auto_upload'])
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})
@@ -596,8 +783,150 @@ def scene_form(request, project_id):
     # will pass data into the form via JS or we construct an empty one.
     # For now, we render a generic form.
     
-    return render(request, 'generator/scene_form.html', {
-        'project_id': project_id,
-        'index': index,
-        'assets': Asset.objects.all().order_by('-uploaded_at') # Check context size!
+
+# -------------------------------------------------------------------------
+# STANDALONE SCRIPT EDITOR (Feature: independent-editor)
+# -------------------------------------------------------------------------
+
+def script_editor_standalone(request):
+    """Renders the editor without a project context."""
+    return render(request, 'generator/project_editor.html', {
+        'project': None, # No project
+        'is_standalone': True
     })
+
+@csrf_exempt
+def save_script_file(request):
+    """API: Saves JSON content to a local file using Save As dialog."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+        
+    try:
+        import json
+        import tkinter as tk
+        from tkinter import filedialog
+        
+        data = json.loads(request.body)
+        script_content = data.get('script', {})
+        
+        # Tkinter UI
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        # Default Initial Dir
+        initial_dir = r"c:\Users\Usuario\Documents\curso creacion contenido con ia\guiones"
+        if not os.path.exists(initial_dir):
+            try: os.makedirs(initial_dir)
+            except: pass
+
+        file_path = filedialog.asksaveasfilename(
+            initialdir=initial_dir,
+            defaultextension=".json",
+            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")],
+            confirmoverwrite=True,
+            title="Guardar Guion como..."
+        )
+        
+        root.destroy()
+        
+        if not file_path:
+            return JsonResponse({'status': 'cancelled'})
+            
+        # Write to file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(script_content, f, indent=4, ensure_ascii=False)
+            
+        return JsonResponse({
+            'status': 'saved',
+            'filename': os.path.basename(file_path),
+            'path': file_path
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+@csrf_exempt
+def browse_local_asset(request):
+    """API: Opens file dialog to pick an asset and returns absolute path."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        
+        # Determine filter mode
+        filter_type = request.GET.get('type', 'visual') # 'visual' or 'audio'
+        
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        if filter_type == 'audio':
+            dialog_title = "Seleccionar Archivo de Audio (SFX/Música)"
+            file_types = [
+                ("Audio Files", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac"),
+                ("MP3", "*.mp3"),
+                ("WAV", "*.wav"),
+                ("All files", "*.*")
+            ]
+        else:
+            dialog_title = "Seleccionar Asset (Imagen o Video)"
+            file_types = [
+                ("Media Files", "*.png *.jpg *.jpeg *.mp4 *.mov *.avi *.webm *.gif"),
+                ("Images", "*.png *.jpg *.jpeg *.gif"),
+                ("Videos", "*.mp4 *.mov *.avi *.webm"),
+                ("All files", "*.*")
+            ]
+        
+        file_path = filedialog.askopenfilename(
+            title=dialog_title,
+            filetypes=file_types
+        )
+        
+        root.destroy()
+        
+        if not file_path:
+            return JsonResponse({'status': 'cancelled'})
+            
+        return JsonResponse({
+            'status': 'success',
+            'path': file_path,
+            'filename': os.path.basename(file_path)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def download_project_script_json(request, project_id):
+    """
+    Downloads the project's script_text as a .json file.
+    """
+    from django.http import HttpResponse
+    from django.utils.text import slugify
+    
+    project = get_object_or_404(VideoProject, id=project_id)
+    script_content = project.script_text
+    
+    response = HttpResponse(script_content, content_type='application/json')
+    safe_title = slugify(project.title) or f"project_{project.id}"
+    response['Content-Disposition'] = f'attachment; filename="{safe_title}.json"'
+    return response
+
+def toggle_auto_upload(request, project_id):
+    """
+    Toggles the auto_upload_youtube flag for a project.
+    """
+    project = get_object_or_404(VideoProject, id=project_id)
+    project.auto_upload_youtube = not project.auto_upload_youtube
+    project.save()
+    
+    status_str = "ACTIVADA" if project.auto_upload_youtube else "DESACTIVADA"
+    project.log_output += f"\\n[System] 🔄 Subida automática {status_str} por el usuario."
+    project.save(update_fields=['log_output', 'auto_upload_youtube'])
+    
+    # Handle AJAX requests from detail page (v3.5)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+         return JsonResponse({'status': 'success', 'enabled': project.auto_upload_youtube})
+         
+    messages.success(request, f"Subida automática a YouTube: {status_str}")
+    return redirect('generator:project_detail', project_id=project.id)

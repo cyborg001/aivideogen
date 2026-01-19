@@ -1,11 +1,34 @@
-{% extends 'generator/base.html' %}
+﻿{% extends 'generator/base.html' %}
 {% block content %}
+<!-- VERSION 4.0 DEFINITIVE FIX -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
         <h1>{{ project.title }}</h1>
-        <span class="status-badge status-{{ project.status }}" style="font-size: 1rem;">{{ project.status_label
-            }}</span>
+        <span class="status-badge status-{{ project.status }}" style="font-size: 1rem;">
+            {% if project.status == 'pending' %}Pendiente
+            {% elif project.status == 'processing' %}Procesando
+            {% elif project.status == 'completed' %}Completado
+            {% elif project.status == 'failed' or project.status == 'error' %}Fallido
+            {% elif project.status == 'cancelled' %}Cancelado
+            {% else %}{{ project.status }}{% endif %}
+        </span>
     </div>
+</div>
+<div style="display: flex; gap: 10px; align-items: center;">
+
+    <!-- AUTO UPLOAD TOGGLE (Panic Switch) -->
+    <a href="{% url 'generator:toggle_auto_upload' project.id %}" class="btn"
+        style="background-color: {% if project.auto_upload_youtube %}#ff0000{% else %}#333{% endif %}; border-color: #555; font-size: 0.9rem; padding: 8px 15px;"
+        title="Haz clic para activar/desactivar la subida automática sin reiniciar">
+        {% if project.auto_upload_youtube %}🔥 Auto-Upload ON{% else %}⚪ Auto-Upload OFF{% endif %}
+    </a>
+
+    <!-- DOWNLOAD JSON -->
+    <a href="{% url 'generator:download_project_script_json' project.id %}" class="btn"
+        style="background-color: #059669; border: 1px solid #10b981; font-size: 0.9rem; padding: 8px 15px;">
+        📥 JSON
+    </a>
+
     <a href="{% url 'generator:project_editor' project.id %}" class="btn"
         style="background-color: #4f46e5; border-color: #4f46e5;">✨ Abrir Editor Visual</a>
 </div>
@@ -20,16 +43,63 @@
             Tu navegador no soporta el video.
         </video>
     </div>
-    <br><br>
-    <a href="{{ project.output_video.url }}" download class="btn">Descargar Video</a>
-    <a href="{% url 'generator:youtube_upload' project.id %}" class="btn" target="_blank"
-        style="background-color: #ff0000; border-color: #ff0000; margin-left: 10px;">Subir a YouTube</a>
+    <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+        <h4 style="color: #4f46e5; margin-bottom: 15px;">⚙️ Opciones de Render</h4>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <!-- Download -->
+            <a href="{{ project.output_video.url }}" download class="btn"
+                style="background-color: #22c55e; border-color: #22c55e;">
+                📥 Descargar Video
+            </a>
+
+            <!-- YouTube -->
+            <a href="{% url 'generator:youtube_upload' project.id %}" class="btn" target="_blank"
+                style="background-color: #ff0000; border-color: #ff0000;">
+                Subir a YouTube
+            </a>
+
+            <!-- RE-RENDER (OVERWRITE) -->
+            <form action="{% url 'generator:reset_project' project.id %}" method="post"
+                onsubmit="return confirm('¿Estás seguro? Se borrará el video actual para generar uno nuevo con los cambios del guion.')">
+                {% csrf_token %}
+                <button type="submit" class="btn" style="background-color: #f59e0b; border-color: #f59e0b;">
+                    🔄 Re-generar (Sobrescribir)
+                </button>
+            </form>
+
+            <!-- CLONE (NEW VERSION) -->
+            <form action="{% url 'generator:clone_project' project.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn" style="background-color: #4f46e5; border-color: #4f46e5;">
+                    📑 Crear Nueva Versión
+                </button>
+            </form>
+        </div>
+        <p style="font-size: 0.8rem; color: #666; margin-top: 10px;">
+            * Usa <b>Sobrescribir</b> si corregiste el guion y quieres arreglar este video. <br>
+            * Usa <b>Nueva Versión</b> si quieres probar cambios sin perder el video actual.
+        </p>
+    </div>
     {% elif project.output_video %}
     <div class="alert alert-warning" style="margin-bottom: 30px;">
         ⚠️ El archivo de video generado ya no existe en el sistema.
     </div>
     {% else %}
-    {% if project.status == 'processing' or project.status == 'pending' %}
+    {% if project.status == 'pending' %}
+    <div style="text-align: center; padding: 40px; background: #1e1e1e; border-radius: 10px; border: 1px dashed #444;">
+        <h2 style="margin-bottom: 20px;">🎬 Proyecto Listo</h2>
+        <p style="margin-bottom: 30px; color: #aaa;">El proyecto ha sido creado. Haz clic abajo para comenzar la
+            generación del video.</p>
+
+        <form action="{% url 'generator:start_project' project.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn"
+                style="background-color: #00e676; color: #000; font-size: 1.2rem; padding: 15px 30px; font-weight: bold; border: none;">
+                🚀 Comenzar Generación
+            </button>
+        </form>
+    </div>
+    {% elif project.status == 'processing' %}
     <p>El video se está generando. Esta página se recargará automáticamente.</p>
     <div style="text-align: center; padding: 40px;">
         <div class="loader"></div>
@@ -73,7 +143,7 @@
             window.location.reload(1);
         }, 5000);
     </script>
-    {% elif project.status == 'cancelled' or project.status == 'failed' %}
+    {% elif project.status == 'cancelled' or project.status == 'failed' or project.status == 'error' %}
     <div class="alert alert-{% if project.status == 'cancelled' %}info{% else %}danger{% endif %}"
         style="margin-bottom: 20px;">
         {% if project.status == 'cancelled' %}
@@ -82,11 +152,24 @@
         ❌ La generación de este video falló. Revisa los logs arriba.
         {% endif %}
     </div>
+
     <div style="display: flex; gap: 10px;">
-        <a href="{% url 'generator:create_project' %}?retry_project={{ project.id }}" class="btn"
-            style="flex: 1;">Reintentar Edición</a>
+        <!-- Option 1: Start Again (Overwrite) -->
+        <form action="{% url 'generator:reset_project' project.id %}" method="post" style="flex: 1;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="width: 100%; height: 100%;">♻️ Reintentar (Limpiar)</button>
+        </form>
+
+        <!-- Option 2: Open Editor -->
         <a href="{% url 'generator:project_editor' project.id %}" class="btn"
-            style="flex: 1; background-color: #4f46e5; border-color: #4f46e5;">✨ Editor Visual (BETA)</a>
+            style="flex: 1; background-color: #4f46e5; border-color: #4f46e5;">✨ Editar Guion</a>
+
+        <!-- Option 3: Clone -->
+        <form action="{% url 'generator:clone_project' project.id %}" method="post" style="flex: 1;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="width: 100%; height: 100%; background-color: #6366f1;">📑
+                Clonar</button>
+        </form>
     </div>
     {% endif %}
     {% endif %}

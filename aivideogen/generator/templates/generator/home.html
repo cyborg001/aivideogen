@@ -13,7 +13,11 @@
             style="display: flex; align-items: center; justify-content: center; text-decoration: none;">✕ Limpiar</a>
         {% endif %}
     </form>
-    <a href="{% url 'generator:create_project' %}" class="btn" style="white-space: nowrap;">+ Nuevo Proyecto</a>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'generator:script_editor_standalone' %}" class="btn"
+            style="background-color: #bb86fc; border-color: #bb86fc; white-space: nowrap;">⚡ Nuevo Guion (Rápido)</a>
+        <a href="{% url 'generator:create_project' %}" class="btn" style="white-space: nowrap;">+ Nuevo Proyecto</a>
+    </div>
 </div>
 
 <div class="card">

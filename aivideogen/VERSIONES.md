@@ -55,6 +55,7 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 ---
 | 2.25.0 | 2026-01-15 | **Robust Audio & Asset Shield** | **Dynamic Volume:** Control de volumen de música por bloque (ej. silencio dramático). <br> **Asset Shield:** Normalización automática de nombres de assets (arranque seguro ante timestamps). <br> **SFX Precision:** Control de volumen granular para efectos de sonido. |
 | 2.26.0 | 2026-01-16 | **Strategic Logic Relocation** | **Smart Logic Shift:** Lógica de "Zoom Continuo" movida del guion (`convert_script.py`) para control absoluto. <br> **Aggressive Ducking:** Audio Ducking re-calibrado al 5% (casi nulo). <br> **Neutral Voice Strategy:** Adopción de voces neutrales (`es-US-Alonso`) para narración. |
+| 2.26.1 | 2026-01-17 | **Stability & Workflow Patch** | **Manual Processing:** Inicio manual de generación para control total. <br> **Clean Lifecycle:** Eliminación limpia de proyectos y archivos huérfanos. <br> **Critical Engine Fix:** Validación de tipos de Assets (evita fallos NoneType) y manejo de errores robusto en V4. |
 
 ---
-*Actualizado al 16-01-2026*
+*Actualizado al 17-01-2026*
