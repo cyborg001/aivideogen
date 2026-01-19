@@ -624,6 +624,7 @@ def create_project_from_editor(request):
             status='pending',
             script_text=json.dumps(script, indent=4, ensure_ascii=False),
             voice_id=voice_id,
+            aspect_ratio=settings.get('aspect_ratio') or script.get('aspect_ratio', 'landscape'),
             music_volume=float(settings.get('music_volume', 0.15)),
             auto_upload_youtube=bool(settings.get('auto_upload', False))
         )
@@ -747,6 +748,9 @@ def save_project_script_json(request, project_id):
                 except: 
                     pass
             
+            if 'aspect_ratio' in settings_data:
+                project.aspect_ratio = settings_data['aspect_ratio']
+                
             # Global Music (filename string)
             if 'background_music' in settings_data:
                 bg_music_name = settings_data['background_music']

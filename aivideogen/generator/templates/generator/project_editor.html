@@ -37,7 +37,7 @@
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }})">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -61,6 +61,20 @@
                 Editor de Texto</button>
             <button @click="showSettingsModal = true"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">⚙️ Configuración</button>
+
+            <!-- Aspect Ratio Toggle -->
+            <div class="flex bg-gray-700 p-0.5 rounded-lg border border-gray-600">
+                <button @click="projectSettings.aspect_ratio = 'landscape'"
+                    class="px-2 py-1 rounded transition flex items-center gap-1"
+                    :class="projectSettings.aspect_ratio === 'landscape' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+                    <span class="text-xs font-bold">🖥️</span>
+                </button>
+                <button @click="projectSettings.aspect_ratio = 'portrait'"
+                    class="px-2 py-1 rounded transition flex items-center gap-1"
+                    :class="projectSettings.aspect_ratio === 'portrait' ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+                    <span class="text-xs font-bold">📱</span>
+                </button>
+            </div>
 
             <div class="w-px h-6 bg-gray-600 mx-2"></div>
 
@@ -773,7 +787,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false) => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape') => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -798,6 +812,7 @@
                     background_music: initialMusicName,
                     voice_id: initialVoice,
                     auto_upload: initialAutoUpload,
+                    aspect_ratio: initialAspectRatio,
                     voice_speed: '+0%'
                 },
 
@@ -872,6 +887,7 @@
                     this.script.music_volume = parseFloat(this.projectSettings.music_volume);
                     this.script.background_music = this.projectSettings.background_music;
                     this.script.voice = this.projectSettings.voice_id;
+                    this.script.aspect_ratio = this.projectSettings.aspect_ratio;
 
                     // Payload
                     const payload = {
