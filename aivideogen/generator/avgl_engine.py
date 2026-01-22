@@ -63,6 +63,10 @@ class AVGLScene:
         self.pause = 0.0
         self.subtitle = ""
         self.subtitles = [] # List of {"text": str, "offset": int, "duration": float}
+        
+        # Group Interpolation Internal Data
+        self.group_id = None
+        self.group_settings = None
 
 
 
@@ -202,10 +206,55 @@ def parse_avgl_json(json_text):
         
         scenes_data = block_data.get("scenes", [])
         if not isinstance(scenes_data, list): scenes_data = [scenes_data]
+
+        # GROUP SUPPORT (Flattening)
+        groups_data = block_data.get("groups", [])
+        for group in groups_data:
+            master_asset_data = group.get("master_asset")
+            group_scenes = group.get("scenes", [])
+            for s_data in group_scenes:
+                # If scene has no assets, inherit master_asset from group
+                # We copy to avoid mutating the original dict in unpredictable ways
+                s_clone = s_data.get("scene", s_data).copy() if "scene" in s_data else s_data.copy()
+                
+                # Check if scene has VALID assets (not just empty list or empty dicts)
+                has_valid_assets = False
+                if s_clone.get("assets"):
+                    for a in s_clone["assets"]:
+                       if isinstance(a, dict) and (a.get("type") or a.get("id")):
+                           # Check if value is not empty string
+                           t = a.get("type") or a.get("id")
+                           if t and str(t).strip() and str(t).strip().lower() != "image" and str(t).strip().lower() != "video":
+                               has_valid_assets = True
+                               break
+                       elif isinstance(a, str) and a.strip():
+                           has_valid_assets = True
+                           break
+
+                # Inherit Master Asset if needed
+                if master_asset_data and not has_valid_assets:
+                     s_clone["assets"] = [master_asset_data]
+                
+                # ATTACH GROUP METADATA (For Constant Velocity Interpolation)
+                # We add underscore keys so AVGLScene constructor ignores them, 
+                # but we will manually extract them later.
+                s_clone["_group_id"] = f"g_{group.get('title', 'idx')}_{id(group)}"
+                s_clone["_group_settings"] = {
+                    "zoom": group.get("zoom"),
+                    "move": group.get("move"),
+                    "overlay": group.get("overlay"),
+                    "fit": group.get("fit")
+                }
+                
+                scenes_data.append(s_clone)
             
         for scene_data in scenes_data:
             if not isinstance(scene_data, dict): continue
             scene = AVGLScene(title=scene_data.get("title", "Escena Sin Título"))
+            
+            # Transfer group metadata for interpolation
+            scene.group_id = scene_data.get("_group_id")
+            scene.group_settings = scene_data.get("_group_settings")
             
             # Text
             raw_text = scene_data.get("text", "")
@@ -321,7 +370,7 @@ def wrap_ssml(text, voice, speed="+0%", pitch=None):
     Wraps text in SSML tags if necessary.
     CRITICAL FIX: Use full SSML header to ensure Edge TTS correctly identifies it as markup.
     """
-    if '<prosody' in text or '<break' in text or (pitch and pitch != "+0Hz"):
+    if '<prosody' in text or '<break' in text or '<express-as' in text or (pitch and pitch != "+0Hz"):
         content = text
         
         # Apply Global Speed/Pitch Wrapper if not already wrapped
@@ -356,11 +405,11 @@ async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rat
     import numpy as np
 
     emotions_config = {
-        'TENSO': {'rate': '-15%', 'volume': '+0%', 'pitch': '-10Hz'},
-        'EPICO': {'rate': '+10%', 'volume': '+15%', 'pitch': '+5Hz'},
-        'SUSPENSO': {'rate': '-25%', 'volume': '+0%', 'pitch': '-5Hz'},
-        'GRITANDO': {'rate': '+20%', 'volume': '+30%', 'pitch': '+15Hz'},
-        'SUSURRO': {'rate': '-20%', 'volume': '-30%', 'pitch': '+0Hz'},
+        'TENSO': {'style': 'serious', 'rate': '-5%', 'pitch': '-3Hz'},
+        'EPICO': {'style': 'excited', 'rate': '+10%', 'volume': '+15%', 'pitch': '+5Hz'},
+        'SUSPENSO': {'style': 'whispering', 'rate': '-25%', 'pitch': '-2Hz'},
+        'GRITANDO': {'style': 'shouting', 'rate': '+20%', 'volume': '+30%', 'pitch': '+15Hz'},
+        'SUSURRO': {'style': 'whispering', 'rate': '-20%', 'volume': '-20%', 'pitch': '-5Hz'},
     }
 
     # 1. Parse Segments
@@ -419,16 +468,64 @@ async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rat
             # Text segment
             seg_path = os.path.join(temp_dir, f"{project_prefix}_{i}.mp3")
             
+            # Determine segment voice (Switching support)
+            seg_voice = voice
+            if tag in VOICES_CONFIG:
+                seg_voice = VOICES_CONFIG[tag]
+            
             # Apply emotion settings
             seg_rate = rate
-            seg_pitch = pitch 
+            seg_pitch = "+0Hz"
             seg_vol = "+0%"
+            seg_style = "neutral"
             
             if tag in emotions_config:
+                # Combine base rate with emotion rate numerically logic could be added here
+                # For now we just override or keep simple
                 seg_rate = emotions_config[tag].get('rate', rate)
                 seg_vol = emotions_config[tag].get('volume', '+0%')
-                if 'pitch' in emotions_config[tag]:
-                     seg_pitch = emotions_config[tag]['pitch'] 
+                seg_pitch = emotions_config[tag].get('pitch', "+0Hz")
+                seg_style = emotions_config[tag].get('style', "neutral")
+            
+            # Edge TTS call with Native Style (SSML)
+            # We must construct a valid SSML string if we want to use express-as
+            # or if we have specific pitch requirements that Communicate() args don't cover well.
+            # However, edge_tts.Communicate() handles rate/volume/pitch args nicely.
+            # Only style needs SSML wrapping usually.
+            
+            # Construct SSML for style if not neutral
+            if seg_style != "neutral":
+                 # We need to wrap it ourselves because edge_tts doesn't have a 'style' arg in init
+                 # But getting the full SSML right with Communicate(ssml_content) is tricky.
+                 # Strategy: Wrap content in <express-as> and let Communicate handle the rest?
+                 # Communicate(text) -> raw text. Communicate(ssml) -> raw ssml.
+                 
+                 ssml_content = f'<express-as style="{seg_style}">{content}</express-as>'
+                 # We must wrap this in speak/voice tags too if we pass it as SSML
+                 full_ssml = wrap_ssml(ssml_content, seg_voice, speed=seg_rate)
+                 # Note: wrap_ssml handles rate via prosody, but pitch is missing there properly.
+                 # Let's update wrap_ssml later or hack it here.
+                 # For now, let's rely on updated wrap_ssml which we should also fix if needed,
+                 # but here is the direct implementation:
+                 
+                 prosody_attrs = f'rate="{seg_rate}" volume="{seg_vol}" pitch="{seg_pitch}"'
+                 final_ssml = (
+                    f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-ES">'
+                    f'<voice name="{seg_voice}">'
+                    f'<express-as style="{seg_style}">'
+                    f'<prosody {prosody_attrs}>'
+                    f'{content}'
+                    f'</prosody>'
+                    f'</express-as>'
+                    f'</voice>'
+                    f'</speak>'
+                 )
+                 communicate = edge_tts.Communicate(final_ssml, seg_voice) # voice arg is redundant if in ssml but harmless
+            else:
+                 # Standard clean call
+                 communicate = edge_tts.Communicate(content, seg_voice, rate=seg_rate, volume=seg_vol, pitch=seg_pitch)
+
+            await communicate.save(seg_path)
             
             # Clean technical tags/XML and instructions in parentheses (Soportamos acotaciones)
             clean_content = re.sub(r'<[^>]+>', '', content) # Strip XML

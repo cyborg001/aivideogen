@@ -254,7 +254,11 @@ def generate_video_avgl(project):
         # If no text, create a tiny silent file or handle as None
         if not scene.text:
             # We skip generation but we will handle it in the next loop with a placeholder
-            audio_files.append((scene, None))
+            audio_files.append({
+                "scene": scene,
+                "path": None,
+                "intervals": []
+            })
             continue
             
         # Prepare text - Use clean mode (no SSML) for Edge TTS for now
@@ -262,15 +266,10 @@ def generate_video_avgl(project):
         
         # CLEANUP: Strip Character Tags [NAME] from start of text
         # This prevents TTS from reading "[ETHAN]" and fixes potential "No audio" errors
+        # CLEANUP: Strip Character Tags [NAME] from start of text
+        # REMOVED: Legacy logic was stripping emotion tags like [TENSO].
+        # The script is already cleaned of [NAME] tags.
         curr_text = scene.text
-        if curr_text.startswith('['):
-            # Check if it's likely a name tag (short, uppercase, no closing tag later?)
-            # Actually, standard format is "[NAME] Text".
-            # But we must preserve "[TENSO] Text [/TENSO]" logic?
-            # Emotion tags wrap the content. Name tags just prefix.
-            # Names usually don't have a closing tag. 
-            # Safe regex: Remove [NAME] at start if it's followed by space
-            curr_text = re.sub(r'^\[[^\]]+\]\s*', '', curr_text)
 
         # CLEANUP: Strip Stage Directions (Parentheses)
         # Prevents reading "(Susurrando)" aloud.
@@ -290,7 +289,7 @@ def generate_video_avgl(project):
             env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
             
             if scene.speed != 1.0:
-                speed_rate = f"+{int((scene.speed - 1.0) * 100)}%"
+                speed_rate = f"{int((scene.speed - 1.0) * 100):+}%"
             else:
                 speed_rate = env_rate
 
@@ -346,6 +345,110 @@ def generate_video_avgl(project):
     if project.status == 'cancelled':
         logger.log("🛑 Generación detenida por usuario (post-audio).")
         return
+
+    # ═══════════════════════════════════════════════════════════════════
+    # GROUP MASTER SHOT INTERPOLATION (Constant Velocity)
+    # ═══════════════════════════════════════════════════════════════════
+    # Group scenes by group_id to recalculate Zoom/Move based on ACTUAL audio duration.
+    # This overrides the initial text-length based estimation for perfect constant speed.
+    group_tracker = {}
+    
+    # 1. Collect Durations
+    for item in audio_files:
+        scn = item['scene']
+        path = item['path']
+        if not scn.group_id: continue
+        
+        # Get duration
+        dur = 0.5 # default safety
+        if path and os.path.exists(path):
+            try:
+                # We use a quick probe or AudioFileClip (heavy)
+                # Since we already use MoviePy later, let's just peek or trust metadata if we had it.
+                # But we don't have metadata yet. MoviePy is safe here as we need it anyway.
+                # Optimization: Cache duration in item to avoid double load?
+                temp_clip = AudioFileClip(path)
+                dur = temp_clip.duration
+                temp_clip.close()
+                item['duration'] = dur # Cache for later loop
+            except: pass
+        else:
+            dur = 1.0 # fallback for silence
+            item['duration'] = dur
+            
+        dur += scn.pause # Add pause to visual duration
+        
+        if scn.group_id not in group_tracker:
+            group_tracker[scn.group_id] = {
+                "scenes": [],
+                "settings": scn.group_settings,
+                "total_duration": 0.0
+            }
+        
+        group_tracker[scn.group_id]["scenes"].append(item)
+        group_tracker[scn.group_id]["total_duration"] += dur
+
+    # 2. Re-Interpolate
+    for gid, gdata in group_tracker.items():
+        total_dur = gdata["total_duration"] or 1.0
+        current_time = 0.0
+        
+        # Parse Group Settings
+        # Zoom
+        z_start, z_end = 1.0, 1.1
+        if gdata["settings"] and gdata["settings"].get("zoom"):
+            z_parts = gdata["settings"]["zoom"].split(':')
+            if len(z_parts) >= 2: 
+                try: z_start = float(z_parts[0]); z_end = float(z_parts[1])
+                except: pass
+        
+        # Move
+        move_str = gdata["settings"].get("move") or ""
+        # We need to support the multi-move string parsing logic here again? 
+        # Or just construct the interpolation ratios and let apply_ken_burns handle the parsing of start/end.
+        # Issue: apply_ken_burns takes "zoom=1.0:1.2" string. We need to construct that string per scene.
+        # Ideally we parse move dimensions (HOR, VER) separately.
+        
+        moves_parsed = []
+        if move_str:
+            parts = move_str.split('+')
+            for p in parts:
+                mp = p.strip().split(':')
+                if len(mp) >= 3:
+                    moves_parsed.append({
+                        "dim": mp[0].strip(),
+                        "start": float(mp[1]),
+                        "end": float(mp[2])
+                    })
+
+        for item in gdata["scenes"]:
+            scene_dur = item.get("duration", 0)
+            
+            # Start/End Ratios
+            r_start = current_time / total_dur
+            r_end = (current_time + scene_dur) / total_dur
+            
+            # Interpolate Zoom
+            s_z_start = z_start + (z_end - z_start) * r_start
+            s_z_end = z_start + (z_end - z_start) * r_end
+            new_zoom_str = f"{s_z_start:.3f}:{s_z_end:.3f}"
+            
+            # Interpolate Move
+            new_move_parts = []
+            for m in moves_parsed:
+                s_m_start = m["start"] + (m["end"] - m["start"]) * r_start
+                s_m_end = m["start"] + (m["end"] - m["start"]) * r_end
+                new_move_parts.append(f"{m['dim']}:{s_m_start:.1f}:{s_m_end:.1f}")
+            
+            new_move_str = " + ".join(new_move_parts) if new_move_parts else ""
+            
+            # Update Scene Asset
+            if item['scene'].assets:
+                asset = item['scene'].assets[0]
+                asset.zoom = new_zoom_str
+                if new_move_str: asset.move = new_move_str
+            
+            current_time += scene_dur
 
     # ═══════════════════════════════════════════════════════════════════
     # SCENE-BY-SCENE GENERATION (Robust Sync)
