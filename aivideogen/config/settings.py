@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'generator.middleware.ActivityMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -142,7 +143,49 @@ YOUTUBE_FIXED_HASHTAGS = os.getenv(
     '#IA #notiaci #ciencia #tecnologia #noticias #avances #avancesmedicos #carlosramirez #descubrimientos'
 )
 
+# Audio Ducking Parameters (v6.5 - High Intensity Optimized)
+AUDIO_DUCKING_RATIO = float(os.getenv('AUDIO_DUCKING_RATIO', 0.12))
+AUDIO_ATTACK_TIME = float(os.getenv('AUDIO_ATTACK_TIME', 0.15))
+AUDIO_RELEASE_TIME = float(os.getenv('AUDIO_RELEASE_TIME', 0.4))
+
 # File upload limits
 DATA_UPLOAD_MAX_NUMBER_FILES = 1000  # Maximum number of files that can be uploaded at once
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB maximum size for in-memory uploads
 FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB maximum size for a single file upload
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'app.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'generator': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

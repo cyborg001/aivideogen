@@ -34,14 +34,38 @@ def get_flow():
     return flow
 
 def get_youtube_client():
+    from google.auth.transport.requests import Request
+    
     token_obj = YouTubeToken.objects.last()
     if not token_obj:
         return None
     
     credentials = google.oauth2.credentials.Credentials(**token_obj.token)
     
-    # Check if we need to refresh (client-side simple check, better handled by library)
-    # The dictionary 'token' expected by Credentials(**token) usually has everything
+    # Check if we need to refresh
+    if credentials.expired and credentials.refresh_token:
+        try:
+            credentials.refresh(Request())
+            # Update the stored token with new values
+            token_obj.token = {
+                'token': credentials.token,
+                'refresh_token': credentials.refresh_token,
+                'token_uri': credentials.token_uri,
+                'client_id': credentials.client_id,
+                'client_secret': credentials.client_secret,
+                'scopes': credentials.scopes
+            }
+            token_obj.save()
+        except Exception as e:
+            # If refresh fails, it might be truly revoked/expired
+            import logging
+            logger = logging.getLogger(__name__)
+            error_msg = str(e)
+            if 'invalid_grant' in error_msg.lower():
+                logger.error(f"❌ [YouTube] ERROR CRÍTICO: El token ha expirado o ha sido revocado. DEBES RE-AUTORIZAR la cuenta en la interfaz de la Web App.")
+            else:
+                logger.error(f"[YouTube] Falló el refresh automático: {e}")
+            return None
     
     youtube = build('youtube', 'v3', credentials=credentials)
     return youtube

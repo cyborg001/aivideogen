@@ -8,34 +8,58 @@ from pathlib import Path
 from django.core.management import execute_from_command_line
 from dotenv import load_dotenv
 
-# Force unbuffered output for PyInstaller executable
-# This ensures that print statements and logs appear immediately in the console
+# Force UTF-8 and unbuffered output for PyInstaller executable
+# This ensures that emojis and unicode characters work in the console
+os.environ['PYTHONUTF8'] = '1'
+os.environ['PYTHONUNBUFFERED'] = '1'
+
 if hasattr(sys, '_MEIPASS'):
-    # PyInstaller executable detected
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buffering=1)
-    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', buffering=1)
-    # Also set environment variable
-    os.environ['PYTHONUNBUFFERED'] = '1'
+    import io
+    # Re-open stdout/stderr with UTF-8 encoding
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
 
 def open_browser(port):
-    time.sleep(1.5) # Wait for server to start
+    """Wait for server to start and then open the browser."""
+    time.sleep(2.5)
     url = f'http://127.0.0.1:{port}'
-    
-    # Try to open in "App Mode" (Chrome/Edge) for a native feel
+    print(f"Abriendo aplicación en {url}...")
     try:
-        # Chrome
+        # Try to open with Chrome --app mode if possible for better look
+        import subprocess
         subprocess.Popen(['start', 'chrome', f'--app={url}', '--start-maximized'], shell=True)
-        return
     except:
-        try:
-            # Edge
-            subprocess.Popen(['start', 'msedge', f'--app={url}', '--start-maximized'], shell=True)
-            return
-        except:
-            pass
-            
-    # Fallback to default browser
-    webbrowser.open(url)
+        import webbrowser
+        webbrowser.open(url)
+
+def start_gui_control():
+    """Opens a small Tkinter window to control the server."""
+    import tkinter as tk
+    from tkinter import messagebox
+    
+    root = tk.Tk()
+    root.title("aiVideoGen Server")
+    root.geometry("300x120")
+    root.resizable(False, False)
+    root.attributes('-topmost', True)
+    
+    # Custom icon or style could be added here
+    label = tk.Label(root, text="El servidor está activo.", font=("Segoe UI", 12, "bold"), pady=10)
+    label.pack()
+    
+    info = tk.Label(root, text="Cierra esta ventana para apagar el servidor.", font=("Segoe UI", 8), fg="gray")
+    info.pack()
+
+    def on_closing():
+        if messagebox.askokcancel("Apagar", "¿Deseas apagar el servidor de aiVideoGen?"):
+            print("Cerrando aplicación por petición del usuario...")
+            root.destroy()
+            os._exit(0)
+
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.mainloop()
+
+# OLD monitor_heartbeat removed per user request (v6.1)
 
 if __name__ == "__main__":
     # Load .env variables
@@ -43,7 +67,7 @@ if __name__ == "__main__":
     
     # Get configuration
     port = os.getenv('PORT', '8888')
-    version = "2.26.1-STABLE"
+    version = "8.5.0"
     
     print(f"═══════════════════════════════════════════════════════")
     print(f"      AIVideogen v{version} - MOTOR DE EVENTOS")
@@ -71,6 +95,8 @@ if __name__ == "__main__":
     # Start browser in a separate thread
     if os.environ.get('RUN_MAIN') != 'true': # Prevent double opening on reloader
         threading.Thread(target=open_browser, args=(port,)).start()
+        # Start GUI control window instead of inactivity monitor
+        threading.Thread(target=start_gui_control, daemon=True).start()
     
     print(f"Iniciando AIVideogen en el puerto {port}...")
     if os.environ.get('RUN_MAIN') != 'true':

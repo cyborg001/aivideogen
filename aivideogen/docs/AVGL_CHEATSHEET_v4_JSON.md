@@ -46,7 +46,27 @@
 }
 ```
 
+
 ---
+
+## Groups (Assets Compartidos)
+
+```json
+{
+  "groups": [
+    {
+      "master_asset": { "type": "fondo.png", "zoom": "1.0:1.1" },
+      "scenes": [
+        { "text": "Escena 1 (Usa fondo.png)" },
+        { "text": "Escena 2 (Usa fondo.png)" }
+      ]
+    }
+  ]
+}
+```
+
+---
+
 
 ## Scene Completa
 
@@ -58,6 +78,7 @@
   "speed": 1.1,
   "assets": [...],
   "sfx": [...],
+  "audio": "voces/mi_voz.mp3",
   "pause": 1.5
 }
 ```
@@ -150,10 +171,11 @@
 
 ## 🎯 Pro Tips
 
-1. **Herencia:** Los scenes heredan `music`, `voice`, `speed` del block
-2. **Pause:** Siempre al final de la escena
-3. **Offset SFX:** `0` = inicio, `5` = después de 5 palabras
-4. **Overlays:** Menos es más - no abuses
+1. **Herencia:** Los scenes heredan `music`, `voice`, `speed` del block.
+2. **Grupos:** Puedes heredar `voice`, `speed` y `audio` (voz real) desde un `group`.
+3. **Pause:** Siempre al final de la escena.
+4. **Offset SFX:** `0` = inicio, `5` = después de 5 palabras.
+5. **Overlays:** Menos es más - no abuses.
 
 ---
 

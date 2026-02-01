@@ -6,10 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor Visual - {{ project.title }}</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Tailwind CSS (Localized for Offline Mode) -->
+    <script src="{% static 'generator/js/tailwind.min.js' %}"></script>
+    <!-- Alpine.js (Localized for Offline Mode) -->
+    <script defer src="{% static 'generator/js/alpine.min.js' %}"></script>
     <style>
         [x-cloak] {
             display: none !important;
@@ -35,19 +35,20 @@
         }
 
         /* Toggle Checkbox CSS */
+        /* Toggle Switch Improved (v4.6) */
         .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
+            transform: translateX(100%);
+            border-color: #10B981;
         }
 
         .toggle-checkbox:checked+.toggle-label {
-            background-color: #68D391;
+            background-color: #10B981;
         }
     </style>
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}')">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -272,33 +273,107 @@
                                     <template x-for="(group, gIndex) in block.groups" :key="'g'+gIndex">
                                         <div
                                             class="mb-4 mt-6 border border-blue-500/30 rounded-xl bg-blue-900/10 overflow-hidden relative group/group">
-                                            <!-- Group Header -->
-                                            <div
-                                                class="bg-blue-900/30 px-4 py-2 flex justify-between items-center border-b border-blue-500/20">
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Grupo</span>
-                                                    <span class="text-xs text-blue-100 font-bold"
-                                                        x-text="group.title || 'Grupo ' + (gIndex+1)"></span>
+                                            <!-- Group Header (Visual Card) -->
+                                            <div class="bg-blue-900/20 p-3 border-b border-blue-500/20 flex gap-4">
+
+                                                <!-- Master Asset Thumbnail -->
+                                                <div
+                                                    class="w-32 aspect-video bg-black rounded overflow-hidden relative border border-blue-500/50 shadow-lg flex-shrink-0 group/poster">
+                                                    <template x-if="group.master_asset">
+                                                        <div class="w-full h-full relative">
+                                                            <img :src="group.master_asset.includes('/') ? (group.master_asset.startsWith('/media') ? group.master_asset : '/media/' + group.master_asset) : '/media/assets/' + group.master_asset"
+                                                                class="w-full h-full object-cover opacity-80"
+                                                                onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+
+                                                            <!-- Badges -->
+                                                            <div
+                                                                class="absolute bottom-0 right-0 p-0.5 flex flex-wrap justify-end gap-0.5 pointer-events-none w-full bg-gradient-to-t from-black/80 to-transparent">
+                                                                <span
+                                                                    class="bg-blue-600 text-[8px] px-1 rounded text-white font-bold uppercase tracking-wider">MASTER</span>
+                                                                <span x-show="group.zoom"
+                                                                    class="bg-cyan-600/80 text-[7px] px-1 rounded text-white font-mono"
+                                                                    x-text="'ZM ' + group.zoom"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="!group.master_asset">
+                                                        <div
+                                                            class="w-full h-full flex flex-col items-center justify-center text-blue-500/50 bg-blue-900/20">
+                                                            <span class="text-2xl">📁</span>
+                                                            <span class="text-[8px] uppercase mt-1">Sin Master</span>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Quick Actions Overlay -->
+                                                    <div
+                                                        class="absolute inset-0 bg-black/60 opacity-0 group-hover/poster:opacity-100 transition flex items-center justify-center gap-2">
+                                                        <button @click.stop="openGroupSettings(bIndex, gIndex)"
+                                                            class="text-white hover:text-blue-400"
+                                                            title="Configurar Visuales">
+                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                                                </path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="text-[9px] bg-blue-500 text-white px-1 rounded uppercase"
-                                                        x-show="group.master_asset">Master Asset</span>
-                                                    <button @click.stop="openGroupSettings(bIndex, gIndex)"
-                                                        class="text-gray-500 hover:text-white transition"
-                                                        title="Configurar Grupo">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                                            </path>
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
+
+                                                <!-- Group Info -->
+                                                <div class="flex-1 flex flex-col justify-center">
+                                                    <div class="flex justify-between items-start">
+                                                        <div>
+                                                            <div class="flex items-center gap-2 mb-1">
+                                                                <span
+                                                                    class="text-[10px] font-bold text-blue-400/80 uppercase tracking-widest border border-blue-500/30 px-1 rounded">GRUPO</span>
+                                                                <h3 class="text-sm font-bold text-blue-100"
+                                                                    x-text="group.title || 'Grupo ' + (gIndex+1)"></h3>
+                                                            </div>
+                                                            <p
+                                                                class="text-[10px] text-gray-400 font-mono flex items-center gap-2">
+                                                                <span x-show="group.move" class="text-blue-300">↔ Movie:
+                                                                    ON</span>
+                                                                <span x-show="!group.move" class="text-gray-600">No
+                                                                    Move</span>
+                                                                <span class="text-gray-600">|</span>
+                                                                <span
+                                                                    x-text="(group.scenes ? group.scenes.length : 0) + ' Escenas'"></span>
+                                                            </p>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-1">
+                                                            <button @click.stop="openGroupSettings(bIndex, gIndex)"
+                                                                class="text-gray-500 hover:text-white p-2 rounded hover:bg-white/5 transition"
+                                                                title="Configurar Setup">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                                                    </path>
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                </svg>
+                                                            </button>
+                                                            <button @click.stop="deleteGroup(bIndex, gIndex)"
+                                                                class="text-gray-500 hover:text-red-500 p-2 rounded hover:bg-red-500/10 transition"
+                                                                title="Eliminar Grupo">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                    </path>
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -395,6 +470,13 @@
                                                         </div>
                                                     </div>
                                                 </template>
+                                                <!-- Add Scene to Group Button -->
+                                                <button @click="openModal(bIndex, null, gIndex)"
+                                                    class="w-full py-2 bg-blue-900/20 hover:bg-blue-600/10 border-t border-blue-500/20 text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 group/btn">
+                                                    <span
+                                                        class="bg-blue-900/40 group-hover/btn:bg-blue-500 group-hover/btn:text-white text-blue-300 w-4 h-4 rounded-full flex items-center justify-center text-[10px] transition">+</span>
+                                                    Añadir al Master Shot
+                                                </button>
                                             </div>
                                         </div>
                                     </template>
@@ -406,13 +488,21 @@
                                     </div>
                                 </div>
 
-                                <!-- Add Scene Footer -->
-                                <button @click="openModal(bIndex, null)"
-                                    class="w-full py-3 bg-gray-800/50 hover:bg-blue-600/10 border-t border-gray-700 text-gray-400 hover:text-blue-400 text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 group/btn">
-                                    <span
-                                        class="bg-gray-700 group-hover/btn:bg-blue-500 group-hover/btn:text-white text-gray-300 w-5 h-5 rounded-full flex items-center justify-center text-sm transition">+</span>
-                                    Añadir Escena
-                                </button>
+                                <!-- Add Scene / Group Footer -->
+                                <div class="flex border-t border-gray-700 overflow-hidden">
+                                    <button @click="openModal(bIndex, null)"
+                                        class="flex-1 py-3 bg-gray-800/50 hover:bg-blue-600/10 text-gray-400 hover:text-blue-400 text-[10px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 group/btn border-r border-gray-700">
+                                        <span
+                                            class="bg-gray-700 group-hover/btn:bg-blue-500 group-hover/btn:text-white text-gray-300 w-4 h-4 rounded-full flex items-center justify-center text-xs transition">+</span>
+                                        Añadir Escena
+                                    </button>
+                                    <button @click="addGroup(bIndex)"
+                                        class="flex-1 py-3 bg-gray-800/50 hover:bg-indigo-600/10 text-gray-400 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 group/btn">
+                                        <span
+                                            class="bg-gray-700 group-hover/btn:bg-indigo-500 group-hover/btn:text-white text-gray-300 w-4 h-4 rounded-full flex items-center justify-center text-xs transition">🎬</span>
+                                        Añadir Master Shot
+                                    </button>
+                                </div>
                             </div>
                         </template>
 
@@ -544,6 +634,29 @@
                         terminar.</p>
                 </div>
 
+                <!-- Render Mode Toggle (v4.7) -->
+                <div class="bg-gray-800 p-2 rounded border border-gray-600">
+                    <label class="block text-sm text-gray-300 font-bold mb-2">Método de Renderizado</label>
+                    <div class="flex bg-gray-900 p-1 rounded-lg border border-gray-700">
+                        <button @click="projectSettings.render_mode = 'cpu'"
+                            class="flex-1 py-1 rounded-md text-xs font-bold transition flex items-center justify-center gap-2"
+                            :class="projectSettings.render_mode === 'cpu' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'">
+                            <span>💻</span> CPU (Estable)
+                        </button>
+                        <button @click="projectSettings.render_mode = 'gpu'"
+                            class="flex-1 py-1 rounded-md text-xs font-bold transition flex items-center justify-center gap-2"
+                            :class="projectSettings.render_mode === 'gpu' ? 'bg-green-600 text-white' : 'text-gray-500 hover:text-gray-300'">
+                            <span>🚀</span> GPU (NVIDIA)
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-2">
+                        <span x-show="projectSettings.render_mode === 'cpu'">Optimizado con 8 hilos. Máxima
+                            compatibilidad.</span>
+                        <span x-show="projectSettings.render_mode === 'gpu'">Usa NVIDIA NVENC. Máxima velocidad de
+                            codificación.</span>
+                    </p>
+                </div>
+
             </div>
 
             <!-- Settings Footer -->
@@ -668,6 +781,22 @@
                         </div>
                     </div>
 
+                    <!-- CUSTOM AUDIO (New) -->
+                    <div class="mt-4 bg-gray-800 p-2 rounded border border-gray-700/50">
+                        <label class="block text-xs uppercase text-green-400 font-bold mb-1">Audio Personalizado (Voz
+                            Real)</label>
+                        <div class="flex gap-1">
+                            <input type="text" x-model="formData.audio"
+                                placeholder="ruta/archivo.mp3 (en assets o media)"
+                                class="w-full bg-gray-700 border border-gray-600 rounded p-1 text-xs text-white font-mono">
+                            <button @click="browseSceneAudio()"
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
+                                title="Buscar Archivo">📂</button>
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-1">Si se define, desactiva la voz IA (TTS) para esta
+                            escena.</p>
+                    </div>
+
                     <!-- SFX SECTION -->
                     <div class="bg-gray-800 p-3 rounded border border-gray-700/50 mt-4">
                         <div class="flex justify-between items-center mb-2">
@@ -751,6 +880,30 @@
                                 </svg>
                             </button>
                         </div>
+
+                        <!-- Asset Audio Control (v4.6) -->
+                        <div x-show="isVideo" class="bg-blue-900/20 p-2 rounded border border-blue-500/20 mt-2"
+                            x-transition>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-xs text-blue-300 font-bold">Aportar Sonido Original</span>
+                                <div
+                                    class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="formData.asset_audio_bool"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer transition-transform duration-200"
+                                        style="top: 2px; left: 2px;" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
+                                </div>
+                            </label>
+                            <div x-show="formData.asset_audio_bool" class="mt-2 flex items-center gap-2" x-transition>
+                                <span class="text-[10px] text-gray-500">Volumen:</span>
+                                <input type="range" min="0" max="1" step="0.1" x-model="formData.asset_audio_vol"
+                                    class="flex-1 h-1">
+                                <span class="text-[10px] font-mono text-blue-400"
+                                    x-text="Math.round((formData.asset_audio_vol || 0.8)*100)+'%'"></span>
+                            </div>
+                        </div>
+
                         <p class="text-[10px] text-gray-500 mt-1">Debe estar en la carpeta
                             <code>media/assets</code> o ser una ruta absoluta.
                         </p>
@@ -1091,7 +1244,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
                         <div>
                             <label class="text-[10px] text-gray-400 block">Voz (ID Override)</label>
                             <input type="text" x-model="groupForm.voice" placeholder="es-MX-DaliaNeural"
@@ -1101,6 +1254,19 @@
                             <label class="text-[10px] text-gray-400 block">Velocidad Voz</label>
                             <input type="text" x-model="groupForm.voice_speed" placeholder="+0%"
                                 class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-white">
+                        </div>
+                    </div>
+
+                    <!-- Custom Audio for Group -->
+                    <div class="bg-blue-900/20 p-2 rounded border border-blue-500/20">
+                        <label class="block text-[10px] uppercase text-green-400 font-bold mb-1">Audio Personalizado
+                            (Voz Real Grupo)</label>
+                        <div class="flex gap-1">
+                            <input type="text" x-model="groupForm.audio" placeholder="ruta/archivo.mp3"
+                                class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white font-mono">
+                            <button @click="browseGroupAudio()"
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
+                                title="Buscar Archivo">📂</button>
                         </div>
                     </div>
                 </div>
@@ -1117,7 +1283,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape') => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu') => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -1127,13 +1293,21 @@
                 showModal: false,
                 showSettingsModal: false,
                 showBlockModal: false,
+                showGroupModal: false,
                 showBulkModal: false,
                 editIndex: null,
                 editBlockIndex: 0,
+                editGroupIndex: null,
                 bulkText: '',
 
                 // Block Form
                 blockForm: { title: '', music: '', volume: 0.2, master_asset: '' },
+                groupForm: {
+                    title: '', master_asset: '', overlay: '', fit: false, zoom: '1.0:1.3',
+                    usePanHor: false, panHorStart: 0, panHorEnd: 0,
+                    usePanVer: false, panVerStart: 0, panVerEnd: 0,
+                    music: '', volume: 0.2, voice: '', voice_speed: '', audio: ''
+                },
 
                 // Settings Model
                 projectSettings: {
@@ -1143,6 +1317,7 @@
                     voice_id: initialVoice,
                     auto_upload: initialAutoUpload,
                     aspect_ratio: initialAspectRatio,
+                    render_mode: initialRenderMode,
                     voice_speed: '+0%'
                 },
 
@@ -1159,6 +1334,8 @@
                     voice: '',
                     pitch: '',
                     overlay: '',
+                    asset_audio_bool: false,
+                    asset_audio_vol: 0.8,
                     useZoom: false, zoomStart: 1.0, zoomEnd: 1.2,
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
                 },
@@ -1249,6 +1426,7 @@
                     this.script.background_music = this.projectSettings.background_music;
                     this.script.voice = this.projectSettings.voice_id;
                     this.script.aspect_ratio = this.projectSettings.aspect_ratio;
+                    this.script.render_mode = this.projectSettings.render_mode;
 
                     // Payload
                     const payload = {
@@ -1404,7 +1582,8 @@
                         music: group.music || '',
                         volume: group.volume !== undefined ? group.volume : 0.2,
                         voice: group.voice || '',
-                        voice_speed: group.voice_speed || ''
+                        voice_speed: group.voice_speed || '',
+                        audio: group.audio || ''
                     };
 
                     // Parse existing move string
@@ -1463,6 +1642,7 @@
                         group.volume = parseFloat(this.groupForm.volume);
                         group.voice = this.groupForm.voice;
                         group.voice_speed = this.groupForm.voice_speed;
+                        group.audio = this.groupForm.audio;
 
                         // Apply Visuals to Scenes (Master Shot Interpolation)
                         if (group.scenes && group.scenes.length > 0) {
@@ -1478,11 +1658,17 @@
 
                             // Pan Hor
                             let hStart = 0, hEnd = 0;
-                            if (this.groupForm.usePanHor) { hStart = this.groupForm.panHorStart; hEnd = this.groupForm.panHorEnd; }
+                            if (this.groupForm.usePanHor) {
+                                hStart = parseFloat(this.groupForm.panHorStart) || 0;
+                                hEnd = parseFloat(this.groupForm.panHorEnd) || 0;
+                            }
 
                             // Pan Ver
                             let vStart = 0, vEnd = 0;
-                            if (this.groupForm.usePanVer) { vStart = this.groupForm.panVerStart; vEnd = this.groupForm.panVerEnd; }
+                            if (this.groupForm.usePanVer) {
+                                vStart = parseFloat(this.groupForm.panVerStart) || 0;
+                                vEnd = parseFloat(this.groupForm.panVerEnd) || 0;
+                            }
 
                             group.scenes.forEach(scene => {
                                 const sLen = scene.text ? scene.text.length : 0;
@@ -1555,6 +1741,16 @@
                     } catch (e) { alert("Error: " + e); }
                 },
 
+                async browseGroupAudio() {
+                    try {
+                        const res = await fetch('/api/asset/browse/?type=audio');
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            this.groupForm.audio = data.path;
+                        }
+                    } catch (e) { alert("Error: " + e); }
+                },
+
                 async browseBlockAsset() {
                     try {
                         const res = await fetch('/api/asset/browse/');
@@ -1620,11 +1816,14 @@
 
                             // Advanced
                             voice: scene.voice || '',
+                            audio: scene.audio || '',
                             pitch: scene.pitch || '',
 
                             // Visual FX
                             overlay: (asset.overlay || '').replace('.mp4', '').replace('.mov', ''),
                             fit: asset.fit || false,
+                            asset_audio_bool: !!asset.audio,
+                            asset_audio_vol: (typeof asset.audio === 'number') ? asset.audio : (asset.audio ? 1.0 : 0.8),
                             useZoom: false, zoomStart: 1.0, zoomEnd: 1.2,
 
                             // Split Pan logic for Diagonal support
@@ -1676,9 +1875,12 @@
                             subDur: 3,
                             subDelay: 0.0,
                             voice: '',
+                            audio: '',
                             pitch: '',
                             fit: false,
                             overlay: '',
+                            asset_audio_bool: false,
+                            asset_audio_vol: 0.8,
 
                             useZoom: true,
                             zoomStart: 1.0,
@@ -1755,7 +1957,8 @@
                         zoom: zoomStr,
                         move: moveStr,
                         overlay: this.formData.overlay || null,
-                        fit: this.formData.fit
+                        fit: this.formData.fit,
+                        audio: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null
                     };
 
                     // 2. Build Scene Object
@@ -1765,6 +1968,7 @@
                         pause: parseFloat(this.formData.pause),
                         subtitle: this.formData.subtitle,
                         voice: this.formData.voice || null,
+                        audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
 
                         assets: [assetObj],
@@ -1827,9 +2031,31 @@
                 addBlock() {
                     this.script.blocks.push({
                         title: 'Nuevo Bloque',
+                        scenes: [],
+                        groups: []
+                    });
+                    this.saveScript(this.isStandalone);
+                },
+
+                addGroup(blockIndex) {
+                    if (!this.script.blocks[blockIndex].groups) {
+                        this.script.blocks[blockIndex].groups = [];
+                    }
+                    this.script.blocks[blockIndex].groups.push({
+                        title: 'Nuevo Master Shot',
+                        master_asset: '',
+                        zoom: '1.0:1.3',
+                        move: 'HOR:50:50',
                         scenes: []
                     });
                     this.saveScript(this.isStandalone);
+                },
+
+                deleteGroup(blockIndex, groupIndex) {
+                    if (confirm('¿Eliminar este Grupo Master Shot y sus escenas?')) {
+                        this.script.blocks[blockIndex].groups.splice(groupIndex, 1);
+                        this.saveScript(this.isStandalone);
+                    }
                 },
 
                 deleteBlock(index) {
@@ -2030,6 +2256,18 @@
                     } catch (e) {
                         console.error("Error exploring assets:", e);
                     }
+                },
+
+                async browseSceneAudio() {
+                    try {
+                        const res = await fetch('/api/asset/browse/?type=audio');
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            this.formData.audio = data.path;
+                        }
+                    } catch (e) {
+                        alert("Error abriendo buscador: " + e);
+                    }
                 }
 
             }));
@@ -2078,6 +2316,16 @@
             </div>
         </div>
     </div>
+    <script>
+        // Heartbeat mechanism to keep server alive (CRITICAL for Standalone Editor)
+        function sendHeartbeat() {
+            fetch("{% url 'generator:api_heartbeat' %}")
+                .then(response => response.json())
+                .catch(err => console.debug("Heartbeat failed (server might be down)"));
+        }
+        setInterval(sendHeartbeat, 10000); // 10s
+        document.addEventListener('DOMContentLoaded', sendHeartbeat);
+    </script>
 </body>
 
 </html>

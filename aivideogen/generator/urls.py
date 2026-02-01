@@ -44,4 +44,8 @@ urlpatterns = [
     # Text/JSON Conversion APIs
     path('api/script/json_to_text/', views.json_to_text_api, name='api_json_to_text'),
     path('api/script/text_to_json/', views.text_to_json_api, name='api_text_to_json'),
+
+    # Logs & System
+    path('logs/', views.view_logs, name='view_logs'),
+    path('api/heartbeat/', views.api_heartbeat, name='api_heartbeat'),
 ]

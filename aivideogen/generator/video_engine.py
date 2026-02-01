@@ -7,7 +7,32 @@ import os
 import time
 import re
 import numpy as np
+import logging
 from django.conf import settings
+
+# v8.5 Notification Support
+if os.name == 'nt':
+    try:
+        import winsound
+    except ImportError:
+        winsound = None
+else:
+    winsound = None
+
+logger = logging.getLogger(__name__)
+
+def play_finish_sound(success=True):
+    """Plays a system sound to notify the user that rendering has finished."""
+    if winsound:
+        try:
+            if success:
+                # MB_ICONASTERISK (64) - Standard success/info sound
+                winsound.MessageBeep(64)
+            else:
+                # MB_ICONHAND (16) - Standard error sound
+                winsound.MessageBeep(16)
+        except Exception as e:
+            print(f"Error playing notification sound: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -54,7 +79,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     # ═══════════════════════════════════════════════════════════════════
     # 2. LOAD & BASE SCALING
     # ═══════════════════════════════════════════════════════════════════
-    img = Image.open(image_path)
+    img = Image.open(image_path).convert("RGB")
     w_orig, h_orig = img.size
     target_w, target_h = target_size
     
@@ -67,7 +92,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         base_scale = min(scale_w, scale_h)
     else:
         base_scale = max(scale_w, scale_h)
-        
+    
     # Smart Slack: Add 15% buffer if moving on a constrained axis
     if not is_fit:
         has_hor = any(c['dir'] == 'HOR' for c in move_configs)
@@ -102,21 +127,26 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
                 x = -(p_prog / 100.0) * slack_x
             elif cfg['dir'] == 'VER':
                 y = -((100.0 - p_prog) / 100.0) * slack_y
-        return (int(x), int(y))
+        return (x, y)
 
     base_clip = ImageClip(img_np, duration=duration)
     clip = base_clip.resized(get_frame_scale).with_position(get_frame_pos)
     
-    layers = [clip]
-    if overlay_path and os.path.exists(overlay_path):
-        overlay = VideoFileClip(overlay_path, has_mask=True)
-        if overlay.duration < duration:
-            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
-        overlay = overlay.resized(target_size).subclipped(0, duration)
-        overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
-        layers.append(overlay)
+    if not overlay_path or not os.path.exists(overlay_path):
+        # v8.6.1: Must ALWAYS return CompositeVideoClip to enforce target_size
+        # Returning 'clip' directly was causing odd dimensions (Encoder Error)
+        return CompositeVideoClip([clip.with_duration(duration)], size=target_size, bg_color=(0,0,0)).with_duration(duration)
     
-    return CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
+    # ═══════════════════════════════════════════════════════════════════
+    # 3. OVERLAY PROCESSING (Only if needed)
+    # ═══════════════════════════════════════════════════════════════════
+    overlay = VideoFileClip(overlay_path, has_mask=True)
+    if overlay.duration < duration:
+        overlay = overlay.with_effects([vfx.Loop(duration=duration)])
+    overlay = overlay.resized(target_size).subclipped(0, duration)
+    overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
+    
+    return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
 
 
 def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None):
@@ -174,844 +204,656 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
 def generate_video_avgl(project):
     """
     Main video generation function using AVGL v4.0 JSON format.
-    Includes performance optimizations:
-    - Pre-scaled Ken Burns
-    - Overlay caching
-    - Parallel audio generation (if asyncio available)
+    v8.6.2: Wrapped in Global Error Listener for robust notifications.
     """
-    from moviepy import ImageClip, AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip
+    from moviepy import ImageClip, AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip, CompositeVideoClip, vfx
     from .avgl_engine import parse_avgl_json, translate_emotions, wrap_ssml, generate_audio_edge, generate_audio_elevenlabs
-    from .utils import ProjectLogger  # Import existing logger
+    from .utils import ProjectLogger
     import asyncio
     import numpy as np
+    from moviepy import AudioClip, ColorClip, afx, TextClip
+    from .models import Music
+    from django.db.models import Q
     
-    # Initialize
     start_time = time.time()
-    project.status = 'processing'
-    project.save()
-    
-    # Use ProjectLogger from utils.py (saves to DB)
     logger = ProjectLogger(project)
-    logger.log("🚀 Iniciando generación AVGL v4.0")
-    
-    # Log Video Format
-    format_type = "SHORT" if project.aspect_ratio == 'portrait' else "VIDEO"
-    logger.log(f"📐 FORMATO: {format_type}")
-    
-    # Parse script
-    try:
-        script = parse_avgl_json(project.script_text)
-        logger.log(f"✅ Script parseado: '{script.title}'")
-    except Exception as e:
-        logger.log(f"❌ Error al parsear JSON: {e}")
-        project.status = 'error'
-        project.save()
-        return
-    
-    # Update project title if specified and NOT already set by user manually
-    if script.title and project.title in ["Sin Título", "Video Sin Título", "Proyecto sin título", ""]:
-        project.title = script.title
-        project.save()
-
-    # FORCE OVERRIDE: Apply Project Voice to Script
-    # This ensures "Dominican" request overrides "Alvaro" default in parse_avgl_json
-    if project.voice_id:
-        logger.log(f"🎤 Forzando voz del proyecto: {project.voice_id}")
-        script.voice = project.voice_id
-        # Propagate to all existing scenes that have default/None
-        for block in script.blocks:
-            for scene in block.scenes:
-                # If scene specific voice is same as default or empty, override
-                if not scene.voice or scene.voice == "es-ES-AlvaroNeural":
-                    scene.voice = project.voice_id
-    
-    # Setup directories
-    temp_audio_dir = os.path.join(settings.MEDIA_ROOT, 'temp_audio')
-    os.makedirs(temp_audio_dir, exist_ok=True)
-    assets_dir = os.path.join(settings.MEDIA_ROOT, 'assets')
-    overlay_dir = os.path.join(settings.MEDIA_ROOT, 'overlays')
-    
-    # Target resolution
-    target_size = (1080, 1920) if project.aspect_ratio == 'portrait' else (1920, 1080)
-    
-    # Overlay cache (OPTIMIZATION)
-    overlay_cache = {}
-    
-    # Generate audio for all scenes
-    logger.log("🎙️ Generando audio...")
-    all_scenes = script.get_all_scenes()
     audio_files = []
-    
-    # Generate Audio for all scenes
-    audio_files = []
-    from moviepy import AudioClip
-    
-    for i, scene in enumerate(all_scenes):
-        logger.log(f"  Escena {i+1}/{len(all_scenes)}: {scene.title}")
-        
-        audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
-        
-        # If no text, create a tiny silent file or handle as None
-        if not scene.text:
-            # We skip generation but we will handle it in the next loop with a placeholder
-            audio_files.append({
-                "scene": scene,
-                "path": None,
-                "intervals": []
-            })
-            continue
-            
-        # Prepare text - Use clean mode (no SSML) for Edge TTS for now
-        use_ssml = (project.engine == 'eleven')
-        
-        # CLEANUP: Strip Character Tags [NAME] from start of text
-        # This prevents TTS from reading "[ETHAN]" and fixes potential "No audio" errors
-        # CLEANUP: Strip Character Tags [NAME] from start of text
-        # REMOVED: Legacy logic was stripping emotion tags like [TENSO].
-        # The script is already cleaned of [NAME] tags.
-        curr_text = scene.text
-
-        # CLEANUP: Strip Stage Directions (Parentheses)
-        # Prevents reading "(Susurrando)" aloud.
-        curr_text = re.sub(r'\(.*?\)', '', curr_text)
-        
-        # CLEANUP: Strip Subtitle Tags [SUB:...] 
-        # These are handled by the video renderer, but must be hidden from TTS
-        curr_text = re.sub(r'\[SUB:.*?\]', '', curr_text).strip()
-
-        text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
-        
-        if project.engine == 'edge':
-            # SPEED LOGIC:
-            # 1. If scene.speed != 1.0, use it.
-            # 2. Else, check EDGE_TTS_RATE env var default.
-            
-            env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
-            
-            if scene.speed != 1.0:
-                speed_rate = f"{int((scene.speed - 1.0) * 100):+}%"
-            else:
-                speed_rate = env_rate
-
-            # DEBUG: Log exact params being sent
-            clean_debug = text_with_emotions.replace('<', '{').replace('>', '}')
-            logger.log(f"    🎤 DEBUG EdgeTTS: Voice='{scene.voice}' Rate='{speed_rate}' Pitch='{scene.pitch}' Text='{clean_debug[:50]}...'")
-
-            # CRITICAL FIX: Do NOT wrap in SSML here. generate_audio_edge handles segmentation manually.
-            # Wrapping it in SSML breaks the regex for [TAGS] inside.
-            
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            success, intervals = loop.run_until_complete(
-                generate_audio_edge(text_with_emotions, audio_path, scene.voice, rate=speed_rate, pitch=scene.pitch or "+0Hz")
-            )
-            loop.close()
-        else:
-            api_key = os.getenv('ELEVENLABS_API_KEY')
-            voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL')
-            
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            # ElevenLabs doesn't support segmented intervals yet, so we treat it as 1 single block
-            success = loop.run_until_complete(
-                generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key)
-            )
-            loop.close()
-            intervals = [] # Will be handled by fallback if empty
-        
-        if success:
-            # We store the intervals along with the path
-            audio_files.append({
-                "scene": scene,
-                "path": audio_path,
-                "intervals": intervals
-            })
-        else:
-            logger.log(f"  ⚠️ Error generando audio para escena {i+1}")
-            audio_files.append({
-                "scene": scene,
-                "path": None,
-                "intervals": []
-            })
-    
-    # Check if we have at least some audio or scenes
-    if not audio_files:
-        logger.log("❌ No se detectaron escenas para procesar.")
-        project.status = 'error'; project.save()
-        return
-
-    # CHECK CANCELLATION AFTER AUDIO
-    project.refresh_from_db()
-    if project.status == 'cancelled':
-        logger.log("🛑 Generación detenida por usuario (post-audio).")
-        return
-
-    # ═══════════════════════════════════════════════════════════════════
-    # GROUP MASTER SHOT INTERPOLATION (Constant Velocity)
-    # ═══════════════════════════════════════════════════════════════════
-    # Group scenes by group_id to recalculate Zoom/Move based on ACTUAL audio duration.
-    # This overrides the initial text-length based estimation for perfect constant speed.
-    group_tracker = {}
-    
-    # 1. Collect Durations
-    for item in audio_files:
-        scn = item['scene']
-        path = item['path']
-        if not scn.group_id: continue
-        
-        # Get duration
-        dur = 0.5 # default safety
-        if path and os.path.exists(path):
-            try:
-                # We use a quick probe or AudioFileClip (heavy)
-                # Since we already use MoviePy later, let's just peek or trust metadata if we had it.
-                # But we don't have metadata yet. MoviePy is safe here as we need it anyway.
-                # Optimization: Cache duration in item to avoid double load?
-                temp_clip = AudioFileClip(path)
-                dur = temp_clip.duration
-                temp_clip.close()
-                item['duration'] = dur # Cache for later loop
-            except: pass
-        else:
-            dur = 1.0 # fallback for silence
-            item['duration'] = dur
-            
-        dur += scn.pause # Add pause to visual duration
-        
-        if scn.group_id not in group_tracker:
-            group_tracker[scn.group_id] = {
-                "scenes": [],
-                "settings": scn.group_settings,
-                "total_duration": 0.0
-            }
-        
-        group_tracker[scn.group_id]["scenes"].append(item)
-        group_tracker[scn.group_id]["total_duration"] += dur
-
-    # 2. Re-Interpolate
-    for gid, gdata in group_tracker.items():
-        total_dur = gdata["total_duration"] or 1.0
-        current_time = 0.0
-        
-        # Parse Group Settings
-        # Zoom
-        z_start, z_end = 1.0, 1.1
-        if gdata["settings"] and gdata["settings"].get("zoom"):
-            z_parts = gdata["settings"]["zoom"].split(':')
-            if len(z_parts) >= 2: 
-                try: z_start = float(z_parts[0]); z_end = float(z_parts[1])
-                except: pass
-        
-        # Move
-        move_str = gdata["settings"].get("move") or ""
-        # We need to support the multi-move string parsing logic here again? 
-        # Or just construct the interpolation ratios and let apply_ken_burns handle the parsing of start/end.
-        # Issue: apply_ken_burns takes "zoom=1.0:1.2" string. We need to construct that string per scene.
-        # Ideally we parse move dimensions (HOR, VER) separately.
-        
-        moves_parsed = []
-        if move_str:
-            parts = move_str.split('+')
-            for p in parts:
-                mp = p.strip().split(':')
-                if len(mp) >= 3:
-                    moves_parsed.append({
-                        "dim": mp[0].strip(),
-                        "start": float(mp[1]),
-                        "end": float(mp[2])
-                    })
-
-        for item in gdata["scenes"]:
-            scene_dur = item.get("duration", 0)
-            
-            # Start/End Ratios
-            r_start = current_time / total_dur
-            r_end = (current_time + scene_dur) / total_dur
-            
-            # Interpolate Zoom
-            s_z_start = z_start + (z_end - z_start) * r_start
-            s_z_end = z_start + (z_end - z_start) * r_end
-            new_zoom_str = f"{s_z_start:.3f}:{s_z_end:.3f}"
-            
-            # Interpolate Move
-            new_move_parts = []
-            for m in moves_parsed:
-                s_m_start = m["start"] + (m["end"] - m["start"]) * r_start
-                s_m_end = m["start"] + (m["end"] - m["start"]) * r_end
-                new_move_parts.append(f"{m['dim']}:{s_m_start:.1f}:{s_m_end:.1f}")
-            
-            new_move_str = " + ".join(new_move_parts) if new_move_parts else ""
-            
-            # Update Scene Asset
-            if item['scene'].assets:
-                asset = item['scene'].assets[0]
-                asset.zoom = new_zoom_str
-                if new_move_str: asset.move = new_move_str
-            
-            current_time += scene_dur
-
-    # ═══════════════════════════════════════════════════════════════════
-    # SCENE-BY-SCENE GENERATION (Robust Sync)
-    # ═══════════════════════════════════════════════════════════════════
-    from moviepy import afx, AudioClip, AudioFileClip, CompositeAudioClip, TextClip, concatenate_videoclips, ImageClip
     block_clips = []
-    block_metadata = []
-    current_time = 0
-    timestamps_list = []
     
-    # Create a Scene-to-Audio mapping to prevent desync
-    # Now it maps scene to a dict with 'path' and 'intervals'
-    scene_audio_map = {item['scene']: item for item in audio_files}
-    
-    for b_idx, block in enumerate(script.blocks):
-        # CHECK CANCELLATION
-        project.refresh_from_db()
-        if project.status == 'cancelled':
-            logger.log("🛑 Generación detenida por usuario (dentro del bucle de bloques).")
+    try:
+        project.status = 'processing'
+        project.save()
+        
+        # Log Video Format
+        format_type = "SHORT" if project.aspect_ratio == 'portrait' else "VIDEO"
+        logger.log(f"[Engine] Iniciando v8.6.2 | FORMATO: {format_type}")
+        
+        # 1. Parse script
+        try:
+            script_text = project.script_text
+            script = parse_avgl_json(script_text)
+            logger.log(f"[OK] Script parseado: '{script.title}'")
+        except Exception as e:
+            logger.log(f"[Error] Error al parsear JSON: {e}")
+            project.status = 'error'; project.save()
+            play_finish_sound(success=False)
             return
 
-        logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
-        block_scene_clips = []
-        block_voice_intervals = []
-        block_cursor = 0.0
+        # Update project title if specified and NOT already set by user manually
+        if script.title and project.title in ["Sin Título", "Video Sin Título", "Proyecto sin título", ""]:
+            project.title = script.title; project.save()
+
+        # FORCE OVERRIDE: Apply Project Voice to Script
+        if project.voice_id:
+            script.voice = project.voice_id
+            for block in script.blocks:
+                for scene in block.scenes:
+                    if not scene.voice or scene.voice == "es-ES-AlvaroNeural":
+                        scene.voice = project.voice_id
         
-        # Continuity Tracking (Per Block)
-        last_asset_path = None
-        last_zoom_end = 1.0
-        last_move = None
+        # Setup directories
+        temp_audio_dir = os.path.join(settings.MEDIA_ROOT, 'temp_audio')
+        os.makedirs(temp_audio_dir, exist_ok=True)
+        assets_dir = os.path.join(settings.MEDIA_ROOT, 'assets')
+        overlay_dir = os.path.join(settings.MEDIA_ROOT, 'overlays')
         
-        for s_idx, scene in enumerate(block.scenes):
-            # 0. GRANULAR CANCELLATION CHECK (v2.25.1)
-            project.refresh_from_db()
-            if project.status == 'cancelled':
-                logger.log("🛑 Generación detenida por usuario (en bucle de escenas).")
-                return
+        # Target resolution (Ensuring even numbers for H.264 compatibility)
+        target_size = (1080, 1920) if project.aspect_ratio == 'portrait' else (1920, 1080)
+        target_size = ((target_size[0] // 2) * 2, (target_size[1] // 2) * 2)
+        
+        # 2. Generate audio for all scenes
+        logger.log("[Audio] Generando segmentos...")
+        all_scenes = script.get_all_scenes()
+        
+        # v5.2.1: Pre-calculate durations for Master Shot interpolation
+        audio_durations = {}
+        for i, scene in enumerate(all_scenes):
+            logger.log(f"  Escena {i+1}/{len(all_scenes)}: {scene.title}")
+            
+            audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
+            
+            # Custom Audio Priority
+            if scene.audio:
+                custom_audio_path = os.path.join(assets_dir, scene.audio)
+                if not os.path.exists(custom_audio_path): custom_audio_path = os.path.join(settings.MEDIA_ROOT, scene.audio)
+                if os.path.exists(custom_audio_path):
+                    logger.log(f"    🔊 Usando audio personalizado: {os.path.basename(custom_audio_path)}")
+                    import shutil; shutil.copy2(custom_audio_path, audio_path)
+                    audio_files.append((scene, audio_path))
+                    try: temp_clip = AudioFileClip(audio_path); audio_durations[scene] = temp_clip.duration; temp_clip.close()
+                    except: audio_durations[scene] = 1.0
+                    continue
 
-            # 1. Audio Retrieval (Robust)
-            audio_clip = None
-            scene_intervals = []
-            if scene in scene_audio_map:
-                audio_entry = scene_audio_map[scene]
-                if audio_entry['path']:
-                    audio_clip = AudioFileClip(audio_entry['path'])
-                    scene_intervals = audio_entry.get('intervals', [])
-            
-            # Fallback for missing audio (ensures sync)
-            if not audio_clip:
-                logger.log(f"  ⚠️ Audio NO generado per escena {s_idx+1}. Usando silencio.")
-                audio_clip = AudioClip(lambda t: [0,0], duration=1.0)
-                # If no intervals, we treat as a single block if it's fallback
-                scene_intervals = [(0, audio_clip.duration)]
-            
-            # If engine didn't provide intervals (e.g. ElevenLabs or single block fallback)
-            if not scene_intervals:
-                scene_intervals = [(0, audio_clip.duration)]
-
-            duration = audio_clip.duration + scene.pause
-            
-            # REVERT: Use only the first asset
-            if scene.assets:
-                asset = scene.assets[0]
+            if not scene.text:
+                audio_files.append((scene, None)); audio_durations[scene] = 1.0; continue
                 
-                # CRITICAL FIX v2.26.1: Check if asset.type is valid before join
-                if not asset.type:
-                     logger.log(f"  ⚠️ Asset sin tipo definido en escena {s_idx+1}. Ignorando.")
-                     asset_path = "__INVALID__"
-                else:
-                     # Check if it's already an absolute path or exists relative to CWD
-                     if os.path.exists(asset.type) or os.path.isabs(asset.type):
-                         asset_path = asset.type
-                     else:
-                         asset_path = os.path.join(assets_dir, asset.type)
-                
-                # Tolerance for common extensions
-                if not os.path.exists(asset_path):
-                    for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
-                        if os.path.exists(asset_path + ext):
-                            asset_path += ext; break
+            use_ssml = (project.engine == 'eleven')
+            curr_text = re.sub(r'\(.*?\)', '', scene.text).strip()
+            if curr_text.startswith('[') and not re.match(r'^\[\s*SUB', curr_text, flags=re.IGNORECASE):
+                curr_text = re.sub(r'^\[(?!(?:\s*/?SUB|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO))[^\]]+\]\s*', '', curr_text, flags=re.IGNORECASE)
 
-                if not os.path.exists(asset_path):
-                    logger.log(f"  ⚠️ Asset no encontrado o inválido: {asset.type}. Fondo negro.")
-                    clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
-                    
-                    # Reset continuity on missing asset
-                    last_asset_path = None
-                    last_zoom_end = 1.0
-                    last_move = None
-                    
-                else:
-                    eff_zoom = asset.zoom or "1.0:1.3"
-                    eff_move = asset.move or "HOR:50:50"
-
-                    logger.log(f"  🎬 Escena {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
-                    
-                    # Overlay
-                    overlay_path = None
-                    if asset.overlay:
-                        overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
-                        if not os.path.exists(overlay_path): overlay_path = None
-                    
-                    # Determine Asset Type (Image vs Video)
-                    is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv'))
-                    
-                    if is_video:
-                        logger.log(f"  📽️ Asset detectado como VÍDEO: {os.path.basename(asset_path)}")
-                        clip = process_video_asset(
-                            asset_path, duration, target_size,
-                            overlay_path=overlay_path,
-                            fit=asset.fit
-                        )
-                    else:
-                        # Apply Ken Burns (Standard image logic)
-                        clip = apply_ken_burns(
-                            asset_path, duration, target_size,
-                            zoom=eff_zoom,
-                            move=eff_move,
-                            overlay_path=overlay_path, 
-                            fit=asset.fit
-                        )
+            text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
+            
+            success = False
+            if project.engine == 'edge':
+                env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
+                speed_rate = f"+{int((scene.speed - 1.0) * 100)}%" if scene.speed != 1.0 else env_rate
+                loop = asyncio.new_event_loop(); asyncio.set_event_loop(loop)
+                success = loop.run_until_complete(generate_audio_edge(text_with_emotions, audio_path, scene.voice, speed_rate, pitch=scene.pitch or "+0Hz", scene=scene))
+                loop.close()
             else:
-                clip = ImageClip(np.zeros((target_size[1], target_size[0], 3), dtype=np.uint8), duration=duration)
+                api_key = os.getenv('ELEVENLABS_API_KEY')
+                voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL')
+                success = asyncio.run(generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key))
             
-            # 2. SFX Processing (New)
-            scene_sfx_clips = []
-            if scene.sfx:
-                sfx_dir = os.path.join(settings.MEDIA_ROOT, 'sfx')
-                for sfx_item in scene.sfx:
-                    sfx_path = os.path.join(sfx_dir, sfx_item.type)
-                    # Tolerance for extension
-                    if not os.path.exists(sfx_path):
-                        for ext in ['.mp3', '.wav']:
-                            if os.path.exists(sfx_path + ext):
-                                sfx_path += ext; break
-                    
-                    if os.path.exists(sfx_path):
-                        try:
-                            s_clip = AudioFileClip(sfx_path).with_effects([afx.MultiplyVolume(sfx_item.volume)])
-                            
-                            # AVGL v4: Offset is word-based. 
-                            # Calculate delay: (scene_audio_duration / scene_word_count) * offset
-                            delay = 0
-                            if sfx_item.offset > 0 and audio_clip:
-                                # Count words in scene text
-                                clean_text = re.sub(r'\[.*?\]', '', scene.text)
-                                words = clean_text.split()
-                                if words:
-                                    delay = (audio_clip.duration / len(words)) * sfx_item.offset
-                            
-                            scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, duration - delay)))
-                            logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {sfx_item.volume}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
-                        except Exception as e:
-                            logger.log(f"    ⚠️ Error SFX {sfx_item.type}: {e}")
+            if success:
+                audio_files.append((scene, audio_path))
+                try: temp_clip = AudioFileClip(audio_path); audio_durations[scene] = temp_clip.duration; temp_clip.close()
+                except: audio_durations[scene] = 1.0
+            else:
+                logger.log(f"  ⚠️ Error generando audio para escena {i+1}")
+                audio_files.append((scene, None))
+                audio_durations[scene] = 1.0
 
-            # Mix Scene Audio (Voice + SFX)
-            if scene_sfx_clips:
-                final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
-                audio_clip = final_scene_audio
+        # Check if we have at least some audio or scenes
+        if not audio_files:
+            logger.log("❌ No se detectaron escenas para procesar.")
+            project.status = 'error'; project.save()
+            play_finish_sound(success=False)
+            return
 
-            # SUBTITLE RENDERING v3.2 (Calculated Offsets)
-            scene_subtitles = []
-            if hasattr(scene, 'subtitles') and scene.subtitles:
-                scene_subtitles = scene.subtitles
-            elif hasattr(scene, 'subtitle') and scene.subtitle:
-                # Compatibility with old single subtitle format
-                scene_subtitles = [{"text": scene.subtitle, "offset": 0, "duration": duration}]
+        # 3. Main Clip Generation Loop
+        logger.log("[Video] Procesando escenas...")
+        block_metadata = []
+        current_time = 0.0
+        timestamps_list = []
+        
+        # Create a Scene-to-Audio mapping to prevent desync
+        scene_audio_map = {scene: audio for scene, audio in audio_files}
 
-            if scene_subtitles:
-                try:
-                    from moviepy import CompositeVideoClip
-                    
-                    # Font selection
-                    font = 'Arial'
-                    font_candidates = [
-                        r'C:\Windows\Fonts\arial.ttf',
-                        r'C:\Windows\Fonts\Arial.ttf',
-                        r'C:\Windows\Fonts\segoeui.ttf',
-                        r'C:\Windows\Fonts\verdana.ttf'
-                    ]
-                    for candidate in font_candidates:
-                        if os.path.exists(candidate):
-                            font = candidate; break
-                    
-                    # Calculate Word Duration for Sync
-                    # Logic: (audio_duration / word_count)
-                    clean_text = re.sub(r'\[.*?\]', '', scene.text)
-                    words = clean_text.split()
-                    word_count = len(words)
-                    
-                    # Prevent division by zero, use a safe default if no words
-                    word_duration = (audio_clip.duration / word_count) if word_count > 0 else 0.5
-                    
-                    subtitle_clips = []
-                    fontsize = int(target_size[1] * 0.06) 
-                    
-                    for sub in scene_subtitles:
-                        sub_text = sub.get('text', '')
-                        if not sub_text: continue
+        for b_idx, block in enumerate(script.blocks):
+            logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
+            block_scene_clips = []
+            block_voice_intervals = []
+            block_cursor = 0.0
+            
+            for s_idx, scene in enumerate(block.scenes):
+                # 1. Audio Retrieval (Robust)
+                audio_clip = None
+                voice_duration = 0.0
+                if scene in scene_audio_map and scene_audio_map[scene]:
+                    audio_path = scene_audio_map[scene]
+                    audio_clip = AudioFileClip(audio_path)
+                    voice_duration = audio_clip.duration
+                
+                # Fallback for missing audio (ensures sync)
+                if not audio_clip:
+                    logger.log(f"  ⚠️ Audio NO generado per escena {s_idx+1}. Usando silencio.")
+                    audio_clip = AudioClip(lambda t: [0,0], duration=1.0)
+                
+                duration = audio_clip.duration + scene.pause
+                
+                # ASSET LOADING & FALLBACK
+                clip = None
+                if scene.assets:
+                    asset = scene.assets[0]
+                    asset_path = os.path.join(assets_dir, asset.type)
+                    if not os.path.exists(asset_path):
+                        for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
+                            if os.path.exists(asset_path + ext): asset_path += ext; break
+
+                    if not os.path.exists(asset_path):
+                        logger.log(f"  ⚠️ Asset no encontrado: {asset.type}. Buscando respaldo...")
+                        # Smart Fallback
+                        fallback_candidates = [os.path.join(assets_dir, "notiaci_intro_wide.png"), os.path.join(assets_dir, "banner_notiaci.png")]
+                        found_fb = False
+                        for fb in fallback_candidates:
+                            if os.path.exists(fb): asset_path = fb; found_fb = True; break
+                        if not found_fb:
+                            try:
+                                any_imgs = [f for f in os.listdir(assets_dir) if f.lower().endswith(('.png', '.jpg'))]
+                                if any_imgs: asset_path = os.path.join(assets_dir, any_imgs[0]); found_fb = True
+                            except: pass
                         
-                        # Calculate Timing v4.0 (Word Count Based)
-                        # START TIME: word_index * word_duration
-                        sub_start = sub.get('offset', 0) * word_duration
-                        
-                        # DURATION: word_count * word_duration
-                        sub_word_count = sub.get('word_count')
-                        if sub_word_count:
-                            sub_dur = int(sub_word_count) * word_duration
+                        if not found_fb:
+                            clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
+                            logger.log("  🛑 No hay assets disponibles. Usando fondo negro.")
                         else:
-                            sub_dur = 3 # Fallback (v4.5 standard)
-                            
-                        # Ensure it fits in scene (Grace period of 0.1s)
-                        final_dur = min(sub_dur, (duration + 0.1) - sub_start)
-                        if final_dur < 0.1: continue 
+                            clip = apply_ken_burns(asset_path, duration, target_size, zoom="1.1:1.0", move="HOR:50:50")
+                            logger.log(f"  💡 Respaldo encontrado: {os.path.basename(asset_path)}")
+                    
+                    if not clip and os.path.exists(asset_path):
+                        # ═══════════════════════════════════════════════════════════════════
+                        # MASTER SHOT / GROUP INTERPOLATION (v5.2)
+                        # ═══════════════════════════════════════════════════════════════════
+                        eff_zoom = asset.zoom or "1.0:1.3"
+                        eff_move = asset.move or "HOR:50:50"
                         
-                        # Ensure start is within scene
-                        if sub_start >= duration: continue
-                        
-                        # STYLE v4.3 PRO (Compatibility Fix)
-                        from moviepy import ColorClip
-                        
-                        try:
-                            txt_content = sub_text.upper()
+                        if scene.group_id and scene.group_settings:
+                            g = scene.group_settings
+                            g_zoom = g.get("zoom", "1.0:1.3")
+                            g_move = g.get("move", "HOR:50:50")
                             
-                            # BOX DIMENSIONS: Force Integer!
-                            temp_size_txt = TextClip(text=txt_content, font_size=fontsize, font=font, color='yellow', method='label')
-                            box_w = int(temp_size_txt.w + 120)
-                            box_h = int(temp_size_txt.h + 60)
-                            temp_size_txt.close()
+                            # Calculate group timing
+                            group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
+                            total_group_duration = sum([audio_durations.get(s, 1.0) + s.pause for s in group_scenes])
                             
-                            # 1. Create Text Clip using 'caption'
-                            # 'align' is removed due to compatibility error in this environment
-                            txt_clip = TextClip(
-                                text=txt_content,
+                            # Find start time of CURRENT scene relative to group start
+                            start_in_group = 0.0
+                            for s in group_scenes:
+                                if s == scene: break
+                                s_dur = audio_durations.get(s, 1.0) + s.pause
+                                start_in_group += s_dur
+                            
+                            # Interpolate Zoom
+                            z_parts = g_zoom.split(':') if ':' in g_zoom else [g_zoom, g_zoom]
+                            gz_start = float(z_parts[0]); gz_end = float(z_parts[1])
+                            
+                            z_s = gz_start + (gz_end - gz_start) * (start_in_group / total_group_duration)
+                            z_e = gz_start + (gz_end - gz_start) * ((start_in_group + duration) / total_group_duration)
+                            eff_zoom = f"{z_s:.3f}:{z_e:.3f}"
+                            
+                            # Interpolate Move (Simple Linear)
+                            # We handle HOR:start:end
+                            if ':' in g_move:
+                                m_parts = g_move.split(':')
+                                if len(m_parts) >= 3:
+                                    m_dir = m_parts[0]; ms = float(m_parts[1]); me = float(m_parts[2])
+                                    m_s = ms + (me - ms) * (start_in_group / total_group_duration)
+                                    m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
+                                    eff_move = f"{m_dir}:{m_s:.1f}:{m_e:.1f}"
+
+                        logger.log(f"  🎬 Escena {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
+                        
+                        # Overlay
+                        overlay_path = None
+                        if asset.overlay:
+                            overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
+                            if not os.path.exists(overlay_path): overlay_path = None
+                        
+                        # Determine Asset Type (Image vs Video)
+                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv'))
+                        
+                        if is_video:
+                            logger.log(f"  📽️ Asset detectado como VÍDEO: {os.path.basename(asset_path)}")
+                            clip = process_video_asset(
+                                asset_path, duration, target_size,
+                                overlay_path=overlay_path,
+                                fit=asset.fit
+                            )
+                        else:
+                            # Apply Ken Burns (Standard image logic)
+                            clip = apply_ken_burns(
+                                asset_path, duration, target_size,
+                                zoom=eff_zoom,
+                                move=eff_move,
+                                overlay_path=overlay_path, 
+                                fit=asset.fit
+                            )
+                else:
+                    # v8.6: FAST AUDIO TEST MODE
+                    # Use ColorClip for maximum speed when user explicitly omits assets (for audio testing)
+                    logger.log(f"  🔇 Modo Solo Audio/Debug: Sin assets. Fondo negro rápido.")
+                    clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
+
+                # 2. SFX Processing (New)
+                scene_sfx_clips = []
+                if scene.sfx:
+                    sfx_dir = os.path.join(settings.MEDIA_ROOT, 'sfx')
+                    for sfx_item in scene.sfx:
+                        sfx_path = os.path.join(sfx_dir, sfx_item.type)
+                        # Tolerance for extension
+                        if not os.path.exists(sfx_path):
+                            for ext in ['.mp3', '.wav', '.m4a']:
+                                if os.path.exists(sfx_path + ext):
+                                    sfx_path += ext; break
+                        
+                        if os.path.exists(sfx_path):
+                            try:
+                                s_clip = AudioFileClip(sfx_path).with_effects([afx.MultiplyVolume(sfx_item.volume)])
+                                
+                                # AVGL v4: Offset is word-based. 
+                                # Calculate delay: (scene_audio_duration / scene_word_count) * offset
+                                delay = 0
+                                if sfx_item.offset > 0 and audio_clip:
+                                    # Count words in scene text
+                                    clean_text = re.sub(r'\[.*?\]', '', scene.text)
+                                    words = clean_text.split()
+                                    if words:
+                                        delay = (audio_clip.duration / len(words)) * sfx_item.offset
+                                
+                                scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, duration - delay)))
+                                logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {sfx_item.volume}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
+                            except Exception as e:
+                                logger.log(f"    ⚠️ Error SFX {sfx_item.type}: {e}")
+
+                # Mix Scene Audio (Voice + SFX)
+                if scene_sfx_clips:
+                    final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
+                    audio_clip = final_scene_audio
+
+                # SUBTITLE RENDERING (Enhanced v6.2)
+                # Priority: scene.subtitles (list from tags) > scene.subtitle (single string)
+                sub_clips_dynamic = []
+                try:
+                    # Common Font detection
+                    try:
+                        font_list = TextClip.list('font')
+                        font = 'Arial-Bold' if 'Arial-Bold' in font_list else 'C:/Windows/Fonts/arial.ttf'
+                    except:
+                        font = 'C:/Windows/Fonts/arial.ttf'
+                    
+                    fontsize = int(target_size[1] * 0.035)
+                    
+                    if hasattr(scene, 'subtitles') and scene.subtitles:
+                        # v6.8: Use the same splitting logic for consistency
+                        clean_text_for_count = scene.text
+                        words_in_scene = clean_text_for_count.split()
+                        total_words_scene = len(words_in_scene)
+                        timing_base = voice_duration if voice_duration > 0 else duration
+                        
+                        logger.log(f"    📝 Renderizando {len(scene.subtitles)} subtítulos de énfasis. Palabras totales: {total_words_scene}")
+                        
+                        for idx, sub_data in enumerate(scene.subtitles):
+                            s_text = sub_data.get('text', '')
+                            s_offset = sub_data.get('offset', 0)
+                            s_w_count = sub_data.get('word_count', 4)
+                            
+                            if not s_text: continue
+                            
+                            # Estimate timing
+                            s_start = (s_offset / total_words_scene) * timing_base if total_words_scene > 0 else 0
+                            s_dur = (s_w_count / total_words_scene) * timing_base if total_words_scene > 0 else 2.5
+                            
+                            # Sanitize
+                            s_start = min(s_start, duration - 0.1)
+                            s_dur = min(s_dur, duration - s_start)
+                            if s_dur < 0.4: s_dur = 0.5
+                            
+                            logger.log(f"       [{idx+1}] '{s_text[:20]}...' @ {s_start:.2f}s (dur: {s_dur:.2f}s, offset: {s_offset})")
+                            
+                            # v7.2: Fixed height for the black bar ensures perfect vertical centering
+                            # Font size is reduced, but the bar height is generous (2.8x font size)
+                            box_height = int(fontsize * 2.8)
+                            
+                            d_txt_clip = TextClip(
+                                text=s_text,
                                 font_size=fontsize,
                                 color='yellow',
+                                bg_color='black',
                                 font=font,
-                                stroke_color='black',
-                                stroke_width=2,
                                 method='caption',
-                                size=(box_w, box_h)
-                            )
+                                text_align='center',
+                                horizontal_align='center',
+                                vertical_align='center',
+                                size=(int(target_size[0]*0.85), box_height)
+                            ).with_start(s_start).with_duration(s_dur)
                             
-                            # 2. Black Background: Force Integer!
-                            bg_clip = ColorClip(size=(int(box_w), int(box_h)), color=(0,0,0)).with_opacity(1.0)
+                            # Only adding horizontal margins for that "wide" look, vertical is handled by box_height
+                            d_txt_clip = d_txt_clip.with_effects([vfx.Margin(left=30, right=30, color=(0,0,0))])
+                            d_txt_clip = d_txt_clip.with_position(('center', 0.85), relative=True)
                             
-                            # 3. Composite (Stacking)
-                            sub_box = CompositeVideoClip([bg_clip, txt_clip], size=(int(box_w), int(box_h)))
-                            
-                            # 4. Final Timing & Positioning
-                            final_sub = sub_box.with_position(('center', 0.80), relative=True)\
-                                               .with_start(sub_start)\
-                                               .with_duration(final_dur)\
-                                               .with_end(sub_start + final_dur)
-                            
-                            subtitle_clips.append(final_sub)
-                            logger.log(f"    📝 Subtítulo v4.3: '{sub_text}' ({sub_start:.2f}s, words:{sub_word_count})")
-                        except Exception as sub_err:
-                            logger.log(f"    ⚠️ Error v4.3 Rendering: {sub_err}")
-                            # Fallback
-                            txt_clip = TextClip(text=sub_text, font_size=fontsize, color='yellow', bg_color='black', method='caption', size=(int(target_size[0]*0.8), None))
-                            subtitle_clips.append(txt_clip.with_position(('center', 0.80), relative=True).with_start(sub_start).with_duration(final_dur).with_end(sub_start + final_dur))
-
-                    if subtitle_clips:
-                        clip = CompositeVideoClip([clip] + subtitle_clips)
-                    
+                            sub_clips_dynamic.append(d_txt_clip)
+                        
+                        if sub_clips_dynamic:
+                            clip = CompositeVideoClip([clip] + sub_clips_dynamic)
+                            logger.log(f"    ✅ Desplegados {len(sub_clips_dynamic)} subtítulos en escena.")
+                        
                 except Exception as e:
                     logger.log(f"    ⚠️ Error renderizando subtítulos: {e}")
 
-            # Set audio & append
-            clip = clip.with_audio(audio_clip)
-            block_scene_clips.append(clip)
-            
-            # Timestamps
-            mins, secs = divmod(int(current_time), 60)
-            timestamps_list.append(f"{mins:02d}:{secs:02d} - {scene.title}")
-            
-            # Track voice interval for ducking (relative to block start)
-            # SMART DUCKING: Shift all sub-intervals by the block_cursor
-            for v_start, v_end in scene_intervals:
-                block_voice_intervals.append((block_cursor + v_start, block_cursor + v_end))
-            
-            current_time += duration
-            block_cursor += duration
-        
-        if not block_scene_clips: continue
-        
-        # Concatenate block scenes
-        block_video = concatenate_videoclips(block_scene_clips, method="compose")
-        
-        # Track intervals globally for post-loop music processing
-        for start, end in block_voice_intervals:
-            # Shift interval by current block start time (calculated by tracking cumulative duration)
-            # wait, 'block_cursor' was relative to 0 at start of loop.
-            # We need the absolute time.
-            # Let's calculate absolute start of this block
-            # Actually, we can just use the fact that we concatenate later.
-            # We need to store (block_duration, voice_intervals_relative, has_local_music)
-            pass
-
-        # Apply Block Music ONLY if explicitly set in block
-        music_to_use = block.music
-        has_local_music = False
-        
-        if music_to_use:
-            try:
-                from .models import Music
-                m_obj = Music.objects.filter(file__icontains=music_to_use).first() or \
-                        Music.objects.filter(name__icontains=music_to_use).first()
+                # Set audio & append
+                clip = clip.with_audio(audio_clip)
+                block_scene_clips.append(clip)
                 
-                if m_obj and os.path.exists(m_obj.file.path):
-                    has_local_music = True
-                    logger.log(f"  🎵 Música específica bloque: {m_obj.name}")
-                    bg_audio = AudioFileClip(m_obj.file.path)
-                    
-                    loops = int(block_video.duration / bg_audio.duration) + 1
-                    bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
-                    
-                    vol = block.volume if block.volume is not None else 0.2
-                    
-                    # Local Ducking
-                    peak_vol = vol
-                    duck_vol = peak_vol * 0.12
-                    attack_t = 0.3; release_t = 1.5
-
-                    def volume_ducking_local(t):
-                         # ... (Same logic as before but strictly local) ...
-                        if isinstance(t, np.ndarray):
-                            vol_arr = np.full(t.shape, peak_vol)
-                            for start, end in block_voice_intervals:
-                                vol_arr[(t >= start) & (t <= end)] = duck_vol
-                                mask_fade_out = (t >= (start - attack_t)) & (t < start)
-                                if np.any(mask_fade_out):
-                                    progress = (t[mask_fade_out] - (start - attack_t)) / attack_t
-                                    vol_arr[mask_fade_out] = peak_vol - (progress * (peak_vol - duck_vol))
-                                mask_fade_in = (t > end) & (t <= (end + release_t))
-                                if np.any(mask_fade_in):
-                                    progress = (t[mask_fade_in] - end) / release_t
-                                    vol_arr[mask_fade_in] = duck_vol + (progress * (peak_vol - duck_vol))
-                            return vol_arr.reshape(-1, 1)
-                        else:
-                             for start, end in block_voice_intervals:
-                                if start <= t <= end: return duck_vol
-                                if (start - attack_t) <= t < start:
-                                    progress = (t - (start - attack_t)) / attack_t
-                                    return peak_vol - (progress * (peak_vol - duck_vol))
-                                if end < t <= (end + release_t):
-                                    progress = (t - end) / release_t
-                                    return duck_vol + (progress * (peak_vol - duck_vol))
-                             return peak_vol
-
-                    bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
-                    final_audio = CompositeAudioClip([block_video.audio, bg_audio_final])
-                    block_video = block_video.with_audio(final_audio)
-            except Exception as e:
-                logger.log(f"  ⚠️ Error música bloque: {e}")
-
-        # Store metadata for Global Music Pass
-        bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
-        block_metadata.append({
-            'duration': block_video.duration,
-            'voice_intervals': block_voice_intervals, # Current Relative
-            'has_local_music': has_local_music,
-            'volume': bs_vol
-        })
-        
-        block_clips.append(block_video)
-
-    if not block_clips:
-        logger.log("❌ Error fatal: No se generaron clips de bloques.")
-        project.status = 'failed'; project.save()
-        return
-
-    logger.log("🔗 Concatenando bloques y exportando...")
-    final_video = concatenate_videoclips(block_clips, method="compose")
-    
-    # ═══════════════════════════════════════════════════════════════════
-    # GLOBAL MUSIC PROCESSING (Continuous)
-    # ═══════════════════════════════════════════════════════════════════
-    try:
-        # 1. Determine Global Music Source
-        # Priority: UI (Project) > Script JSON
-        global_music_name = None
-        if project.background_music:
-            try: global_music_name = os.path.basename(project.background_music.file.name)
-            except: pass
-            
-        if not global_music_name:
-            global_music_name = script.background_music
-            
-        if global_music_name:
-            from .models import Music
-            gm_obj = Music.objects.filter(file__icontains=global_music_name).first() or \
-                     Music.objects.filter(name__icontains=global_music_name).first()
-            
-            if gm_obj and os.path.exists(gm_obj.file.path):
-                logger.log(f"🎵 Aplicando Música Global Continua: {gm_obj.name}")
-                bg_audio = AudioFileClip(gm_obj.file.path)
+                # Timestamps
+                m, s = divmod(int(current_time), 60)
+                timestamps_list.append(f"{m:02d}:{s:02d} {scene.title}")
                 
-                # Loop to full duration
-                loops = int(final_video.duration / bg_audio.duration) + 1
-                bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
+                # Ducking Intervals
+                if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
+                    for vs, ve in scene.voice_intervals: block_voice_intervals.append((block_cursor + vs, block_cursor + ve))
+                else: block_voice_intervals.append((block_cursor, block_cursor + voice_duration))
                 
-                # Global Volume Defaults
-                default_vol = script.music_volume if script.music_volume is not None else project.music_volume
-                if default_vol is None: default_vol = 0.20
+                current_time += duration; block_cursor += duration
+
+            if block_scene_clips:
+                block_video = concatenate_videoclips(block_scene_clips, method="chain")
                 
-                # 2. Build Global Intervals & Volume Map
-                global_voice_intervals = []
-                mute_intervals = []
-                # block_time_ranges = list of (start, end, volume)
-                block_time_ranges = []
+                # Apply Block Music (Local Ducking)
+                music_to_use = block.music
+                has_local_music = False
                 
-                current_offset = 0.0
-                
-                for b_meta in block_metadata:
-                    b_dur = b_meta['duration']
-                    b_end = current_offset + b_dur
-                    
-                    # Store block volume range
-                    # Fallback to default if block volume is None (though we handled it above)
-                    b_vol = b_meta.get('volume', default_vol)
-                    block_time_ranges.append((current_offset, b_end, b_vol))
-                    
-                    # Offset local voice intervals to global time
-                    for v_start, v_end in b_meta['voice_intervals']:
-                        global_voice_intervals.append((v_start + current_offset, v_end + current_offset))
-                    
-                    # If block has local music, we must MUTE global music here
-                    if b_meta['has_local_music']:
-                        mute_intervals.append((current_offset, b_end))
+                if music_to_use:
+                    try:
+                        m_obj = Music.objects.filter(file__icontains=music_to_use).first() or \
+                                Music.objects.filter(name__icontains=music_to_use).first()
                         
-                    current_offset += b_dur
+                        if m_obj and os.path.exists(m_obj.file.path):
+                            has_local_music = True
+                            logger.log(f"  🎵 Música específica bloque: {m_obj.name}")
+                            bg_audio = AudioFileClip(m_obj.file.path)
+                            
+                            loops = int(block_video.duration / bg_audio.duration) + 1
+                            bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
+                            
+                            vol = block.volume if block.volume is not None else 0.2
+                            
+                            # Local Ducking
+                            peak_vol = vol
+                            duck_vol = peak_vol * settings.AUDIO_DUCKING_RATIO
+                            attack_t = settings.AUDIO_ATTACK_TIME; release_t = settings.AUDIO_RELEASE_TIME
 
-                # 3. Global Ducking & Muting & Volume Automation Function
-                # Legacy "Snappy" Ducking (Precision Calibration v2.26 - Aggressive)
-                duck_factor = 0.25  # Duck to 25% of peak (0.20 * 0.25 = 0.05 Target - "Almost Null")
-                fade_t = 0.25       # Attack Time (Fast but smooth)
-                release_t = 1.6     # Release Time (Slow - Prevents pumping in short pauses)
-                fade_muting = 0.5 
+                            def volume_ducking_local(t):
+                                # v8.6 Robust Local Ducking (Minimum Mapping)
+                                if isinstance(t, np.ndarray):
+                                    # Start with baseline (factors 1.0)
+                                    factors = np.full(t.shape, 1.0)
+                                    for start, end in block_voice_intervals:
+                                        # Standard DUCK during voice
+                                        factors[(t >= start) & (t <= end)] = settings.AUDIO_DUCKING_RATIO
+                                        # Fade Out (Peak -> Duck)
+                                        mask_fout = (t >= (start - attack_t)) & (t < start)
+                                        if np.any(mask_fout):
+                                            prog = (t[mask_fout] - (start - attack_t)) / attack_t
+                                            f_out = 1.0 - (prog * (1.0 - settings.AUDIO_DUCKING_RATIO))
+                                            factors[mask_fout] = np.minimum(factors[mask_fout], f_out)
+                                        # Fade In (Duck -> Peak)
+                                        mask_fin = (t > end) & (t <= (end + release_t))
+                                        if np.any(mask_fin):
+                                            prog = (t[mask_fin] - end) / release_t
+                                            f_in = settings.AUDIO_DUCKING_RATIO + (prog * (1.0 - settings.AUDIO_DUCKING_RATIO))
+                                            factors[mask_fin] = np.minimum(factors[mask_fin], f_in)
+                                    return (factors * peak_vol).reshape(-1, 1)
+                                else:
+                                    factor = 1.0
+                                    for start, end in block_voice_intervals:
+                                        if start <= t <= end: 
+                                            factor = min(factor, settings.AUDIO_DUCKING_RATIO)
+                                        elif (start - attack_t) <= t < start:
+                                            prog = (t - (start - attack_t)) / attack_t
+                                            factor = min(factor, 1.0 - (prog * (1.0 - settings.AUDIO_DUCKING_RATIO)))
+                                        elif end < t <= (end + release_t):
+                                            prog = (t - end) / release_t
+                                            factor = min(factor, settings.AUDIO_DUCKING_RATIO + (prog * (1.0 - settings.AUDIO_DUCKING_RATIO)))
+                                    return factor * peak_vol
 
-                def volume_global(t):
-                    # Helper for scalar/vector t
-                    args = t if isinstance(t, np.ndarray) else np.array([t])
-                    
-                    # 1. Base Volume (From JSON or Block Override)
-                    # For simplicity and "Snappy" feel, we stick to Global Peak mostly, 
-                    # but allow Block Logic to override the CEILING.
-                    vol_arr = np.full(args.shape, default_vol)
-                    
-                    # Apply Block Specific Volumes (e.g. Conclusion = 0.05)
-                    for start, end, b_vol in block_time_ranges:
-                        mask_block = (args >= start) & (args < end)
-                        if np.any(mask_block):
-                            vol_arr[mask_block] = b_vol
+                            bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
+                            final_audio = CompositeAudioClip([block_video.audio, bg_audio_final])
+                            block_video = block_video.with_audio(final_audio)
+                    except Exception as e:
+                        logger.log(f"  ⚠️ Error música bloque: {e}")
 
-                    # 2. Ducking (Voices) - Linear Transformation relative to Base
-                    for start, end in global_voice_intervals:
-                        # Find Base Volume at this moment (Dynamic Baseline)
-                        # We use a simplified approach: calculate ducked target from the CURRENT base
-                        
-                        # Full Duck Region
-                        mask_voice = (args >= start) & (args <= end)
-                        if np.any(mask_voice):
-                            vol_arr[mask_voice] *= duck_factor
-                        
-                        # Attack (Fade Out: Base -> Duck)
-                        mask_out = (args >= (start - fade_t)) & (args < start)
-                        if np.any(mask_out):
-                            # Linear progression 0.0 -> 1.0
-                            prog = (args[mask_out] - (start - fade_t)) / fade_t
-                            curr_base = vol_arr[mask_out] # This is currently High
-                            target_duck = curr_base * duck_factor
-                            vol_arr[mask_out] = curr_base - (prog * (curr_base - target_duck))
+                # Store metadata for Global Music Pass
+                bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
+                block_metadata.append({
+                    'duration': block_video.duration,
+                    'voice_intervals': block_voice_intervals, # Current Relative
+                    'has_local_music': has_local_music,
+                    'volume': bs_vol
+                })
+                block_clips.append(block_video)
 
-                        # Release (Fade In: Duck -> Base)
-                        mask_in = (args > end) & (args <= (end + release_t))
-                        if np.any(mask_in):
-                            # Linear progression 0.0 -> 1.0
-                            prog = (args[mask_in] - end) / release_t
-                            # For Release, we want to go FROM Duck TO Base
-                            # But vol_arr in this region is currently Base (untouched by mask_voice)
-                            curr_base = vol_arr[mask_in]
-                            base_duck = curr_base * duck_factor
-                            vol_arr[mask_in] = base_duck + (prog * (curr_base - base_duck))
+        if not block_clips: raise Exception("No block clips generated")
 
-                    # 3. Muting (Local Music Blocks)
-                    for start, end in mute_intervals:
-                        vol_arr[(args >= start) & (args <= end)] = 0
-                        # Fade out
-                        mask_out = (args >= (start - fade_muting)) & (args < start)
-                        if np.any(mask_out):
-                            prog = (args[mask_out] - (start - fade_muting)) / fade_muting
-                            vol_arr[mask_out] *= (1.0 - prog)
-                        # Fade in
-                        mask_in = (args > end) & (args <= (end + fade_muting))
-                        if np.any(mask_in):
-                            prog = (args[mask_in] - end) / fade_muting
-                            vol_arr[mask_in] *= prog
-
-                    return vol_arr.reshape(-1, 1) if isinstance(t, np.ndarray) else vol_arr[0]
-
-                # Apply
-                bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_global(t))
-                
-                # Check for cancellations before expensive mix
-                project.refresh_from_db()
-                if project.status == 'cancelled': return
-
-                final_audio = CompositeAudioClip([final_video.audio, bg_audio_final])
-                final_video = final_video.with_audio(final_audio)
-                
-    except Exception as e:
-        logger.log(f"⚠️ Error procesando música global: {e}")
-
-    output_filename = f"project_{project.id}.mp4"
-    output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
-    # FINAL CANCELLATION CHECK BEFORE RENDER (v2.25.1)
-    project.refresh_from_db()
-    if project.status == 'cancelled':
-        logger.log("🛑 Renderizado abortado por usuario.")
-        try: final_video.close()
-        except: pass
-        return
-
-    final_video.write_videofile(
-        output_path, fps=30, codec='libx264', audio_codec='aac', 
-        preset='ultrafast', threads=8
-    )
-    
-    # Total stats
-    total_time = time.time() - start_time
-    project.output_video.name = f"videos/{output_filename}"
-    project.duration = final_video.duration
-    project.timestamps = "\n".join(timestamps_list)
-    project.status = 'completed'
-    project.save()
-    
-    logger.log(f"✨ ¡Generación exitosa en {total_time:.1f}s!")
-    
-    # Cleanup
-    try:
-        final_video.close()
-        for bc in block_clips: bc.close()
-        for _, path in audio_files:
-            if os.path.exists(path): os.remove(path)
-    except:
-        pass
+        # 4. Final Export
+        final_video = concatenate_videoclips(block_clips, method="chain")
         
-    return output_path
-
-    # Delete files
-    cleaned_count = 0
-    for _, audio_path in audio_files:
+        # ═══════════════════════════════════════════════════════════════════
+        # GLOBAL MUSIC PROCESSING (Continuous)
+        # ═══════════════════════════════════════════════════════════════════
         try:
-            if os.path.exists(audio_path):
-                os.remove(audio_path)
-                cleaned_count += 1
+            # 1. Determine Global Music Source
+            # Priority: UI (Project) > Script JSON
+            global_music_name = None
+            if project.background_music:
+                try: global_music_name = os.path.basename(project.background_music.file.name)
+                except: pass
+                
+            if not global_music_name:
+                global_music_name = script.background_music
+                
+            if global_music_name:
+                # v5.2: SUPER ROBUST FUZZY LOOKUP
+                
+                # Normalize Search Term
+                search_name = os.path.basename(global_music_name).lower()
+                name_no_ext = re.sub(r'\.(mp3|wav|m4a)$', '', search_name)
+                name_clean = name_no_ext.replace('_', ' ').replace('-', ' ').strip()
+                name_slug = name_no_ext.replace(' ', '_').replace('-', '_').strip()
+                
+                # Search variations
+                gm_obj = Music.objects.filter(
+                    Q(file__icontains=name_no_ext) | 
+                    Q(file__icontains=name_slug) | 
+                    Q(name__icontains=name_clean) |
+                    Q(name__icontains=name_no_ext)
+                ).first()
+                
+                if gm_obj and os.path.exists(gm_obj.file.path):
+                    logger.log(f"🎵 Aplicando Música Global Continua: {gm_obj.name}")
+                    bg_audio = AudioFileClip(gm_obj.file.path)
+                    
+                    # Loop to full duration
+                    loops = int(final_video.duration / bg_audio.duration) + 1
+                    bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
+                    
+                    # Global Volume Defaults
+                    default_vol = script.music_volume if script.music_volume is not None else project.music_volume
+                    if default_vol is None: default_vol = 0.20
+                    
+                    # 2. Build Global Intervals & Volume Map
+                    global_voice_intervals = []
+                    mute_intervals = []
+                    # block_time_ranges = list of (start, end, volume)
+                    block_time_ranges = []
+                    
+                    current_offset = 0.0
+                    
+                    for b_meta in block_metadata:
+                        b_dur = b_meta['duration']
+                        b_end = current_offset + b_dur
+                        
+                        # Store block volume range
+                        # Fallback to default if block volume is None (though we handled it above)
+                        b_vol = b_meta.get('volume', default_vol)
+                        block_time_ranges.append((current_offset, b_end, b_vol))
+                        
+                        # Offset local voice intervals to global time
+                        for v_start, v_end in b_meta['voice_intervals']:
+                            global_voice_intervals.append((v_start + current_offset, v_end + current_offset))
+                        
+                        # If block has local music, we must MUTE global music here
+                        if b_meta['has_local_music']:
+                            mute_intervals.append((current_offset, b_end))
+                            
+                        current_offset += b_dur
+
+                    # 3. Dynamic Ducking (v5.8)
+                    # Optimized for snappy transitions (0.8s release instead of 1.5s)
+                    peak_vol = default_vol
+                    duck_vol = peak_vol * settings.AUDIO_DUCKING_RATIO
+                    attack_t = 0.2  # Snappier attack
+                    release_t = 0.8 # Snappier release (USER: "detect pauses")
+
+                    logger.log(f"    [Audio] Mezclando música global dinámica ({len(global_voice_intervals)} intervalos de voz)")
+
+                    def volume_ducking_global(t):
+                        # v8.6 Robust Global Ducking
+                        # Optimization: pre-calculate factors.
+                        if isinstance(t, np.ndarray):
+                            # 1. Determine base volume per sample (Peak Vol dynamic!)
+                            base_vols = np.full(t.shape, peak_vol)
+                            for b_start, b_end, b_vol in block_time_ranges:
+                                mask = (t >= b_start) & (t <= b_end)
+                                base_vols[mask] = b_vol
+                            
+                            # 2. Calculate ducking factor (factors 0.0 to 1.0)
+                            factors = np.full(t.shape, 1.0)
+                            duck_ratio = settings.AUDIO_DUCKING_RATIO
+                            
+                            for v_start, v_end in global_voice_intervals:
+                                # Duck
+                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
+                                
+                                # Attack
+                                m_out = (t >= (v_start - attack_t)) & (t < v_start)
+                                if np.any(m_out):
+                                    p = (t[m_out] - (v_start - attack_t)) / attack_t
+                                    factors[m_out] = np.minimum(factors[m_out], 1.0 - (p * (1.0 - duck_ratio)))
+                                
+                                # Release
+                                m_in = (t > v_end) & (t <= (v_end + release_t))
+                                if np.any(m_in):
+                                    p = (t[m_in] - v_end) / release_t
+                                    factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
+                            
+                            # 3. Global Mute
+                            for ms, me in mute_intervals:
+                                factors[(t >= ms) & (t <= me)] = 0.0
+                                
+                            return (base_vols * factors).reshape(-1, 1) if len(t.shape) == 1 else (base_vols * factors)
+                        else:
+                            # Single value logic
+                            # 1. Base Vol
+                            cur_peak = peak_vol
+                            for b_start, b_end, b_vol in block_time_ranges:
+                                if b_start <= t <= b_end:
+                                    cur_peak = b_vol; break
+                            
+                            # 2. Factor
+                            for ms, me in mute_intervals:
+                                if ms <= t <= me: return 0.0
+                            
+                            factor = 1.0
+                            duck_ratio = settings.AUDIO_DUCKING_RATIO
+                            for v_start, v_end in global_voice_intervals:
+                                if v_start <= t <= v_end:
+                                    factor = min(factor, duck_ratio)
+                                elif (v_start - attack_t) <= t < v_start:
+                                    p = (t - (v_start - attack_t)) / attack_t
+                                    factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
+                                elif v_end < t <= (v_end + release_t):
+                                    p = (t - v_end) / release_t
+                                    factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
+                            
+                            return cur_peak * factor
+
+                    # Apply using fl_audio style transform (v5.8 uses a cleaner approach)
+                    bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
+                    
+                    final_audio = CompositeAudioClip([final_video.audio, bg_audio_final])
+                    final_video = final_video.with_audio(final_audio)
+                    
         except Exception as e:
-            logger.log(f"⚠️ Error borrando {os.path.basename(audio_path)}: {e}")
-            
-    logger.log(f"✨ Se eliminaron {cleaned_count} archivos de audio temporales.")
-    
+            logger.log(f"[Error] Error procesando música global: {e}")
+
+        output_filename = f"project_{project.id}.mp4"
+        output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        # v5.9 GPU Preset Fix
+        use_gpu = (project.render_mode == 'gpu')
+        render_params = {
+            'fps': 30, 
+            'codec': 'libx264', 
+            'audio_codec': 'aac', 
+            'preset': 'ultrafast', 
+            'threads': 8
+        }
+        
+        if use_gpu:
+            logger.log("[HW] MODO RENDER: GPU Acelerado (NVENC)")
+            render_params.update({
+                'codec': 'h264_nvenc', 
+                'bitrate': '5000k',
+                'preset': 'p1',  # Correct preset for NVENC (p1=fastest, p7=slowest/best)
+                'threads': None  # NVENC handles its own threads better
+            })
+        else:
+            logger.log("[HW] MODO RENDER: CPU Standard (libx264)")
+
+        final_video.write_videofile(output_path, ffmpeg_params=["-pix_fmt", "yuv420p"], **render_params)
+        
+        project.output_video.name = f"videos/{output_filename}"
+        project.duration = final_video.duration
+        project.timestamps = "\n".join(timestamps_list)
+        project.status = 'completed'; project.save()
+        play_finish_sound(success=True)
+        logger.log(f"[Done] ¡Éxito en {time.time()-start_time:.1f}s!")
+
+    except Exception as e:
+        logger.log(f"[FATAL] Error en renderizado: {e}")
+        project.status = 'failed'; project.save()
+        play_finish_sound(success=False)
+        raise e
+    finally:
+        try:
+            if 'final_video' in locals() and final_video: final_video.close()
+            for c in block_clips: c.close()
+            for _, p in audio_files: 
+                if p and os.path.exists(p): os.remove(p)
+        except Exception as e:
+            logger.log(f"[Cleanup] Error durante la limpieza: {e}")
+        
     return output_path

@@ -1,0 +1,200 @@
+# ═══════════════════════════════════════════════════════════════════
+
+async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rate="+0%", pitch="+0Hz"):
+    """
+    Robust Direct Engine (v5.1)
+    Strips ALL technical tags and uses the plain text API with native parameters.
+    """
+    import edge_tts
+    import re
+    
+    # 1. TOTAL CLEANUP: Strip brackets (tags), parentheses (stage directions), and XML.
+    # We remove anything like [TAG], [TAG:VAL], [SUB:...], (Susurrando), <prosody>
+    clean_text = re.sub(r'\[.*?\]', '', text)
+    clean_text = re.sub(r'\(.*?\)', '', clean_text)
+    clean_text = re.sub(r'<.*?>', '', clean_text)
+    clean_text = clean_text.strip()
+    
+    if not clean_text:
+        return False
+
+    # 2. COMMUNICATE: Pass rate/pitch directly to the constructor.
+    # EdgeTTS will handle the internal SSML generation safely.
+    try:
+        # Note: rate/pitch must be in the format expected by EdgeTTS (+X%, +XHz)
+        communicate = edge_tts.Communicate(clean_text, voice, rate=rate, pitch=pitch)
+        await communicate.save(output_path)
+        return True
+    except Exception as e:
+        print(f"❌ Error en EdgeTTS: {e}")
+        return False
+    import edge_tts
+    from moviepy import AudioFileClip, concatenate_audioclips, AudioClip
+    import numpy as np
+
+    emotions_config = {
+        'TENSO': {'style': 'serious', 'rate': '-5%', 'pitch': '-3Hz'},
+        'EPICO': {'style': 'excited', 'rate': '+10%', 'volume': '+15%', 'pitch': '+5Hz'},
+        'SUSPENSO': {'style': 'whispering', 'rate': '-25%', 'pitch': '-2Hz'},
+        'GRITANDO': {'style': 'shouting', 'rate': '+20%', 'volume': '+30%', 'pitch': '+15Hz'},
+        'SUSURRO': {'style': 'whispering', 'rate': '-20%', 'volume': '-20%', 'pitch': '-5Hz'},
+    }
+
+    # 1. Parse Segments
+    segments = []
+    # Regex to find [TAG]text[/TAG] or [PAUSA:X.X] or plain text
+    # We use a non-greedy approach for tags
+    pattern = r'(\[PAUSA:[\d\.]+\]|\[([A-Z]+)\](.*?)\[/\2\])'
+    
+    last_end = 0
+    for match in re.finditer(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+        # Plain text before the match
+        if match.start() > last_end:
+            plain = text[last_end:match.start()].strip()
+            if plain:
+                segments.append(('plain', plain))
+        
+        full_match = match.group(0)
+        if full_match.upper().startswith('[PAUSA'):
+            dur = float(re.search(r'[\d\.]+', full_match).group())
+            segments.append(('pause', dur))
+        else:
+            tag = match.group(2).upper()
+            content = match.group(3).strip()
+            segments.append((tag, content))
+        
+        last_end = match.end()
+    
+    # Remaining text after last match
+    if last_end < len(text):
+        plain = text[last_end:].strip()
+        if plain:
+            segments.append(('plain', plain))
+
+    if not segments:
+        segments = [('plain', text)]
+
+    # 2. Generate and store clips
+    audio_clips = []
+    voice_segments_metadata = [] # List of (start, end) relative to final clip
+    
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_segments')
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    project_prefix = f"seg_{int(time.time())}_{random.randint(100,999)}"
+    current_offset = 0.0
+
+    try:
+        for i, (tag, content) in enumerate(segments):
+            if tag == 'pause':
+                # Create silence clip
+                silence = AudioClip(lambda t: np.zeros(2), duration=content).with_fps(44100)
+                audio_clips.append(silence)
+                current_offset += content
+                continue
+            
+            # Text segment
+            seg_path = os.path.join(temp_dir, f"{project_prefix}_{i}.mp3")
+            
+            # Determine segment voice (Switching support)
+            seg_voice = voice
+            if tag in VOICES_CONFIG:
+                seg_voice = VOICES_CONFIG[tag]
+            
+            # Apply emotion settings
+            seg_rate = rate
+            seg_pitch = "+0Hz"
+            seg_vol = "+0%"
+            seg_style = "neutral"
+            
+            if tag in emotions_config:
+                # Combine base rate with emotion rate numerically logic could be added here
+                # For now we just override or keep simple
+                seg_rate = emotions_config[tag].get('rate', rate)
+                seg_vol = emotions_config[tag].get('volume', '+0%')
+                seg_pitch = emotions_config[tag].get('pitch', "+0Hz")
+                seg_style = emotions_config[tag].get('style', "neutral")
+            
+            # Edge TTS call with Native Style (SSML)
+            # We must construct a valid SSML string if we want to use express-as
+            # or if we have specific pitch requirements that Communicate() args don't cover well.
+            # However, edge_tts.Communicate() handles rate/volume/pitch args nicely.
+            # Only style needs SSML wrapping usually.
+            
+            # Construct SSML for style if not neutral
+            if seg_style != "neutral":
+                 # We need to wrap it ourselves because edge_tts doesn't have a 'style' arg in init
+                 # But getting the full SSML right with Communicate(ssml_content) is tricky.
+                 # Strategy: Wrap content in <express-as> and let Communicate handle the rest?
+                 # Communicate(text) -> raw text. Communicate(ssml) -> raw ssml.
+                 
+                 ssml_content = f'<express-as style="{seg_style}">{content}</express-as>'
+                 # We must wrap this in speak/voice tags too if we pass it as SSML
+                 full_ssml = wrap_ssml(ssml_content, seg_voice, speed=seg_rate)
+                 # Note: wrap_ssml handles rate via prosody, but pitch is missing there properly.
+                 # Let's update wrap_ssml later or hack it here.
+                 # For now, let's rely on updated wrap_ssml which we should also fix if needed,
+                 # but here is the direct implementation:
+                 
+                 prosody_attrs = f'rate="{seg_rate}" volume="{seg_vol}" pitch="{seg_pitch}"'
+                 final_ssml = (
+                    f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-ES">'
+                    f'<voice name="{seg_voice}">'
+                    f'<express-as style="{seg_style}">'
+                    f'<prosody {prosody_attrs}>'
+                    f'{content}'
+                    f'</prosody>'
+                    f'</express-as>'
+                    f'</voice>'
+                    f'</speak>'
+                 )
+                 communicate = edge_tts.Communicate(final_ssml, seg_voice) # voice arg is redundant if in ssml but harmless
+            else:
+                 # Standard clean call
+                 communicate = edge_tts.Communicate(content, seg_voice, rate=seg_rate, volume=seg_vol, pitch=seg_pitch)
+
+            await communicate.save(seg_path)
+            
+            # Clean technical tags/XML and instructions in parentheses (Soportamos acotaciones)
+            clean_content = re.sub(r'<[^>]+>', '', content) # Strip XML
+            clean_content = re.sub(r'\(.*?\)', '', clean_content) # Strip (...)
+            
+            # Translate Cinematic Actions (TOS, AJEM, etc.)
+            for action_tag, onomatopoeia in ACTIONS_CONFIG.items():
+                clean_content = clean_content.replace(action_tag, onomatopoeia)
+            
+            clean_content = clean_content.strip()
+            if not clean_content: continue
+
+            # Determine segment voice (Switching support)
+            seg_voice = voice
+            if tag in VOICES_CONFIG:
+                seg_voice = VOICES_CONFIG[tag]
+
+            # Edge TTS call
+            communicate = edge_tts.Communicate(clean_content, seg_voice, rate=seg_rate, volume=seg_vol, pitch=seg_pitch)
+            await communicate.save(seg_path)
+            
+            if os.path.exists(seg_path):
+                clip = AudioFileClip(seg_path)
+                
+                # Track interval
+                voice_segments_metadata.append((current_offset, current_offset + clip.duration))
+                
+                audio_clips.append(clip)
+                current_offset += clip.duration
+
+        # 3. Join Clips
+        if audio_clips:
+            final_audio = concatenate_audioclips(audio_clips)
+            final_audio.write_audiofile(output_path, logger=None)
+            
+            # Cleanup
+            for clip in audio_clips:
+                clip.close()
+            
+            return (True, voice_segments_metadata)
+        return (False, [])
+        
+    except Exception as e:
+        print(f"❌ Error en segmentación de audio: {e}")

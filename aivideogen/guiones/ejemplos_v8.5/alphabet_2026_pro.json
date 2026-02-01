@@ -1,0 +1,99 @@
+{
+    "title": "SHORT: El Fin del Copyright y AlphaGenome",
+    "hashtags": "#ia #google #noticiasi #short #genie #alphagenome #copyright #notiaci #dominicanrepublic",
+    "fuentes": "Alphabet Press, Google DeepMind, CNBC, Bloomberg (30 Ene 2026)",
+    "tags": "Google Genie, AlphaGenome, Copyright IA, Alphabet 2026, DeepMind, Leon Ding Google, NotIACi Noticias",
+    "voice": "es-DO-EmilioNeural",
+    "voice_speed": "+0%",
+    "aspect_ratio": "portrait",
+    "background_music": "Space Station Experience - Unicorn Heads.mp3",
+    "music_volume": 0.15,
+    "blocks": [
+        {
+            "title": "EL IMPACTO ALPHABET",
+            "scenes": [
+                {
+                    "title": "Inicio",
+                    "text": "Hoy treinta de enero Google acaba de soltar una bomba que podría desintegrar la industria del videojuego tal como la conocemos: [SUB]Project Genie[/SUB].",
+                    "assets": [
+                        {
+                            "id": "google_genie.mp4",
+                            "fit": true
+                        }
+                    ],
+                    "pause": 0.3
+                },
+                {
+                    "title": "Bienvenida",
+                    "text": "Bienvenidos a NotIACi, Noticias de IA y ciencias. Según informes de Alphabet, este hito marca el inicio de una era donde la propiedad intelectual ya no existe.",
+                    "assets": [
+                        {
+                            "id": "genie_cloning_games.png",
+                            "move": "VER:100:0",
+                            "zoom": "1.1:1.0"
+                        }
+                    ],
+                    "pause": 0.5
+                },
+                {
+                    "title": "Impacto Industria",
+                    "text": "Y para demostrarlo, Genie clona mundos jugables enteros de Mario y Zelda en segundos. Las acciones de [SUB]Unity y Roblox[/SUB] están en caída libre ante esta amenaza existencial.",
+                    "assets": [
+                        {
+                            "id": "stock_market_crash_tech.png",
+                            "move": "VER:0:100",
+                            "zoom": "1.0:1.4"
+                        }
+                    ],
+                    "pause": 0.5
+                },
+                {
+                    "title": "AlphaGenome",
+                    "text": "Además, DeepMind ha presentado [SUB]AlphaGenome[/SUB], mapeando los disparadores genéticos de nuestras enfermedades directamente desde sus servidores centrales.",
+                    "assets": [
+                        {
+                            "id": "alphagenome_dna_map.png",
+                            "move": "VER:100:0",
+                            "zoom": "1.0:1.2"
+                        }
+                    ],
+                    "pause": 0.8
+                },
+                {
+                    "title": "Conclusión Profunda",
+                    "text": "Todo esto nos sitúa ante el fin de la propiedad biológica y creativa. Alphabet ya no solo organiza la información, ahora es el [SUB]guardián de nuestro código genético[/SUB] y de nuestra cultura digital jugable.",
+                    "assets": [
+                        {
+                            "id": "future_city_alphabet_logo.png",
+                            "move": "VER:0:100",
+                            "zoom": "1.0:1.4"
+                        }
+                    ],
+                    "pause": 1.0
+                },
+                {
+                    "title": "CTA",
+                    "text": "Pero dinos, ¿crees que Google debería tener tanto poder sobre nuestra biografía y cultura? Opina abajo, dale like y suscríbete para más análisis en NotIACi.",
+                    "assets": [
+                        {
+                            "id": "cta_interact.png",
+                            "move": "VER:100:0",
+                            "zoom": "1.1:1.0"
+                        }
+                    ],
+                    "pause": 0.5
+                },
+                {
+                    "title": "Despedida",
+                    "text": "NotIACi: Información que transforma el futuro.",
+                    "assets": [
+                        {
+                            "id": "suscribete.mp4",
+                            "fit": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

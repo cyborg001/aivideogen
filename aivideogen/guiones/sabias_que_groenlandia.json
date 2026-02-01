@@ -1,0 +1,58 @@
+{
+  "title": "Sabias Que: El Tesoro Oculto de Groenlandia",
+  "voice": "es-MX-JorgeNeural",
+  "speed": 1.1,
+  "background_music": "suspense_tech.mp3",
+  "blocks": [
+    {
+      "title": "Impacto y Tecnología",
+      "scenes": [
+        {
+          "title": "Gancho de Portada",
+          "text": "[TESTRUPTION]¿Sabías que la verdadera razón por la que Trump quiere comprar Groenlandia no es el territorio, sino tu smartphone?[/TESTRUPTION]",
+          "assets": [
+            {
+              "id": "trump_main.png",
+              "zoom": "1.1:1.3",
+              "move": "HOR:50:50",
+              "overlay": "dust"
+            }
+          ]
+        },
+        {
+          "title": "Impacto Visual",
+          "text": "Bajo el hielo ártico se esconde una guerra tecnológica silenciosa por el control del futuro.",
+          "assets": [
+            {
+              "id": "hook.png",
+              "zoom": "1.0:1.2"
+            }
+          ]
+        },
+        {
+          "title": "Tierras Raras",
+          "text": "Groenlandia es el octavo país con más reservas de tierras raras del mundo. Hablamos de minerales críticos como el neodimio e itrio, esenciales para fabricar desde tu iPhone hasta misiles avanzados.",
+          "assets": [
+            {
+              "id": "mining.png",
+              "zoom": "1.1:1.0",
+              "move": "VER:10:90"
+            }
+          ],
+          "pause": 1.0
+        },
+        {
+          "title": "Geopolítica y Cierre",
+          "text": "[EPICO]Quien controle Groenlandia, controla la independencia energética y militar frente a China. ¿Es este el futuro? Sígueme para más descubrimientos impactantes.[/EPICO]",
+          "assets": [
+            {
+              "id": "tech_future.png",
+              "zoom": "1.3:1.0",
+              "overlay": "grain"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

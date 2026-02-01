@@ -152,13 +152,15 @@
 <body>
     <nav>
         <a href="{% url 'generator:home' %}" class="logo">aiVideoGen <small
-                style="font-size: 0.6rem; opacity: 0.7;">v2.22.1</small></a>
+                style="font-size: 0.6rem; opacity: 0.7;">v3.0.0</small></a>
         <a href="{% url 'researcher:news_list' %}">AI Hub</a>
         <a href="{% url 'generator:script_editor_standalone' %}" style="color: #4f46e5;">✨ Crear Guion</a>
         <a href="{% url 'generator:create_project' %}">Crear Nuevo</a>
         <a href="{% url 'generator:asset_list' %}">Assets</a>
         <a href="{% url 'generator:music_list' %}">Música</a>
         <a href="{% url 'generator:sfx_list' %}">SFX</a>
+        <a href="{% url 'generator:view_logs' %}" style="opacity: 0.6; font-size: 0.8rem; margin-left: 10px;">Ver
+            Logs</a>
     </nav>
     <div class="container">
         {% if messages %}
@@ -192,6 +194,21 @@
             (Código & IA)</p>
         <p style="font-size: 0.7rem; opacity: 0.7;">Powered by Django & Google Gemini</p>
     </footer>
+
+    <script>
+        // Heartbeat mechanism to keep server alive
+        function sendHeartbeat() {
+            fetch("{% url 'generator:api_heartbeat' %}")
+                .then(response => response.json())
+                .catch(err => console.debug("Heartbeat failed (server might be down)"));
+        }
+
+        // Send heartbeat every 10 seconds
+        setInterval(sendHeartbeat, 10000);
+
+        // Send one immediately on load
+        document.addEventListener('DOMContentLoaded', sendHeartbeat);
+    </script>
 </body>
 
 </html>

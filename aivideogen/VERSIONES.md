@@ -4,6 +4,9 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 
 | Versión | Fecha | Hito Técnico | Cambios Realizados |
 | :--- | :--- | :--- | :--- |
+| **8.6.2** | 2026-02-01 | **Robust Rendering Era** | **Global Error Listener:** Captura de fallos críticos para asegurar notificaciones sonoras. <br> **Even Dimension Constraint:** Forzado de dimensiones pares para compatibilidad total con H.264. <br> **Turbo Render (v8.6):** Optimización `method="chain"` para renderizado masivo. |
+| **8.5.0** | 2026-01-31 | **Stability & Flow Mastery** | **YouTube Metadata Fix:** Extracción avanzada de fuentes/hashtags en JSON. <br> **Narrative Flow:** Implementación de la regla de conjunciones para transiciones suaves. <br> **UI Script Recovery:** Restauración de `convert_avgl_json_to_text` para evitar fallos en el editor. <br> **Framing Intelligence:** Ajuste dinámico de encuadre para personas (Zoom Out/Vertical Pan). |
+| **3.1.0** | 2026-01-24 | **Hardware Acceleration Era** | **GPU-Accelerated Rendering:** Integración de NVIDIA NVENC (`h264_nvenc`) para renderizado ultra-rápido en tarjetas RTX. <br> **Environment Normalization:** Reemplazo de comandos obsoletos (`wmic`) por PowerShell moderno y herramientas de diagnóstico (`GPUtil`). |
 | **3.0.0** | 2026-01-16 | **Unified Engine Era** | **Legacy Removed:** Eliminación total del motor antiguo. Todo el renderizado pasa por AVGL v4. <br> **Smart Text Bridge:** Soporte nativo de `FIT`, `ZOOM`, `OVERLAY` en guiones de texto (5 columnas) mediante conversión automática a JSON. <br> **Single Pipeline:** Unificación de lógica de renderizado para máxima consistencia. |
 | 2.24.4 | 2026-01-11 | **Smart Title Cleaner** | Mejora de limpieza de títulos con Regex (Strips emojis & prefixes). |
 | 2.0.0 | 2025-12-27 | Lanzamiento Dist | Creación de la versión independiente (dist) con sistema de migraciones automáticas. |
@@ -58,4 +61,9 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 | 2.26.1 | 2026-01-17 | **Stability & Workflow Patch** | **Manual Processing:** Inicio manual de generación para control total. <br> **Clean Lifecycle:** Eliminación limpia de proyectos y archivos huérfanos. <br> **Critical Engine Fix:** Validación de tipos de Assets (evita fallos NoneType) y manejo de errores robusto en V4. |
 
 ---
-*Actualizado al 17-01-2026*
+*Actualizado al 31-01-2026*
+
+## 🔮 Hoja de Ruta (Roadmap - Próximas Ideas)
+- [ ] **Efecto Shake (Temblor)**: Implementar jitter aleatorio para escenas de alta tensión.
+- [ ] **Dynamic Overlays**: Soporte para cambio de overlay a mitad de escena.
+- [ ] **Audio Master FX**: Normalización automática de picos de audio post-render.

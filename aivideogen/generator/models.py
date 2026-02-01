@@ -69,10 +69,16 @@ class VideoProject(models.Model):
         ('portrait', 'Vertical (9:16 - Shorts)'),
     ]
 
+    RENDER_MODE_CHOICES = [
+        ('cpu', 'Procesador (CPU)'),
+        ('gpu', 'Tarjeta NVIDIA (GPU)'),
+    ]
+
     title = models.CharField(max_length=255, default="Proyecto sin título")
     script_text = models.TextField()
     engine = models.CharField(max_length=20, choices=ENGINE_CHOICES, default='edge')
     aspect_ratio = models.CharField(max_length=20, choices=ASPECT_RATIO_CHOICES, default='landscape')
+    render_mode = models.CharField(max_length=10, choices=RENDER_MODE_CHOICES, default='cpu', help_text="Método de renderizado de video")
     voice_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID de la voz o nombre (Edge/ElevenLabs)")
     
     background_music = models.ForeignKey(Music, on_delete=models.SET_NULL, null=True, blank=True, help_text="Música de fondo para el video")

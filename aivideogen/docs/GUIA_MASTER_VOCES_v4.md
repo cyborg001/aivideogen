@@ -22,13 +22,13 @@ Si todo el audiolibro/video es narrado por una sola voz (ej. `es-DO-EmilioNeural
 
 Estas son las etiquetas "nativas" que el sistema `translate_emotions` reconoce y traduce automáticamente a SSML avanzado. Úselas dentro del texto del guion.
 
-| Etiqueta | Configuración Interna | Uso Recomendado |
+| Etiqueta | Estilo Nativo Edge (Azure) | Uso Recomendado |
 | :--- | :--- | :--- |
-| `[TENSO] ... [/TENSO]` | `Pitch: -10Hz` \| `Rate: -15%` | Momentos de peligro inminente, advertencias serias o miedo contenido. |
-| `[EPICO] ... [/EPICO]` | `Pitch: +5Hz` \| `Rate: +10%` \| `Vol: +15%` | Clímax de acción, discursos inspiradores, momentos de victoria. |
-| `[SUSPENSO] ... [/SUSPENSO]` | `Pitch: -5Hz` \| `Rate: -25%` | Misterio, revelaciones lentas, narración de ambiente oscuro. |
-| `[GRITANDO] ... [/GRITANDO]` | `Pitch: +15Hz` \| `Rate: +20%` \| `Vol: Loud` | Gritos de batalla, discusiones acaloradas, órdenes urgentes. |
-| `[SUSURRO] ... [/SUSURRO]` | `Pitch: -12Hz` \| `Rate: -20%` \| `Vol: -30%` | Secretos, pensamientos internos, momentos íntimos o de sigilo. |
+| `[TENSO]` | `serious` (-3Hz, -5% rate) | Momentos de peligro inminente, advertencias serias. |
+| `[EPICO]` | `excited` (+5Hz, +10% rate) | Clímax de acción, discursos inspiradores. |
+| `[SUSPENSO]` | `whispering` (-2Hz, -25% rate) | Misterio, revelaciones lentas. |
+| `[GRITANDO]` | `shouting` (+15Hz, +20% rate) | Gritos de batalla, discusiones. |
+| `[SUSURRO]` | `whispering` (-5Hz, -20% rate) | Secretos, pensamientos internos. |
 | `[PAUSA:X]` | `<break time="Xs"/>` | Insertar silencio exacto (ej. `[PAUSA:2.5]`). |
 
 ### Ejemplo Práctico de Guion:

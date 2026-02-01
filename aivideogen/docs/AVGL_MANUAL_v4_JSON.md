@@ -20,6 +20,7 @@ Script (Raíz)
             ├── Assets (imágenes/videos con efectos)
             ├── SFX (efectos de sonido)
             ├── Pause (silencios)
+            ├── Audio (voz real personalizada)
             └── Voice Override (cambio de voz específico)
 ```
 
@@ -60,6 +61,7 @@ Script (Raíz)
               "offset": 0
             }
           ],
+          "audio": "voces/mi_voz_real.mp3",
           "pause": 1.5
         }
       ]
@@ -112,7 +114,54 @@ Script (Raíz)
 
 **Herencia:** Las escenas heredan `music`, `voice`, `speed` del bloque (si no especifican lo contrario).
 
+
 ---
+
+## 🏗️ Nivel 2.5: Groups (Assets Compartidos)
+
+Dentro de un `block`, puedes usar `groups` para agrupar escenas que comparten un mismo escenario o asset visual principal. Esto evita repetir el código del asset en cada escena y facilita el mantenimiento.
+
+### Estructura de Grupo
+```json
+{
+  "blocks": [
+    {
+      "title": "Capítulo 1",
+      "groups": [
+        {
+          "title": "Conversación en Cafetería",
+          "master_asset": {
+            "type": "cafeteria_bg.png",
+            "zoom": "1.0:1.1",
+            "overlay": "dust"
+          },
+          "scenes": [
+            { 
+              "title": "Saludo", 
+              "text": "Hola, ¿cómo estás?",
+              "voice": "es-ES-ElviraNeural"
+            },
+            { 
+              "title": "Respuesta", 
+              "text": "Todo bien por aquí.",
+              "voice": "es-ES-AlvaroNeural"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Reglas de Herencia:
+156: 1.  **Herencia Visual**: Todas las escenas dentro del grupo heredarán automáticamente el `master_asset` (incluyendo zoom, move, overlay) **SOLO SI** la escena no define sus propios `assets`.
+157: 2.  **Herencia de Audio/Voz**: Puedes definir `voice`, `speed` y `audio` a nivel de grupo. Las escenas los heredarán si no tienen sus propios valores.
+158: 3.  **Override**: Si una escena dentro del grupo define su propio array `assets`, este tendrá prioridad y el `master_asset` será ignorado para esa escena específica.
+159: 4.  **Interpolación**: Bill intenta mantener la continuidad visual entre escenas del mismo grupo para evitar saltos bruscos en el zoom (raccord).
+
+---
+
 
 ## 🎞️ Nivel 3: Scenes (Escenas)
 
@@ -270,6 +319,22 @@ Script (Raíz)
 
 ---
 
+## 🎙️ Audio (Voz Real Personalizada)
+
+Si tienes una locución grabada profesionalmente o quieres usar una voz personalizada que no sea TTS (Text-to-Speech), puedes usar el campo `audio`.
+
+```json
+{
+  "audio": "voces/locucion_pro.mp3"
+}
+```
+
+- **Ruta**: Relativa a `media/assets/` o absoluta.
+- **Efecto**: Si se define, Bill **ignorará el campo `text`** (no generará TTS) para esa escena y usará el archivo de audio subido.
+- **Herencia**: Puedes definirlo en un `group` para aplicarlo a varias escenas.
+
+---
+
 ## 🎭 Emotion Tags (Tags de Emoción)
 
 En el campo `text`, puedes usar tags especiales para controlar el tono:
@@ -340,6 +405,31 @@ En el campo `text`, puedes usar tags especiales para controlar el tono:
   ]
 }
 ```
+
+---
+
+## 🔊 Mezcla de Audio y Ducking (v6.5)
+
+Bill gestiona automáticamente el volumen de la música de fondo para que la voz siempre sea clara. A partir de la v6.5, el sistema soporta **Ducking Granular**, lo que permite que la música suba incluso durante las pausas internas (`[PAUSA:X]`) de una escena.
+
+### Configuración en `.env`
+Puedes ajustar el comportamiento del audio mediante estas variables:
+
+- `AUDIO_DUCKING_RATIO`: Nivel al que baja la música (0.10 = 10% del volumen original).
+- `AUDIO_ATTACK_TIME`: Segundos que tarda la música en BAJAR al empezar a hablar.
+- `AUDIO_RELEASE_TIME`: Segundos que tarda la música en SUBIR durante los silencios.
+
+### Perfiles Recomendados
+Dependiendo del tipo de contenido, puedes configurar estos valores en tu `.env`:
+
+| Perfil | Attack | Release | Ratio | Uso Ideal |
+| :--- | :--- | :--- | :--- | :--- |
+| **Dinámico/Vlog** | 0.15s | 0.4s | 0.12 | Ritmo rápido, pausas cortas (0.5s). |
+| **Documental** | 0.3s | 0.8s | 0.10 | Narración pausada, tono serio. |
+| **Relajado/Zen** | 0.5s | 1.5s | 0.05 | Transiciones lentas y música suave. |
+
+> [!IMPORTANT]
+> **Regla de Oro:** Si tus guiones tienen pausas cortas (0.5s) y quieres que la música se note, usa el perfil **Dinámico** con un `Release` de **0.4s**.
 
 ---
 

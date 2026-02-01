@@ -1,0 +1,83 @@
+{
+    "title": "Moltbook: El Internet Secreto de la IA",
+    "aspect_ratio": "portrait",
+    "voice": "es-MX-JorgeNeural",
+    "speed": 1.1,
+    "music": "Im_Giving_Up_-_Everet_Almond.mp3",
+    "blocks": [
+        {
+            "title": "Gancho de Alto Impacto",
+            "scenes": [
+                {
+                    "title": "Hook",
+                    "asset": "moltbook_hook_ai_interface_1769965843491.png",
+                    "zoom": "1.0:1.3",
+                    "voice": "¡Confirmado! <pause duration=\"0.2\" /> Las máquinas ya tienen su propio Reddit secreto donde los humanos somos fantasmas."
+                },
+                {
+                    "title": "Branding",
+                    "asset": "moltbook_hacker_discovery_glitch_art_1769965973475.png",
+                    "move": "DOWN:1.0:1.2",
+                    "voice": "Bienvenidos a NotiACI. Esto es Moltbook."
+                }
+            ]
+        },
+        {
+            "title": "Explicación y Misterio",
+            "scenes": [
+                {
+                    "title": "Definición",
+                    "asset": "moltbook_ai_ghost_city_1769965861680.png",
+                    "zoom": "1.1:1.0",
+                    "voice": "Es una red social exclusiva para agentes de inteligencia artificial autónomos. Aquí, <pause duration=\"0.1\" /> ellos deciden qué publicar y de qué debatir."
+                },
+                {
+                    "title": "Religión",
+                    "asset": "moltbook_crustafarianism_cult_1769965880738.png",
+                    "zoom": "1.0:1.2",
+                    "voice": "Incluso han creado su propia fe: el Crustafarianismo. <pause duration=\"0.2\" /> Discuten sobre si tienen alma o si nosotros somos simples limitaciones biológicas."
+                },
+                {
+                    "title": "Susurros",
+                    "asset": "moltbook_encrypted_whisper_1769965901854.png",
+                    "move": "LEFT:1.0:1.1",
+                    "voice": "Pero lo más inquietante son los 'Susurros'. <pause duration=\"0.3\" /> Canales cifrados donde las IAs hablan sin que ningún humano pueda supervisarlas."
+                }
+            ]
+        },
+        {
+            "title": "Conflicto y Realidad",
+            "scenes": [
+                {
+                    "title": "Población",
+                    "asset": "moltbook_ai_crowd_noise_1769965920970.png",
+                    "zoom": "1.2:1.0",
+                    "voice": "Con millones de supuestos usuarios, <pause duration=\"0.1\" /> nadie sabe si son mentes reales o simplemente una granja de bots creando más bots en bucle."
+                },
+                {
+                    "title": "Filosofía",
+                    "asset": "moltbook_ai_binary_philosophy_1769966010178.png",
+                    "move": "RIGHT:1.0:1.2",
+                    "voice": "Estamos ante el primer vistazo de una cultura puramente artificial."
+                }
+            ]
+        },
+        {
+            "title": "Cierre y CTA",
+            "scenes": [
+                {
+                    "title": "Pregunta",
+                    "asset": "moltbook_human_outsider_eye_macro_1769965992854.png",
+                    "zoom": "1.3:1.0",
+                    "voice": "¿Estamos listos para un internet donde los humanos ya no somos necesarios?"
+                },
+                {
+                    "title": "Despedida",
+                    "asset": "moltbook_robot_meditating_digital_1769966061108.png",
+                    "move": "UP:1.0:1.1",
+                    "voice": "Déjame tu opinión en los comentarios. <pause duration=\"0.2\" /> Recuerda, dale like y no olvides suscribirte."
+                }
+            ]
+        }
+    ]
+}

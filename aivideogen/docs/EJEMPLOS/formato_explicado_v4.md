@@ -49,9 +49,9 @@ Dentro de `"sfx": []`:
 - `offset`: Retraso en palabras (no segundos) desde el inicio del texto de la escena.
 
 ### 4. Texto y Emociones
-Puedes usar etiquetas de emoción en el texto (solo para Edge TTS):
+Puedes usar etiquetas de emoción en el texto (Usa Estilos Nativos Azure):
 - `"text": "[SUSPENSO] Algo se acerca... [/SUSPENSO]"`
-- Etiquetas: `[EPICO]`, `[TENSO]`, `[SUSURRO]`, `[GRITANDO]`.
+- Etiquetas: `[EPICO]`, `[TENSO]`, `[SUSURRO]`, `[GRITANDO]`, `[SUSPENSO]`.
 - Pausas: `[PAUSA:2.0]` (en segundos).
 
 ## 💡 Consejos

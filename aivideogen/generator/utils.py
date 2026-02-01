@@ -81,15 +81,29 @@ Responde ÚNICAMENTE el JSON.
 def extract_sources_from_script(script_text):
     """
     Extracts source information from the script text.
-    Looks for lines starting with 'Fuente:', 'Sources:', etc.
+    v8.0: Supports JSON format by looking for "fuentes" or "sources" keys.
     """
     if not script_text:
         return ""
     
+    script_text = script_text.strip()
+    
+    # 1. Try JSON Extraction
+    if script_text.startswith('{') and script_text.endswith('}'):
+        try:
+            import json
+            data = json.loads(script_text)
+            sources = data.get('fuentes') or data.get('sources') or data.get('fuente') or data.get('source')
+            if sources:
+                return str(sources).strip()
+        except:
+            pass
+
+    # 2. Try REGEX Extraction (Legacy Text Format)
     import re
     # Look for "Fuente: X" or "Source: X"
     # Capture the rest of the line
-    match = re.search(r'(?:Fuente|Source|Basado en):\s*(.*)', script_text, re.IGNORECASE)
+    match = re.search(r'(?:Fuente|Source|Basado en|Fuentes):\s*(.*)', script_text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
         
@@ -98,10 +112,27 @@ def extract_sources_from_script(script_text):
 def extract_hashtags_from_script(script_text):
     """
     Extracts hashtags from the script text.
+    v8.0: Supports JSON format by looking for "hashtags" key.
     """
     if not script_text:
         return ""
         
+    script_text = script_text.strip()
+    
+    # 1. Try JSON list
+    if script_text.startswith('{') and script_text.endswith('}'):
+        try:
+            import json
+            data = json.loads(script_text)
+            tags = data.get('hashtags')
+            if isinstance(tags, list):
+                return " ".join([f"#{t.strip().replace('#', '')}" for t in tags if t.strip()])
+            elif isinstance(tags, str):
+                return tags.strip()
+        except:
+            pass
+
+    # 2. Try REGEX Extraction (Universal)
     import re
     # Find all words starting with #
     hashtags = re.findall(r'#\w+', script_text)
@@ -151,7 +182,15 @@ class ProjectLogger:
         self.log_buffer = []
 
     def log(self, message):
-        print(f"[Project {self.project.id}] {message}")
+        # Remove emojis for console compatibility if they cause issues
+        # But we mostly rely on the wrapped sys.stdout now.
+        try:
+            print(f"[Project {self.project.id}] {message}")
+        except UnicodeEncodeError:
+            # Fallback for very old/strict consoles
+            clean_msg = message.encode('ascii', 'ignore').decode('ascii')
+            print(f"[Project {self.project.id}] {clean_msg}")
+
         self.log_buffer.append(message)
         self.project.log_output = "\n".join(self.log_buffer)
         self.project.save(update_fields=['log_output'])

@@ -3,3 +3,5 @@ moviepy
 elevenlabs
 python-dotenv
 edge-tts==7.2.5
+google-auth-oauthlib
+google-api-python-client

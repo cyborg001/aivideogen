@@ -1,8 +1,9 @@
 @echo off
-title aiVideoGen v2.22.1
+title aiVideoGen v3.0.0
+set PYTHONUTF8=1
 echo.
 echo ================================================
-echo    aiVideoGen v2.22.1
+echo    aiVideoGen v3.0.0
 echo ================================================
 echo.
 echo Iniciando servidor local en puerto 8888...
@@ -14,6 +15,8 @@ echo.
 echo ================================================
 echo.
 
-python run_app.py
-
-pause
+if exist "C:\Program Files\Python312\python.exe" (
+    "C:\Program Files\Python312\python.exe" run_app.py
+) else (
+    python run_app.py
+)

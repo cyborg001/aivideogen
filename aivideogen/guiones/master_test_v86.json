@@ -1,0 +1,96 @@
+{
+    "title": "MASTER TEST STABILITY v8.6",
+    "voice": "es-US-AlonsoNeural",
+    "background_music": "Epic_Journey_-_Yung_Logos.mp3",
+    "music_volume": 0.4,
+    "blocks": [
+        {
+            "title": "BLOQUE 1: Estabilidad Vocal (30s)",
+            "volume": 0.5,
+            "scenes": [
+                {
+                    "title": "Introduccion",
+                    "text": "Bienvenidos a la prueba maestra de estabilidad del motor versión ocho punto seis. [PAUSA:1.5] En este bloque estamos probando el volumen base de cero punto cinco.",
+                    "assets": [
+                        {
+                            "id": "notiaci_intro_wide.png"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fluidez",
+                    "text": "Fíjate cómo la música se mantiene en un nivel constante bajo mi voz. No debería haber subidones entre estas dos oraciones [PAUSA:0.5] porque el nuevo algoritmo de mínimos detecta la proximidad.",
+                    "assets": [
+                        {
+                            "id": "banner_notiaci.png"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "BLOQUE 2: Stress-Test de Pausas (45s)",
+            "volume": 0.2,
+            "scenes": [
+                {
+                    "title": "Pausas Cortas",
+                    "text": "Frase A. [PAUSA:0.3] Frase B. [PAUSA:0.3] Frase C. [PAUSA:0.3] En este punto la música debería estar baja permanentemente, ignorando los micro-espacios.",
+                    "assets": [
+                        {
+                            "id": "future_arctic_city.png"
+                        }
+                    ]
+                },
+                {
+                    "title": "Pausa Larga",
+                    "text": "Ahora, una pausa de cinco segundos para que la música suba suavemente y baje al regresar. [PAUSA:5.0]",
+                    "assets": [
+                        {
+                            "id": "greenland_landscape_vs_mine.png"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "BLOQUE 3: Modo Solo Audio / Debug (30s)",
+            "volume": 0.7,
+            "scenes": [
+                {
+                    "title": "Sin Imagen 1",
+                    "text": "En esta escena no puse ninguna imagen en el JSON. [PAUSA:1.0] El motor debería usar un fondo negro ultrarápido sin buscar respaldos.",
+                    "assets": []
+                },
+                {
+                    "title": "Sin Imagen 2",
+                    "text": "Esto permite que este bloque se procese a la velocidad de la luz, ahorrando tiempo de CPU valioso.",
+                    "assets": []
+                }
+            ]
+        },
+        {
+            "title": "BLOQUE 4: Turbo Render y Final (45s)",
+            "volume": 0.4,
+            "scenes": [
+                {
+                    "title": "Complejidad Final",
+                    "text": "Llevamos casi dos minutos de video. Con el método antiguo, aquí el motor ya estaría arrastrándose. [PAUSA:1.0] Con el método chain, la velocidad debe ser igual que al principio.",
+                    "assets": [
+                        {
+                            "id": "china_arctic_route_map_png_1769849278225.png"
+                        }
+                    ]
+                },
+                {
+                    "title": "Conclusion",
+                    "text": "Prueba completada. Si el tiempo de renderizado fue razonable y el audio fluyó sin picos, el motor está listo para la rama principal. [PAUSA:2.0] ¡Fin de la transmisión!",
+                    "assets": [
+                        {
+                            "id": "cta_interact.png"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

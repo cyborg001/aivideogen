@@ -11,6 +11,17 @@ from .youtube_utils import get_flow, get_youtube_client, upload_video
 import threading
 import os
 import logging
+import time
+
+# Heartbeat tracking for auto-shutdown
+LAST_ACTIVITY_FILE = os.path.join(settings.BASE_DIR, 'last_activity.txt')
+
+def update_last_activity():
+    try:
+        with open(LAST_ACTIVITY_FILE, 'w') as f:
+            f.write(str(time.time()))
+    except Exception as e:
+        logger.warning(f"Failed to update heartbeat file: {e}")
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +178,8 @@ def create_project(request):
             music_volume=float(music_volume),
             visual_prompts=visual_prompts,
             script_hashtags=script_hashtags,
-            auto_upload_youtube=auto_upload
+            auto_upload_youtube=auto_upload,
+            render_mode=request.POST.get('render_mode', 'cpu')
         )
         
         # NOTE: Auto-start removed by user request (v2.25.0)
@@ -183,14 +195,14 @@ def create_project(request):
         if os.path.exists(default_script_path):
             with open(default_script_path, 'r', encoding='utf-8') as f:
                 default_script = f.read().strip()
-                logger.debug("✨ Guion de defecto cargado desde archivo JSON.")
+                logger.debug("[System] Guion de defecto cargado desde archivo JSON.")
         else:
             # Emergency fallback if file is missing
             default_script = '{"title": "Nuevo Proyecto", "blocks": []}'
-            logger.warning(f"⚠️ Archivo de defecto no encontrado en {default_script_path}")
+            logger.warning(f"[Warning] Archivo de defecto no encontrado en {default_script_path}")
     except Exception as e:
         default_script = "{}"
-        logger.error(f"⚠️ Error cargando guion de defecto: {e}")
+        logger.error(f"[Error] Error cargando guion de defecto: {e}")
 
     # 1. OPTIONAL: Overwrite with news suggestion or specific example if needed
     # (Existing logic below handles news_id and retry)
@@ -418,7 +430,8 @@ def youtube_authorize(request):
         flow = get_flow()
         authorization_url, state = flow.authorization_url(
             access_type='offline',
-            include_granted_scopes='true'
+            include_granted_scopes='true',
+            prompt='consent'
         )
         request.session['oauth_state'] = state
         return redirect(authorization_url)
@@ -626,14 +639,16 @@ def create_project_from_editor(request):
             voice_id=voice_id,
             aspect_ratio=settings.get('aspect_ratio') or script.get('aspect_ratio', 'landscape'),
             music_volume=float(settings.get('music_volume', 0.15)),
-            auto_upload_youtube=bool(settings.get('auto_upload', False))
+            auto_upload_youtube=bool(settings.get('auto_upload', False)),
+            render_mode=settings.get('render_mode') or script.get('render_mode', 'cpu')
         )
         
         # Handle Music
-        bg_music_name = settings.get('background_music') or script.get('background_music')
-        if bg_music_name:
+        bg_music_input = settings.get('background_music') or script.get('background_music')
+        if bg_music_input:
             from .models import Music
-            m = Music.objects.filter(file__iexact=bg_music_name).first() or \
+            bg_music_name = os.path.basename(bg_music_input)
+            m = Music.objects.filter(file__iexact=bg_music_input).first() or \
                 Music.objects.filter(name__iexact=bg_music_name).first() or \
                 Music.objects.filter(file__icontains=bg_music_name).first()
             if m:
@@ -753,13 +768,14 @@ def save_project_script_json(request, project_id):
                 
             # Global Music (filename string)
             if 'background_music' in settings_data:
-                bg_music_name = settings_data['background_music']
-                if not bg_music_name:
+                bg_music_input = settings_data['background_music']
+                if not bg_music_input:
                      project.background_music = None
                 else:
                      from .models import Music
-                     # Try exact match first, then contains
-                     m = Music.objects.filter(file__iexact=bg_music_name).first() or \
+                     bg_music_name = os.path.basename(bg_music_input)
+                     # Try exact match first, then by name (extracted), then contains
+                     m = Music.objects.filter(file__iexact=bg_music_input).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
                          Music.objects.filter(file__icontains=bg_music_name).first()
                      if m: project.background_music = m
@@ -771,6 +787,10 @@ def save_project_script_json(request, project_id):
             # Auto Upload
             if 'auto_upload' in settings_data:
                 project.auto_upload_youtube = bool(settings_data['auto_upload'])
+
+            # Render Mode (v4.7)
+            if 'render_mode' in settings_data:
+                project.render_mode = settings_data['render_mode']
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})
@@ -798,6 +818,35 @@ def script_editor_standalone(request):
         'project': None, # No project
         'is_standalone': True
     })
+
+# -------------------------------------------------------------------------
+# LOG VIEWER (Feature: web-logs)
+# -------------------------------------------------------------------------
+
+def view_logs(request):
+    """Renders the application logs from app.log."""
+    log_file = os.path.join(settings.BASE_DIR, 'app.log')
+    logs = []
+    
+    if os.path.exists(log_file):
+        try:
+            with open(log_file, 'r', encoding='utf-8', errors='replace') as f:
+                # Read last 500 lines
+                lines = f.readlines()
+                logs = lines[-500:]
+                logs.reverse() # Show newest first
+        except Exception as e:
+            logs = [f"Error leyendo el archivo de logs: {e}"]
+    else:
+        logs = ["No se encontró el archivo app.log. Asegúrate de que la aplicación haya generado algún evento."]
+        
+    return render(request, 'generator/logs.html', {'logs': logs})
+
+@csrf_exempt
+def api_heartbeat(request):
+    """Updates the last activity timestamp to prevent auto-shutdown."""
+    update_last_activity()
+    return JsonResponse({'status': 'ok', 'time': time.time()})
 
 @csrf_exempt
 def save_script_file(request):
@@ -851,52 +900,41 @@ def save_script_file(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
-@csrf_exempt
 def browse_local_asset(request):
-    """API: Opens file dialog to pick an asset and returns absolute path."""
+    """API: Opens file dialog via an external process to pick an asset and returns absolute path."""
+    import subprocess
+    import json
+    import sys
+    
     try:
-        import tkinter as tk
-        from tkinter import filedialog
-        
-        # Determine filter mode
         filter_type = request.GET.get('type', 'visual') # 'visual' or 'audio'
         
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes('-topmost', True)
+        # Use sys.executable to ensure we use the same python environment
+        helper_path = os.path.join(settings.BASE_DIR, 'generator', 'browse_helper.py')
         
-        if filter_type == 'audio':
-            dialog_title = "Seleccionar Archivo de Audio (SFX/Música)"
-            file_types = [
-                ("Audio Files", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac"),
-                ("MP3", "*.mp3"),
-                ("WAV", "*.wav"),
-                ("All files", "*.*")
-            ]
-        else:
-            dialog_title = "Seleccionar Asset (Imagen o Video)"
-            file_types = [
-                ("Media Files", "*.png *.jpg *.jpeg *.mp4 *.mov *.avi *.webm *.gif"),
-                ("Images", "*.png *.jpg *.jpeg *.gif"),
-                ("Videos", "*.mp4 *.mov *.avi *.webm"),
-                ("All files", "*.*")
-            ]
-        
-        file_path = filedialog.askopenfilename(
-            title=dialog_title,
-            filetypes=file_types
+        result = subprocess.run(
+            [sys.executable, helper_path, filter_type],
+            capture_output=True,
+            text=True,
+            timeout=300 # 5 minute timeout
         )
         
-        root.destroy()
-        
-        if not file_path:
-            return JsonResponse({'status': 'cancelled'})
+        if result.returncode != 0:
+            return JsonResponse({'error': f"Helper failed: {result.stderr}"}, status=500)
             
-        return JsonResponse({
-            'status': 'success',
-            'path': file_path,
-            'filename': os.path.basename(file_path)
-        })
+        # Extract JSON from stdout (in case of warnings/extra output)
+        out = result.stdout.strip()
+        try:
+            start_idx = out.find('{')
+            end_idx = out.rfind('}') + 1
+            if start_idx == -1 or end_idx == 0:
+                raise ValueError("No JSON found in output")
+            json_str = out[start_idx:end_idx]
+            data = json.loads(json_str)
+        except Exception as e:
+            return JsonResponse({'error': f"Failed to parse helper output: {out}. Error: {e}"}, status=500)
+            
+        return JsonResponse(data)
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

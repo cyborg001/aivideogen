@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Django
+db.sqlite3
+*.log
+local_settings.py
+.env
+
+# Multimedia y Assets (Muy pesados)
+media/
+assets/
+temp_audio/
+temp_segments/
+*.mp4
+*.mp3
+*.wav
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mov
+*.avi
+
+# Secrets
+.env
+client_secrets.json
+# No ignorar guiones de ejemplo ni configuraciones
+!guiones/*.json
+!docs/EJEMPLOS/*.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project Specific
+last_activity.txt
+project_*.mp4
+script_*.json
+uploaded_media_*

@@ -40,6 +40,9 @@ Este documento contiene las restricciones técnicas y estratégicas que DEBEN se
     - El saludo de marca "Bienvenidos a NotIACi" va **después** del gancho inicial.
 - **Ritmo Visual**: 
     - Cambio de imagen/video/efecto cada **2-4 segundos**. Prohibido dejar una imagen estática más de 4 seg.
+- **Fluidez Narrativa**: 
+    - Queda PROHIBIDO usar puntos y aparte secos entre noticias. 
+    - Se DEBEN usar conjunciones o conectores narrativos (e.g., "Además", "Por otro lado", "Siguiendo con...") para mantener la cohesión.
 - **Subtítulos**:
     - Deben estar en el **centro de la pantalla**. Evitar zonas superiores/inferiores cubiertas por la UI de YouTube.
 - **Conclusión Profunda**: 
