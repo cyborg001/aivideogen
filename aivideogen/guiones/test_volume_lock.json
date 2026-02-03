@@ -1,0 +1,35 @@
+{
+    "title": "TEST VOLUME LOCK v8.7",
+    "music_volume_lock": true,
+    "background_music": "Epic_Journey_-_Yung_Logos.mp3",
+    "music_volume": 0.4,
+    "blocks": [
+        {
+            "title": "Bloque 1: Volumen bloque 0.1 (Ignorado por Lock)",
+            "volume": 0.1,
+            "scenes": [
+                {
+                    "title": "Escena 1",
+                    "text": "En este bloque, el volumen está configurado a cero punto uno, pero como el bloqueo está activo, deberías escuchar la música de fondo a nivel cero punto cuatro.",
+                    "assets": [
+                        "notiaci_intro_wide.png"
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 2: Musica Local (Prioridad sobre Lock)",
+            "volume": 0.8,
+            "music": "Brazilian_Disappearance_-_The_129ers.mp3",
+            "scenes": [
+                {
+                    "title": "Escena 2",
+                    "text": "Este bloque tiene música propia. Aquí el volumen sí debería subir a cero punto ocho, sobrepasando el bloqueo global.",
+                    "assets": [
+                        "banner_notiaci.png"
+                    ]
+                }
+            ]
+        }
+    ]
+}

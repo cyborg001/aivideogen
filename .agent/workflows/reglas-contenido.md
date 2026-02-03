@@ -51,7 +51,22 @@ Este documento contiene las restricciones técnicas y estratégicas que DEBEN se
     - Terminar con una pregunta específica y el mensaje: "Recuerda, dale like y no olvides suscribirte."
     - Usar `suscribete.mp4` para el cierre.
 
-## 3. Estándares Técnicos de la App
+## 4. Algoritmo de Verificación (Checklist Pre-Render)
+Antes de entregar un guion final o iniciar el renderizado, Bill DEBE validar estos 5 puntos críticos:
+
+1.  **Check de Gancho (Hook-First)**:
+    - [ ] ¿El primer enunciado dura < 2s?
+    - [ ] ¿El saludo "Bienvenidos a NotiACI" está DESPUÉS del gancho?
+2.  **Sintaxis de Pausas (JSON compatibility)**:
+    - [ ] ¿Se usa el formato `[PAUSA:X.X]` y NO tags XML como `<pause />`? (Edge TTS en el motor JSON solo lee corchetes).
+3.  **Ritmo Visual (Dinamismo)**:
+    - [ ] ¿Hay un cambio de asset cada 2-4 segundos?
+4.  **Continuidad Narrativa**:
+    - [ ] ¿Se usan conectores (Además, Por otro lado, etc.) entre secciones?
+5.  **Cierre y CTA**:
+    - [ ] ¿Termina con una pregunta de debate y el texto de suscripción estándar?
+
+## 5. Estándares Técnicos de la App
 - **Estética**: Premium Dark Theme, fuentes modernas (Outfit), gradientes suaves.
 - **Filtrado**: Por defecto, mostrar noticias con relevancia >= 4.
 - **Traducción**: Títulos y descripciones siempre traducidos al español.

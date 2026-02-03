@@ -96,6 +96,7 @@ class VideoProject(models.Model):
     script_hashtags = models.TextField(blank=True, help_text="Hashtags extraídos del guion (# HASHTAGS: ...)")
     youtube_video_id = models.CharField(max_length=100, blank=True, null=True, help_text="YouTube video ID after upload (prevents duplicates)")
     auto_upload_youtube = models.BooleanField(default=False, help_text="Subir automáticamente a YouTube al finalizar la generación")
+    music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
     
     log_output = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

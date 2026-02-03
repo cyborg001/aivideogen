@@ -149,6 +149,10 @@
 - `[GRITANDO]...[/GRITANDO]`
 - `[SUSURRO]...[/SUSURRO]`
 
+### Pronunciación vs Visual (NUEVO v8.7)
+- `[PHO]inteligencia artificial | IA[/PHO]`
+  (Dice el texto largo, pero el subtítulo muestra el corto).
+
 ---
 
 ## Voces Comunes

@@ -81,6 +81,7 @@ class AVGLScript:
         self.fuentes = ""
         self.tags = ""
         self.hashtags = ""
+        self.music_volume_lock = False
 
     def get_all_scenes(self):
         scenes = []
@@ -105,35 +106,45 @@ def parse_speed(val):
 
 def extract_subtitles_v35(text):
     """
-    Extracts subtitles from tags. Preserves the text for the narrator.
-    v6.8: Robust Mapping Logic. Eliminates repetition and silence bugs.
+    Extracts subtitles and narration from tags. 
+    Supports:
+    - [SUB]text[/SUB] -> Narration and Subtitle are the same.
+    - [SUB: count | text] -> Subtitle with specific word count duration.
+    - [PHO]narration | subtitle[/PHO] -> Narrator says one thing, subtitle shows another.
+    v8.7: Enhanced with [PHO] to handle phonetic overrides like "IAs".
     """
-    # 1. Identify all tags and their contents
-    # This regex catches: [SUB]content[/SUB] OR [SUB: content]
-    # We use a combined pattern to ensure we don't miss anything.
-    wrapped_pattern = re.compile(r'\[\s*SUB\s*\](.*?)\s*\[\s*/SUB\s*\]', re.IGNORECASE | re.DOTALL)
-    simple_pattern = re.compile(r'\[\s*SUB\s*:\s*(.*?)\s*\]', re.IGNORECASE)
+    import re
     
-    tags = []
+    # 1. Identify all tags
+    patterns = {
+        'wrapped': re.compile(r'\[\s*SUB\s*\](.*?)\s*\[\s*/SUB\s*\]', re.IGNORECASE | re.DOTALL),
+        'simple': re.compile(r'\[\s*SUB\s*:\s*(.*?)\s*\]', re.IGNORECASE),
+        'pho': re.compile(r'\[\s*PHO\s*\](.*?)\s*\[\s*/PHO\s*\]', re.IGNORECASE | re.DOTALL)
+    }
     
-    # Process wrapped tags first
-    for m in wrapped_pattern.finditer(text):
-        tags.append({'start': m.start(), 'end': m.end(), 'content': m.group(1).strip(), 'type': 'wrapped'})
-    
-    # Process simple tags, but only if they don't overlap with a wrapped tag
-    for m in simple_pattern.finditer(text):
-        if not any(t['start'] <= m.start() < t['end'] for t in tags):
-            tags.append({'start': m.start(), 'end': m.end(), 'content': m.group(1).strip(), 'type': 'simple'})
+    all_tags = []
+    for t_type, pattern in patterns.items():
+        for m in pattern.finditer(text):
+            all_tags.append({
+                'start': m.start(),
+                'end': m.end(),
+                'content': m.group(1).strip(),
+                'type': t_type
+            })
             
-    # Sort tags by appearance
-    tags.sort(key=lambda x: x['start'])
-    
-    # 2. Build clean text and track word positions
-    clean_parts = []
+    # Sort and remove overlaps (first one wins)
+    all_tags.sort(key=lambda x: x['start'])
+    tags = []
+    last_end = 0
+    for t in all_tags:
+        if t['start'] >= last_end:
+            tags.append(t)
+            last_end = t['end']
+            
+    # 2. Build clean text and subtitles
+    current_clean_text = ""
     last_idx = 0
     raw_subs = []
-    
-    current_clean_text = ""
     
     for tag in tags:
         # Text before tag
@@ -143,33 +154,52 @@ def extract_subtitles_v35(text):
         # Word index in current clean text
         word_offset = len(current_clean_text.split())
         
-        # Tag content
         content = tag['content']
-        display_text = content
+        display_text = ""
+        narrator_text = ""
         word_count = 3
         
-        if tag['type'] == 'simple' and '|' in content:
+        if tag['type'] == 'pho':
+            # Format: narration | subtitle
+            if '|' in content:
+                parts = [p.strip() for p in content.split('|')]
+                narrator_text = parts[0]
+                display_text = parts[1] if len(parts) > 1 else parts[0]
+            else:
+                narrator_text = content
+                display_text = content
+            word_count = len(narrator_text.split())
+            if word_count < 2: word_count = 3
+            
+        elif tag['type'] == 'simple' and '|' in content:
+            # Format: count | subtitle
             parts = [p.strip() for p in content.split('|')]
             try:
                 word_count = int(parts[0])
                 display_text = parts[1] if len(parts) > 1 else ""
             except:
                 display_text = parts[0]
+            narrator_text = display_text # Simple SUB usually repeats
+            
         else:
+            # Standard [SUB] or [SUB:...]
+            display_text = content
+            narrator_text = content
             word_count = len(display_text.split())
             if word_count < 2: word_count = 3
             
         raw_subs.append({"text": display_text, "offset": word_offset, "word_count": word_count})
         
         # Add content to narration
-        current_clean_text += display_text
+        current_clean_text += narrator_text
         last_idx = tag['end']
         
     # Final piece
     current_clean_text += text[last_idx:]
     
-    # One last safety: strip any stray brackets that weren't caught
+    # Strip any stray brackets (safety)
     clean_text = re.sub(r'\[\s*/?SUB\s*(?::.*?)?\]', '', current_clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r'\[\s*/?PHO\s*\]', '', clean_text, flags=re.IGNORECASE)
     
     return clean_text.strip(), raw_subs
 
@@ -191,6 +221,7 @@ def parse_avgl_json(json_text):
     script.fuentes = data.get("fuentes", "")
     script.tags = data.get("tags", "")
     script.hashtags = data.get("hashtags", "")
+    script.music_volume_lock = data.get("music_volume_lock", False)
     
     for block_data in data.get("blocks", []):
         block = AVGLBlock(
@@ -218,7 +249,7 @@ def parse_avgl_json(json_text):
             scene = AVGLScene(title=s_data.get("title", "Escena"))
             scene.group_id = s_data.get("_group_id")
             scene.group_settings = s_data.get("_group_settings")
-            scene.text = str(s_data.get("text", ""))
+            scene.text = str(s_data.get("text") or s_data.get("voice") or "")
             scene.voice = s_data.get("voice") or script.voice
             scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed
             scene.pitch = s_data.get("pitch")
@@ -411,20 +442,35 @@ def convert_avgl_json_to_text(data):
         
         for scene in block.get("scenes", []):
             title = scene.get("title", "Escena")
-            text = scene.get("text", "")
+            text = scene.get("text") or scene.get("voice") or ""
             
             # Asset logic
             asset_name = "negro.png"
             asset_instr = "."
-            if scene.get("assets") and len(scene["assets"]) > 0:
-                asset = scene["assets"][0]
-                asset_name = asset.get("id") or asset.get("type") or "negro.png"
+            
+            # Support both 'assets' (list) and 'asset' (single string/object)
+            assets_list = scene.get("assets")
+            if not assets_list and scene.get("asset"):
+                assets_list = [scene.get("asset")]
                 
-                # Instructions (Zoom/Fit)
+            if assets_list and len(assets_list) > 0:
+                asset = assets_list[0]
+                if isinstance(asset, str):
+                    asset_name = asset
+                else:
+                    asset_name = asset.get("id") or asset.get("type") or "negro.png"
+                
+                # Instructions (Zoom/Fit/Move)
                 instr_parts = []
-                if asset.get("zoom"): instr_parts.append(f"ZOOM:{asset['zoom']}")
-                if asset.get("fit"): instr_parts.append("FIT")
-                if asset.get("move"): instr_parts.append(f"MOVE:{asset['move']}")
+                if isinstance(asset, dict):
+                    if asset.get("zoom"): instr_parts.append(f"ZOOM:{asset['zoom']}")
+                    if asset.get("fit"): instr_parts.append("FIT")
+                    if asset.get("move"): instr_parts.append(f"MOVE:{asset['move']}")
+                else:
+                    # Check if keys are directly in the scene (for flat JSON)
+                    if scene.get("zoom"): instr_parts.append(f"ZOOM:{scene['zoom']}")
+                    if scene.get("fit"): instr_parts.append("FIT")
+                    if scene.get("move"): instr_parts.append(f"MOVE:{scene['move']}")
                 
                 if instr_parts:
                     asset_instr = " ".join(instr_parts)

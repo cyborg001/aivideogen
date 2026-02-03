@@ -141,6 +141,24 @@ def extract_hashtags_from_script(script_text):
     unique_tags = list(set(hashtags))
     return " ".join(unique_tags)
 
+def get_human_title(raw_title):
+    """
+    Cleans technical filenames into human-readable titles.
+    Example: "mechazilla_short.json" -> "Mechazilla Short"
+    """
+    import os
+    if not raw_title:
+        return "Video Sin Titulo"
+    
+    # Remove extension
+    name, _ = os.path.splitext(raw_title)
+    
+    # Replace underscores and hyphens with spaces
+    clean_name = name.replace('_', ' ').replace('-', ' ')
+    
+    # Capitalize words
+    return clean_name.strip().title()
+
 def generate_contextual_tags(project):
     """
     Intelligently generates contextual tags based on title and script content.
@@ -149,10 +167,19 @@ def generate_contextual_tags(project):
     import re
     tags = []
     
-    # 1. From Title
-    if project.title:
+    human_title = get_human_title(project.title)
+    
+    # 1. From Human Title
+    if human_title:
         # Remove common stop words and punctuation
-        clean_title = re.sub(r'[^\w\s]', '', project.title)
+        clean_title = re.sub(r'[^\w\s]', '', human_title)
+        # Add significant words (>3 chars)
+        tags.extend([w.lower() for w in clean_title.split() if len(w) > 3])
+    
+    # 1. From Human Title (Sanitized)
+    if human_title:
+        # Remove common stop words and punctuation
+        clean_title = re.sub(r'[^\w\s]', '', human_title)
         # Add significant words (>3 chars)
         tags.extend([w.lower() for w in clean_title.split() if len(w) > 3])
 
@@ -235,7 +262,7 @@ def generate_video_process(project):
         generate_video_avgl(project)
     except Exception as e:
         logger = ProjectLogger(project)
-        logger.log(f"❌ Error CRÍTICO en Motor V4: {e}")
+        logger.log(f"[ERROR] Error CRITICO en Motor V4: {e}")
         project.status = 'error'
         project.save()
 
@@ -250,6 +277,6 @@ def generate_video_process(project):
             from .youtube_utils import trigger_auto_upload
             trigger_auto_upload(project)
         except Exception as e:
-            print(f"[YouTube] Error fatal disparando subida automática: {e}")
-            project.log_output += f"\n[YouTube] ❌ Error fatal disparando subida automática: {e}"
+            print(f"[YouTube] Error fatal disparando subida automatica: {e}")
+            project.log_output += f"\n[YouTube] [ERROR] Error fatal disparando subida automatica: {e}"
             project.save(update_fields=['log_output'])

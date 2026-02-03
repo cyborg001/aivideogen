@@ -1,4 +1,5 @@
 import os
+import re
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
@@ -28,9 +29,10 @@ def get_flow():
     
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         client_secrets_file,
-        scopes=SCOPES,
-        redirect_uri=settings.YOUTUBE_REDIRECT_URI
+        scopes=SCOPES
     )
+    # Ensure redirect_uri is set after loading, very important for 'web' type
+    flow.redirect_uri = settings.YOUTUBE_REDIRECT_URI
     return flow
 
 def get_youtube_client():
@@ -121,10 +123,7 @@ def upload_video(youtube, video_path, title, description, category_id="28", priv
         raise
 
 def generate_youtube_description(project):
-    """
-    Generates a professional description for YouTube based on project data.
-    """
-    from .utils import extract_sources_from_script, extract_hashtags_from_script
+    from .utils import extract_sources_from_script, extract_hashtags_from_script, get_human_title
     
     description_parts = []
     
@@ -132,8 +131,9 @@ def generate_youtube_description(project):
     description_parts.append("👋 ¡Hola! Bienvenido a Notiaci")
     description_parts.append("")
     
-    # 2. Project Title
-    description_parts.append(f"🎬 {project.title}")
+    # 2. Project Title (Humanized)
+    human_title = get_human_title(project.title)
+    description_parts.append(f"🎬 {human_title}")
     description_parts.append("")
     
     # 3. Sources
@@ -192,7 +192,17 @@ def generate_youtube_description(project):
     description_parts.append("📧 Para más información contáctanos:")
     description_parts.append("carlosaipro6@gmail.com")
     
-    return "\n".join(description_parts)
+    final_description = "\n".join(description_parts)
+    
+    # 7. TAG STRIPPING (v8.7)
+    # Limpiar [PHO]pronunciacion|subtitulo[/PHO] -> subtitulo
+    final_description = re.sub(r'\[PHO\][^|]*\|([^\]]*)\[/PHO\]', r'\1', final_description)
+    # Limpiar [SUB]texto[/SUB] -> texto
+    final_description = re.sub(r'\[SUB\](.*?)\[/SUB\]', r'\1', final_description)
+    # Eliminar cualquier otra etiqueta entre corchetes (emociones, etc.)
+    final_description = re.sub(r'\[[A-Z0-9_-]+\]', '', final_description)
+    
+    return final_description
 
 def trigger_auto_upload(project):
     """
@@ -210,7 +220,7 @@ def trigger_auto_upload(project):
         return False
 
     if not youtube:
-        project.log_output += "\n[YouTube] ⚠️ No se pudo realizar la subida automática: No hay token de autorización. Debes autorizar al menos una vez manualmente."
+        project.log_output += "\n[YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización. Debes autorizar al menos una vez manualmente."
         project.save(update_fields=['log_output'])
         return False
         
@@ -220,7 +230,8 @@ def trigger_auto_upload(project):
         
         # 3. Prepare metadata
     try:
-        title = project.title
+        from .utils import get_human_title
+        title = get_human_title(project.title)
         description = generate_youtube_description(project)
         
         # EXTRACT TAGS LOGIC (v4.2 - Smart Contextual Tags)
@@ -244,10 +255,10 @@ def trigger_auto_upload(project):
         
         # Deduplicate and limit
         final_tags = list(dict.fromkeys(tags_list))[:20]
-
+ 
         # 4. Upload
         logger.info(f"[YouTube] Iniciando subida automática para proyecto {project.id}: {title}")
-        project.log_output += f"\n[YouTube] 🚀 Iniciando subida con Tags Contextuales: {', '.join(final_tags[:5])}..."
+        project.log_output += f"\n[YouTube] [START] Iniciando subida con Tags Contextuales: {', '.join(final_tags[:5])}..."
         project.save(update_fields=['log_output'])
         
         result = upload_video(youtube, project.output_video.path, title, description, tags=final_tags)
@@ -256,18 +267,18 @@ def trigger_auto_upload(project):
              video_id = result['id']
              video_url = f"https://www.youtube.com/watch?v={video_id}"
              project.youtube_video_id = video_id
-             project.log_output += f"\n[YouTube] ✅ Video subido con éxito!\nURL: {video_url}"
+             project.log_output += f"\n[YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
              project.save()
              logger.info(f"[YouTube] Subida automática exitosa - Video ID: {video_id}")
              return True
         else:
-            project.log_output += "\n[YouTube] ⚠️ La subida terminó pero no se recibió confirmación de ID."
+            project.log_output += "\n[YouTube] [WARNING] La subida terminó pero no se recibió confirmación de ID."
             project.save(update_fields=['log_output'])
             
     except Exception as e:
         error_msg = str(e)
         logger.error(f"[YouTube] Error en subida automática: {error_msg}")
-        project.log_output += f"\n[YouTube] ❌ Error en subida automática: {error_msg}"
+        project.log_output += f"\n[YouTube] [ERROR] Error en subida automática: {error_msg}"
         project.save(update_fields=['log_output'])
         
     return False

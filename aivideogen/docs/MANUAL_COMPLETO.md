@@ -66,6 +66,10 @@ Puedes "dirigir" la actuación de la voz usando dos capas:
     *   `[GRITANDO]...[/GRITANDO]`
     *   `[SUSPENSO]...[/SUSPENSO]`
     
+    > **NUEVO (v8.7): Etiquetas Fonéticas [PHO]**
+    > Para corregir la pronunciación de siglas o términos técnicos (ej. que diga "Inteligencias Artificiales" pero se vea "IAs").
+    > Uso: `[PHO]texto hablado | texto visual[/PHO]`
+    
     > **NUEVO (v2.26.2):** Estas etiquetas ahora usan **Estilos Nativos de Azure** (ej. `shouting`, `whispering`, `excited`) para un realismo superior, además de los ajustes de tono/velocidad.
 
 ### 2.2 Gestión de Assets e Imágenes

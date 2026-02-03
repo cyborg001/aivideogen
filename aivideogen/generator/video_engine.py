@@ -512,7 +512,7 @@ def generate_video_avgl(project):
                         total_words_scene = len(words_in_scene)
                         timing_base = voice_duration if voice_duration > 0 else duration
                         
-                        logger.log(f"    📝 Renderizando {len(scene.subtitles)} subtítulos de énfasis. Palabras totales: {total_words_scene}")
+                        logger.log(f"[Subs] Renderizando {len(scene.subtitles)} subtitulos de enfasis. Palabras totales: {total_words_scene}")
                         
                         for idx, sub_data in enumerate(scene.subtitles):
                             s_text = sub_data.get('text', '')
@@ -557,10 +557,10 @@ def generate_video_avgl(project):
                         
                         if sub_clips_dynamic:
                             clip = CompositeVideoClip([clip] + sub_clips_dynamic)
-                            logger.log(f"    ✅ Desplegados {len(sub_clips_dynamic)} subtítulos en escena.")
+                            logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos en escena.")
                         
                 except Exception as e:
-                    logger.log(f"    ⚠️ Error renderizando subtítulos: {e}")
+                    logger.log(f"    [WARNING] Error renderizando subtitulos: {e}")
 
                 # Set audio & append
                 clip = clip.with_audio(audio_clip)
@@ -591,7 +591,7 @@ def generate_video_avgl(project):
                         
                         if m_obj and os.path.exists(m_obj.file.path):
                             has_local_music = True
-                            logger.log(f"  🎵 Música específica bloque: {m_obj.name}")
+                            logger.log(f"  [Audio] Musica especifica bloque: {m_obj.name}")
                             bg_audio = AudioFileClip(m_obj.file.path)
                             
                             loops = int(block_video.duration / bg_audio.duration) + 1
@@ -645,7 +645,12 @@ def generate_video_avgl(project):
                         logger.log(f"  ⚠️ Error música bloque: {e}")
 
                 # Store metadata for Global Music Pass
-                bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
+                # v8.7: Music Volume Lock Logic
+                if script.music_volume_lock and not has_local_music:
+                    # If locked and no local music, force project/script global volume
+                    bs_vol = script.music_volume if script.music_volume is not None else (project.music_volume if project.music_volume is not None else 0.18)
+                else:
+                    bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
                 block_metadata.append({
                     'duration': block_video.duration,
                     'voice_intervals': block_voice_intervals, # Current Relative
@@ -840,7 +845,7 @@ def generate_video_avgl(project):
         project.timestamps = "\n".join(timestamps_list)
         project.status = 'completed'; project.save()
         play_finish_sound(success=True)
-        logger.log(f"[Done] ¡Éxito en {time.time()-start_time:.1f}s!")
+        logger.log(f"[Done] Exito en {time.time()-start_time:.1f}s!")
 
     except Exception as e:
         logger.log(f"[FATAL] Error en renderizado: {e}")

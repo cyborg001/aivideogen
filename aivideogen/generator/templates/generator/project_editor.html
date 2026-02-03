@@ -48,7 +48,7 @@
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}')">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }})">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -195,8 +195,8 @@
                                                             </div>
                                                         </template>
                                                         <template
-                                                            x-if="!isVideo(scene.assets?.[0]?.type) && scene.assets?.[0]?.type">
-                                                            <img :src="'/media/assets/' + scene.assets[0].type"
+                                                            x-if="!isVideo(scene.assets?.[0]?.id || scene.assets?.[0]?.type) && (scene.assets?.[0]?.id || scene.assets?.[0]?.type)">
+                                                            <img :src="'/media/assets/' + (scene.assets[0].id || scene.assets[0].type)"
                                                                 class="w-full h-full object-cover opacity-60">
                                                         </template>
 
@@ -410,8 +410,8 @@
                                                                     </div>
                                                                 </template>
                                                                 <template
-                                                                    x-if="!isVideo(scene.assets?.[0]?.type) && scene.assets?.[0]?.type">
-                                                                    <img :src="'/media/assets/' + scene.assets[0].type"
+                                                                    x-if="!isVideo(scene.assets?.[0]?.id || scene.assets?.[0]?.type) && (scene.assets?.[0]?.id || scene.assets?.[0]?.type)">
+                                                                    <img :src="'/media/assets/' + (scene.assets[0].id || scene.assets[0].type)"
                                                                         class="w-full h-full object-cover opacity-60">
                                                                 </template>
                                                                 <div
@@ -558,13 +558,15 @@
     <div x-show="showSettingsModal" style="display: none;"
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
-        <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md p-6 animate-scale"
+        <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[95vh] animate-scale"
             @click.away="showSettingsModal = false">
-            <h2 class="text-xl font-bold text-gray-200 mb-6 flex items-center gap-2">
-                <span>⚙️</span> Configuración del Proyecto
-            </h2>
+            <div class="p-6 border-b border-gray-800 shrink-0">
+                <h2 class="text-xl font-bold text-gray-200 flex items-center gap-2">
+                    <span>⚙️</span> Configuración del Proyecto
+                </h2>
+            </div>
 
-            <div class="space-y-4">
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
                 <!-- Project Title -->
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">Nombre del Guion</label>
@@ -634,6 +636,23 @@
                         terminar.</p>
                 </div>
 
+                <!-- Music Volume Lock Toggle (v8.7) -->
+                <div class="bg-gray-800 p-2 rounded border border-gray-600">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-sm text-yellow-300 font-bold">Bloqueo de Volumen Global</span>
+                        <div
+                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="projectSettings.music_volume_lock"
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                                style="top: 2px; left: 2px; transition: all 0.3s;" />
+                            <label
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                        </div>
+                    </label>
+                    <p class="text-[10px] text-gray-500 mt-1">Si se activa, los bloques no podrán cambiar el volumen de
+                        la música de fondo (a menos que tengan música propia).</p>
+                </div>
+
                 <!-- Render Mode Toggle (v4.7) -->
                 <div class="bg-gray-800 p-2 rounded border border-gray-600">
                     <label class="block text-sm text-gray-300 font-bold mb-2">Método de Renderizado</label>
@@ -660,7 +679,7 @@
             </div>
 
             <!-- Settings Footer -->
-            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-700">
+            <div class="p-6 shrink-0 flex justify-end gap-3 border-t border-gray-700">
                 <button @click="showSettingsModal = false"
                     class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold tracking-wide">Cancelar</button>
                 <button @click="saveSettings()"
@@ -1057,11 +1076,13 @@
     <div x-show="showBlockModal" style="display: none;"
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
-        <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-6 animate-scale"
+        <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm flex flex-col max-h-[90vh] animate-scale"
             @click.away="showBlockModal = false">
-            <h3 class="text-lg font-bold text-gray-200 mb-4">Configurar Bloque</h3>
+            <div class="p-6 border-b border-gray-800 shrink-0">
+                <h3 class="text-lg font-bold text-gray-200">Configurar Bloque</h3>
+            </div>
 
-            <div class="space-y-4">
+            <div class="p-6 flex-1 overflow-y-auto space-y-4">
                 <div>
                     <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Título</label>
                     <input type="text" x-model="blockForm.title"
@@ -1108,7 +1129,7 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-end gap-2">
+            <div class="p-6 shrink-0 flex justify-end gap-2 border-t border-gray-700">
                 <button @click="showBlockModal = false"
                     class="text-gray-400 hover:text-white text-xs font-bold uppercase px-3">Cancelar</button>
                 <button @click="saveBlockSettings()"
@@ -1121,11 +1142,13 @@
     <div x-show="showGroupModal" style="display: none;"
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
-        <div class="bg-gray-900 border border-blue-500/30 rounded-xl shadow-2xl w-full max-w-lg p-6 animate-scale"
+        <div class="bg-gray-900 border border-blue-500/30 rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] animate-scale"
             @click.away="showGroupModal = false">
-            <h3 class="text-lg font-bold text-blue-300 mb-4 border-b border-gray-700 pb-2">Configurar Grupo</h3>
+            <div class="p-6 border-b border-gray-700 shrink-0">
+                <h3 class="text-lg font-bold text-blue-300">Configurar Grupo</h3>
+            </div>
 
-            <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div class="p-6 flex-1 overflow-y-auto space-y-4">
                 <!-- Title -->
                 <div>
                     <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Título del Grupo</label>
@@ -1272,7 +1295,7 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-end gap-2 border-t border-gray-700 pt-4">
+            <div class="p-6 shrink-0 flex justify-end gap-2 border-t border-gray-700">
                 <button @click="showGroupModal = false"
                     class="text-gray-400 hover:text-white text-xs font-bold uppercase px-3">Cancelar</button>
                 <button @click="saveGroupSettings()"
@@ -1283,7 +1306,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu') => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false) => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -1318,7 +1341,8 @@
                     auto_upload: initialAutoUpload,
                     aspect_ratio: initialAspectRatio,
                     render_mode: initialRenderMode,
-                    voice_speed: '+0%'
+                    voice_speed: '+0%',
+                    music_volume_lock: initialMusicLock
                 },
 
                 voiceSpeedNum: 0,
@@ -1340,9 +1364,11 @@
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
                 },
 
-                get isVideo() {
-                    if (!this.formData.asset_type) return false;
-                    const ext = this.formData.asset_type.split('.').pop().toLowerCase();
+                isVideo(asset) {
+                    if (!asset) return false;
+                    let path = typeof asset === 'string' ? asset : (asset.id || asset.type || '');
+                    if (typeof path !== 'string') return false;
+                    const ext = path.split('.').pop().toLowerCase();
                     return ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext);
                 },
 
@@ -1406,6 +1432,9 @@
                                 if (!isNaN(val)) this.voiceSpeedNum = val;
                             } catch (e) { }
                         }
+                        if (this.script.music_volume_lock !== undefined) {
+                            this.projectSettings.music_volume_lock = this.script.music_volume_lock;
+                        }
                         this.sanitizeScript(this.script);
                     } catch (e) {
                         console.error("Error loading script:", e);
@@ -1427,6 +1456,7 @@
                     this.script.voice = this.projectSettings.voice_id;
                     this.script.aspect_ratio = this.projectSettings.aspect_ratio;
                     this.script.render_mode = this.projectSettings.render_mode;
+                    this.script.music_volume_lock = this.projectSettings.music_volume_lock;
 
                     // Payload
                     const payload = {

@@ -474,7 +474,7 @@ def upload_to_youtube_view(request, project_id):
     # Check if already uploaded to prevent duplicates
     if project.youtube_video_id:
         video_url = f"https://www.youtube.com/watch?v={project.youtube_video_id}"
-        messages.info(request, f"⚠️ Este video ya fue subido a YouTube anteriormente.")
+        messages.info(request, f"[INFO] Este video ya fue subido a YouTube anteriormente.")
         return render(request, 'generator/youtube_upload_success.html', {
             'video_url': video_url,
             'fallback_url': request.build_absolute_uri('/'),
@@ -482,7 +482,7 @@ def upload_to_youtube_view(request, project_id):
         })
     
     if not project.output_video or not project.output_exists:
-        messages.error(request, "❌ El video aún no se ha generado o el archivo no existe.")
+        messages.error(request, "[ERROR] El video aun no se ha generado o el archivo no existe.")
         return redirect('generator:project_detail', project_id=project.id)
 
     try:
@@ -490,7 +490,7 @@ def upload_to_youtube_view(request, project_id):
         
         # Check authorization first for better user feedback
         if not get_youtube_client():
-            messages.warning(request, "⚠️ Primero debes autorizar tu cuenta de YouTube.")
+            messages.warning(request, "[WARNING] Primero debes autorizar tu cuenta de YouTube.")
             return redirect('generator:youtube_authorize')
 
         # Use the shared logic
@@ -504,19 +504,19 @@ def upload_to_youtube_view(request, project_id):
             })
         else:
             # Errors are already logged to project.log_output by trigger_auto_upload
-            messages.error(request, "❌ No se pudo subir el video. Revisa el log del proyecto para más detalles.")
+            messages.error(request, "[ERROR] No se pudo subir el video. Revisa el log del proyecto para mas detalles.")
             return redirect('generator:project_detail', project_id=project.id)
             
     except FileNotFoundError as e:
-        messages.error(request, f"❌ Error de configuración de YouTube: {str(e)}")
+        messages.error(request, f"[ERROR] Error de configuracion de YouTube: {str(e)}")
         logger.error(f"[YouTube] FileNotFoundError: {e}")
         return redirect('generator:home')
     except Exception as e:
         error_msg = str(e)
-        messages.error(request, f"❌ Error al subir a YouTube: {error_msg}")
+        messages.error(request, f"[ERROR] Error al subir a YouTube: {error_msg}")
         logger.error(f"[YouTube] Error en upload: {error_msg}")
         
-        project.log_output += f"\n[YouTube] ❌ Error: {error_msg}"
+        project.log_output += f"\n[YouTube] [ERROR] Error: {error_msg}"
         project.save()
         
         return redirect('generator:project_detail', project_id=project.id)
@@ -791,6 +791,10 @@ def save_project_script_json(request, project_id):
             # Render Mode (v4.7)
             if 'render_mode' in settings_data:
                 project.render_mode = settings_data['render_mode']
+
+            # Music Volume Lock (v8.7)
+            if 'music_volume_lock' in settings_data:
+                project.music_volume_lock = bool(settings_data['music_volume_lock'])
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})
