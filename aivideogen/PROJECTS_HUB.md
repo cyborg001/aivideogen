@@ -4,7 +4,7 @@ Este documento es nuestra central de mando. Aquí rastreamos el progreso de cada
 
 ---
 
-## 🚀 1. Software: AI Video Generator (v2.18.1)
+## 🚀 1. Software: AI Video Generator (v8.7.0)
 **Estado:** Estable / Producción
 **Objetivo:** Mantener y evolucionar el motor de creación de video.
 
