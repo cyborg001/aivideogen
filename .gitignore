@@ -37,6 +37,7 @@ __pycache__/
 *.exe
 *.spec
 nuitka_log.txt
+aivideogen/client_secrets.json
 
 # --- SÍ SE SUBEN (Esenciales y UI) ---
 !aivideogen/media/sfx/
