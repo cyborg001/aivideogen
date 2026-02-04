@@ -73,7 +73,7 @@ def build():
 
     # POST-BUILD
     import shutil
-    dist_dir = os.path.join(base_dir, 'dist', 'AIVideogen_v6.0_Portable')
+    dist_dir = os.path.join(base_dir, 'dist', 'AIVideogen_v8.5_Portable')
     if os.path.exists(dist_dir):
         # Ensure folders exist
         os.makedirs(os.path.join(dist_dir, 'media', 'assets'), exist_ok=True)
