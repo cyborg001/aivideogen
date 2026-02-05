@@ -7,8 +7,11 @@ from googleapiclient.http import MediaFileUpload
 from django.conf import settings
 from .models import YouTubeToken
 
-# Scopes needed for YouTube upload
-SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
+# Scopes needed for YouTube upload and GDrive sync
+SCOPES = [
+    'https://www.googleapis.com/auth/youtube.upload',
+    'https://www.googleapis.com/auth/drive.file'
+]
 
 def get_flow():
     client_secrets_file = os.path.join(settings.BASE_DIR, 'client_secrets.json')
