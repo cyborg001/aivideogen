@@ -775,10 +775,21 @@ def save_project_script_json(request, project_id):
                      from .models import Music
                      bg_music_name = os.path.basename(bg_music_input)
                      # Try exact match first, then by name (extracted), then contains
+                     # v8.7 fix: also normalize slashes for cross-platform matching
+                     bg_music_alt = bg_music_input.replace('/', '\\')
+                     bg_music_alt2 = bg_music_input.replace('\\', '/')
+                     
                      m = Music.objects.filter(file__iexact=bg_music_input).first() or \
+                         Music.objects.filter(file__iexact=bg_music_alt).first() or \
+                         Music.objects.filter(file__iexact=bg_music_alt2).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
                          Music.objects.filter(file__icontains=bg_music_name).first()
-                     if m: project.background_music = m
+                     
+                     if m: 
+                         project.background_music = m
+                         logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
+                     else:
+                         logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")
 
             # Global Voice ID
             if 'voice_id' in settings_data:

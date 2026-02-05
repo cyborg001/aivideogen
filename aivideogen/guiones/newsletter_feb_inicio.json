@@ -1,0 +1,88 @@
+{
+    "title": "Noticias Tech Feb 1-4: Resumen Explosivo",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "Akatsuki Rising - The Mini Vandals.mp3",
+    "music_volume": 0.12,
+    "blocks": [
+        {
+            "title": "Apertura Impactante",
+            "scenes": [
+                {
+                    "title": "Gancho",
+                    "asset": "musk_spacex_xai.png",
+                    "voice": "¡Confirmado! [PAUSA:0.2] Elon Musk acaba de fusionar SpaceX y xAI en un gigante de 1.25 trillones de dólares."
+                },
+                {
+                    "title": "Identidad de Marca",
+                    "asset": "notiac_logo.png",
+                    "voice": "Bienvenidos a Not-i-A-Ci."
+                }
+            ]
+        },
+        {
+            "title": "Bloque 1: El Imperio de Musk",
+            "scenes": [
+                {
+                    "title": "Infraestructura Espacial",
+                    "asset": "spacex_data_center.png",
+                    "voice": "Esta unión busca crear la primera red masiva de centros de datos de IA... [PAUSA:0.2] ¡en el espacio!"
+                },
+                {
+                    "title": "Escalabilidad",
+                    "asset": "satellite_network.png",
+                    "voice": "Esto permitirá una escalabilidad infinita... [PAUSA:0.1] sin depender de la infraestructura terrestre."
+                }
+            ]
+        },
+        {
+            "title": "Bloque 2: Apple x Google",
+            "scenes": [
+                {
+                    "title": "Alianza Histórica",
+                    "asset": "apple_google_siri.png",
+                    "voice": "Por otro lado, Apple y Google han sellado una alianza histórica: [PAUSA:0.3] Gemini ahora potenciará a la nueva generación de Siri."
+                },
+                {
+                    "title": "Siri Inteligente",
+                    "asset": "siri_ios26.png",
+                    "voice": "Prepárate para una Siri que realmente entiende el contexto... [PAUSA:0.2] y responde con precisión humana."
+                }
+            ]
+        },
+        {
+            "title": "Bloque 3: Movilidad y Creación",
+            "scenes": [
+                {
+                    "title": "Waymo Expansión",
+                    "asset": "waymo_tokyo.png",
+                    "voice": "Siguiendo con los avances, Waymo ha recibido 16 mil millones de dólares para llevar sus robotaxis a 20 nuevas ciudades, [PAUSA:0.2] incluyendo Tokio y Londres."
+                },
+                {
+                    "title": "Project Genie",
+                    "asset": "google_genie_world.png",
+                    "voice": "Y Google sorprendió con Project Genie: [PAUSA:0.3] una IA que crea mundos 3D jugables a partir de simples instrucciones de voz."
+                }
+            ]
+        },
+        {
+            "title": "Cierre y Debate",
+            "scenes": [
+                {
+                    "title": "Conclusión Profunda",
+                    "asset": "ai_coworker.png",
+                    "voice": "En solo 4 días, la IA ha pasado de ser una herramienta... [PAUSA:0.1] a convertirse en nuestro copiloto espacial y creativo."
+                },
+                {
+                    "title": "Pregunta de Debate",
+                    "asset": "question_mark_tech.png",
+                    "voice": "¿Crees que los centros de datos espaciales son el futuro o una locura de Musk?"
+                },
+                {
+                    "title": "Suscripción",
+                    "asset": "suscribete.mp4",
+                    "voice": "Recuerda, dale like y no olvides suscribirte."
+                }
+            ]
+        }
+    ]
+}

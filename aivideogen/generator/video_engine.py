@@ -679,6 +679,7 @@ def generate_video_avgl(project):
                 global_music_name = script.background_music
                 
             if global_music_name:
+                logger.log(f"🔎 Buscando Música Global: {global_music_name}")
                 # v5.2: SUPER ROBUST FUZZY LOOKUP
                 
                 # Normalize Search Term
@@ -696,7 +697,7 @@ def generate_video_avgl(project):
                 ).first()
                 
                 if gm_obj and os.path.exists(gm_obj.file.path):
-                    logger.log(f"🎵 Aplicando Música Global Continua: {gm_obj.name}")
+                    logger.log(f"🎵 Aplicando Música Global Continua: {gm_obj.name} (File: {gm_obj.file.name})")
                     bg_audio = AudioFileClip(gm_obj.file.path)
                     
                     # Loop to full duration

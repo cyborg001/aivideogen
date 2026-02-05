@@ -8,14 +8,13 @@ from pathlib import Path
 from django.core.management import execute_from_command_line
 from dotenv import load_dotenv
 
-# Force UTF-8 and unbuffered output for PyInstaller executable
-# This ensures that emojis and unicode characters work in the console
+# Force UTF-8 and unbuffered output
 os.environ['PYTHONUTF8'] = '1'
 os.environ['PYTHONUNBUFFERED'] = '1'
 
-if hasattr(sys, '_MEIPASS'):
-    import io
-    # Re-open stdout/stderr with UTF-8 encoding
+# Re-open stdout/stderr with UTF-8 encoding to avoid UnicodeEncodeError in some consoles
+import io
+if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
 
@@ -69,9 +68,9 @@ if __name__ == "__main__":
     port = os.getenv('PORT', '8888')
     version = "8.5.0"
     
-    print(f"═══════════════════════════════════════════════════════")
+    print(f"=======================================================")
     print(f"      AIVideogen v{version} - MOTOR DE EVENTOS")
-    print(f"═══════════════════════════════════════════════════════")
+    print(f"=======================================================")
     
     # Set Django settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
