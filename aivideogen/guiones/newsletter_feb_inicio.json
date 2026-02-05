@@ -10,12 +10,12 @@
                 {
                     "title": "Gancho",
                     "asset": "musk_spacex_xai.png",
-                    "voice": "¡Confirmado! [PAUSA:0.2] Elon Musk acaba de fusionar SpaceX y xAI en un gigante de 1.25 trillones de dólares."
+                    "voice": "¡Confirmado! [PAUSA:0.2] [PHO]Ilon Mask | Elon Musk[/PHO] acaba de fusionar [PHO]Space Ex | SpaceX[/PHO] y [PHO]Ex Ai | xAI[/PHO] en un gigante de [SUB]1.25 trillones de dólares[/SUB]."
                 },
                 {
                     "title": "Identidad de Marca",
                     "asset": "notiac_logo.png",
-                    "voice": "Bienvenidos a Not-i-A-Ci."
+                    "voice": "Bienvenidos a [PHO]Noti A Ci | Not-i-A-Ci[/PHO]."
                 }
             ]
         },
@@ -25,7 +25,7 @@
                 {
                     "title": "Infraestructura Espacial",
                     "asset": "spacex_data_center.png",
-                    "voice": "Esta unión busca crear la primera red masiva de centros de datos de IA... [PAUSA:0.2] ¡en el espacio!"
+                    "voice": "Esta unión busca crear la primera red masiva de centros de datos de [PHO]IA | IA[/PHO]... [PAUSA:0.2] ¡en el [SUB]espacio[/SUB]!"
                 },
                 {
                     "title": "Escalabilidad",
@@ -40,12 +40,12 @@
                 {
                     "title": "Alianza Histórica",
                     "asset": "apple_google_siri.png",
-                    "voice": "Por otro lado, Apple y Google han sellado una alianza histórica: [PAUSA:0.3] Gemini ahora potenciará a la nueva generación de Siri."
+                    "voice": "Por otro lado, Apple y Google han sellado una alianza histórica: [PAUSA:0.3] [PHO]Yémini | Gemini[/PHO] ahora potenciará a la nueva generación de [PHO]Siri | Siri[/PHO]."
                 },
                 {
                     "title": "Siri Inteligente",
                     "asset": "siri_ios26.png",
-                    "voice": "Prepárate para una Siri que realmente entiende el contexto... [PAUSA:0.2] y responde con precisión humana."
+                    "voice": "Prepárate para una [PHO]Siri | Siri[/PHO] que realmente entiende el contexto... [PAUSA:0.2] y responde con [SUB]precisión humana[/SUB]."
                 }
             ]
         },
@@ -55,12 +55,12 @@
                 {
                     "title": "Waymo Expansión",
                     "asset": "waymo_tokyo.png",
-                    "voice": "Siguiendo con los avances, Waymo ha recibido 16 mil millones de dólares para llevar sus robotaxis a 20 nuevas ciudades, [PAUSA:0.2] incluyendo Tokio y Londres."
+                    "voice": "Siguiendo con los avances, [PHO]Güeymo | Waymo[/PHO] ha recibido 16 mil millones de dólares para llevar sus robotaxis a 20 nuevas ciudades, [PAUSA:0.2] incluyendo [SUB]Tokio y Londres[/SUB]."
                 },
                 {
                     "title": "Project Genie",
                     "asset": "google_genie_world.png",
-                    "voice": "Y Google sorprendió con Project Genie: [PAUSA:0.3] una IA que crea mundos 3D jugables a partir de simples instrucciones de voz."
+                    "voice": "Y Google sorprendió con [PHO]Proyect Yini | Project Genie[/PHO]: [PAUSA:0.3] una [PHO]IA | IA[/PHO] que crea mundos 3D jugables a partir de instrucciones de voz."
                 }
             ]
         },
@@ -70,12 +70,12 @@
                 {
                     "title": "Conclusión Profunda",
                     "asset": "ai_coworker.png",
-                    "voice": "En solo 4 días, la IA ha pasado de ser una herramienta... [PAUSA:0.1] a convertirse en nuestro copiloto espacial y creativo."
+                    "voice": "En solo 4 días, la [PHO]IA | IA[/PHO] ha pasado de ser una herramienta... [PAUSA:0.1] a convertirse en nuestro [SUB]copiloto espacial[/SUB] y creativo."
                 },
                 {
                     "title": "Pregunta de Debate",
                     "asset": "question_mark_tech.png",
-                    "voice": "¿Crees que los centros de datos espaciales son el futuro o una locura de Musk?"
+                    "voice": "¿Crees que los centros de datos espaciales son el futuro o una locura de [PHO]Mask | Musk[/PHO]?"
                 },
                 {
                     "title": "Suscripción",
