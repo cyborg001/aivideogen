@@ -39,10 +39,11 @@ def play_finish_sound(success=True):
 # Ken Burns Effect (Optimized with Pre-Scaling)
 # ═══════════════════════════════════════════════════════════════════
 
-def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None):
+def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
     """
     Applies optimized Ken Burns effect with robust sizing and movement.
     Supports diagonal movement: "HOR:start:end + VER:start:end"
+    v11.8: Added SHAKE and ROTATE support.
     """
     from moviepy import ImageClip, VideoFileClip, CompositeVideoClip, vfx
     from PIL import Image
@@ -50,10 +51,18 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     # ═══════════════════════════════════════════════════════════════════
     # 1. PARSE PARAMETERS
     # ═══════════════════════════════════════════════════════════════════
-    # Expected format: "X:Y" (e.g. "1.0:1.3")
-    z_parts = zoom.split(':') if (zoom and ':' in zoom) else ['1.0', '1.0']
-    z_start = float(z_parts[0]) if len(z_parts) > 0 else 1.0
-    z_end = float(z_parts[1]) if len(z_parts) > 1 else z_start
+    # Expected format: "X:Y" (e.g. "1.0:1.3") or "X" (e.g. "1.5")
+    z_start, z_end = 1.0, 1.0
+    if zoom:
+        if isinstance(zoom, str) and ':' in zoom:
+            z_parts = zoom.split(':')
+            z_start = float(z_parts[0])
+            z_end = float(z_parts[1]) if len(z_parts) > 1 else z_start
+        else:
+            try:
+                z_start = float(zoom)
+                z_end = z_start
+            except: pass
     
     # ═══════════════════════════════════════════════════════════════════
     # DIAGONAL SUPPORT (HOR:start:end + VER:start:end)
@@ -107,12 +116,12 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     working_h, working_w = img_np.shape[:2]
 
     def get_frame_scale(t):
-        progress = t / duration
+        progress = (t / duration) if duration > 0 else 1.0
         rel_zoom = z_start + (z_end - z_start) * progress
         return rel_zoom / max(z_start, z_end)
 
     def get_frame_pos(t):
-        progress = t / duration
+        progress = (t / duration) if duration > 0 else 1.0
         scale = get_frame_scale(t)
         curr_w = working_w * scale; curr_h = working_h * scale
         slack_x = curr_w - target_w; slack_y = curr_h - target_h
@@ -127,10 +136,57 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
                 x = -(p_prog / 100.0) * slack_x
             elif cfg['dir'] == 'VER':
                 y = -((100.0 - p_prog) / 100.0) * slack_y
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # SHAKE EFFECT (v12.1 Parametric)
+        # ═══════════════════════════════════════════════════════════════════
+        if shake:
+            shake_freq = 12.0 # Hz
+            # v12.1: Use intensity from JSON or default to 5. Pixels = intensity * 1.5
+            intensity = float(shake_intensity if shake_intensity else 5)
+            shake_amp = intensity * 1.6   # 5 * 1.6 = 8px (v11 legacy)
+            
+            x += np.sin(t * shake_freq * 2 * np.pi) * shake_amp * np.random.uniform(0.5, 1.0)
+            y += np.cos(t * shake_freq * 1.5 * np.pi) * shake_amp * np.random.uniform(0.5, 1.0)
+
         return (x, y)
 
     base_clip = ImageClip(img_np, duration=duration)
     clip = base_clip.resized(get_frame_scale).with_position(get_frame_pos)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ROTATE EFFECT (v11.8)
+    # ═══════════════════════════════════════════════════════════════════
+    if rotate:
+        try:
+            r_start, r_end = 0.0, 0.0
+            if isinstance(rotate, str) and ':' in rotate:
+                r_parts = rotate.split(':')
+                r_start = float(r_parts[0])
+                r_end = float(r_parts[1])
+            else:
+                r_start = float(rotate)
+                r_end = r_start
+            
+            # v12.3: 1 value = static, range = animated
+            if r_start == r_end:
+                clip = clip.rotated(r_start, resample="bicubic")
+            else:
+                # Dynamic Rotation over duration
+                def get_rot(t): 
+                    # v12.4: Fixed Angular Velocity (deg/s) if w_rotate is present
+                    if w_rotate is not None:
+                        try:
+                            w_val = float(w_rotate)
+                            return r_start + w_val * t
+                        except: pass
+
+                    # Default: Interpolate relative to duration
+                    prog = (t / duration) if duration > 0 else 1.0
+                    return r_start + (r_end - r_start) * prog
+                clip = clip.with_effects([vfx.Rotate(get_rot, resample="bicubic")])
+        except Exception as e:
+            logger.warning(f"Error applying rotation '{rotate}': {e}")
     
     if not overlay_path or not os.path.exists(overlay_path):
         # v8.6.1: Must ALWAYS return CompositeVideoClip to enforce target_size
@@ -219,12 +275,18 @@ def generate_video_avgl(project):
     
     start_time = time.time()
     logger = ProjectLogger(project)
-    audio_files = []
-    block_clips = []
-    # v9.6: Tracking for all clips to ensure proper closure (Windows WinError 32 mitigation)
-    clips_to_close = []
+    
+    # Init Progress
+    project.progress = 5
+    project.save(update_fields=['progress'])
     
     try:
+        audio_files = []
+        block_clips = []
+        # v9.6: Tracking for all clips to ensure proper closure (Windows WinError 32 mitigation)
+        clips_to_close = []
+        
+        # Prepare
         project.status = 'processing'
         project.save()
         
@@ -321,10 +383,14 @@ def generate_video_avgl(project):
 
         # Check if we have at least some audio or scenes
         if not audio_files:
-            logger.log("❌ No se detectaron escenas para procesar.")
+            logger.log("❌ Error fatal: No se generó ningún audio.")
             project.status = 'error'; project.save()
             play_finish_sound(success=False)
             return
+            
+        # Progress: Audio Generated
+        project.progress = 35
+        project.save(update_fields=['progress'])
 
         # 3. Main Clip Generation Loop
         logger.log("[Video] Procesando escenas...")
@@ -336,6 +402,15 @@ def generate_video_avgl(project):
         scene_audio_map = {scene: audio for scene, audio in audio_files}
 
         for b_idx, block in enumerate(script.blocks):
+            # Calculate Progress (35% to 85%)
+            # Based on block index
+            total_blocks = len(script.blocks)
+            if total_blocks > 0:
+                p_increment = 50 / total_blocks
+                current_p = 35 + (b_idx * p_increment)
+                project.progress = int(current_p)
+                project.save(update_fields=['progress'])
+
             logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
             block_scene_clips = []
             block_voice_intervals = []
@@ -390,7 +465,6 @@ def generate_video_avgl(project):
                     if not clip and os.path.exists(asset_path):
                         # ═══════════════════════════════════════════════════════════════════
                         # MASTER SHOT / GROUP INTERPOLATION (v5.2)
-                        # ═══════════════════════════════════════════════════════════════════
                         eff_zoom = asset.zoom or "1.0:1.3"
                         eff_move = asset.move or "HOR:50:50"
                         
@@ -465,7 +539,10 @@ def generate_video_avgl(project):
                                 zoom=eff_zoom,
                                 move=eff_move,
                                 overlay_path=overlay_path, 
-                                fit=asset.fit
+                                fit=asset.fit,
+                                shake=getattr(asset, 'shake', False),
+                                shake_intensity=getattr(asset, 'shake_intensity', 5),
+                                rotate=getattr(asset, 'rotate', None)
                             )
                 else:
                     # v8.6: FAST AUDIO TEST MODE
@@ -838,39 +915,79 @@ def generate_video_avgl(project):
         except Exception as e:
             logger.log(f"[Error] Error procesando música global: {e}")
 
-        output_filename = f"project_{project.id}.mp4"
-        output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        # v5.9 GPU Preset Fix
-        use_gpu = (project.render_mode == 'gpu')
-        render_params = {
-            'fps': 30, 
-            'codec': 'libx264', 
-            'audio_codec': 'aac', 
-            'preset': 'ultrafast', 
-            'threads': 8
-        }
-        
-        if use_gpu:
-            logger.log("[HW] MODO RENDER: GPU Acelerado (NVENC)")
-            render_params.update({
-                'codec': 'h264_nvenc', 
-                'bitrate': '5000k',
-                'preset': 'p1',  # Correct preset for NVENC (p1=fastest, p7=slowest/best)
-                'threads': None  # NVENC handles its own threads better
-            })
-        else:
-            logger.log("[HW] MODO RENDER: CPU Standard (libx264)")
+        # 5. Render Final Video
+        # ═══════════════════════════════════════════════════════════════════
+        if final_video:
+            project.progress = 90
+            project.save(update_fields=['progress'])
+            width, height = target_size # Ensure width/height are defined for logging
+            logger.log(f"🎬 Iniciando renderizado final ({width}x{height})...")
+            
+            output_filename = f"video_{project.id}_{int(time.time())}.mp4"
+            output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # v5.9 GPU Preset Fix
+            use_gpu = (project.render_mode == 'gpu')
+            
+            # v11.8: Stable rendering (Single Thread)
+            render_params = {
+                'fps': 30, 
+                'codec': 'libx264', 
+                'audio_codec': 'aac', 
+                'preset': 'ultrafast', 
+                'threads': 1
+            }
+            
+            if use_gpu:
+                logger.log("[HW] MODO RENDER: GPU Acelerado (NVENC)")
+                render_params.update({
+                    'codec': 'h264_nvenc', 
+                    'bitrate': '5000k',
+                    'preset': 'p1',  # Correct preset for NVENC (p1=fastest, p7=slowest/best)
+                    'threads': None  # NVENC handles its own threads better
+                })
+            else:
+                logger.log("[HW] MODO RENDER: CPU Standard (libx264)")
 
-        final_video.write_videofile(output_path, ffmpeg_params=["-pix_fmt", "yuv420p"], **render_params)
-        
-        project.output_video.name = f"videos/{output_filename}"
-        project.duration = final_video.duration
-        project.timestamps = "\n".join(timestamps_list)
+            # v11.1: Progress callback and optimized DB saving
+            def set_progress(percent):
+                new_val = round(float(percent), 1)
+                # v11.2: I/O Optimization - Only save to DB if progress changed by at least 1%
+                # to avoid hammering SQLite during final render which has many updates.
+                old_val = getattr(set_progress, 'last_db_val', -1.0)
+                if abs(new_val - old_val) >= 1.0 or new_val >= 99.0 or new_val <= 1.0:
+                    project.progress_total = new_val
+                    project.save(update_fields=['progress_total'])
+                    set_progress.last_db_val = new_val
+                else:
+                    # Update in-memory only for logic
+                    project.progress_total = new_val
+
+            # v11.7: SILENT MODE (Maximum Stability)
+            # Using None solves the 0.05s truncation bug and 0:00 duration error on Windows.
+            # Progression will jump from 90% to 100% upon completion.
+            set_progress(92) 
+
+            final_video.write_videofile(
+                output_path, 
+                ffmpeg_params=["-pix_fmt", "yuv420p"], 
+                logger=None, # v11.7: Stability over telemetry. Avoids truncated 0.05s videos.
+                **render_params
+            )
+            
+            project.output_video.name = f"videos/{output_filename}"
+            project.duration = float(final_video.duration)
+            project.timestamps = "\n".join(timestamps_list)
+            project.status = 'completed'
+            project.progress = 100
+            project.save()
+            
+            logger.log(f"✅ ¡Video generado con éxito! ({output_path})")
+        project.progress_total = 100.0 # Ensure final progress is 100%
         project.status = 'completed'; project.save()
         play_finish_sound(success=True)
-        logger.log(f"[Done] Exito en {time.time()-start_time:.1f}s!")
+        logger.log(f"[Done] Exito en {time.time()-start_time:.1f} segundos!")
 
     except Exception as e:
         logger.log(f"[FATAL] Error en renderizado: {e}")

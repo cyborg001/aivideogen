@@ -161,6 +161,9 @@
         <a href="{% url 'generator:sfx_list' %}">SFX</a>
         <a href="{% url 'generator:view_logs' %}" style="opacity: 0.6; font-size: 0.8rem; margin-left: 10px;">Ver
             Logs</a>
+        <button onclick="shutdownApp()"
+            style="margin-left: auto; background-color: #cf6679; color: black; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">🔌
+            Apagar App</button>
     </nav>
     <div class="container">
         {% if messages %}
@@ -208,6 +211,26 @@
 
         // Send one immediately on load
         document.addEventListener('DOMContentLoaded', sendHeartbeat);
+
+        // v12.5 Kill Switch
+        function shutdownApp() {
+            if (confirm("⚠️ ¿Estás seguro de que quieres cerrar la aplicación?\n\nEsto detendrá el servidor web y todos los procesos de renderizado activos.")) {
+                fetch("{% url 'generator:shutdown_app' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                    .then(response => {
+                        alert("Aplicación apagada. Puede cerrar esta pestaña.");
+                        window.close();
+                    })
+                    .catch(err => {
+                        console.error("Error shutdown:", err);
+                        alert("Se envió la señal de apagado.");
+                    });
+            }
+        }
     </script>
 </body>
 

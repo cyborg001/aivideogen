@@ -100,10 +100,14 @@
         </form>
     </div>
     {% elif project.status == 'processing' %}
-    <p>El video se está generando. Esta página se recargará automáticamente.</p>
-    <div style="text-align: center; padding: 40px;">
-        <div class="loader"></div>
-        <p style="margin-top: 20px; color: #00ff00; font-family: monospace;">Generando video... Por favor espera.</p>
+    <div id="progress-container"
+        style="background: #333; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden; position: relative;">
+        <div id="progress-bar"
+            style="background: linear-gradient(90deg, #bb86fc, #03dac6); width: {{ project.progress|default:'0' }}%; height: 100%; transition: width 0.5s;">
+        </div>
+    </div>
+    <div style="text-align: center; font-family: monospace; color: #00ff00; font-weight: bold; margin-bottom: 20px;">
+        <span id="progress-text">{{ project.progress|default:'0' }}</span>% completado
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
@@ -114,34 +118,35 @@
         </form>
     </div>
 
-    <style>
-        .loader {
-            border: 5px solid #1a1a1a;
-            /* Dark grey */
-            border-top: 5px solid #00ff00;
-            /* Neon Green */
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-
+    <!-- v12.5: Real-time Polling -->
     <script>
-        setTimeout(function () {
-            window.location.reload(1);
-        }, 5000);
+        function updateStatus() {
+            fetch("{% url 'generator:api_project_status' project.id %}")
+                .then(response => response.json())
+                .then(data => {
+                    // Update Progress Bar
+                    const pBar = document.getElementById('progress-bar');
+                    const pText = document.getElementById('progress-text');
+                    if (pBar) pBar.style.width = data.progress + '%';
+                    if (pText) pText.innerText = data.progress;
+
+                    // Update Logs (if element exists)
+                    const logElement = document.getElementById('logs-preview');
+                    if (logElement) {
+                        logElement.value = data.log;
+                        logElement.scrollTop = logElement.scrollHeight;
+                    }
+
+                    // Reload on completion or failure to update UI state
+                    if (data.status === 'completed' || data.status === 'failed' || data.status === 'error' || data.status === 'cancelled') {
+                        window.location.reload();
+                    }
+                })
+                .catch(err => console.error("Error polling:", err));
+        }
+
+        // Poll every 1.5 seconds
+        setInterval(updateStatus, 1500);
     </script>
     {% elif project.status == 'cancelled' or project.status == 'failed' or project.status == 'error' %}
     <div class="alert alert-{% if project.status == 'cancelled' %}info{% else %}danger{% endif %}"

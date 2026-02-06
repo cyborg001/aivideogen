@@ -50,7 +50,7 @@
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }})">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }})">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -686,12 +686,7 @@
                             <span>🚀</span> GPU (NVIDIA)
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-2">
-                        <span x-show="projectSettings.render_mode === 'cpu'">Optimizado con 8 hilos. Máxima
-                            compatibilidad.</span>
-                        <span x-show="projectSettings.render_mode === 'gpu'">Usa NVIDIA NVENC. Máxima velocidad de
-                            codificación.</span>
-                    </p>
+
                 </div>
 
             </div>
@@ -1007,17 +1002,10 @@
                                 <span class="font-bold">Zoom (Escala)</span>
                             </label>
 
-                            <div x-show="formData.useZoom" class="grid grid-cols-2 gap-2 pl-6" x-transition>
-                                <div>
-                                    <label class="text-[10px] text-gray-400 block">Inicio</label>
-                                    <input type="number" step="0.1" x-model="formData.zoomStart"
-                                        class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-gray-400 block">Fin</label>
-                                    <input type="number" step="0.1" x-model="formData.zoomEnd"
-                                        class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
-                                </div>
+                            <div x-show="formData.useZoom" class="pl-6" x-transition>
+                                <input type="text" x-model="formData.zoomStr" placeholder="ej: 1.2 o 1.0:1.3"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-blue-300">
+                                <p class="text-[10px] text-gray-500 mt-1">1 valor = fijo | 2 valores (:) = animado</p>
                             </div>
                         </div>
 
@@ -1046,47 +1034,87 @@
                             </div>
 
                             <!-- Vertical Pan -->
-                            <div>
+                            <div class="mb-3">
                                 <label
                                     class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-gray-200 mb-2">
                                     <input type="checkbox" x-model="formData.usePanVer"
-                                        class="text-green-500 rounded focus:ring-0" :disabled="isVideo">
+                                        class="text-blue-500 rounded focus:ring-0" :disabled="isVideo">
                                     <span class="font-bold">Paneo Vertical</span>
                                 </label>
                                 <div x-show="formData.usePanVer" class="grid grid-cols-2 gap-2 pl-6" x-transition>
                                     <div>
-                                        <label class="text-[10px] text-gray-400 block">Inicio (%)</label>
+                                        <label class="text-[10px] text-gray-400 block">Arriba (%)</label>
                                         <input type="number" step="10" x-model="formData.panVerStart"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-gray-400 block">Fin (%)</label>
+                                        <label class="text-[10px] text-gray-400 block">Abajo (%)</label>
                                         <input type="number" step="10" x-model="formData.panVerEnd"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div x-show="isVideo" class="mt-2 text-[10px] text-red-400 italic">
-                            * Efectos de movimiento desactivados para video.
-                        </div>
                     </div>
 
-                </div>
+                    <!-- FX: SHAKE & ROTATE (v12.1) -->
+                    <div class="mt-3 pt-3 border-t border-gray-700 space-y-3" :class="{'opacity-50': isVideo}">
+                        <div class="flex items-center justify-between">
+                            <label
+                                class="flex items-center gap-2 text-sm cursor-pointer hover:text-white text-pink-400 font-bold">
+                                <input type="checkbox" x-model="formData.shake"
+                                    class="text-pink-500 rounded focus:ring-0" :disabled="isVideo">
+                                <span>Efecto SHAKE (Vibración)</span>
+                            </label>
+                        </div>
 
+                        <!-- Shake Parameterize (New v12.1) -->
+                        <div x-show="formData.shake" x-transition class="pl-6 space-y-2">
+                            <div
+                                class="flex justify-between items-center text-[10px] uppercase text-gray-500 font-bold mb-1">
+                                <span>Intensidad</span>
+                                <span class="text-pink-400 font-mono" x-text="formData.shake_intensity || 5"></span>
+                            </div>
+                            <input type="range" min="1" max="20" step="1" x-model="formData.shake_intensity"
+                                class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-500">
+                        </div>
+
+                        <!-- Rotación -->
+                        <div>
+                            <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1 font-mono">Rotación
+                                (angulo o inicio:fin)</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" x-model="formData.rotate" placeholder="ej: 15 o 0:720"
+                                    :disabled="isVideo"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-pink-300">
+                            </div>
+                            <!-- Velocidad Angular v12.4 -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-gray-500 font-bold font-mono">w:</span>
+                                <input type="number" x-model="formData.w_rotate" placeholder="Vel. Angular (opcional)"
+                                    :disabled="isVideo"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs font-mono text-pink-300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-gray-700 bg-gray-900 flex justify-end gap-3 rounded-b-xl">
-                <button @click="closeModal()"
-                    class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold tracking-wide">Cancelar</button>
-                <button @click="saveScene()"
-                    class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-2 rounded shadow-lg font-bold uppercase tracking-wide transform hover:scale-105 transition">
-                    <span x-text="editIndex === null ? 'Añadir Escena' : 'Guardar Cambios'"></span>
-                </button>
+            <div x-show="isVideo" class="mt-2 text-[10px] text-red-400 italic">
+                * Efectos de movimiento desactivados para video.
             </div>
         </div>
+
+        <!-- Modal Footer (Injected Correcty) -->
+        <div class="px-6 py-4 border-t border-gray-700 bg-gray-900 flex justify-end gap-3 rounded-b-xl shrink-0">
+            <button @click="closeModal()"
+                class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold tracking-wide">Cancelar</button>
+            <button @click="saveScene()"
+                class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-2 rounded shadow-lg font-bold uppercase tracking-wide transform hover:scale-105 transition">
+                <span x-text="editIndex === null ? 'Añadir Escena' : 'Guardar Cambios'"></span>
+            </button>
+        </div>
+    </div>
     </div>
 
 
@@ -1892,7 +1920,9 @@
                                     overlay: group.overlay,
                                     fit: group.fit,
                                     zoom: sZoom,
-                                    move: sMove
+                                    move: sMove,
+                                    shake: group.shake || false,
+                                    rotate: group.rotate || null
                                 };
                                 // Overwrite scene assets
                                 scene.assets = [assetObj];
@@ -2014,25 +2044,23 @@
                             fit: asset.fit || false,
                             asset_audio_bool: !!asset.audio,
                             asset_audio_vol: (typeof asset.audio === 'number') ? asset.audio : (asset.audio ? 1.0 : 0.8),
-                            useZoom: false, zoomStart: 1.0, zoomEnd: 1.2,
+                            useZoom: !!asset.zoom,
+                            zoomStr: asset.zoom || '1.0',
 
                             // Split Pan logic for Diagonal support
                             usePanHor: false, panHorStart: 50, panHorEnd: 50,
                             usePanVer: false, panVerStart: 50, panVerEnd: 50,
 
                             // SFX Support
-                            sfx: scene.sfx ? JSON.parse(JSON.stringify(scene.sfx)) : []
+                            sfx: scene.sfx ? JSON.parse(JSON.stringify(scene.sfx)) : [],
+
+                            // Camera FX (v12.4)
+                            shake: asset.shake || false,
+                            shake_intensity: asset.shake_intensity || 5,
+                            rotate: asset.rotate || '',
+                            w_rotate: asset.w_rotate || ''
                         };
 
-                        // Load Zoom
-                        if (asset.zoom) {
-                            this.formData.useZoom = true;
-                            const parts = asset.zoom.split(':');
-                            if (parts.length >= 2) {
-                                this.formData.zoomStart = parseFloat(parts[0]);
-                                this.formData.zoomEnd = parseFloat(parts[1]);
-                            }
-                        }
 
                         // Load Move (Search for HOR and VER independently)
                         if (asset.move) {
@@ -2079,7 +2107,10 @@
                             usePanHor: false, panHorStart: 50, panHorEnd: 50,
                             usePanVer: false, panVerStart: 50, panVerEnd: 50,
 
-                            sfx: []
+                            sfx: [],
+                            shake: false,
+                            shake_intensity: 5,
+                            rotate: ''
                         };
                     }
                 },
@@ -2126,10 +2157,7 @@
 
                 saveScene() {
                     // 1. Build Asset Object
-                    let zoomStr = null;
-                    if (this.formData.useZoom) {
-                        zoomStr = `${this.formData.zoomStart}:${this.formData.zoomEnd}`;
-                    }
+                    let currentZoom = this.formData.useZoom ? (this.formData.zoomStr || '1.0') : null;
 
                     // Build Move String (Combine HOR + VER)
                     let moveParts = [];
@@ -2144,11 +2172,15 @@
                     const assetObj = {
                         id: this.formData.asset_type,
                         type: (this.formData.asset_type.toLowerCase().endsWith('.mp4') || this.formData.asset_type.toLowerCase().endsWith('.mov')) ? 'video' : 'image',
-                        zoom: zoomStr,
+                        zoom: currentZoom,
                         move: moveStr,
                         overlay: this.formData.overlay || null,
                         fit: this.formData.fit,
-                        audio: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null
+                        audio: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null,
+                        shake: this.formData.shake || false,
+                        shake_intensity: parseInt(this.formData.shake_intensity || 5),
+                        rotate: this.formData.rotate || null,
+                        w_rotate: this.formData.w_rotate || null
                     };
 
                     // 2. Build Scene Object
@@ -2160,7 +2192,6 @@
                         voice: this.formData.voice || null,
                         audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
-
                         assets: [assetObj],
                         sfx: this.formData.sfx // Save SFX array
                     };

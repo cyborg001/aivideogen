@@ -85,6 +85,7 @@ class VideoProject(models.Model):
     music_volume = models.FloatField(default=0.15, help_text="Volumen de la música (0.0 a 1.0)")
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    progress = models.IntegerField(default=0, help_text="Porcentaje de progreso de 0 a 100")
     
     output_video = models.FileField(upload_to='videos/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
@@ -99,6 +100,8 @@ class VideoProject(models.Model):
     music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
     
     log_output = models.TextField(blank=True)
+    duration = models.FloatField(default=0.0, help_text="Duración total del video en segundos")
+    progress_total = models.FloatField(default=0.0, help_text="Progreso actual de generación (0-100)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property

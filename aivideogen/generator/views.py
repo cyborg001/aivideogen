@@ -856,18 +856,23 @@ def save_project_script_json(request, project_id):
                      bg_music_alt2 = bg_music_input.replace('\\', '/')
                      
                      # Improved search: exact file path or exact name
+                     # v11.8: Even more robust matching (stripping prefixes)
+                     bg_music_clean = bg_music_input.replace('\\', '/').split('/')[-1]
                      m = Music.objects.filter(file__iexact=bg_music_input).first() or \
                          Music.objects.filter(file__iexact=bg_music_alt).first() or \
                          Music.objects.filter(file__iexact=bg_music_alt2).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
                          Music.objects.filter(name__iexact=bg_music_input).first() or \
-                         Music.objects.filter(file__icontains=bg_music_name).first()
+                         Music.objects.filter(name__iexact=bg_music_clean).first() or \
+                         Music.objects.filter(file__icontains=bg_music_name).first() or \
+                         Music.objects.filter(file__icontains=bg_music_clean).first()
                      
                      if m: 
                          project.background_music = m
-                         logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
+                         # logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
                      else:
-                         logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")
+                         # logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")
+                         pass
 
             # Global Voice ID
             if 'voice_id' in settings_data:

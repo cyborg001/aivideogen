@@ -1,0 +1,26 @@
+{
+    "project_title": "Test Vortice v12.4",
+    "voice": "CIENTIFICO",
+    "speed": 1.1,
+    "blocks": [
+        {
+            "block_id": 1,
+            "scenes": [
+                {
+                    "title": "Prueba de Vórtice",
+                    "text": "Iniciando prueba de velocidad angular constante. Esta imagen debería girar exactamente una vuelta completa por cada segundo de audio, creando un efecto de vórtice hipnótico independiente de la duración.",
+                    "assets": [
+                        {
+                            "type": "image",
+                            "id": "galaxy_vortex.jpg",
+                            "zoom": "1.5:0.2",
+                            "rotate": "0:360",
+                            "w_rotate": 360,
+                            "shake": false
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
