@@ -170,7 +170,8 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             
             # v12.3: 1 value = static, range = animated
             if r_start == r_end:
-                clip = clip.rotated(r_start, resample="bicubic")
+                # v12.5 Fix: expand=False prevents center wobble
+                clip = clip.rotated(r_start, resample="bicubic", expand=False)
             else:
                 # Dynamic Rotation over duration
                 def get_rot(t): 
@@ -184,7 +185,9 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
                     # Default: Interpolate relative to duration
                     prog = (t / duration) if duration > 0 else 1.0
                     return r_start + (r_end - r_start) * prog
-                clip = clip.with_effects([vfx.Rotate(get_rot, resample="bicubic")])
+                
+                # v12.5 Fix: expand=False to fix wobble
+                clip = clip.with_effects([vfx.Rotate(get_rot, resample="bicubic", expand=False)])
         except Exception as e:
             logger.warning(f"Error applying rotation '{rotate}': {e}")
     
