@@ -48,4 +48,9 @@ urlpatterns = [
     # Logs & System
     path('logs/', views.view_logs, name='view_logs'),
     path('api/heartbeat/', views.api_heartbeat, name='api_heartbeat'),
+    
+    # v12.5: Progress & Shutdown
+    path('api/shutdown/', views.shutdown_app, name='shutdown_app'),
+    path('api/project/<int:project_id>/status/', views.get_project_status, name='api_project_status'),
 ]
+
