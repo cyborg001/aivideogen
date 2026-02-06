@@ -1070,3 +1070,42 @@ def toggle_auto_upload(request, project_id):
          
     messages.success(request, f"Subida automática a YouTube: {status_str}")
     return redirect('generator:project_detail', project_id=project.id)
+
+# ═══════════════════════════════════════════════════════════════════
+# v12.5: PROGRESS & SHUTDOWN API
+# ═══════════════════════════════════════════════════════════════════
+
+def get_project_status(request, project_id):
+    """Returns JSON with current status, progress and log tailored for polling."""
+    try:
+        project = VideoProject.objects.get(id=project_id)
+        return JsonResponse({
+            'status': project.status,
+            'progress': project.progress,
+            'log': getattr(project, 'log_output', '')
+        })
+    except VideoProject.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Project not found'}, status=404)
+
+def shutdown_app(request):
+    """Kill Switch: Terminates the Django server process safely."""
+    if request.method == 'POST':
+        import signal
+        import threading
+        import time
+        
+        # Helper to kill process in thread to allow response to return
+        def kill_server():
+            time.sleep(1) # Allow response to flush
+            pid = os.getpid()
+            print(f"[System] Killing process {pid}...")
+            # Windows/Linux compatible kill
+            try:
+                os.kill(pid, signal.SIGTERM) 
+            except:
+                os.kill(pid, signal.SIGABRT) # Hard kill fallback
+
+        threading.Thread(target=kill_server).start()
+        
+        return JsonResponse({'status': 'ok', 'message': 'Apagando servidor...'})
+    return JsonResponse({'status': 'error'}, status=400)
