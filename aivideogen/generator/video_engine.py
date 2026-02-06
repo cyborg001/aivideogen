@@ -149,7 +149,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
 
 
-def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None):
+def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None):
     """
     Processes a video asset to fit the scene: looping, trimming, and scaling.
     """
@@ -157,6 +157,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     
     # Load video
     v_clip = VideoFileClip(video_path)
+    if clips_to_close is not None: clips_to_close.append(v_clip)
     
     # Handle duration: Loop if shorter than scene
     if v_clip.duration < duration:
@@ -188,6 +189,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     # Overlay support for video assets too
     if overlay_path and os.path.exists(overlay_path):
         overlay = VideoFileClip(overlay_path, has_mask=True)
+        if clips_to_close is not None: clips_to_close.append(overlay)
         if overlay.duration < duration:
             overlay = overlay.with_effects([vfx.Loop(duration=duration)])
         overlay = overlay.resized(target_size).subclipped(0, duration)
@@ -219,6 +221,8 @@ def generate_video_avgl(project):
     logger = ProjectLogger(project)
     audio_files = []
     block_clips = []
+    # v9.6: Tracking for all clips to ensure proper closure (Windows WinError 32 mitigation)
+    clips_to_close = []
     
     try:
         project.status = 'processing'
@@ -344,6 +348,7 @@ def generate_video_avgl(project):
                 if scene in scene_audio_map and scene_audio_map[scene]:
                     audio_path = scene_audio_map[scene]
                     audio_clip = AudioFileClip(audio_path)
+                    clips_to_close.append(audio_clip)
                     voice_duration = audio_clip.duration
                 
                 # Fallback for missing audio (ensures sync)
@@ -415,13 +420,24 @@ def generate_video_avgl(project):
                             
                             # Interpolate Move (Simple Linear)
                             # We handle HOR:start:end
-                            if ':' in g_move:
-                                m_parts = g_move.split(':')
-                                if len(m_parts) >= 3:
-                                    m_dir = m_parts[0]; ms = float(m_parts[1]); me = float(m_parts[2])
-                                    m_s = ms + (me - ms) * (start_in_group / total_group_duration)
-                                    m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
-                                    eff_move = f"{m_dir}:{m_s:.1f}:{m_e:.1f}"
+                            # v9.6 Fix: Support for combined moves in group-scene interpolation
+                            m_configs = []
+                            if '+' in g_move:
+                                for p in [p.strip() for p in g_move.split('+')]:
+                                    mp = p.split(':')
+                                    if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': float(mp[1]), 'e': float(mp[2])})
+                            else:
+                                mp = g_move.split(':')
+                                if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': float(mp[1]), 'e': float(mp[2])})
+                            
+                            for cfg in m_configs:
+                                ms = cfg['s']; me = cfg['e']
+                                m_s = ms + (me - ms) * (start_in_group / total_group_duration)
+                                m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
+                                if cfg['dir'] == 'HOR':
+                                    eff_move = f"HOR:{m_s:.1f}:{m_e:.1f}" if not eff_move or '+' not in eff_move else eff_move + f" + HOR:{m_s:.1f}:{m_e:.1f}"
+                                else:
+                                    eff_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if eff_move else f"VER:{m_s:.1f}:{m_e:.1f}"
 
                         logger.log(f"  🎬 Escena {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                         
@@ -439,7 +455,8 @@ def generate_video_avgl(project):
                             clip = process_video_asset(
                                 asset_path, duration, target_size,
                                 overlay_path=overlay_path,
-                                fit=asset.fit
+                                fit=asset.fit,
+                                clips_to_close=clips_to_close
                             )
                         else:
                             # Apply Ken Burns (Standard image logic)
@@ -471,6 +488,7 @@ def generate_video_avgl(project):
                         if os.path.exists(sfx_path):
                             try:
                                 s_clip = AudioFileClip(sfx_path).with_effects([afx.MultiplyVolume(sfx_item.volume)])
+                                if clips_to_close is not None: clips_to_close.append(s_clip)
                                 
                                 # AVGL v4: Offset is word-based. 
                                 # Calculate delay: (scene_audio_duration / scene_word_count) * offset
@@ -593,50 +611,65 @@ def generate_video_avgl(project):
                             has_local_music = True
                             logger.log(f"  [Audio] Musica especifica bloque: {m_obj.name}")
                             bg_audio = AudioFileClip(m_obj.file.path)
-                            
+                            clips_to_close.append(bg_audio)
+                        elif music_to_use and os.path.exists(music_to_use):
+                            # v9.2: Direct path fallback for blocks
+                            has_local_music = True
+                            logger.log(f"  [Audio] Musica especifica bloque (directa): {os.path.basename(music_to_use)}")
+                            bg_audio = AudioFileClip(music_to_use)
+                            clips_to_close.append(bg_audio)
+                        elif music_to_use:
+                             # Try media-relative
+                             potential_path = os.path.join(settings.MEDIA_ROOT, music_to_use)
+                             if os.path.exists(potential_path):
+                                 has_local_music = True
+                                 logger.log(f"  [Audio] Musica especifica bloque (media): {os.path.basename(music_to_use)}")
+                                 bg_audio = AudioFileClip(potential_path)
+                                 clips_to_close.append(bg_audio)
+
+                        if has_local_music:
                             loops = int(block_video.duration / bg_audio.duration) + 1
                             bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
                             
-                            vol = block.volume if block.volume is not None else 0.2
+                            try:
+                                peak_vol = float(block.volume) if block.volume is not None else float(script.music_volume)
+                            except:
+                                peak_vol = 0.2
                             
-                            # Local Ducking
-                            peak_vol = vol
-                            duck_vol = peak_vol * settings.AUDIO_DUCKING_RATIO
-                            attack_t = settings.AUDIO_ATTACK_TIME; release_t = settings.AUDIO_RELEASE_TIME
+                            if peak_vol <= 0: peak_vol = 0.2
+                            
+                            duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
+                            at = float(settings.AUDIO_ATTACK_TIME)
+                            rt = float(settings.AUDIO_RELEASE_TIME)
 
                             def volume_ducking_local(t):
-                                # v8.6 Robust Local Ducking (Minimum Mapping)
+                                # v9.3 Robust Local Ducking
                                 if isinstance(t, np.ndarray):
-                                    # Start with baseline (factors 1.0)
-                                    factors = np.full(t.shape, 1.0)
+                                    factors = np.ones_like(t, dtype=float)
                                     for start, end in block_voice_intervals:
-                                        # Standard DUCK during voice
-                                        factors[(t >= start) & (t <= end)] = settings.AUDIO_DUCKING_RATIO
-                                        # Fade Out (Peak -> Duck)
-                                        mask_fout = (t >= (start - attack_t)) & (t < start)
-                                        if np.any(mask_fout):
-                                            prog = (t[mask_fout] - (start - attack_t)) / attack_t
-                                            f_out = 1.0 - (prog * (1.0 - settings.AUDIO_DUCKING_RATIO))
-                                            factors[mask_fout] = np.minimum(factors[mask_fout], f_out)
-                                        # Fade In (Duck -> Peak)
-                                        mask_fin = (t > end) & (t <= (end + release_t))
-                                        if np.any(mask_fin):
-                                            prog = (t[mask_fin] - end) / release_t
-                                            f_in = settings.AUDIO_DUCKING_RATIO + (prog * (1.0 - settings.AUDIO_DUCKING_RATIO))
-                                            factors[mask_fin] = np.minimum(factors[mask_fin], f_in)
-                                    return (factors * peak_vol).reshape(-1, 1)
+                                        # Ducking
+                                        factors[(t >= (start - at)) & (t <= (end + rt))] = duck_ratio
+                                        # Fades
+                                        m_out = (t >= (start - at)) & (t < start)
+                                        if np.any(m_out):
+                                            p = (t[m_out] - (start - at)) / at
+                                            factors[m_out] = 1.0 - (p * (1.0 - duck_ratio))
+                                        m_in = (t > end) & (t <= (end + rt))
+                                        if np.any(m_in):
+                                            p = (t[m_in] - end) / rt
+                                            factors[m_in] = duck_ratio + (p * (1.0 - duck_ratio))
+                                    return (float(peak_vol) * factors)[:, None]
                                 else:
                                     factor = 1.0
                                     for start, end in block_voice_intervals:
-                                        if start <= t <= end: 
-                                            factor = min(factor, settings.AUDIO_DUCKING_RATIO)
-                                        elif (start - attack_t) <= t < start:
-                                            prog = (t - (start - attack_t)) / attack_t
-                                            factor = min(factor, 1.0 - (prog * (1.0 - settings.AUDIO_DUCKING_RATIO)))
-                                        elif end < t <= (end + release_t):
-                                            prog = (t - end) / release_t
-                                            factor = min(factor, settings.AUDIO_DUCKING_RATIO + (prog * (1.0 - settings.AUDIO_DUCKING_RATIO)))
-                                    return factor * peak_vol
+                                        if start <= t <= end: factor = duck_ratio; break
+                                        elif (start - at) <= t < start:
+                                            p = (t - (start - at)) / at
+                                            factor = 1.0 - (p * (1.0 - duck_ratio))
+                                        elif end < t <= (end + rt):
+                                            p = (t - end) / rt
+                                            factor = duck_ratio + (p * (1.0 - duck_ratio))
+                                    return float(peak_vol * factor)
 
                             bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
                             final_audio = CompositeAudioClip([block_video.audio, bg_audio_final])
@@ -699,117 +732,108 @@ def generate_video_avgl(project):
                 if gm_obj and os.path.exists(gm_obj.file.path):
                     logger.log(f"🎵 Aplicando Música Global Continua: {gm_obj.name} (File: {gm_obj.file.name})")
                     bg_audio = AudioFileClip(gm_obj.file.path)
-                    
-                    # Loop to full duration
+                    clips_to_close.append(bg_audio)
+                elif global_music_name and os.path.exists(global_music_name):
+                    # v9.2: Fallback to direct absolute/relative path if DB lookup fails
+                    logger.log(f"🎵 Aplicando Música Global Directa: {os.path.basename(global_music_name)}")
+                    bg_audio = AudioFileClip(global_music_name)
+                    clips_to_close.append(bg_audio)
+                elif global_music_name:
+                    # Try media-relative path as last resort
+                    potential_path = os.path.join(settings.MEDIA_ROOT, global_music_name)
+                    if os.path.exists(potential_path):
+                        logger.log(f"🎵 Aplicando Música Global (Media): {os.path.basename(global_music_name)}")
+                        bg_audio = AudioFileClip(potential_path)
+                        clips_to_close.append(bg_audio)
+                else:
+                    logger.log(f"⚠️ No se pudo encontrar el archivo de música: {global_music_name}")
+                    bg_audio = None
+                
+                if bg_audio:
+                    # 2. Loop to full duration
                     loops = int(final_video.duration / bg_audio.duration) + 1
                     bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
                     
-                    # Global Volume Defaults
-                    default_vol = script.music_volume if script.music_volume is not None else project.music_volume
-                    if default_vol is None: default_vol = 0.20
+                    # 3. Global Volume Defaults
+                    try:
+                        default_vol = float(script.music_volume) if script.music_volume is not None else float(project.music_volume)
+                    except (TypeError, ValueError):
+                        default_vol = 0.20
                     
-                    # 2. Build Global Intervals & Volume Map
+                    if default_vol <= 0: default_vol = 0.20
+                    
+                    # 4. Build Global Intervals & Volume Map
                     global_voice_intervals = []
                     mute_intervals = []
-                    # block_time_ranges = list of (start, end, volume)
                     block_time_ranges = []
                     
                     current_offset = 0.0
-                    
                     for b_meta in block_metadata:
                         b_dur = b_meta['duration']
                         b_end = current_offset + b_dur
-                        
-                        # Store block volume range
-                        # Fallback to default if block volume is None (though we handled it above)
                         b_vol = b_meta.get('volume', default_vol)
                         block_time_ranges.append((current_offset, b_end, b_vol))
-                        
-                        # Offset local voice intervals to global time
                         for v_start, v_end in b_meta['voice_intervals']:
                             global_voice_intervals.append((v_start + current_offset, v_end + current_offset))
-                        
-                        # If block has local music, we must MUTE global music here
                         if b_meta['has_local_music']:
                             mute_intervals.append((current_offset, b_end))
-                            
                         current_offset += b_dur
 
-                    # 3. Dynamic Ducking (v5.8)
-                    # Optimized for snappy transitions (0.8s release instead of 1.5s)
+                    # 5. Dynamic Ducking (v5.8)
                     peak_vol = default_vol
-                    duck_vol = peak_vol * settings.AUDIO_DUCKING_RATIO
-                    attack_t = 0.2  # Snappier attack
-                    release_t = 0.8 # Snappier release (USER: "detect pauses")
+                    duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
+                    attack_t = 0.2; release_t = 0.8
 
                     logger.log(f"    [Audio] Mezclando música global dinámica ({len(global_voice_intervals)} intervalos de voz)")
 
                     def volume_ducking_global(t):
-                        # v8.6 Robust Global Ducking
-                        # Optimization: pre-calculate factors.
                         if isinstance(t, np.ndarray):
-                            # 1. Determine base volume per sample (Peak Vol dynamic!)
                             base_vols = np.full(t.shape, peak_vol)
                             for b_start, b_end, b_vol in block_time_ranges:
                                 mask = (t >= b_start) & (t <= b_end)
                                 base_vols[mask] = b_vol
                             
-                            # 2. Calculate ducking factor (factors 0.0 to 1.0)
                             factors = np.full(t.shape, 1.0)
-                            duck_ratio = settings.AUDIO_DUCKING_RATIO
-                            
                             for v_start, v_end in global_voice_intervals:
-                                # Duck
                                 factors[(t >= v_start) & (t <= v_end)] = duck_ratio
-                                
-                                # Attack
                                 m_out = (t >= (v_start - attack_t)) & (t < v_start)
                                 if np.any(m_out):
                                     p = (t[m_out] - (v_start - attack_t)) / attack_t
                                     factors[m_out] = np.minimum(factors[m_out], 1.0 - (p * (1.0 - duck_ratio)))
-                                
-                                # Release
                                 m_in = (t > v_end) & (t <= (v_end + release_t))
                                 if np.any(m_in):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
                             
-                            # 3. Global Mute
                             for ms, me in mute_intervals:
                                 factors[(t >= ms) & (t <= me)] = 0.0
-                                
-                            return (base_vols * factors).reshape(-1, 1) if len(t.shape) == 1 else (base_vols * factors)
-                        else:
-                            # Single value logic
-                            # 1. Base Vol
-                            cur_peak = peak_vol
-                            for b_start, b_end, b_vol in block_time_ranges:
-                                if b_start <= t <= b_end:
-                                    cur_peak = b_vol; break
                             
-                            # 2. Factor
+                            # v9.4 Fix: Ensure (N, 1) for stereo broadcasting
+                            return (base_vols * factors)[:, None]
+                        else:
+                            try:
+                                cur_peak = float(peak_vol)
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    if b_start <= t <= b_end:
+                                        cur_peak = float(b_vol); break
+                            except: cur_peak = 0.2
+                            
                             for ms, me in mute_intervals:
                                 if ms <= t <= me: return 0.0
                             
                             factor = 1.0
-                            duck_ratio = settings.AUDIO_DUCKING_RATIO
                             for v_start, v_end in global_voice_intervals:
-                                if v_start <= t <= v_end:
-                                    factor = min(factor, duck_ratio)
+                                if v_start <= t <= v_end: factor = min(factor, duck_ratio)
                                 elif (v_start - attack_t) <= t < v_start:
                                     p = (t - (v_start - attack_t)) / attack_t
                                     factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
                                 elif v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
-                            
-                            return cur_peak * factor
+                            return float(cur_peak * factor)
 
-                    # Apply using fl_audio style transform (v5.8 uses a cleaner approach)
                     bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
-                    
-                    final_audio = CompositeAudioClip([final_video.audio, bg_audio_final])
-                    final_video = final_video.with_audio(final_audio)
+                    final_video = final_video.with_audio(CompositeAudioClip([final_video.audio, bg_audio_final]))
                     
         except Exception as e:
             logger.log(f"[Error] Error procesando música global: {e}")
@@ -856,10 +880,21 @@ def generate_video_avgl(project):
     finally:
         try:
             if 'final_video' in locals() and final_video: final_video.close()
-            for c in block_clips: c.close()
+            # v9.6: Explicit closure of all tracked clips before deletion
+            for c in clips_to_close:
+                try: c.close()
+                except: pass
+            
+            for c in block_clips: 
+                try: c.close()
+                except: pass
+                
             for _, p in audio_files: 
-                if p and os.path.exists(p): os.remove(p)
+                if p and os.path.exists(p): 
+                    try: os.remove(p)
+                    except Exception as e:
+                        logger.log(f"[Cleanup] No se pudo borrar {os.path.basename(p)}: {e}")
         except Exception as e:
-            logger.log(f"[Cleanup] Error durante la limpieza: {e}")
+            logger.log(f"[Cleanup] Error fatal en limpieza: {e}")
         
     return output_path

@@ -1,0 +1,296 @@
+import requests
+import os
+import random
+import asyncio
+import json
+import re
+import time
+from django.conf import settings
+# Lazy imports moved to function level for performance
+from django.utils.text import slugify
+
+
+# ═══════════════════════════════════════════════════════════════════
+# AVGL v4.0 - Data Classes (JSON-based)
+# ═══════════════════════════════════════════════════════════════════
+
+class AVGLAsset:
+    """Represents a visual asset (image/video) with effects"""
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False):
+        self.type = asset_type
+        self.zoom = zoom  # "1.0:1.3"
+        self.move = move  # "HOR:0:100"
+        self.overlay = overlay  # "dust"
+        self.fit = fit  # True = fit, False = cover
+
+
+class AVGLSFX:
+    """Represents a sound effect"""
+    def __init__(self, sfx_type, volume=0.5, offset=0):
+        self.type = sfx_type
+        self.volume = volume
+        self.offset = offset  # Word offset
+
+
+class AVGLScene:
+    """Represents a single scene in the video"""
+    def __init__(self, title):
+        self.title = title
+        self.text = ""
+        self.voice = None
+        self.speed = None
+        self.assets = []  # List of AVGLAsset
+        self.sfx = []  # List of AVGLSFX
+        self.pause = 0.0
+
+
+class AVGLBlock:
+    """Represents a chapter/block in the video"""
+    def __init__(self, title, music=None, volume=0.2):
+        self.title = title
+        self.music = music
+        self.volume = volume
+        self.scenes = []  # List of AVGLScene
+
+
+class AVGLScript:
+    """Represents the complete video script"""
+    def __init__(self, title="Video Sin Título"):
+        self.title = title
+        self.voice = "es-ES-AlvaroNeural"
+        self.speed = 1.0
+        self.style = "neutral"
+        self.blocks = []  # List of AVGLBlock
+    
+    def get_all_scenes(self):
+        """Returns a flat list of all scenes"""
+        scenes = []
+        for block in self.blocks:
+            scenes.extend(block.scenes)
+        return scenes
+
+
+# ═══════════════════════════════════════════════════════════════════
+# AVGL v4.0 - JSON Parser
+# ═══════════════════════════════════════════════════════════════════
+
+def parse_avgl_json(json_text):
+    """
+    Parses AVGL v4.0 JSON format into AVGLScript object.
+    Raises ValueError if JSON is invalid.
+    """
+    try:
+        data = json.loads(json_text)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON inválido en línea {e.lineno}: {e.msg}")
+    
+    # Create script with metadata
+    script = AVGLScript(title=data.get("title", "Video Sin Título"))
+    script.voice = data.get("voice", "es-ES-AlvaroNeural")
+    script.speed = data.get("speed", 1.0)
+    script.style = data.get("style", "neutral")
+    
+    # Parse blocks
+    blocks_data = data.get("blocks", [])
+    if not blocks_data:
+        raise ValueError("El script debe tener al menos un 'block'")
+    
+    for block_data in blocks_data:
+        if not isinstance(block_data, dict):
+            continue
+            
+        block = AVGLBlock(
+            title=block_data.get("title", "Bloque Sin Título"),
+            music=block_data.get("music"),
+            volume=block_data.get("volume", 0.2)
+        )
+        
+        # Parse scenes
+        scenes_data = block_data.get("scenes", [])
+        if not isinstance(scenes_data, list):
+            scenes_data = [scenes_data] # Tolerance
+            
+        for scene_data in scenes_data:
+            if not isinstance(scene_data, dict):
+                continue
+                
+            scene = AVGLScene(title=scene_data.get("title", "Escena Sin Título"))
+            
+            # Support multiple texts (list) or single text (string)
+            raw_text = scene_data.get("text", "")
+            if isinstance(raw_text, list):
+                scene.text = " ".join([str(t) for t in raw_text if t])
+            else:
+                scene.text = str(raw_text)
+                
+            scene.voice = scene_data.get("voice", script.voice)
+            scene.speed = scene_data.get("speed", script.speed)
+            scene.pause = scene_data.get("pause", 0.0)
+            
+            # Parse assets
+            assets_data = scene_data.get("assets", [])
+            # Support single asset provided as string or dict
+            if isinstance(assets_data, (str, dict)):
+                assets_data = [assets_data]
+            
+            for asset_data in assets_data:
+                if isinstance(asset_data, str):
+                    asset = AVGLAsset(asset_type=asset_data)
+                elif isinstance(asset_data, dict):
+                    # Support both 'type' and 'id'
+                    asset_type = asset_data.get("type") or asset_data.get("id")
+                    asset = AVGLAsset(
+                        asset_type=asset_type,
+                        zoom=asset_data.get("zoom"),
+                        move=asset_data.get("move"),
+                        overlay=asset_data.get("overlay"),
+                        fit=asset_data.get("fit", False)
+                    )
+                else:
+                    continue
+                scene.assets.append(asset)
+            
+            # Parse SFX
+            sfx_data = scene_data.get("sfx", [])
+            # Support single SFX as string or dict
+            if isinstance(sfx_data, (str, dict)):
+                sfx_data = [sfx_data]
+                
+            for sfx_item in sfx_data:
+                if isinstance(sfx_item, str):
+                    sfx = AVGLSFX(sfx_type=sfx_item)
+                elif isinstance(sfx_item, dict):
+                    # Support both 'type' and 'id'
+                    sfx_type = sfx_item.get("type") or sfx_item.get("id")
+                    sfx = AVGLSFX(
+                        sfx_type=sfx_type,
+                        volume=sfx_item.get("volume", 0.5),
+                        offset=sfx_item.get("offset", 0)
+                    )
+                else:
+                    continue
+                scene.sfx.append(sfx)
+            
+            block.scenes.append(scene)
+        
+        script.blocks.append(block)
+    
+    return script
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Emotion Translator (SSML for Edge TTS)
+# ═══════════════════════════════════════════════════════════════════
+
+def translate_emotions(text, use_ssml=True):
+    """
+    Translates custom emotion tags like [TENSO] into SSML or clean text.
+    If use_ssml=False, it strips tags and uses ellipsis for pauses to prevent
+    Edge TTS from reading instructions aloud.
+    """
+    emotions = {
+        'TENSO': {'pitch': '-10Hz', 'rate': '-15%'},
+        'EPICO': {'pitch': '+5Hz', 'rate': '+10%', 'volume': '+15%'},
+        'SUSPENSO': {'pitch': '-5Hz', 'rate': '-25%'},
+        'GRITANDO': {'pitch': '+15Hz', 'rate': '+20%', 'volume': 'loud'},
+        'SUSURRO': {'pitch': '-12Hz', 'rate': '-20%', 'volume': '-30%'},
+    }
+    
+    import xml.sax.saxutils as saxutils
+    
+    if not use_ssml:
+        # CLEAN MODE: Strip all tags and replace [PAUSA] with ...
+        clean_text = text
+        for tag in emotions.keys():
+            clean_text = re.sub(rf'\[{tag}\](.*?)\[/{tag}\]', r'\1', clean_text, flags=re.IGNORECASE | re.DOTALL)
+        # Replace [PAUSA:X.X] with ...
+        clean_text = re.sub(r'\[PAUSA:[\d\.]+\]', '...', clean_text, flags=re.IGNORECASE)
+        return clean_text
+
+    # SSML MODE:
+    processed_text = saxutils.escape(text)
+    
+    for tag, attrs in emotions.items():
+        pattern = rf'\[{tag}\](.*?)\[/{tag}\]'
+        attr_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
+        replacement = rf'<prosody {attr_str}>\1</prosody>'
+        processed_text = re.sub(pattern, replacement, processed_text, flags=re.IGNORECASE | re.DOTALL)
+    
+    # Process [PAUSA:X.X] -> <break time="X.Xs"/>
+    processed_text = re.sub(r'\[PAUSA:([\d\.]+)\]', r'<break time="\1s"/>', processed_text, flags=re.IGNORECASE)
+    
+    return processed_text
+
+
+def wrap_ssml(text, voice, speed="+0%"):
+    """
+    Wraps text in SSML tags if necessary.
+    CRITICAL FIX: Use full SSML header to ensure Edge TTS correctly identifies it as markup.
+    """
+    if '<prosody' in text or '<break' in text:
+        content = text
+        if speed != "+0%":
+            content = f'<prosody rate="{speed}">{text}</prosody>'
+            
+        # Robust header for Edge TTS
+        return (
+            f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
+            f'xml:lang="es-ES"><voice name="{voice}">{content}</voice></speak>'
+        )
+    return text
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Audio Generation (Edge TTS & ElevenLabs)
+# ═══════════════════════════════════════════════════════════════════
+
+async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rate="+0%"):
+    """
+    Generate audio using Edge TTS.
+    NOTE: SSML support in Edge TTS is currently unstable (bloats or leaks).
+    We use a clean mode to ensure reliability.
+    """
+    import edge_tts
+    import re
+    try:
+        # If it's SSML, we strip it and use the plain text parameters
+        # to avoid the service reading "prosody" or bloating to 30s.
+        if text.strip().startswith('<speak'):
+            # 1. Strip all XML tags
+            clean_text = re.sub(r'<[^>]+>', '', text)
+            # 2. Heuristic: replace multiple spaces with single space
+            clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+            # 3. Use plain communication
+            communicate = edge_tts.Communicate(clean_text, voice, rate=rate)
+        else:
+            communicate = edge_tts.Communicate(text, voice, rate=rate)
+        
+        await communicate.save(output_path)
+        return True
+    except Exception as e:
+        print(f"Error in generate_audio_edge: {e}")
+        return False
+
+
+async def generate_audio_elevenlabs(text, output_path, voice_id, api_key):
+    """Generate audio using ElevenLabs (does NOT support SSML)"""
+    from elevenlabs.client import ElevenLabs
+    from elevenlabs import save
+    try:
+        # ElevenLabs doesn't understand SSML, so strip all XML tags
+        clean_text = re.sub(r'<[^>]+>', '', text)
+        clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()
+        
+        client = ElevenLabs(api_key=api_key)
+        audio_gen = client.text_to_speech.convert(
+            text=clean_text,
+            voice_id=voice_id,
+            model_id="eleven_multilingual_v2"
+        )
+        save(audio_gen, output_path)
+        return True
+    except Exception as e:
+        print(f"Error in generate_audio_elevenlabs: {e}")
+        return False
+
+

@@ -144,7 +144,7 @@ YOUTUBE_FIXED_HASHTAGS = os.getenv(
 )
 
 # Audio Ducking Parameters (v6.5 - High Intensity Optimized)
-AUDIO_DUCKING_RATIO = float(os.getenv('AUDIO_DUCKING_RATIO', 0.12))
+AUDIO_DUCKING_RATIO = float(os.getenv('AUDIO_DUCKING_RATIO', 0.25))
 AUDIO_ATTACK_TIME = float(os.getenv('AUDIO_ATTACK_TIME', 0.15))
 AUDIO_RELEASE_TIME = float(os.getenv('AUDIO_RELEASE_TIME', 0.4))
 

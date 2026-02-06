@@ -120,123 +120,41 @@
                             <div
                                 class="mb-10 border border-gray-700 rounded-xl bg-gray-900/40 overflow-hidden relative group hover:border-gray-600 transition-all shadow-lg">
 
-                                <!-- Block Header (Visual Card) -->
+                                <!-- Block Header -->
                                 <div
-                                    class="bg-gradient-to-r from-gray-850 to-gray-900 p-4 border-b border-gray-700 flex gap-4 ring-1 ring-inset ring-white/5">
-
-                                    <!-- Master Asset Thumbnail (Block Level) -->
-                                    <div class="w-28 aspect-video bg-black rounded-lg overflow-hidden relative border border-gray-600 shadow-xl flex-shrink-0 group/block-poster cursor-pointer"
-                                        @click="openBlockSettings(bIndex)">
-                                        <template x-if="block.master_asset">
-                                            <div class="w-full h-full relative">
-                                                <img :src="getAssetPath(block.master_asset)"
-                                                    class="w-full h-full object-cover opacity-90 transition group-hover/block-poster:scale-105"
-                                                    onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
-
-                                                <div
-                                                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
-                                                </div>
-
-                                                <!-- Badges -->
-                                                <div
-                                                    class="absolute bottom-1 right-1 flex flex-wrap justify-end gap-1 pointer-events-none">
-                                                    <span
-                                                        class="bg-blue-600 text-[7px] px-1 rounded text-white font-black uppercase tracking-widest shadow-lg">BLOCK
-                                                        MASTER</span>
-                                                    <span x-show="block.zoom"
-                                                        class="bg-cyan-600/90 text-[7px] px-1 rounded text-white font-mono"
-                                                        x-text="'ZM ' + block.zoom"></span>
-                                                    <span x-show="block.overlay"
-                                                        class="bg-purple-600/90 text-[7px] px-1 rounded text-white font-mono"
-                                                        x-text="block.overlay"></span>
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <template x-if="!block.master_asset">
-                                            <div
-                                                class="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800/40 hover:bg-gray-800/60 transition">
-                                                <span class="text-xl">📺</span>
-                                                <span class="text-[7px] font-bold uppercase mt-1 tracking-tighter">Sin
-                                                    Fondo Global</span>
-                                            </div>
-                                        </template>
-
-                                        <!-- Quick Edit Overlay -->
-                                        <div
-                                            class="absolute inset-0 bg-blue-600/20 opacity-0 group-hover/block-poster:opacity-100 transition-opacity flex items-center justify-center">
-                                            <div class="bg-black/80 rounded-full p-2 border border-white/20">
-                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                                    </path>
-                                                </svg>
-                                            </div>
-                                        </div>
+                                    class="bg-gradient-to-r from-gray-800 to-gray-900 px-5 py-3 flex justify-between items-center border-b border-gray-700 group-hover:border-gray-600">
+                                    <div class="flex items-center gap-3 flex-1">
+                                        <span
+                                            class="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
+                                            Bloque <span x-text="bIndex + 1"></span>
+                                        </span>
+                                        <input type="text" x-model="block.title"
+                                            class="bg-transparent border-none text-base font-bold text-gray-200 focus:ring-0 p-0 placeholder-gray-600 focus:text-white transition w-full"
+                                            placeholder="Título del Bloque (Ej: Intro)">
                                     </div>
-
-                                    <!-- Block Info & Actions -->
-                                    <div class="flex-1 flex flex-col justify-center min-w-0">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <div class="flex items-center gap-3 flex-1 min-w-0">
-                                                <span
-                                                    class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] bg-blue-500/10 px-2 py-1 rounded-sm border border-blue-500/20 shrink-0">
-                                                    BLOQUE <span x-text="bIndex + 1"></span>
-                                                </span>
-                                                <input type="text" x-model="block.title"
-                                                    class="bg-transparent border-none text-lg font-black text-gray-100 focus:ring-0 p-0 placeholder-gray-700 focus:text-white transition w-full truncate"
-                                                    placeholder="Título del Bloque...">
-                                            </div>
-
-                                            <div class="flex items-center gap-1 shrink-0 ml-4">
-                                                <button @click="openBlockSettings(bIndex)"
-                                                    class="text-gray-500 hover:text-blue-400 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
-                                                    title="Configuración Maestra">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                                        </path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    @click="if(confirm('¿Eliminar bloque completo?')) script.blocks.splice(bIndex, 1)"
-                                                    class="text-gray-500 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 transition-colors">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 text-[10px] text-gray-500 font-mono">
-                                            <div class="flex items-center gap-1 text-emerald-400/80"
-                                                x-show="block.music">
-                                                <span>🎵</span>
-                                                <span class="truncate max-w-[150px]" x-text="block.music"></span>
-                                                <span x-text="'('+(block.volume*100).toFixed(0)+'%)'"></span>
-                                            </div>
-                                            <div class="flex items-center gap-1" x-show="block.voice">
-                                                <span>🗣️</span>
-                                                <span x-text="block.voice"></span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-gray-700">|</span>
-                                                <span
-                                                    x-text="(block.scenes ? block.scenes.length : 0) + ' Escenas Estándar'"></span>
-                                                <span
-                                                    x-text="(block.groups ? block.groups.length : 0) + ' Grupos'"></span>
-                                            </div>
-                                        </div>
+                                    <div class="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition">
+                                        <!-- Block Settings Button -->
+                                        <button @click="openBlockSettings(bIndex)"
+                                            class="text-gray-500 hover:text-blue-400 p-2 rounded hover:bg-blue-500/10 transition"
+                                            title="Configuración del Bloque">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                                </path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="if(confirm('¿Eliminar bloque?')) script.blocks.splice(bIndex, 1)"
+                                            class="text-gray-500 hover:text-red-500 p-2 rounded hover:bg-red-500/10 transition"
+                                            title="Eliminar Bloque">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -261,25 +179,30 @@
                                                     <!-- Visual Preview -->
                                                     <div
                                                         class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                        <template x-if="isVideo(scene.assets?.[0])">
-                                                            <div
-                                                                class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-600">
-                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
-                                                                    </path>
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                                </svg>
+                                                        <template x-if="scene.assets?.[0]">
+                                                            <div class="w-full h-full relative">
+                                                                <img :src="getAssetPath(scene.assets[0])"
+                                                                    class="w-full h-full object-cover opacity-80 transition hover:scale-110"
+                                                                    onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+
+                                                                <!-- Video Overlay Icon -->
+                                                                <template x-if="isAssetVideo(scene.assets[0])">
+                                                                    <div
+                                                                        class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
+                                                                        <svg class="w-4 h-4 text-white opacity-70"
+                                                                            fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path
+                                                                                d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.333-5.89a1.5 1.5 0 000-2.538L6.3 2.841z" />
+                                                                        </svg>
+                                                                    </div>
+                                                                </template>
                                                             </div>
                                                         </template>
-                                                        <template
-                                                            x-if="scene.assets?.[0] && !isVideo(scene.assets?.[0])">
-                                                            <img :src="getAssetPath(scene.assets[0])"
-                                                                class="w-full h-full object-cover opacity-60">
+                                                        <template x-if="!scene.assets?.[0]">
+                                                            <div
+                                                                class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
+                                                                <span class="text-xs">📺</span>
+                                                            </div>
                                                         </template>
 
                                                         <!-- Badges -->
@@ -475,26 +398,31 @@
                                                         <div class="flex-grow min-w-0 grid grid-cols-12 gap-4">
                                                             <div
                                                                 class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                                <template x-if="isVideo(scene.assets?.[0])">
-                                                                    <div
-                                                                        class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-600">
-                                                                        <svg class="w-5 h-5" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
-                                                                            </path>
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                                                            </path>
-                                                                        </svg>
+                                                                <template x-if="scene.assets?.[0]">
+                                                                    <div class="w-full h-full relative">
+                                                                        <img :src="getAssetPath(scene.assets[0])"
+                                                                            class="w-full h-full object-cover opacity-80"
+                                                                            onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+
+                                                                        <!-- Video Overlay Icon -->
+                                                                        <template x-if="isAssetVideo(scene.assets[0])">
+                                                                            <div
+                                                                                class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
+                                                                                <svg class="w-4 h-4 text-white opacity-70"
+                                                                                    fill="currentColor"
+                                                                                    viewBox="0 0 20 20">
+                                                                                    <path
+                                                                                        d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.333-5.89a1.5 1.5 0 000-2.538L6.3 2.841z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                        </template>
                                                                     </div>
                                                                 </template>
-                                                                <template
-                                                                    x-if="scene.assets?.[0] && !isVideo(scene.assets?.[0])">
-                                                                    <img :src="getAssetPath(scene.assets[0])"
-                                                                        class="w-full h-full object-cover opacity-60">
+                                                                <template x-if="!scene.assets?.[0]">
+                                                                    <div
+                                                                        class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
+                                                                        <span class="text-[8px]">📺</span>
+                                                                    </div>
                                                                 </template>
                                                                 <div
                                                                     class="absolute bottom-0 right-0 p-0.5 flex flex-wrap justify-end gap-0.5 pointer-events-none max-w-full">
@@ -1183,53 +1111,6 @@
                     </div>
                 </div>
 
-                <!-- Master Asset + Visuals (Block Level) -->
-                <div class="bg-gray-800/50 p-3 rounded border border-gray-700">
-                    <label class="block text-xs uppercase text-blue-400 font-bold mb-2">Visuales (Maestro del
-                        Bloque)</label>
-
-                    <!-- Asset -->
-                    <div class="mb-3">
-                        <label class="text-[10px] text-gray-400 block mb-1">Imagen/Video Base del Bloque</label>
-                        <div class="flex gap-1">
-                            <input type="text" x-model="blockForm.master_asset"
-                                class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white font-mono text-xs text-yellow-300"
-                                placeholder="Ruta del archivo...">
-                            <button @click="browseBlockAsset()"
-                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 rounded"
-                                title="Buscar Asset">📂</button>
-                        </div>
-                    </div>
-
-                    <!-- Visual Effects Grid -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[10px] text-gray-400 block">Efecto / Overlay</label>
-                            <select x-model="blockForm.overlay"
-                                class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-white">
-                                <option value="">Original</option>
-                                <option value="dust">Dust (Polvo)</option>
-                                <option value="grain">Film Grain</option>
-                                <option value="scratches">Old Film</option>
-                                <option value="cinematic">Cinematic</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2 mt-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" x-model="blockForm.fit"
-                                    class="rounded bg-gray-900 border-gray-600">
-                                <span class="text-xs text-gray-300">Fit (No Recortar)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Zoom -->
-                    <div class="mt-3">
-                        <label class="text-[10px] text-gray-400 block">Zoom (Start:End)</label>
-                        <input type="text" x-model="blockForm.zoom" placeholder="1.0:1.1"
-                            class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-center font-mono text-white">
-                    </div>
-                </div>
 
                 <!-- Audio Settings (Block Override) -->
                 <div>
@@ -1493,17 +1374,18 @@
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
                 },
 
-                isVideo(asset) {
-                    if (!asset) return false;
-                    let path = typeof asset === 'string' ? asset : (asset.id || asset.type || '');
+                isAssetVideo(path) {
+                    if (typeof path === 'object' && path !== null) {
+                        path = path.id || path.type || '';
+                    }
                     if (typeof path !== 'string') return false;
                     const ext = path.split('.').pop().toLowerCase();
                     return ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext);
                 },
 
                 // Getter para el panel de edición (usa formData.asset_type)
-                get isVideo() {
-                    return this.isVideo(this.formData.asset_type);
+                get isVideoForm() {
+                    return this.isAssetVideo(this.formData.asset_type);
                 },
 
                 getAssetPath(asset) {
@@ -1615,7 +1497,7 @@
                             } catch (e) { }
                         }
 
-                        // Sync Project Settings from Script JSON (v9.0 Fix)
+                        // Sync Project Settings from Script JSON / Backend Injection (v9.1 Fix)
                         if (data.settings) {
                             if (data.settings.title) this.projectSettings.title = data.settings.title;
                             if (data.settings.background_music) this.projectSettings.background_music = data.settings.background_music;
@@ -1623,7 +1505,16 @@
                             if (data.settings.voice_id) this.projectSettings.voice_id = data.settings.voice_id;
                             if (data.settings.aspect_ratio) this.projectSettings.aspect_ratio = data.settings.aspect_ratio;
                             if (data.settings.render_mode) this.projectSettings.render_mode = data.settings.render_mode;
+                            if (data.settings.music_volume_lock !== undefined) this.projectSettings.music_volume_lock = data.settings.music_volume_lock;
+                            if (data.settings.auto_upload !== undefined) this.projectSettings.auto_upload = data.settings.auto_upload;
+
+                            // Support for old key names
+                            if (data.settings.voice) this.projectSettings.voice_id = data.settings.voice;
                         }
+
+                        // Fallback root sync
+                        if (!this.projectSettings.background_music && data.background_music) this.projectSettings.background_music = data.background_music;
+                        if (!this.projectSettings.voice_id && data.voice) this.projectSettings.voice_id = data.voice;
 
                         if (this.script.music_volume_lock !== undefined) {
                             this.projectSettings.music_volume_lock = this.script.music_volume_lock;
@@ -1641,7 +1532,7 @@
                     let sign = this.voiceSpeedNum >= 0 ? '+' : '';
                     this.projectSettings.voice_speed = `${sign}${this.voiceSpeedNum}%`;
 
-                    // CRITICAL FIX: Merge settings into the script object to ensure Root Structure is valid
+                    // CRITICAL FIX: Merge settings into the script object to ensure Root Structure is valid (v9.1)
                     this.script.voice_speed = this.projectSettings.voice_speed;
                     this.script.title = this.projectSettings.title;
                     this.script.music_volume = parseFloat(this.projectSettings.music_volume);
@@ -1650,6 +1541,11 @@
                     this.script.aspect_ratio = this.projectSettings.aspect_ratio;
                     this.script.render_mode = this.projectSettings.render_mode;
                     this.script.music_volume_lock = this.projectSettings.music_volume_lock;
+                    this.script.auto_upload = this.projectSettings.auto_upload;
+
+                    // Also maintain a persistent settings object inside the script
+                    if (!this.script.settings) this.script.settings = {};
+                    Object.assign(this.script.settings, this.projectSettings);
 
                     // Payload
                     const payload = {
@@ -1761,10 +1657,6 @@
                         title: block.title || '',
                         music: block.music || '',
                         volume: block.volume !== undefined ? block.volume : 0.2,
-                        master_asset: block.master_asset || '',
-                        overlay: block.overlay || '',
-                        fit: block.fit || false,
-                        zoom: block.zoom || '',
                         voice: block.voice || '',
                         voice_speed: block.voice_speed || ''
                     };
@@ -1776,10 +1668,6 @@
                     block.title = this.blockForm.title;
                     block.music = this.blockForm.music || null;
                     block.volume = parseFloat(this.blockForm.volume);
-                    block.master_asset = this.blockForm.master_asset || null;
-                    block.overlay = this.blockForm.overlay || null;
-                    block.fit = this.blockForm.fit || false;
-                    block.zoom = this.blockForm.zoom || null;
 
                     // Audio Override
                     block.voice = this.blockForm.voice || null;

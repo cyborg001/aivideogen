@@ -216,7 +216,7 @@ def parse_avgl_json(json_text):
     script.speed = parse_speed(data.get("speed") or data.get("voice_speed"))
     script.style = data.get("style", "neutral")
     script.background_music = data.get("background_music")
-    script.music_volume = data.get("music_volume", 0.18)
+    script.music_volume = float(data.get("music_volume", 0.18))
     # v7.5 Metadata
     script.fuentes = data.get("fuentes", "")
     script.tags = data.get("tags", "")
@@ -233,32 +233,8 @@ def parse_avgl_json(json_text):
         block.voice = block_data.get("voice")
         block.voice_speed = parse_speed(block_data.get("voice_speed")) if block_data.get("voice_speed") else None
         
-        # Block-level Master Asset Inheritance
-        block_master_asset = block_data.get("master_asset")
-        
-        # 1. Process Standard Scenes with Inheritance
-        scenes_to_process = []
         for s_data in block_data.get("scenes", []):
-            s_clone = s_data.copy()
-            if block_master_asset and not s_clone.get("assets"):
-                s_clone["assets"] = [block_master_asset]
-            scenes_to_process.append(s_clone)
-            
-        # 2. Process Groups with Inheritance (Flattening)
-        for group in block_data.get("groups", []):
-            master_asset = group.get("master_asset") or block_master_asset
-            for s_data in group.get("scenes", []):
-                s_clone = s_data.copy()
-                if master_asset and not s_clone.get("assets"):
-                    s_clone["assets"] = [master_asset]
-                s_clone["_group_id"] = f"g_{id(group)}"
-                s_clone["_group_settings"] = group
-                scenes_to_process.append(s_clone)
-        
-        for s_data in scenes_to_process:
             scene = AVGLScene(title=s_data.get("title", "Escena"))
-            scene.group_id = s_data.get("_group_id")
-            scene.group_settings = s_data.get("_group_settings")
             scene.text = str(s_data.get("text") or s_data.get("voice") or "")
             scene.voice = s_data.get("voice") or script.voice
             scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed
@@ -280,6 +256,42 @@ def parse_avgl_json(json_text):
                 else: scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), sfx_data.get("volume", 0.5), sfx_data.get("offset", 0)))
             
             block.scenes.append(scene)
+
+        for group in block_data.get("groups", []):
+            master_asset = group.get("master_asset")
+            group_id = f"g_{id(group)}"
+            
+            for s_data in group.get("scenes", []):
+                scene = AVGLScene(title=s_data.get("title", "Escena"))
+                scene.group_id = group_id
+                scene.group_settings = group
+                scene.text = str(s_data.get("text") or s_data.get("voice") or "")
+                scene.voice = s_data.get("voice") or script.voice
+                scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed
+                scene.pitch = s_data.get("pitch")
+                scene.pause = s_data.get("pause", 0.0)
+                scene.subtitle = s_data.get("subtitle", "")
+                scene.audio = s_data.get("audio")
+                
+                clean_txt, extracted_subs = extract_subtitles_v35(scene.text)
+                scene.text = clean_txt
+                scene.subtitles = extracted_subs or s_data.get("subtitles", [])
+
+                # Inheritance from Group Master Asset
+                assets_to_use = s_data.get("assets", [])
+                if not assets_to_use and master_asset:
+                    assets_to_use = [master_asset]
+                
+                for a_data in assets_to_use:
+                    if isinstance(a_data, str): scene.assets.append(AVGLAsset(a_data))
+                    else: scene.assets.append(AVGLAsset(a_data.get("id") or a_data.get("type"), a_data.get("zoom"), a_data.get("move"), a_data.get("overlay"), a_data.get("fit", False)))
+
+                for sfx_data in s_data.get("sfx", []):
+                    if isinstance(sfx_data, str): scene.sfx.append(AVGLSFX(sfx_data))
+                    else: scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), sfx_data.get("volume", 0.5), sfx_data.get("offset", 0)))
+                
+                block.scenes.append(scene)
+
         script.blocks.append(block)
     return script
 

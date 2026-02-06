@@ -767,6 +767,24 @@ def get_project_script_json(request, project_id):
             for scene in group.get('scenes', []):
                 repair_scene_assets(scene)
     
+    # --- SYNC PROJECT SETTINGS ---
+    # Inject current project settings into the JSON so the editor starts with the "Truth"
+    data['settings'] = {
+        'title': project.title,
+        'background_music': project.background_music.file.name if project.background_music and project.background_music.file else (project.background_music.name if project.background_music else ""),
+        'music_volume': project.music_volume,
+        'voice_id': project.voice_id,
+        'aspect_ratio': project.aspect_ratio,
+        'render_mode': project.render_mode,
+        'music_volume_lock': project.music_volume_lock,
+        'auto_upload': project.auto_upload_youtube
+    }
+    
+    # Also sync root-level if missing (redundancy)
+    if not data.get('title'): data['title'] = project.title
+    if not data.get('voice'): data['voice'] = project.voice_id
+    if not data.get('background_music'): data['background_music'] = data['settings']['background_music']
+
     if repaired:
         project.script_text = json.dumps(data, indent=4, ensure_ascii=False)
         project.save(update_fields=['script_text'])
@@ -795,6 +813,23 @@ def save_project_script_json(request, project_id):
         if 'settings' in data:
             settings_data = data['settings']
             
+            # Sync settings into the script JSON for redundancy (v9.1)
+            # This ensures that even if we lose the DB link, the JSON carries its own metadata
+            if isinstance(script_data, dict):
+                if 'settings' not in script_data: script_data['settings'] = {}
+                script_data['settings'].update(settings_data)
+                
+                # Also root-level redundancy for legacy compatibility
+                if 'title' in settings_data: script_data['title'] = settings_data['title']
+                if 'voice_id' in settings_data: script_data['voice'] = settings_data['voice_id']
+                if 'background_music' in settings_data: script_data['background_music'] = settings_data['background_music']
+                if 'music_volume' in settings_data: script_data['music_volume'] = settings_data['music_volume']
+                if 'voice_speed' in settings_data: script_data['voice_speed'] = settings_data['voice_speed']
+                if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
+
+            # Re-serialize with the new merged settings
+            project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
+
             if 'title' in settings_data:
                 project.title = settings_data['title']
                 
@@ -820,16 +855,16 @@ def save_project_script_json(request, project_id):
                      bg_music_alt = bg_music_input.replace('/', '\\')
                      bg_music_alt2 = bg_music_input.replace('\\', '/')
                      
+                     # Improved search: exact file path or exact name
                      m = Music.objects.filter(file__iexact=bg_music_input).first() or \
                          Music.objects.filter(file__iexact=bg_music_alt).first() or \
                          Music.objects.filter(file__iexact=bg_music_alt2).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
+                         Music.objects.filter(name__iexact=bg_music_input).first() or \
                          Music.objects.filter(file__icontains=bg_music_name).first()
                      
                      if m: 
                          project.background_music = m
-                         # Sync back normalized path or name to JSON if needed
-                         # settings_data['background_music'] = m.file.name if m.file else m.name
                          logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
                      else:
                          logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")
