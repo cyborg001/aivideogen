@@ -25,24 +25,29 @@ def sync_music():
     count_updated = 0
 
     for filename in files:
-        relative_path = os.path.join('music', filename)
         name = filename # Use filename as name
         
-        # Check if already exists by file path
-        music, created = Music.objects.get_or_create(
-            file=relative_path,
-            defaults={'name': name}
-        )
+        # Robust check Layer 1: Does this exact path exist in DB?
+        # Robust check Layer 2: Is there any entry where the filename is the same?
+        # Robust check Layer 3: Is there any entry where name (stored label) is the same?
         
-        if created:
+        existing = Music.objects.filter(file__icontains=filename).first() or \
+                   Music.objects.filter(name__iexact=name).first()
+        
+        if not existing:
+            relative_path = os.path.join('music', filename)
+            Music.objects.create(
+                file=relative_path,
+                name=name
+            )
             count_created += 1
             print(f"Created: {name}")
         else:
             count_updated += 1
             # Ensure name matches filename if it was different
-            if music.name != name:
-                music.name = name
-                music.save()
+            if existing.name != name:
+                existing.name = name
+                existing.save()
 
     print(f"Sync complete. Created {count_created}, Updated {count_updated}.")
 

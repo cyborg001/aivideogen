@@ -716,19 +716,60 @@ def get_project_script_json(request, project_id):
     
     # --- AUTO-REPAIR ASSETS ---
     repaired = False
-    for block in data.get('blocks', []):
-        for scene in block.get('scenes', []):
-            for asset in scene.get('assets', []):
+    
+    def repair_scene_assets(scene):
+        nonlocal repaired
+        if 'assets' in scene:
+            new_assets = []
+            for asset in scene['assets']:
+                # Case 0: Asset is just a string (ID or Path)
+                if isinstance(asset, str):
+                    is_video = asset.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))
+                    new_assets.append({
+                        'id': asset,
+                        'type': 'video' if is_video else 'image'
+                    })
+                    repaired = True
+                    continue
+                
                 # Case 1: ID is missing, but TYPE contains the filename (Legacy Bug)
                 if not asset.get('id') and asset.get('type') and '.' in asset['type']:
                     asset['id'] = asset['type']
-                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi')) else 'image'
+                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi', '.webm')) else 'image'
                     repaired = True
                 # Case 2: Both present but ID is generic while TYPE has filename
                 elif asset.get('id') in ['image', 'video'] and asset.get('type') and '.' in asset['type']:
                     asset['id'] = asset['type']
-                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi')) else 'image'
+                    asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi', '.webm')) else 'image'
                     repaired = True
+                new_assets.append(asset)
+            scene['assets'] = new_assets
+
+    for block in data.get('blocks', []):
+        # 1. Repair scenes at block level
+        for scene in block.get('scenes', []):
+            repair_scene_assets(scene)
+            
+        # 2. Repair groups and their nested scenes
+        for group in block.get('groups', []):
+            # Repair master_asset if string
+            if 'master_asset' in group and isinstance(group['master_asset'], str):
+                m_asset = group['master_asset']
+                if m_asset.strip():
+                    is_video = m_asset.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))
+                    group['master_asset'] = {
+                        'id': m_asset,
+                        'type': 'video' if is_video else 'image'
+                    }
+                    repaired = True
+            
+            # Repair scenes inside group
+            for scene in group.get('scenes', []):
+                repair_scene_assets(scene)
+    
+    if repaired:
+        project.script_text = json.dumps(data, indent=4, ensure_ascii=False)
+        project.save(update_fields=['script_text'])
     
     return JsonResponse(data, safe=False)
 
@@ -787,6 +828,8 @@ def save_project_script_json(request, project_id):
                      
                      if m: 
                          project.background_music = m
+                         # Sync back normalized path or name to JSON if needed
+                         # settings_data['background_music'] = m.file.name if m.file else m.name
                          logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
                      else:
                          logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")

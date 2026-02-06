@@ -233,10 +233,20 @@ def parse_avgl_json(json_text):
         block.voice = block_data.get("voice")
         block.voice_speed = parse_speed(block_data.get("voice_speed")) if block_data.get("voice_speed") else None
         
-        # Flatten Groups
-        scenes_to_process = block_data.get("scenes", []).copy()
+        # Block-level Master Asset Inheritance
+        block_master_asset = block_data.get("master_asset")
+        
+        # 1. Process Standard Scenes with Inheritance
+        scenes_to_process = []
+        for s_data in block_data.get("scenes", []):
+            s_clone = s_data.copy()
+            if block_master_asset and not s_clone.get("assets"):
+                s_clone["assets"] = [block_master_asset]
+            scenes_to_process.append(s_clone)
+            
+        # 2. Process Groups with Inheritance (Flattening)
         for group in block_data.get("groups", []):
-            master_asset = group.get("master_asset")
+            master_asset = group.get("master_asset") or block_master_asset
             for s_data in group.get("scenes", []):
                 s_clone = s_data.copy()
                 if master_asset and not s_clone.get("assets"):
