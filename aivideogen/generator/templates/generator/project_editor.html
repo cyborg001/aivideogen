@@ -10,6 +10,8 @@
     <script src="{% static 'generator/js/tailwind.min.js' %}"></script>
     <!-- Alpine.js (Localized for Offline Mode) -->
     <script defer src="{% static 'generator/js/alpine.min.js' %}"></script>
+    <!-- SortableJS for Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         [x-cloak] {
             display: none !important;
@@ -115,8 +117,8 @@
             <div class="flex-1 overflow-y-auto p-4 space-y-8 pb-20">
 
                 <template x-if="script.blocks">
-                    <div>
-                        <template x-for="(block, bIndex) in script.blocks" :key="bIndex">
+                    <div id="blocks-container" x-init="setupSortable($el, null, 'blocks')">
+                        <template x-for="(block, bIndex) in script.blocks" :key="block._uId || bIndex">
                             <div
                                 class="mb-10 border border-gray-700 rounded-xl bg-gray-900/40 overflow-hidden relative group hover:border-gray-600 transition-all shadow-lg">
 
@@ -124,6 +126,9 @@
                                 <div
                                     class="bg-gradient-to-r from-gray-800 to-gray-900 px-5 py-3 flex justify-between items-center border-b border-gray-700 group-hover:border-gray-600">
                                     <div class="flex items-center gap-3 flex-1">
+                                        <div
+                                            class="cursor-move text-gray-600 hover:text-gray-400 pr-2 border-r border-gray-700 font-bold">
+                                            :::</div>
                                         <span
                                             class="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
                                             Bloque <span x-text="bIndex + 1"></span>
@@ -160,8 +165,9 @@
 
                                 <!-- Scenes Grid -->
                                 <div class="p-4 bg-gray-900/20">
-                                    <div class="space-y-3">
-                                        <template x-for="(scene, sIndex) in block.scenes" :key="sIndex">
+                                    <div class="space-y-3 scenes-container"
+                                        x-init="setupSortable($el, bIndex, 'scenes')">
+                                        <template x-for="(scene, sIndex) in block.scenes" :key="scene._uId || sIndex">
                                             <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer"
                                                 @click="openModal(bIndex, sIndex)">
 
@@ -382,8 +388,10 @@
                                                 </div>
                                             </div>
 
-                                            <div class="p-3 space-y-2">
-                                                <template x-for="(scene, sIndex) in group.scenes" :key="'gs'+sIndex">
+                                            <div class="p-3 space-y-2 group-scenes-container"
+                                                x-init="setupSortable($el, bIndex, 'group-scenes', gIndex)">
+                                                <template x-for="(scene, sIndex) in group.scenes"
+                                                    :key="scene._uId || sIndex">
                                                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer"
                                                         @click.stop="openModal(bIndex, sIndex, gIndex)">
 
@@ -1434,12 +1442,75 @@
                     }
                 },
 
+                setupSortable(el, bIndex, type, gIndex = null) {
+                    if (typeof Sortable === 'undefined') {
+                        console.warn("SortableJS not loaded yet, retrying...");
+                        setTimeout(() => this.setupSortable(el, bIndex, type, gIndex), 500);
+                        return;
+                    }
+
+                    const options = {
+                        animation: 150,
+                        handle: '.cursor-move',
+                        ghostClass: 'bg-blue-600/20',
+                        onEnd: (evt) => {
+                            const { oldIndex, newIndex, item, from } = evt;
+                            if (oldIndex === newIndex) return;
+
+                            // Revert Sortable DOM move - let Alpine handle it reactively
+                            from.insertBefore(item, from.children[oldIndex > newIndex ? oldIndex + 1 : oldIndex]);
+
+                            this.$nextTick(() => {
+                                if (type === 'blocks') {
+                                    const list = [...this.script.blocks];
+                                    const block = list.splice(oldIndex, 1)[0];
+                                    list.splice(newIndex, 0, block);
+                                    this.script.blocks = list;
+                                } else if (type === 'scenes') {
+                                    const list = [...this.script.blocks[bIndex].scenes];
+                                    const scene = list.splice(oldIndex, 1)[0];
+                                    list.splice(newIndex, 0, scene);
+                                    this.script.blocks[bIndex].scenes = list;
+                                } else if (type === 'group-scenes') {
+                                    const list = [...this.script.blocks[bIndex].groups[gIndex].scenes];
+                                    const scene = list.splice(oldIndex, 1)[0];
+                                    list.splice(newIndex, 0, scene);
+                                    this.script.blocks[bIndex].groups[gIndex].scenes = list;
+                                }
+                                this.saveScript(true);
+                            });
+                        }
+                    };
+
+                    new Sortable(el, options);
+                },
+
+                sanitizeScript(data) {
+                    if (!data.blocks) data.blocks = [];
+                    data.blocks.forEach(block => {
+                        if (!block._uId) block._uId = 'b' + Math.random().toString(36).substr(2, 9);
+                        if (!block.scenes) block.scenes = [];
+                        block.scenes.forEach(scene => {
+                            if (!scene._uId) scene._uId = 's' + Math.random().toString(36).substr(2, 9);
+                        });
+                        if (!block.groups) block.groups = [];
+                        block.groups.forEach(group => {
+                            if (!group._uId) group._uId = 'g' + Math.random().toString(36).substr(2, 9);
+                            if (!group.scenes) group.scenes = [];
+                            group.scenes.forEach(scene => {
+                                if (!scene._uId) scene._uId = 's' + Math.random().toString(36).substr(2, 9);
+                            });
+                        });
+                    });
+                },
+
                 async loadScript() {
                     try {
                         const res = await fetch(`/api/project/${this.projectId}/script/`);
                         const data = await res.json();
 
                         if (!data.blocks) data.blocks = [{ title: "Bloque Principal", scenes: [] }];
+                        this.sanitizeScript(data);
 
                         // PRESERVE GROUPS + INHERIT ASSETS
                         data.blocks.forEach(block => {

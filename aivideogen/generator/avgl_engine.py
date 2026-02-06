@@ -405,39 +405,94 @@ async def generate_audio_elevenlabs(text, output_path, voice_id, api_key):
 def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
     script = {"title": title, "blocks": []}
     lines = text_script.strip().split('\n')
-    current_block = {"title": "Capítulo Principal", "scenes": []}
+    current_block = {"title": "Capítulo Principal", "scenes": [], "groups": []}
+    current_group = None
+
     for line in lines:
         raw_line = line.strip()
         if not raw_line: continue
         
-        # v7.5: Metadata extraction from comments
+        # Metadata
         if raw_line.startswith('#'):
             low_line = raw_line.lower()
-            if 'fuentes:' in low_line: script["fuentes"] = raw_line.split(':', 1)[1].strip()
+            if 'título:' in low_line: script["title"] = raw_line.split(':', 1)[1].strip()
+            elif 'fuentes:' in low_line: script["fuentes"] = raw_line.split(':', 1)[1].strip()
             elif 'tags:' in low_line: script["tags"] = raw_line.split(':', 1)[1].strip()
             elif 'hashtags:' in low_line: script["hashtags"] = raw_line.split(':', 1)[1].strip()
             continue
             
-        if raw_line.startswith('---'):
-            if current_block["scenes"]: script["blocks"].append(current_block)
-            current_block = {"title": raw_line.replace('-', '').strip(), "scenes": []}
+        # Blocks
+        if raw_line.startswith('---') and raw_line.endswith('---'):
+            if current_block["scenes"] or current_block["groups"]: 
+                script["blocks"].append(current_block)
+            current_block = {"title": raw_line.replace('-', '').strip(), "scenes": [], "groups": []}
+            current_group = None
             continue
 
+        # Group Start: === GRUPO: asset | instructions ===
+        if raw_line.startswith('=== GRUPO:'):
+            g_content = raw_line.replace('=== GRUPO:', '').replace('===', '').strip()
+            g_parts = [p.strip() for p in g_content.split('|')]
+            m_asset = g_parts[0] if g_parts else "negro.png"
+            
+            current_group = {
+                "title": "Master Shot",
+                "master_asset": m_asset,
+                "scenes": []
+            }
+            
+            # Parse Group Instructions
+            if len(g_parts) > 1:
+                g_instr = g_parts[1].upper()
+                if 'ZOOM:' in g_instr:
+                    z = re.search(r'ZOOM:([\d\.]+):([\d\.]+)', g_instr)
+                    if z: current_group["zoom"] = f"{z.group(1)}:{z.group(2)}"
+                if 'MOVE:' in g_instr:
+                    # Move can be HOR:0:100 + VER:50:50
+                    m = re.search(r'MOVE:(.*?)(?: \||$)', g_instr)
+                    if m: current_group["move"] = m.group(1).strip()
+                if 'FIT' in g_instr: current_group["fit"] = True
+                
+            continue
+
+        # Group End
+        if raw_line.startswith('=== FIN GRUPO'):
+            if current_group:
+                current_block["groups"].append(current_group)
+                current_group = None
+            continue
+
+        # Scene: TITLE | asset | instructions | pause | text
         parts = [p.strip() for p in line.split('|')]
         if len(parts) >= 3:
-            scene = {"title": parts[0], "text": parts[-1], "assets": [{"id": parts[1]}]}
-            if len(parts) >= 4:
-                dir_str = parts[2].upper()
-                if 'ZOOM' in dir_str:
-                    z = re.search(r'ZOOM:([\d\.]+):([\d\.]+)', dir_str)
-                    if z: scene["assets"][0]["zoom"] = f"{z.group(1)}:{z.group(2)}"
-                if 'FIT' in dir_str: scene["assets"][0]["fit"] = True
+            asset_id = parts[1]
+            instr = parts[2].upper()
+            
+            scene = {"title": parts[0], "text": parts[-1], "assets": []}
+            
+            # Asset Logic
+            if asset_id and asset_id != "negro.png":
+                asset_obj = {"id": asset_id}
+                if 'ZOOM:' in instr:
+                    z = re.search(r'ZOOM:([\d\.]+):([\d\.]+)', instr)
+                    if z: asset_obj["zoom"] = f"{z.group(1)}:{z.group(2)}"
+                if 'FIT' in instr: asset_obj["fit"] = True
+                if 'MOVE:' in instr:
+                    m = re.search(r'MOVE:(.*?)(?: \||$)', instr)
+                    if m: asset_obj["move"] = m.group(1).strip()
+                scene["assets"].append(asset_obj)
+            
             if len(parts) >= 5:
                 try: scene["pause"] = float(parts[4])
                 except: pass
-            current_block["scenes"].append(scene)
             
-    if current_block["scenes"]: script["blocks"].append(current_block)
+            if current_group is not None:
+                current_group["scenes"].append(scene)
+            else:
+                current_block["scenes"].append(scene)
+            
+    if current_block["scenes"] or current_block["groups"]: 
+        script["blocks"].append(current_block)
     return script
 
 def convert_avgl_json_to_text(data):
@@ -462,46 +517,71 @@ def convert_avgl_json_to_text(data):
         block_title = block.get("title", "Bloque")
         lines.append(f"--- {block_title} ---")
         
+        # Scenes at block level
         for scene in block.get("scenes", []):
-            title = scene.get("title", "Escena")
-            text = scene.get("text") or scene.get("voice") or ""
+            lines.append(convert_scene_to_line(scene))
             
-            # Asset logic
-            asset_name = "negro.png"
-            asset_instr = "."
+        # Scenes inside groups
+        for group in block.get("groups", []):
+            title = group.get("title", "Master Shot")
+            m_asset = group.get("master_asset")
+            m_id = "negro.png"
+            if m_asset:
+                m_id = m_asset if isinstance(m_asset, str) else (m_asset.get("id") or m_asset.get("type") or "negro.png")
             
-            # Support both 'assets' (list) and 'asset' (single string/object)
-            assets_list = scene.get("assets")
-            if not assets_list and scene.get("asset"):
-                assets_list = [scene.get("asset")]
-                
-            if assets_list and len(assets_list) > 0:
-                asset = assets_list[0]
-                if isinstance(asset, str):
-                    asset_name = asset
-                else:
-                    asset_name = asset.get("id") or asset.get("type") or "negro.png"
-                
-                # Instructions (Zoom/Fit/Move)
-                instr_parts = []
-                if isinstance(asset, dict):
-                    if asset.get("zoom"): instr_parts.append(f"ZOOM:{asset['zoom']}")
-                    if asset.get("fit"): instr_parts.append("FIT")
-                    if asset.get("move"): instr_parts.append(f"MOVE:{asset['move']}")
-                else:
-                    # Check if keys are directly in the scene (for flat JSON)
-                    if scene.get("zoom"): instr_parts.append(f"ZOOM:{scene['zoom']}")
-                    if scene.get("fit"): instr_parts.append("FIT")
-                    if scene.get("move"): instr_parts.append(f"MOVE:{scene['move']}")
-                
-                if instr_parts:
-                    asset_instr = " ".join(instr_parts)
+            # Group instructions
+            g_instr = []
+            if group.get("zoom"): g_instr.append(f"ZOOM:{group['zoom']}")
+            if group.get("fit"): g_instr.append("FIT")
+            if group.get("move"): g_instr.append(f"MOVE:{group['move']}")
+            g_instr_str = " | " + " ".join(g_instr) if g_instr else ""
             
-            pause = scene.get("pause", 0.0)
-            
-            # Format: TITLE | asset.png | instructions | pause | text
-            lines.append(f"{title} | {asset_name} | {asset_instr} | {pause} | {text}")
+            lines.append(f"=== GRUPO: {m_id}{g_instr_str} ===")
+            for scene in group.get("scenes", []):
+                lines.append("  " + convert_scene_to_line(scene))
+            lines.append("=== FIN GRUPO ===")
         
         lines.append("") # Spacer between blocks
         
     return "\n".join(lines).strip()
+
+def convert_scene_to_line(scene):
+    title = scene.get("title", "Escena")
+    text = scene.get("text") or scene.get("voice") or ""
+    
+    # Asset logic
+    asset_name = "negro.png"
+    asset_instr = "" # Default empty (v9.8 Fix: No more dots)
+    
+    # Support both 'assets' (list) and 'asset' (single string/object)
+    assets_list = scene.get("assets")
+    if not assets_list and scene.get("asset"):
+        assets_list = [scene.get("asset")]
+        
+    if assets_list and len(assets_list) > 0:
+        asset = assets_list[0]
+        if isinstance(asset, str):
+            asset_name = asset
+        else:
+            asset_name = asset.get("id") or asset.get("type") or "negro.png"
+        
+        # Instructions (Zoom/Fit/Move)
+        instr_parts = []
+        if isinstance(asset, dict):
+            if asset.get("zoom"): instr_parts.append(f"ZOOM:{asset['zoom']}")
+            if asset.get("fit"): instr_parts.append("FIT")
+            if asset.get("move"): instr_parts.append(f"MOVE:{asset['move']}")
+        else:
+            # Check if keys are directly in the scene (for flat JSON)
+            if scene.get("zoom"): instr_parts.append(f"ZOOM:{scene['zoom']}")
+            if scene.get("fit"): instr_parts.append("FIT")
+            if scene.get("move"): instr_parts.append(f"MOVE:{scene['move']}")
+        
+        if instr_parts:
+            asset_instr = " ".join(instr_parts)
+    
+    pause = scene.get("pause", 0.0)
+    
+    # Format: TITLE | asset.png | instructions | pause | text
+    # Instructions can be empty now
+    return f"{title} | {asset_name} | {asset_instr} | {pause} | {text}"
