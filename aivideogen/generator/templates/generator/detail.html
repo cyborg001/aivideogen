@@ -133,7 +133,12 @@
                     // Update Logs (if element exists)
                     const logElement = document.getElementById('logs-preview');
                     if (logElement) {
-                        logElement.value = data.log;
+                        // v12.5 Fix: Use textContent for non-input elements
+                        if (logElement.tagName === 'INPUT' || logElement.tagName === 'TEXTAREA') {
+                            logElement.value = data.log;
+                        } else {
+                            logElement.textContent = data.log;
+                        }
                         logElement.scrollTop = logElement.scrollHeight;
                     }
 
@@ -182,7 +187,7 @@
 
 <div class="card">
     <h3>Registro de Proceso (Logs)</h3>
-    <pre
+    <pre id="logs-preview"
         style="background: #000; padding: 10px; overflow: auto; max-height: 300px; font-size: 0.9rem; color: #0f0;">{{ project.log_output }}</pre>
 </div>
 
