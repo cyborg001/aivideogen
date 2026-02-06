@@ -9,13 +9,26 @@
             "scenes": [
                 {
                     "title": "Gancho",
-                    "asset": "musk_spacex_xai.png",
-                    "voice": "¡Confirmado! [PAUSA:0.2] [PHO]Ilon Mask | Elon Musk[/PHO] acaba de fusionar [PHO]Space Ex | SpaceX[/PHO] y [PHO]Ex Ai | xAI[/PHO] en un gigante de [SUB]1.25 trillones de dólares[/SUB]."
+                    "assets": [
+                        {
+                            "id": "musk_spacex_xai.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:40 + VER:50:50",
+                            "fit": false
+                        }
+                    ],
+                    "text": "¡Confirmado! [PAUSA:0.2] [PHO]Ilon Mask | Elon Musk[/PHO] acaba de fusionar [PHO]Space Ex | SpaceX[/PHO] y [PHO]Ex Ai | xAI[/PHO] en un gigante de [SUB]1.25 trillones de dólares[/SUB]."
                 },
                 {
                     "title": "Identidad de Marca",
-                    "asset": "notiac_logo.png",
-                    "voice": "Bienvenidos a [PHO]Noti A Ci | Not-i-A-Ci[/PHO]."
+                    "assets": [
+                        {
+                            "id": "notiac_logo.png",
+                            "zoom": "0.9:1.0",
+                            "fit": true
+                        }
+                    ],
+                    "text": "Bienvenidos a [PHO]Noti A Ci | Not-i-A-Ci[/PHO]."
                 }
             ]
         },
@@ -24,13 +37,27 @@
             "scenes": [
                 {
                     "title": "Infraestructura Espacial",
-                    "asset": "spacex_data_center.png",
-                    "voice": "Esta unión busca crear la primera red masiva de centros de datos de [PHO]IA | IA[/PHO]... [PAUSA:0.2] ¡en el [SUB]espacio[/SUB]!"
+                    "assets": [
+                        {
+                            "id": "spacex_data_center.png",
+                            "zoom": "1.2:1.0",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Esta unión busca crear la primera red masiva de centros de datos de [PHO]IA | IA[/PHO]... [PAUSA:0.2] ¡en el [SUB]espacio[/SUB]!"
                 },
                 {
                     "title": "Escalabilidad",
-                    "asset": "satellite_network.png",
-                    "voice": "Esto permitirá una escalabilidad infinita... [PAUSA:0.1] sin depender de la infraestructura terrestre."
+                    "assets": [
+                        {
+                            "id": "satellite_network.png",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:20:80",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Esto permitirá una escalabilidad infinita... [PAUSA:0.1] sin depender de la infraestructura terrestre."
                 }
             ]
         },
@@ -39,13 +66,27 @@
             "scenes": [
                 {
                     "title": "Alianza Histórica",
-                    "asset": "apple_google_siri.png",
-                    "voice": "Por otro lado, Apple y Google han sellado una alianza histórica: [PAUSA:0.3] [PHO]Yémini | Gemini[/PHO] ahora potenciará a la nueva generación de [PHO]Siri | Siri[/PHO]."
+                    "assets": [
+                        {
+                            "id": "apple_google_siri.png",
+                            "zoom": "1.0:1.1",
+                            "move": "HOR:50:50 + VER:50:60",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Por otro lado, Apple y Google han sellado una alianza histórica: [PAUSA:0.3] [PHO]Yémini | Gemini[/PHO] ahora potenciará a la nueva generación de [PHO]Siri | Siri[/PHO]."
                 },
                 {
                     "title": "Siri Inteligente",
-                    "asset": "siri_ios26.png",
-                    "voice": "Prepárate para una [PHO]Siri | Siri[/PHO] que realmente entiende el contexto... [PAUSA:0.2] y responde con [SUB]precisión humana[/SUB]."
+                    "assets": [
+                        {
+                            "id": "siri_ios26.png",
+                            "zoom": "1.1:1.3",
+                            "move": "HOR:40:60",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Prepárate para una [PHO]Siri | Siri[/PHO] que realmente entiende el contexto... [PAUSA:0.2] y responde con [SUB]precisión humana[/SUB]."
                 }
             ]
         },
@@ -54,13 +95,27 @@
             "scenes": [
                 {
                     "title": "Waymo Expansión",
-                    "asset": "waymo_tokyo.png",
-                    "voice": "Siguiendo con los avances, [PHO]Güeymo | Waymo[/PHO] ha recibido 16 mil millones de dólares para llevar sus robotaxis a 20 nuevas ciudades, [PAUSA:0.2] incluyendo [SUB]Tokio y Londres[/SUB]."
+                    "assets": [
+                        {
+                            "id": "waymo_tokyo.png",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:0:100",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Siguiendo con los avances, [PHO]Güeymo | Waymo[/PHO] ha recibido 16 mil millones de dólares para llevar sus robotaxis a 20 nuevas ciudades, [PAUSA:0.2] incluyendo [SUB]Tokio y Londres[/SUB]."
                 },
                 {
                     "title": "Project Genie",
-                    "asset": "google_genie_world.png",
-                    "voice": "Y Google sorprendió con [PHO]Proyect Yini | Project Genie[/PHO]: [PAUSA:0.3] una [PHO]IA | IA[/PHO] que crea mundos 3D jugables a partir de instrucciones de voz."
+                    "assets": [
+                        {
+                            "id": "google_genie_world.png",
+                            "zoom": "1.5:1.0",
+                            "move": "VER:80:20",
+                            "fit": false
+                        }
+                    ],
+                    "text": "Y Google sorprendió con [PHO]Proyect Yini | Project Genie[/PHO]: [PAUSA:0.3] una [PHO]IA | IA[/PHO] que crea mundos 3D jugables a partir de instrucciones de voz."
                 }
             ]
         },
@@ -69,18 +124,38 @@
             "scenes": [
                 {
                     "title": "Conclusión Profunda",
-                    "asset": "ai_coworker.png",
-                    "voice": "En solo 4 días, la [PHO]IA | IA[/PHO] ha pasado de ser una herramienta... [PAUSA:0.1] a convertirse en nuestro [SUB]copiloto espacial[/SUB] y creativo."
+                    "assets": [
+                        {
+                            "id": "ai_coworker.png",
+                            "zoom": "1.1:1.1",
+                            "move": "HOR:30:70",
+                            "fit": false
+                        }
+                    ],
+                    "text": "En solo 4 días, la [PHO]IA | IA[/PHO] ha pasado de ser una herramienta... [PAUSA:0.1] a convertirse en nuestro [SUB]copiloto espacial[/SUB] y creativo."
                 },
                 {
                     "title": "Pregunta de Debate",
-                    "asset": "question_mark_tech.png",
-                    "voice": "¿Crees que los centros de datos espaciales son el futuro o una locura de [PHO]Mask | Musk[/PHO]?"
+                    "assets": [
+                        {
+                            "id": "question_mark_tech.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:50:50",
+                            "fit": false
+                        }
+                    ],
+                    "text": "¿Crees que los centros de datos espaciales son el futuro o una locura de [PHO]Mask | Musk[/PHO]?"
                 },
                 {
                     "title": "Suscripción",
-                    "asset": "suscribete.mp4",
-                    "voice": "Recuerda, dale like y no olvides suscribirte."
+                    "assets": [
+                        {
+                            "id": "suscribete.mp4",
+                            "zoom": "1.0:1.0",
+                            "fit": true
+                        }
+                    ],
+                    "text": "Recuerda, dale like y no olvides suscribirte."
                 }
             ]
         }
