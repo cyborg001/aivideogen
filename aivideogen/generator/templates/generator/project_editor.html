@@ -1103,22 +1103,22 @@
             <div x-show="isVideo" class="mt-2 text-[10px] text-red-400 italic">
                 * Efectos de movimiento desactivados para video.
             </div>
-        </div>
 
-        <!-- Modal Footer (Injected Correcty) -->
-        <div class="px-6 py-4 border-t border-gray-700 bg-gray-900 flex justify-end gap-3 rounded-b-xl shrink-0">
-            <button @click="closeModal()"
-                class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold tracking-wide">Cancelar</button>
-            <button @click="saveScene()"
-                class="group relative px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-indigo-500/30 font-bold uppercase tracking-widest transition-all duration-200 hover:scale-[1.02] active:scale-95 border border-indigo-400/20 overflow-hidden">
-                <div
-                    class="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-500 -skew-x-12 origin-left">
-                </div>
-                <div class="relative flex items-center gap-2">
-                    <span class="text-lg">💾</span>
-                    <span x-text="editIndex === null ? 'Añadir Escena' : 'Guardar Cambios'"></span>
-                </div>
-            </button>
+            <!-- Action Buttons (Moved Inside Content) -->
+            <div class="col-span-12 mt-8 flex justify-end gap-3 pt-4 border-t border-gray-700/50">
+                <button @click="closeModal()"
+                    class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold tracking-wide">Cancelar</button>
+                <button @click="saveScene()"
+                    class="group relative px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-indigo-500/30 font-bold uppercase tracking-widest transition-all duration-200 hover:scale-[1.02] active:scale-95 border border-indigo-400/20 overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-500 -skew-x-12 origin-left">
+                    </div>
+                    <div class="relative flex items-center gap-2">
+                        <span class="text-lg">💾</span>
+                        <span x-text="editIndex === null ? 'Añadir Escena' : 'Guardar Cambios'"></span>
+                    </div>
+                </button>
+            </div>
         </div>
     </div>
     </div>

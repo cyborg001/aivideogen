@@ -4,6 +4,7 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 
 | Versión | Fecha | Hito Técnico | Cambios Realizados |
 | :--- | :--- | :--- | :--- |
+| **5.0.0** | 2026-02-06 | **Visual FX Revolution** | **Advanced Motion:** Soporte para `ROTATE:start:end` (Rotación interpolada) y `SHAKE:intensity` (Temblor). <br> **Vortex Effect:** Rotación constante por velocidad (`w_rotate:deg_per_sec`) para efectos hipnóticos. <br> **Custom Overlays:** Sistema dinámico para cargar overlays `.mp4` personalizados desde la carpeta `media/overlays`. <br> **Robusto:** Sanitización automática de valores `undefined` en efectos. |
 | **9.8.0** | 2026-02-05 | **Windows Stability & Precision** | **WinError 32 Fix:** Sistema de rastreo y cierre de clips (`clips_to_close`) para evitar bloqueos de archivos en Windows. <br> **Combined Move Parsing:** Soporte total para movimientos `HOR + VER` en interpolación de escenas. <br> **Audio Engine v9.4:** Corrección de broadcasting NumPy para audio estéreo y reparación de sangría en música global. <br> **UI Legacy Removal:** Unificación de miniaturas de escenas y eliminación de duplicados de música. |
 | **8.7.0** | 2026-02-02 | **Linguistic & Meta Clean** | **[PHO] Tag Support:** Implementación de limpieza de etiquetas fonéticas en descripciones de YouTube. <br> **NameError Fix:** Restauración de la función `generate_youtube_description` que impedía la subida automática. <br> **Meta Stripper:** Regex avanzado para eliminar `[SUB]`, emociones y corchetes técnicos en metadatos externos. |
 | **8.6.2** | 2026-02-01 | **Robust Rendering Era** | **Global Error Listener:** Captura de fallos críticos para asegurar notificaciones sonoras. <br> **Even Dimension Constraint:** Forzado de dimensiones pares para compatibilidad total con H.264. <br> **Turbo Render (v8.6):** Optimización `method="chain"` para renderizado masivo. |
@@ -66,6 +67,5 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 *Actualizado al 31-01-2026*
 
 ## 🔮 Hoja de Ruta (Roadmap - Próximas Ideas)
-- [ ] **Efecto Shake (Temblor)**: Implementar jitter aleatorio para escenas de alta tensión.
-- [ ] **Dynamic Overlays**: Soporte para cambio de overlay a mitad de escena.
 - [ ] **Audio Master FX**: Normalización automática de picos de audio post-render.
+- [ ] **Smart B-Roll**: Inserción inteligente de videos de stock basada en contexto.

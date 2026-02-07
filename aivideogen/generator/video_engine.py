@@ -545,7 +545,8 @@ def generate_video_avgl(project):
                                 fit=asset.fit,
                                 shake=getattr(asset, 'shake', False),
                                 shake_intensity=getattr(asset, 'shake_intensity', 5),
-                                rotate=getattr(asset, 'rotate', None)
+                                rotate=getattr(asset, 'rotate', None),
+                                w_rotate=getattr(asset, 'w_rotate', None)
                             )
                 else:
                     # v8.6: FAST AUDIO TEST MODE
