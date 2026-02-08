@@ -1721,10 +1721,28 @@
                         let sign = this.voiceSpeedNum >= 0 ? '+' : '';
                         this.projectSettings.voice_speed = `${sign}${this.voiceSpeedNum}%`;
 
+                        // DEEP COPY to avoid reference issues or mutation during stringify
+                        const scriptCopy = JSON.parse(JSON.stringify(this.script));
+
+                        // Merge settings into the script copy for the backend to receive a complete V5 JSON
+                        scriptCopy.voice_speed = this.projectSettings.voice_speed;
+                        scriptCopy.title = this.projectSettings.title;
+                        scriptCopy.music_volume = parseFloat(this.projectSettings.music_volume);
+                        scriptCopy.background_music = this.projectSettings.background_music;
+                        scriptCopy.voice = this.projectSettings.voice_id;
+                        scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
+                        scriptCopy.render_mode = this.projectSettings.render_mode;
+
+                        // Ensure settings object exists
+                        if (!scriptCopy.settings) scriptCopy.settings = {};
+                        Object.assign(scriptCopy.settings, this.projectSettings);
+
                         const payload = {
-                            script: this.script,
+                            script: scriptCopy,
                             settings: this.projectSettings
                         };
+
+                        console.log("🚀 Enviando payload para crear proyecto:", payload); // Debug
 
                         const res = await fetch('/project/new/from_editor/', {
                             method: 'POST',

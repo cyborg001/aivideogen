@@ -212,11 +212,11 @@ class ProjectLogger:
         # Remove emojis for console compatibility if they cause issues
         # But we mostly rely on the wrapped sys.stdout now.
         try:
-            print(f"[Project {self.project.id}] {message}")
+            print(f"[Project {self.project.id}] {message}", flush=True)
         except UnicodeEncodeError:
             # Fallback for very old/strict consoles
             clean_msg = message.encode('ascii', 'ignore').decode('ascii')
-            print(f"[Project {self.project.id}] {clean_msg}")
+            print(f"[Project {self.project.id}] {clean_msg}", flush=True)
 
         self.log_buffer.append(message)
         self.project.log_output = "\n".join(self.log_buffer)

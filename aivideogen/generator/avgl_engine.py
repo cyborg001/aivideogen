@@ -1,6 +1,6 @@
 import os
-import random
 import asyncio
+import random
 import json
 import re
 import time
@@ -13,13 +13,13 @@ import numpy as np
 # ═══════════════════════════════════════════════════════════════════
 
 VOICES_CONFIG = {
-    'ETHAN': 'es-US-AlonsoNeural',
+    'ETHAN': 'es-MX-JorgeNeural',
     'CHARLI': 'es-DO-EmilioNeural',
     'CARLOS': 'es-DO-EmilioNeural',
     'SONY': 'es-MX-DaliaNeural',
     'NARRADOR': 'es-MX-JorgeNeural',
     'CIENTIFICO': 'es-MX-JorgeNeural',
-    'JOVEN': 'es-US-AlonsoNeural'
+    'JOVEN': 'es-DO-EmilioNeural'
 }
 
 ACTIONS_CONFIG = {
@@ -76,7 +76,7 @@ class AVGLScript:
     def __init__(self, title):
         self.title = title
         self.blocks = []
-        self.voice = "es-ES-AlvaroNeural"
+        self.voice = "es-DO-EmilioNeural"
         self.speed = 1.0
         self.style = "neutral"
         self.background_music = None
@@ -164,16 +164,36 @@ def extract_subtitles_v35(text):
         word_count = 3
         
         if tag['type'] == 'pho':
-            # Format: narration | subtitle
+            # Format: narration | subtitle | [optional visibility]
             if '|' in content:
                 parts = [p.strip() for p in content.split('|')]
+                
+                # Check for visibility flag (v9.8)
+                if len(parts) >= 3:
+                    vis_flag = parts[2].lower().strip()
+                    if vis_flag in ['false', 'no', '0', 'off', 'oculto']:
+                        display_text = "" # Hide subtitle explicitly
+                
                 narrator_text = parts[0]
-                display_text = parts[1] if len(parts) > 1 else parts[0]
+                display_text = display_text if len(parts) > 1 and display_text != "" else (parts[1] if len(parts) > 1 else parts[0])
+                
+                # If display_text was explicitly hidden but logic above reset it, fix it:
+                if len(parts) >= 3:
+                     # Re-check visibility because the single-line ternary above is tricky
+                     vis_flag = parts[2].lower().strip()
+                     if vis_flag in ['false', 'no', '0', 'off', 'oculto']:
+                         display_text = ""
+                         
             else:
                 narrator_text = content
                 display_text = content
+            
+            # Recalculate word count based on narrator text
             word_count = len(narrator_text.split())
             if word_count < 2: word_count = 3
+            
+            # v9.8 Support for Hidden Subtitles via PHO
+            if display_text == "": word_count = 0 # No display -> 0 words visually
             
         elif tag['type'] == 'simple' and '|' in content:
             # Format: count | subtitle
@@ -350,28 +370,67 @@ def wrap_ssml(text, voice, speed="+0%", pitch=None):
 # Audio Generation (Edge TTS & ElevenLabs)
 # ═══════════════════════════════════════════════════════════════════
 
-async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rate="+0%", pitch="+0Hz", scene=None):
+
+async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rate="+0%", pitch="+0Hz", scene=None):
     """
     Robust Segmented Engine (v6.5)
     Splits by [PAUSA:X.X], strips all other tags, and joins audio files.
     Tracks voice_intervals if scene object is provided.
+    v8.6.3: Support for SSML Emotions and [PAUSA] handling within SSML.
     """
     import edge_tts
+    
+    # 1. Pre-process for SSML if we detect emotions keys
+    # We do this here to catch [EPICO], etc BEFORE splitting by pauses if possible,
+    # BUT pause splitting breaks the XML structure if not careful.
+    # STRATEGY: 
+    # 1. Split by Pause First (keep structure safe)
+    # 2. Convert each segment to SSML individually
+    
     pause_pattern = r'\[PAUSA:([\d\.]+)\]'
     parts = re.split(pause_pattern, text, flags=re.IGNORECASE)
     segments = []
+    
     for i, part in enumerate(parts):
         if i % 2 == 1:
             try: segments.append(('pause', float(part)))
             except: pass
         else:
-            clean = re.sub(r'\[.*?\]', '', part)
+            # CLEANING vs SSML
+            # If we want emotions, we MUST NOT strip [EPICO] etc here.
+            # But we must strip [ZOOM], [MOVE] etc.
+            
+            # Step A: Translate Emotions to SSML tags
+            # valid SSML tags: <prosody>, <break>, <p>, <s>, <phoneme>
+            # We assume translate_emotions handles the bracket-to-xml conversion.
+            part_with_ssml = translate_emotions(part, use_ssml=True)
+            
+            # Step B: Clean NON-SSML tags
+            # We want to remove [ZOOM:...] but KEEP <prosody...>
+            # Regex to remove [TAGS] that are NOT part of the standard set we just generated?
+            # Easier: Remove known visual tags specifically, or remove all [...] 
+            # Since translate_emotions converts [EPICO] -> <prosody>, [EPICO] is gone.
+            # So likely we can just strip any REMAINING brackets.
+            
+            # Remove specific instruction tags we know
+            clean = re.sub(r'(?i)\[(ZOOM|MOVE|FIT|AUDIO|SFX|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION|SUB|PHO).*?\]', '', part_with_ssml)
+            
+            # Remove any other residual bracket tags that are NOT [PAUSA] (already handled)
+            # CAUTION: If user wrote "text [text] text", this kills it. But that's standard AVGL behavior.
+            clean = re.sub(r'\[.*?\]', '', clean)
+            
+            # Remove parentheses comments
             clean = re.sub(r'\(.*?\)', '', clean)
-            clean = re.sub(r'<.*?>', '', clean)
+            
+            # Remove explicit property lines if there are any left (legacy pipe format artifacts)
             clean = re.sub(r'(?i)\b(SPEED|ZOOM|AUDIO|SFX|FIT|MOVE|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION)\s*:.*', '', clean)
+            
             clean = clean.strip()
-            if clean: segments.append(('text', clean))
+            if clean: 
+                segments.append(('text', clean))
+
     if not segments: return False
+    
     audio_clips = []
     temp_files = []
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_segments')
@@ -389,7 +448,25 @@ async def generate_audio_edge(text, output_path, voice="es-ES-AlvaroNeural", rat
             else:
                 seg_path = os.path.join(temp_dir, f"{prefix}_{i}.mp3")
                 temp_files.append(seg_path)
-                communicate = edge_tts.Communicate(val, voice, rate=rate, pitch=pitch)
+                
+                # IMPORTANT: wrap in <speak> if it contains XML tags, otherwise plain text
+                final_text = val
+                if '<prosody' in val or '<break' in val:
+                    # EMERGENCY FIX: EdgeTTS is not parsing SSML correctly on this env.
+                    # We strip tags to ensure clean audio.
+                    import xml.sax.saxutils as saxutils
+                    
+                    print(f"[WARN] SSML Emotion tags ignored for stability. Generating plain text.")
+                    # Remove tags
+                    clean_text = re.sub(r'<[^>]+>', '', val)
+                    # Unescape (since translate_emotions escaped it)
+                    final_text = saxutils.unescape(clean_text)
+                    
+                    print(f"[DEBUG] Plain Text Payload: {final_text}") 
+                    communicate = edge_tts.Communicate(final_text, voice, rate=rate, pitch=pitch)
+                else:
+                    communicate = edge_tts.Communicate(final_text, voice, rate=rate, pitch=pitch)
+                
                 await communicate.save(seg_path)
                 if os.path.exists(seg_path):
                     clip = AudioFileClip(seg_path)

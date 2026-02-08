@@ -404,22 +404,43 @@ def generate_video_avgl(project):
         # Create a Scene-to-Audio mapping to prevent desync
         scene_audio_map = {scene: audio for scene, audio in audio_files}
 
-        for b_idx, block in enumerate(script.blocks):
-            # Calculate Progress (35% to 85%)
-            # Based on block index
-            total_blocks = len(script.blocks)
-            if total_blocks > 0:
-                p_increment = 50 / total_blocks
-                current_p = 35 + (b_idx * p_increment)
-                project.progress = int(current_p)
-                project.save(update_fields=['progress'])
+        # v12.5: Granular Progress & Speed Logging (Cache-First)
+        # Pre-calculate total scenes for accurate progress bar
+        total_scenes = sum(len(b.scenes) for b in script.blocks)
+        global_scene_cnt = 0
+        process_start_time = time.time()
+        
+        from django.core.cache import cache
+        # v12.5.3: Register active project for global terminal logging
+        cache.set("active_rendering_project_id", project.id, timeout=3600)
 
+        for b_idx, block in enumerate(script.blocks):
+            # Legacy Block-based progress removed in favor of granular scene progress
+            # kept only for debug log
             logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
             block_scene_clips = []
             block_voice_intervals = []
             block_cursor = 0.0
             
             for s_idx, scene in enumerate(block.scenes):
+                # Granular Progress Update
+                global_scene_cnt += 1
+                
+                # Calculate metrics
+                elapsed = time.time() - process_start_time
+                speed = global_scene_cnt / elapsed if elapsed > 0 else 0
+                
+                # Map progress to 35% - 85% range
+                p_val = 35 + (global_scene_cnt / total_scenes * 50)
+                
+                # v12.5.1: Hybrid Status Caching (Progress + Text)
+                status_text = f"Escena {global_scene_cnt}/{total_scenes} ({p_val:.1f}%) | {speed:.2f} its/s"
+                cache.set(f"project_{project.id}_progress", p_val, timeout=60)
+                cache.set(f"project_{project.id}_status_text", status_text, timeout=60)
+                
+                # Log to console
+                logger.log(f"  ⏳ {status_text}")
+
                 # 1. Audio Retrieval (Robust)
                 audio_clip = None
                 voice_duration = 0.0
@@ -440,30 +461,70 @@ def generate_video_avgl(project):
                 clip = None
                 if scene.assets:
                     asset = scene.assets[0]
-                    asset_path = os.path.join(assets_dir, asset.type)
-                    if not os.path.exists(asset_path):
-                        for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
-                            if os.path.exists(asset_path + ext): asset_path += ext; break
+                    # v11.9 Fix: Support Absolute Paths Priority
+                    raw_path = str(asset.type or asset.id or "").strip()
+                    asset_path = None
+                    
+                    # 1. Check Absolute Path (Priority)
+                    norm_path = os.path.normpath(raw_path)
+                    if norm_path and os.path.isabs(norm_path) and os.path.exists(norm_path):
+                         asset_path = norm_path
+                         logger.log(f"    ✅ Ruta ABSOLUTA detectada y validada: {os.path.basename(asset_path)}")
+                         logger.log(f"       Path: {asset_path}")
+                    else:
+                        # 2. Legacy Relative Logic (Fallback)
+                        fname = raw_path
+                        if '://' in fname or ':\\' in fname or '/media/' in fname:
+                             fname = os.path.basename(fname)
+                        
+                        asset_path = os.path.join(assets_dir, fname)
+                        
+                        # Tolerance: if not found, try extensions
+                        if not os.path.exists(asset_path):
+                            for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
+                                if os.path.exists(asset_path + ext): 
+                                    asset_path += ext
+                                    break
+                    
+                    # LOG RESULT
+                    if os.path.exists(asset_path):
+                        if not os.path.isabs(raw_path):
+                            logger.log(f"    ✅ Asset encontrado en media/assets: {os.path.basename(asset_path)}")
+                    else:
+                        logger.log(f"    ❌ Asset NO encontrado: '{raw_path}'")
+                        logger.log(f"       Buscado en: {asset_path}")
 
                     if not os.path.exists(asset_path):
-                        logger.log(f"  ⚠️ Asset no encontrado: {asset.type}. Buscando respaldo...")
+                        logger.log(f"    🔍 Buscando respaldo (fallback)...")
                         # Smart Fallback
-                        fallback_candidates = [os.path.join(assets_dir, "notiaci_intro_wide.png"), os.path.join(assets_dir, "banner_notiaci.png")]
+                        fallback_candidates = [
+                            os.path.join(assets_dir, "notiaci_intro_wide.png"), 
+                            os.path.join(assets_dir, "banner_notiaci.png")
+                        ]
                         found_fb = False
                         for fb in fallback_candidates:
-                            if os.path.exists(fb): asset_path = fb; found_fb = True; break
+                            if os.path.exists(fb): 
+                                asset_path = fb
+                                found_fb = True
+                                logger.log(f"    💡 Respaldo estándar encontrado: {os.path.basename(asset_path)}")
+                                break
+                        
                         if not found_fb:
                             try:
-                                any_imgs = [f for f in os.listdir(assets_dir) if f.lower().endswith(('.png', '.jpg'))]
-                                if any_imgs: asset_path = os.path.join(assets_dir, any_imgs[0]); found_fb = True
+                                any_imgs = [f for f in os.listdir(assets_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                                if any_imgs: 
+                                    asset_path = os.path.join(assets_dir, any_imgs[0])
+                                    found_fb = True
+                                    logger.log(f"    💡 Respaldo aleatorio encontrado: {os.path.basename(asset_path)}")
                             except: pass
                         
                         if not found_fb:
                             clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
-                            logger.log("  🛑 No hay assets disponibles. Usando fondo negro.")
+                            logger.log("    🛑 SIN ASSETS DISPONIBLES. Usando fondo negro.")
                         else:
+                            # Apply fallback
                             clip = apply_ken_burns(asset_path, duration, target_size, zoom="1.1:1.0", move="HOR:50:50")
-                            logger.log(f"  💡 Respaldo encontrado: {os.path.basename(asset_path)}")
+                            clips_to_close.append(clip)
                     
                     if not clip and os.path.exists(asset_path):
                         # ═══════════════════════════════════════════════════════════════════
@@ -798,6 +859,10 @@ def generate_video_avgl(project):
                 
                 # Normalize Search Term
                 search_name = os.path.basename(global_music_name).lower()
+                
+                # Initialize bg_audio safety
+                bg_audio = None
+
                 name_no_ext = re.sub(r'\.(mp3|wav|m4a)$', '', search_name)
                 name_clean = name_no_ext.replace('_', ' ').replace('-', ' ').strip()
                 name_slug = name_no_ext.replace(' ', '_').replace('-', '_').strip()
@@ -999,6 +1064,9 @@ def generate_video_avgl(project):
         play_finish_sound(success=False)
         raise e
     finally:
+        # v12.5.3: Clear active project from global cache
+        from django.core.cache import cache
+        cache.delete("active_rendering_project_id")
         try:
             if 'final_video' in locals() and final_video: final_video.close()
             # v9.6: Explicit closure of all tracked clips before deletion

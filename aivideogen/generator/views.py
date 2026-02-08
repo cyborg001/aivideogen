@@ -621,6 +621,29 @@ def create_project_from_editor(request):
         script = data.get('script', {})
         settings = data.get('settings', {})
         
+        # VALIDATION: Prevent saving empty scripts (Data Loss Prevention)
+        # Check if it has blocks or at least a title/voice structure
+        if not script or (isinstance(script, dict) and not script.get('blocks') and not script.get('title')):
+             # Using logger instead of print in production
+             logger = logging.getLogger(__name__)
+             logger.warning(f"Intento de guardar guion vacio o malformado: {str(script)[:100]}")
+             # Relaxed check: Only error if TRULY empty to avoid blocking valid but simple scripts
+             if not script:
+                 return JsonResponse({'error': 'El guion esta vacio. No se puede crear el proyecto.'}, status=400)
+
+        # Merge settings into script for V5 Standard compliance
+        # This ensures the script JSON itself carries the project metadata
+        if isinstance(script, dict):
+            if 'settings' not in script: script['settings'] = {}
+            # Update settings into script.settings
+            script['settings'].update(settings)
+            
+            # Also sync root keys for legacy compatibility
+            if 'title' in settings: script['title'] = settings['title']
+            if 'voice_id' in settings: script['voice'] = settings['voice_id']
+            if 'background_music' in settings: script['background_music'] = settings['background_music']
+            if 'music_volume' in settings: script['music_volume'] = settings['music_volume']
+        
         # Determine Title
         title = settings.get('title') or script.get('title') or "Nuevo Proyecto"
         
@@ -647,8 +670,17 @@ def create_project_from_editor(request):
         bg_music_input = settings.get('background_music') or script.get('background_music')
         if bg_music_input:
             from .models import Music
-            bg_music_name = os.path.basename(bg_music_input)
-            m = Music.objects.filter(file__iexact=bg_music_input).first() or \
+            import urllib.parse
+            
+            # 1. Decode
+            bg_music_input_decoded = urllib.parse.unquote(bg_music_input)
+            
+            # 2. Basename
+            bg_music_name = os.path.basename(bg_music_input_decoded)
+            
+            # 3. Search
+            m = Music.objects.filter(file__iexact=bg_music_input_decoded).first() or \
+                Music.objects.filter(file__icontains=bg_music_input_decoded).first() or \
                 Music.objects.filter(name__iexact=bg_music_name).first() or \
                 Music.objects.filter(file__icontains=bg_music_name).first()
             if m:
@@ -806,6 +838,43 @@ def save_project_script_json(request, project_id):
         script_data = data
         if 'script' in data:
             script_data = data['script']
+            
+            # SANITIZATION: Clean Asset URLs to Basenames (v11.8 Persistence Fix)
+            # This ensures DB always stores filename, not full URL from frontend
+            try:
+                if isinstance(script_data, dict) and 'blocks' in script_data:
+                    for block in script_data['blocks']:
+                        # Block Scenes
+                        if 'scenes' in block:
+                            for scene in block['scenes']:
+                                if 'assets' in scene:
+                                    for asset in scene['assets']:
+                                        if isinstance(asset, dict) and 'type' in asset:
+                                            # If it's a URL or path, strip it
+                                            if '://' in asset['type'] or '/media/' in asset['type']:
+                                                # v11.9 Fix: Preserve Absolute Paths if they exist locally
+                                                # Only strip if it's NOT a valid absolute path on disk
+                                                val = asset['type']
+                                                is_valid_abs = False
+                                                try:
+                                                    if os.path.isabs(val) and os.path.exists(val):
+                                                        is_valid_abs = True
+                                                except: pass
+
+                                                if not is_valid_abs:
+                                                    asset['type'] = os.path.basename(asset['type'])
+                        # Groups
+                        if 'groups' in block:
+                            for group in block['groups']:
+                                if 'scenes' in group:
+                                    for scene in group['scenes']:
+                                        if 'assets' in scene:
+                                            for asset in scene['assets']:
+                                                 if isinstance(asset, dict) and 'type' in asset:
+                                                     if '://' in asset['type'] or '/media/' in asset['type']:
+                                                         asset['type'] = os.path.basename(asset['type'])
+            except Exception as e:
+                pass # Don't break save if structure is weird
         
         project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
         
@@ -849,23 +918,28 @@ def save_project_script_json(request, project_id):
                      project.background_music = None
                 else:
                      from .models import Music
-                     bg_music_name = os.path.basename(bg_music_input)
-                     # Try exact match first, then by name (extracted), then contains
-                     # v8.7 fix: also normalize slashes for cross-platform matching
-                     bg_music_alt = bg_music_input.replace('/', '\\')
-                     bg_music_alt2 = bg_music_input.replace('\\', '/')
+                     import urllib.parse
                      
-                     # Improved search: exact file path or exact name
-                     # v11.8: Even more robust matching (stripping prefixes)
-                     bg_music_clean = bg_music_input.replace('\\', '/').split('/')[-1]
-                     m = Music.objects.filter(file__iexact=bg_music_input).first() or \
-                         Music.objects.filter(file__iexact=bg_music_alt).first() or \
-                         Music.objects.filter(file__iexact=bg_music_alt2).first() or \
+                     # 1. Decode URL (e.g. %20 -> space)
+                     bg_music_input_decoded = urllib.parse.unquote(bg_music_input)
+                     
+                     # 2. Extract Basename (File only)
+                     bg_music_name = os.path.basename(bg_music_input_decoded)
+                     
+                     # 3. Normalized Paths for comparison
+                     bg_music_alt = bg_music_input_decoded.replace('/', '\\')
+                     bg_music_alt2 = bg_music_input_decoded.replace('\\', '/')
+                     
+                     # 4. Clean prefix (media/music/, music/, etc)
+                     bg_music_clean = bg_music_name
+                     
+                     # Debug Log
+                     # print(f"DEBUG MUSIC LINK: Input={bg_music_input} Decoded={bg_music_input_decoded} Name={bg_music_name}")
+                     
+                     m = Music.objects.filter(file__iexact=bg_music_input_decoded).first() or \
+                         Music.objects.filter(file__icontains=bg_music_input_decoded).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
-                         Music.objects.filter(name__iexact=bg_music_input).first() or \
-                         Music.objects.filter(name__iexact=bg_music_clean).first() or \
-                         Music.objects.filter(file__icontains=bg_music_name).first() or \
-                         Music.objects.filter(file__icontains=bg_music_clean).first()
+                         Music.objects.filter(file__icontains=bg_music_name).first()
                      
                      if m: 
                          project.background_music = m
@@ -944,6 +1018,15 @@ def view_logs(request):
 def api_heartbeat(request):
     """Updates the last activity timestamp to prevent auto-shutdown."""
     update_last_activity()
+    
+    # v12.5.3: Terminal Visibility for Heartbeat polls
+    from django.core.cache import cache
+    active_pid = cache.get("active_rendering_project_id")
+    if active_pid:
+        status_text = cache.get(f"project_{active_pid}_status_text")
+        if status_text:
+            print(f"[Heartbeat] ID {active_pid} | {status_text}")
+            
     return JsonResponse({'status': 'ok', 'time': time.time()})
 
 @csrf_exempt
@@ -1079,10 +1162,26 @@ def get_project_status(request, project_id):
     """Returns JSON with current status, progress and log tailored for polling."""
     try:
         project = VideoProject.objects.get(id=project_id)
+        
+        # v12.5.1: Hybrid Status Reading (Progress + Text)
+        from django.core.cache import cache
+        cached_progress = cache.get(f"project_{project_id}_progress")
+        cached_status = cache.get(f"project_{project_id}_status_text")
+        
+        final_progress = project.progress
+        if cached_progress is not None:
+            final_progress = float(cached_progress)
+            
+        log_content = getattr(project, 'log_output', '')
+        if cached_status:
+            # v12.5.2: Terminal Visibility (User Request)
+            print(f"[Polling] Project {project_id} | {cached_status}")
+            log_content += f"\n[Live] {cached_status}"
+            
         return JsonResponse({
             'status': project.status,
-            'progress': project.progress,
-            'log': getattr(project, 'log_output', '')
+            'progress': final_progress,
+            'log': log_content
         })
     except VideoProject.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Project not found'}, status=404)
