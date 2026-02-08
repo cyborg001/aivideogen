@@ -1187,24 +1187,21 @@ def get_project_status(request, project_id):
         return JsonResponse({'status': 'error', 'message': 'Project not found'}, status=404)
 
 def shutdown_app(request):
-    """Kill Switch: Terminates the Django server process safely."""
+    """Kill Switch: Terminates the Django server process safely and closes all windows."""
     if request.method == 'POST':
-        import signal
         import threading
         import time
+        import os
         
-        # Helper to kill process in thread to allow response to return
+        # v13.0: Total Shutdown (User Request)
+        # Using os._exit(0) is more aggressive and ensures the process 
+        # tree (including the console/batch file) terminates immediately.
         def kill_server():
-            time.sleep(1) # Allow response to flush
-            pid = os.getpid()
-            print(f"[System] Killing process {pid}...")
-            # Windows/Linux compatible kill
-            try:
-                os.kill(pid, signal.SIGTERM) 
-            except:
-                os.kill(pid, signal.SIGABRT) # Hard kill fallback
+            time.sleep(1.5) # Allow response to flush to the client
+            print(f"[System] Cerrando AIVideogen por completo...")
+            os._exit(0) 
 
         threading.Thread(target=kill_server).start()
         
-        return JsonResponse({'status': 'ok', 'message': 'Apagando servidor...'})
+        return JsonResponse({'status': 'ok', 'message': 'Apagando servidor y cerrando ventanas...'})
     return JsonResponse({'status': 'error'}, status=400)

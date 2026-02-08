@@ -8,6 +8,7 @@ import time
 import re
 import numpy as np
 import logging
+import proglog
 from django.conf import settings
 
 # v8.5 Notification Support
@@ -261,6 +262,36 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
 # ═══════════════════════════════════════════════════════════════════
 # Main Video Generation Function
 # ═══════════════════════════════════════════════════════════════════
+# v13.0: Progress Bridge for MoviePy (User Request)
+class CacheProgressBarLogger(proglog.ProgressBarLogger):
+    """
+    Captures frame-level processing ("Items") and syncs them to Django Cache
+    for real-time visibility in the terminal and UI.
+    """
+    def __init__(self, project_id):
+        super().__init__()
+        self.project_id = project_id
+        from django.core.cache import cache
+        self.cache = cache
+        self.last_update = 0
+        self.start_time = time.time()
+
+    def bars_callback(self, bar, attr, value, old_value=None):
+        # MoviePy uses 'chunk' for frames and 't' for general progress
+        if bar in ['chunk', 't']:
+            now = time.time()
+            if now - self.last_update > 0.5: # 2Hz refresh
+                self.last_update = now
+                total = self.bars.get(bar, {}).get('total', 1)
+                # Map rendering (the final phase) to 90-100% range
+                p_val = 90 + (value / total * 10) if total > 0 else 90
+                
+                elapsed = now - self.start_time
+                speed = value / elapsed if elapsed > 0 else 0
+                
+                status_text = f"Item {value}/{total} ({p_val:.1f}%) | {speed:.2f} its/s"
+                self.cache.set(f"project_{self.project_id}_progress", p_val, timeout=60)
+                self.cache.set(f"project_{self.project_id}_status_text", status_text, timeout=60)
 
 def generate_video_avgl(project):
     """
@@ -434,7 +465,8 @@ def generate_video_avgl(project):
                 p_val = 35 + (global_scene_cnt / total_scenes * 50)
                 
                 # v12.5.1: Hybrid Status Caching (Progress + Text)
-                status_text = f"Escena {global_scene_cnt}/{total_scenes} ({p_val:.1f}%) | {speed:.2f} its/s"
+                # v13.0 Terminology: Item (User Request)
+                status_text = f"Item {global_scene_cnt}/{total_scenes} ({p_val:.1f}%) | {speed:.2f} its/s"
                 cache.set(f"project_{project.id}_progress", p_val, timeout=60)
                 cache.set(f"project_{project.id}_status_text", status_text, timeout=60)
                 
@@ -577,7 +609,7 @@ def generate_video_avgl(project):
                                 else:
                                     eff_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if eff_move else f"VER:{m_s:.1f}:{m_e:.1f}"
 
-                        logger.log(f"  🎬 Escena {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
+                        logger.log(f"  🎬 Item {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                         
                         # Overlay
                         overlay_path = None
@@ -1038,10 +1070,13 @@ def generate_video_avgl(project):
             # Progression will jump from 90% to 100% upon completion.
             set_progress(92) 
 
+            # v13.0: Custom Cache Logger (Terminology Sync)
+            cache_logger = CacheProgressBarLogger(project.id)
+
             final_video.write_videofile(
                 output_path, 
                 ffmpeg_params=["-pix_fmt", "yuv420p"], 
-                logger=None, # v11.7: Stability over telemetry. Avoids truncated 0.05s videos.
+                logger=cache_logger, # v13.0: Real-time Item visibility
                 **render_params
             )
             

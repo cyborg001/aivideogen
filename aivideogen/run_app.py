@@ -94,8 +94,8 @@ if __name__ == "__main__":
     # Start browser in a separate thread
     if os.environ.get('RUN_MAIN') != 'true': # Prevent double opening on reloader
         threading.Thread(target=open_browser, args=(port,)).start()
-        # Start GUI control window instead of inactivity monitor
-        threading.Thread(target=start_gui_control, daemon=True).start()
+        # v13.0: GUI Status Window disabled per Architect request (redundant)
+        # threading.Thread(target=start_gui_control, daemon=True).start()
     
     print(f"Iniciando AIVideogen en el puerto {port}...")
     if os.environ.get('RUN_MAIN') != 'true':
