@@ -19,8 +19,8 @@
                     ]
                 },
                 {
-                    "title": "Bienvenida NotiACI",
-                    "text": "Bienvenidos a NotiACI. Esta es la historia de Stanislav Petrov, el oficial soviético que salvó a la humanidad en 1983.",
+                    "title": "La Amenaza",
+                    "text": "1983. En el búnker secreto de Moscú, los radares indican cinco misiles nucleares lanzados desde EE. UU. El fin del mundo ha comenzado.",
                     "assets": [
                         {
                             "id": "agi_pentagon_war_room.png",
@@ -78,7 +78,7 @@
                 },
                 {
                     "title": "Debate Final",
-                    "text": "¿Crees que la intuición humana es superior a los algoritmos en momentos críticos? Comenta abajo y suscríbete a NotiACI.",
+                    "text": "¿Crees que la intuición humana es superior a los algoritmos en momentos críticos? Soy Álvaro, y esto es NotiACI. Síguenos para no perderte el próximo salto de la humanidad. Suscríbete.",
                     "assets": [
                         {
                             "id": "aivideogen_news_end.png",

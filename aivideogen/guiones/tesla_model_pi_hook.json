@@ -19,8 +19,8 @@
                     ]
                 },
                 {
-                    "title": "Branding NotiACI",
-                    "text": "Bienvenidos a NotiACI. Soy Álvaro, y hoy analizamos por qué este dispositivo podría marcar el fin definitivo de la era del iPhone.",
+                    "title": "La Amenaza",
+                    "text": "Si el Model Pi llega al mercado, las operadoras de telefonía podrían desaparecer de la noche a la mañana. Es el cambio más grande desde el primer iPhone.",
                     "assets": [
                         {
                             "id": "elon_musk_holding_phone.png",
@@ -79,7 +79,7 @@
                 },
                 {
                     "title": "Call to Action",
-                    "text": "Síguenos para no perderte el próximo salto de la humanidad. Suscríbete a NotiACI.",
+                    "text": "Soy Álvaro, y esto es NotiACI. Síguenos para no perderte el próximo salto de la humanidad. Suscríbete.",
                     "assets": [
                         {
                             "id": "aivideogen_news_end.png",
