@@ -36,9 +36,12 @@ def play_finish_sound(success=True):
             print(f"Error playing notification sound: {e}")
 
 
-# ═══════════════════════════════════════════════════════════════════
-# Ken Burns Effect (Optimized with Pre-Scaling)
-# ═══════════════════════════════════════════════════════════════════
+def safe_float(val, default=0.0):
+    try:
+        if val is None or str(val).strip() == "": return default
+        return float(val)
+    except:
+        return default
 
 def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
     """
@@ -209,22 +212,24 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
 
 
-def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None):
+def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, video_volume=0.0):
     """
-    Processes a video asset to fit the scene: looping, trimming, and scaling.
+    v14.0: Processes video with group-sync (start_time) and audio mixing (video_volume).
     """
-    from moviepy import VideoFileClip, CompositeVideoClip, vfx
+    from moviepy import VideoFileClip, CompositeVideoClip, vfx, afx
     
     # Load video
     v_clip = VideoFileClip(video_path)
     if clips_to_close is not None: clips_to_close.append(v_clip)
     
-    # Handle duration: Loop if shorter than scene
-    if v_clip.duration < duration:
-        v_clip = v_clip.with_effects([vfx.Loop(duration=duration)])
+    # Handle duration & sync: Loop if needed to cover the requested range
+    required_end = start_time + duration
+    if v_clip.duration < required_end:
+        # Loop to ensure we can reach start_time + duration
+        v_clip = v_clip.with_effects([vfx.Loop(duration=required_end + 1.0)])
     
-    # Trim to scene duration
-    v_clip = v_clip.subclipped(0, duration)
+    # Trim from start_time
+    v_clip = v_clip.subclipped(start_time, required_end)
     
     # Scaling logic (Contain vs Cover)
     w_orig, h_orig = v_clip.size
@@ -240,13 +245,18 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         base_scale = max(scale_w, scale_h)
         
     v_clip = v_clip.resized(base_scale)
-    
-    # Position centered
     v_clip = v_clip.with_position("center")
+    
+    # Audio Logic
+    video_volume = float(video_volume or 0.0)
+    if video_volume > 0:
+        v_clip = v_clip.with_effects([afx.MultiplyVolume(video_volume)])
+    else:
+        v_clip = v_clip.without_audio()
     
     layers = [v_clip]
     
-    # Overlay support for video assets too
+    # Overlay support
     if overlay_path and os.path.exists(overlay_path):
         overlay = VideoFileClip(overlay_path, has_mask=True)
         if clips_to_close is not None: clips_to_close.append(overlay)
@@ -370,19 +380,61 @@ def generate_video_avgl(project):
         for i, scene in enumerate(all_scenes):
             logger.log(f"  Escena {i+1}/{len(all_scenes)}: {scene.title}")
             
-            audio_path = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{i:03d}.mp3")
+            # v13.5.5: Professional Audio Normalization (Stereo Force & Validation)
+            base_audio_name = f"project_{project.id}_scene_{i:03d}"
+            audio_path = os.path.join(temp_audio_dir, f"{base_audio_name}.mp3")
             
             # Custom Audio Priority
             if scene.audio:
                 custom_audio_path = os.path.join(assets_dir, scene.audio)
                 if not os.path.exists(custom_audio_path): custom_audio_path = os.path.join(settings.MEDIA_ROOT, scene.audio)
+                
                 if os.path.exists(custom_audio_path):
-                    logger.log(f"    🔊 Usando audio personalizado: {os.path.basename(custom_audio_path)}")
-                    import shutil; shutil.copy2(custom_audio_path, audio_path)
-                    audio_files.append((scene, audio_path))
-                    try: temp_clip = AudioFileClip(audio_path); audio_durations[scene] = temp_clip.duration; temp_clip.close()
-                    except: audio_durations[scene] = 1.0
-                    continue
+                    logger.log(f"    🔊 Normalizando audio personalizado: {os.path.basename(custom_audio_path)}")
+                    
+                    # Force normalization via FFmpeg (Fixes Duration: N/A from browsers)
+                    try:
+                        import subprocess
+                        # Find FFmpeg binary path robustly
+                        ffmpeg_exe = 'ffmpeg'
+                        try:
+                            import imageio_ffmpeg
+                            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                        except ImportError: pass
+                        
+                        # Convert to standard MP3 to ensure valid headers and duration
+                        # v13.5.5: Force -ac 2 (Stereo) to prevent mixing issues with background music
+                        cmd = [
+                            ffmpeg_exe, '-y', '-i', custom_audio_path,
+                            '-af', 'volume=1.5',
+                            '-ac', '2',
+                            '-codec:a', 'libmp3lame', '-qscale:a', '2',
+                            audio_path
+                        ]
+                        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                        
+                        if not os.path.exists(audio_path) or os.path.getsize(audio_path) < 100:
+                             raise Exception(f"Archivo de audio normalizado inválido o muy pequeño: {os.path.getsize(audio_path) if os.path.exists(audio_path) else 0} bytes")
+                        
+                        temp_clip = AudioFileClip(audio_path)
+                        logger.log(f"    📏 Normalizado OK: {temp_clip.duration:.2f}s | {os.path.getsize(audio_path)//1024}KB")
+                        
+                        audio_files.append((scene, audio_path))
+                        audio_durations[scene] = temp_clip.duration
+                        temp_clip.close()
+                        continue
+                    except subprocess.CalledProcessError as e:
+                        logger.log(f"    ❌ Fallo crítico FFmpeg normalization: {e.stderr}")
+                        import shutil; shutil.copy2(custom_audio_path, audio_path)
+                        audio_files.append((scene, audio_path))
+                        audio_durations[scene] = 1.0
+                        continue
+                    except Exception as e:
+                        logger.log(f"    ⚠️ Error en normalización FFmpeg: {e}")
+                        import shutil; shutil.copy2(custom_audio_path, audio_path)
+                        audio_files.append((scene, audio_path))
+                        audio_durations[scene] = 1.0
+                        continue
 
             if not scene.text:
                 audio_files.append((scene, None)); audio_durations[scene] = 1.0; continue
@@ -486,16 +538,28 @@ def generate_video_avgl(project):
                 # Fallback for missing audio (ensures sync)
                 if not audio_clip:
                     logger.log(f"  ⚠️ Audio NO generado per escena {s_idx+1}. Usando silencio.")
-                    audio_clip = AudioClip(lambda t: [0,0], duration=1.0)
+                    # v14.3 Improvement: Silent fallback has 0 duration to let 'pause' rule
+                    audio_clip = None 
                 
-                duration = audio_clip.duration + scene.pause
+                # v14.3: Duration is voice + pause. If no voice, it's just pause.
+                voice_duration = audio_clip.duration if audio_clip else 0.0
+                duration = voice_duration + scene.pause
+                
+                if duration <= 0:
+                    duration = 1.0 # Minimal failsafe
                 
                 # ASSET LOADING & FALLBACK
                 clip = None
                 if scene.assets:
                     asset = scene.assets[0]
-                    # v11.9 Fix: Support Absolute Paths Priority & Robustness
-                    raw_path = str(getattr(asset, 'type', '') or getattr(asset, 'id', '') or "").strip()
+                    # v14.7 Fix: Prioritize ID over Type to avoid 'video'/'image' string leaks
+                    # getattr(asset, 'id') should be the real filename or absolute path.
+                    raw_path = str(getattr(asset, 'id', '') or getattr(asset, 'type', '') or "").strip()
+                    
+                    # Safeguard: If the ID is just a category name, treat it as empty to force fallback/intro
+                    if raw_path.lower() in ['video', 'image', 'none', 'null']:
+                        raw_path = ""
+                        
                     asset_path = None
                     
                     # 1. Check Absolute Path (Priority)
@@ -560,6 +624,9 @@ def generate_video_avgl(project):
                             clips_to_close.append(clip)
                     
                     if not clip and os.path.exists(asset_path):
+                        # Determine Asset Type (Image vs Video)
+                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm'))
+                        
                         # ═══════════════════════════════════════════════════════════════════
                         # MASTER SHOT / GROUP INTERPOLATION & V5.0 EFFECTS
                         eff_zoom = asset.zoom or "1.0:1.3"
@@ -567,77 +634,86 @@ def generate_video_avgl(project):
                         eff_shake = getattr(asset, 'shake', False)
                         eff_shake_intensity = getattr(asset, 'shake_intensity', 5)
                         eff_rotate = getattr(asset, 'rotate', None)
+
+                        # v14.2 OPTIMIZATION: Videos don't need Zoom/Move math
+                        if is_video:
+                            eff_zoom = "1.0"
+                            eff_move = "HOR:50:50"
+                            logger.log(f"    📽️ Video detectado: Omitiendo efectos de Zoom/Move.")
+                        else:
                         
-                        # v5.0 Directional Aliases (Extended Support)
-                        MOVE_ALIASES = {
-                            "UP": "VER:100:0",
-                            "DOWN": "VER:0:100",
-                            "LEFT": "HOR:100:0",
-                            "RIGHT": "HOR:0:100",
-                            "CENTER": "HOR:50:50"
-                        }
-                        
-                        raw_move = str(eff_move).strip().upper()
-                        if raw_move in MOVE_ALIASES:
-                            eff_move = MOVE_ALIASES[raw_move]
-                        
-                        # v5.0 Parsing: Extract SHAKE/ROTATE from eff_move if present
-                        if eff_move and 'SHAKE' in eff_move.upper():
-                            match = re.search(r'SHAKE:(\d+)', eff_move, re.IGNORECASE)
-                            eff_shake = True
-                            if match: eff_shake_intensity = int(match.group(1))
-                        
-                        if eff_move and 'ROTATE' in eff_move.upper():
-                            match = re.search(r'ROTATE:([-0-9.]+):([-0-9.]+)', eff_move, re.IGNORECASE)
-                            if match: eff_rotate = f"{match.group(1)}:{match.group(2)}"
-                            else:
-                                match_static = re.search(r'ROTATE:([-0-9.]+)', eff_move, re.IGNORECASE)
-                                if match_static: eff_rotate = match_static.group(1)
-                        
-                        if scene.group_id and scene.group_settings:
-                            g = scene.group_settings
-                            g_zoom = g.get("zoom", "1.0:1.3")
-                            g_move = g.get("move", "HOR:50:50")
+                            # v5.0 Directional Aliases (Extended Support)
+                            MOVE_ALIASES = {
+                                "UP": "VER:100:0",
+                                "DOWN": "VER:0:100",
+                                "LEFT": "HOR:100:0",
+                                "RIGHT": "HOR:0:100",
+                                "CENTER": "HOR:50:50"
+                            }
                             
-                            # Calculate group timing
-                            group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
-                            total_group_duration = sum([audio_durations.get(s, 1.0) + s.pause for s in group_scenes])
+                            raw_move = str(eff_move).strip().upper()
+                            if raw_move in MOVE_ALIASES:
+                                eff_move = MOVE_ALIASES[raw_move]
                             
-                            # Find start time of CURRENT scene relative to group start
-                            start_in_group = 0.0
-                            for s in group_scenes:
-                                if s == scene: break
-                                s_dur = audio_durations.get(s, 1.0) + s.pause
-                                start_in_group += s_dur
+                            # v5.0 Parsing: Extract SHAKE/ROTATE from eff_move if present
+                            if eff_move and 'SHAKE' in eff_move.upper():
+                                match = re.search(r'SHAKE:(\d+)', eff_move, re.IGNORECASE)
+                                eff_shake = True
+                                if match: eff_shake_intensity = int(match.group(1))
                             
-                            # Interpolate Zoom
-                            z_parts = g_zoom.split(':') if ':' in g_zoom else [g_zoom, g_zoom]
-                            gz_start = float(z_parts[0]); gz_end = float(z_parts[1])
-                            
-                            z_s = gz_start + (gz_end - gz_start) * (start_in_group / total_group_duration)
-                            z_e = gz_start + (gz_end - gz_start) * ((start_in_group + duration) / total_group_duration)
-                            eff_zoom = f"{z_s:.3f}:{z_e:.3f}"
-                            
-                            # Interpolate Move (Simple Linear)
-                            # We handle HOR:start:end
-                            # v9.6 Fix: Support for combined moves in group-scene interpolation
-                            m_configs = []
-                            if '+' in g_move:
-                                for p in [p.strip() for p in g_move.split('+')]:
-                                    mp = p.split(':')
-                                    if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': float(mp[1]), 'e': float(mp[2])})
-                            else:
-                                mp = g_move.split(':')
-                                if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': float(mp[1]), 'e': float(mp[2])})
-                            
-                            for cfg in m_configs:
-                                ms = cfg['s']; me = cfg['e']
-                                m_s = ms + (me - ms) * (start_in_group / total_group_duration)
-                                m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
-                                if cfg['dir'] == 'HOR':
-                                    eff_move = f"HOR:{m_s:.1f}:{m_e:.1f}" if not eff_move or '+' not in eff_move else eff_move + f" + HOR:{m_s:.1f}:{m_e:.1f}"
+                            if eff_move and 'ROTATE' in eff_move.upper():
+                                match = re.search(r'ROTATE:([-0-9.]+):([-0-9.]+)', eff_move, re.IGNORECASE)
+                                if match: eff_rotate = f"{match.group(1)}:{match.group(2)}"
                                 else:
-                                    eff_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if eff_move else f"VER:{m_s:.1f}:{m_e:.1f}"
+                                    match_static = re.search(r'ROTATE:([-0-9.]+)', eff_move, re.IGNORECASE)
+                                    if match_static: eff_rotate = match_static.group(1)
+                            
+                            if scene.group_id and scene.group_settings:
+                                g = scene.group_settings
+                                g_zoom = g.get("zoom", "1.0:1.3")
+                                g_move = g.get("move", "HOR:50:50")
+                                
+                                try:
+                                    # Calculate group timing
+                                    group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
+                                    total_group_duration = sum([audio_durations.get(s, 1.0) + s.pause for s in group_scenes])
+                                    
+                                    # Find start time of CURRENT scene relative to group start
+                                    start_in_group = 0.0
+                                    for s in group_scenes:
+                                        if s == scene: break
+                                        s_dur = audio_durations.get(s, 1.0) + s.pause
+                                        start_in_group += s_dur
+                                    
+                                    # Interpolate Zoom
+                                    z_parts = g_zoom.split(':') if ':' in g_zoom else [g_zoom, g_zoom]
+                                    gz_start = safe_float(z_parts[0], 1.0); gz_end = safe_float(z_parts[1], 1.3)
+                                    
+                                    z_s = gz_start + (gz_end - gz_start) * (start_in_group / total_group_duration)
+                                    z_e = gz_start + (gz_end - gz_start) * ((start_in_group + duration) / total_group_duration)
+                                    eff_zoom = f"{z_s:.3f}:{z_e:.3f}"
+                                    
+                                    # Interpolate Move (Simple Linear)
+                                    m_configs = []
+                                    if '+' in g_move:
+                                        for p in [p.strip() for p in g_move.split('+')]:
+                                            mp = p.split(':')
+                                            if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
+                                    else:
+                                        mp = g_move.split(':')
+                                        if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
+                                    
+                                    for cfg in m_configs:
+                                        ms = cfg['s']; me = cfg['e']
+                                        m_s = ms + (me - ms) * (start_in_group / total_group_duration)
+                                        m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
+                                        if cfg['dir'] == 'HOR':
+                                            eff_move = f"HOR:{m_s:.1f}:{m_e:.1f}" if not eff_move or '+' not in eff_move else eff_move + f" + HOR:{m_s:.1f}:{m_e:.1f}"
+                                        else:
+                                            eff_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if eff_move else f"VER:{m_s:.1f}:{m_e:.1f}"
+                                except Exception as e:
+                                    logger.log(f"    ⚠️ Error en interpolación visual de grupo: {e}")
+                                    eff_zoom = "1.0:1.3"; eff_move = "HOR:50:50"
 
                         logger.log(f"  🎬 Item {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                         
@@ -647,16 +723,27 @@ def generate_video_avgl(project):
                             overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
                             if not os.path.exists(overlay_path): overlay_path = None
                         
-                        # Determine Asset Type (Image vs Video)
-                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv'))
-                        
+                        # v14.0 Sync Logic: Identify timing for groups
+                        sync_start_time = 0.0
+                        if scene.group_id:
+                            # Re-use calculated start_in_group if it exists (K-Burns logic above)
+                            # or calculate it here
+                            group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
+                            for s in group_scenes:
+                                if s == scene: break
+                                s_dur = audio_durations.get(s, 1.0) + s.pause
+                                sync_start_time += s_dur
+
                         if is_video:
-                            logger.log(f"  📽️ Asset detectado como VÍDEO: {os.path.basename(asset_path)}")
+                            v_vol = float(getattr(asset, 'video_volume', 0.0) or 0.0)
+                            logger.log(f"  📽️ Asset detectado como VÍDEO (v14.0): {os.path.basename(asset_path)} | Sync: {sync_start_time:.2f}s | Vol: {v_vol}")
                             clip = process_video_asset(
                                 asset_path, duration, target_size,
                                 overlay_path=overlay_path,
                                 fit=asset.fit,
-                                clips_to_close=clips_to_close
+                                clips_to_close=clips_to_close,
+                                start_time=sync_start_time,
+                                video_volume=v_vol
                             )
                         else:
                             # Apply Ken Burns (Standard image logic)
@@ -697,7 +784,8 @@ def generate_video_avgl(project):
                                 # AVGL v4: Offset is word-based. 
                                 # Calculate delay: (scene_audio_duration / scene_word_count) * offset
                                 delay = 0
-                                if sfx_item.offset > 0 and audio_clip:
+                                sfx_offset = int(sfx_item.offset or 0)
+                                if sfx_offset > 0 and audio_clip:
                                     # Count words in scene text
                                     clean_text = re.sub(r'\[.*?\]', '', scene.text)
                                     words = clean_text.split()
@@ -784,8 +872,21 @@ def generate_video_avgl(project):
                 except Exception as e:
                     logger.log(f"    [WARNING] Error renderizando subtitulos: {e}")
 
-                # Set audio & append
-                clip = clip.with_audio(audio_clip)
+                # v14.0 Audio Mixing: Mix Voice + Original Video Sound (if volume > 0)
+                # v14.3: Robust check for audio presence
+                if audio_clip and clip.audio:
+                    from moviepy import CompositeAudioClip
+                    mixed_audio = CompositeAudioClip([audio_clip, clip.audio])
+                    clip = clip.with_audio(mixed_audio)
+                elif audio_clip:
+                    clip = clip.with_audio(audio_clip)
+                elif clip.audio:
+                    # v14.3: If NO text/voice, but video has audio, leave it as is
+                    pass
+                else:
+                    # v14.3: No voice, no video audio = silent clip
+                    clip = clip.without_audio()
+
                 block_scene_clips.append(clip)
                 
                 # Timestamps
@@ -793,9 +894,12 @@ def generate_video_avgl(project):
                 timestamps_list.append(f"{m:02d}:{s:02d} {scene.title}")
                 
                 # Ducking Intervals
-                if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
-                    for vs, ve in scene.voice_intervals: block_voice_intervals.append((block_cursor + vs, block_cursor + ve))
-                else: block_voice_intervals.append((block_cursor, block_cursor + voice_duration))
+                # v14.3 Smart Ducking: Only registr intervals if there is real text/voice
+                if audio_clip:
+                    if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
+                        for vs, ve in scene.voice_intervals: block_voice_intervals.append((block_cursor + vs, block_cursor + ve))
+                    else: 
+                        block_voice_intervals.append((block_cursor, block_cursor + voice_duration))
                 
                 current_time += duration; block_cursor += duration
 

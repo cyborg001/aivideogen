@@ -292,9 +292,20 @@
                                                     class="w-32 aspect-video bg-black rounded overflow-hidden relative border border-blue-500/50 shadow-lg flex-shrink-0 group/poster">
                                                     <template x-if="group.master_asset">
                                                         <div class="w-full h-full relative">
-                                                            <img :src="getAssetPath(group.master_asset)"
-                                                                class="w-full h-full object-cover opacity-80"
-                                                                onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+                                                            <!-- v14.3 Fix: Detect Video for Master Asset to avoid Flicker -->
+                                                            <!-- v14.4 Fix: Show real frame instead of icon -->
+                                                            <template x-if="isAssetVideo(group.master_asset)">
+                                                                <video :src="getAssetPath(group.master_asset)"
+                                                                    class="w-full h-full object-cover opacity-80"
+                                                                    preload="metadata" muted
+                                                                    onloadedmetadata="this.currentTime = 1">
+                                                                </video>
+                                                            </template>
+                                                            <template x-if="!isAssetVideo(group.master_asset)">
+                                                                <img :src="getAssetPath(group.master_asset)"
+                                                                    class="w-full h-full object-cover opacity-80"
+                                                                    onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+                                                            </template>
 
                                                             <!-- Badges -->
                                                             <div
@@ -406,27 +417,29 @@
                                                         <div class="flex-grow min-w-0 grid grid-cols-12 gap-4">
                                                             <div
                                                                 class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                                <template x-if="scene.assets?.[0]">
+                                                                <template
+                                                                    x-if="scene.assets?.[0] || group.master_asset">
                                                                     <div class="w-full h-full relative">
-                                                                        <img :src="getAssetPath(scene.assets[0])"
-                                                                            class="w-full h-full object-cover opacity-80"
-                                                                            onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
-
-                                                                        <!-- Video Overlay Icon -->
-                                                                        <template x-if="isAssetVideo(scene.assets[0])">
-                                                                            <div
-                                                                                class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
-                                                                                <svg class="w-4 h-4 text-white opacity-70"
-                                                                                    fill="currentColor"
-                                                                                    viewBox="0 0 20 20">
-                                                                                    <path
-                                                                                        d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.333-5.89a1.5 1.5 0 000-2.538L6.3 2.841z" />
-                                                                                </svg>
-                                                                            </div>
+                                                                        <template
+                                                                            x-if="isAssetVideo(scene.assets?.[0]?.id || group.master_asset)">
+                                                                            <video
+                                                                                :src="getAssetPath(scene.assets?.[0]?.id || group.master_asset)"
+                                                                                class="w-full h-full object-cover opacity-80"
+                                                                                preload="metadata" muted
+                                                                                onloadedmetadata="this.currentTime = 1">
+                                                                            </video>
                                                                         </template>
+                                                                        <template
+                                                                            x-if="!isAssetVideo(scene.assets?.[0]?.id || group.master_asset)">
+                                                                            <img :src="getAssetPath(scene.assets?.[0]?.id || group.master_asset)"
+                                                                                class="w-full h-full object-cover opacity-80"
+                                                                                onerror="this.src='/static/img/placeholder.png'; this.style.opacity=0.3">
+                                                                        </template>
+
                                                                     </div>
                                                                 </template>
-                                                                <template x-if="!scene.assets?.[0]">
+                                                                <template
+                                                                    x-if="!scene.assets?.[0] && !group.master_asset">
                                                                     <div
                                                                         class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
                                                                         <span class="text-[8px]">📺</span>
@@ -577,7 +590,7 @@
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
         <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[95vh] animate-scale"
-            @click.away="showSettingsModal = false">
+            @click.away="if (!showRecordModal) showSettingsModal = false">
             <div class="p-6 border-b border-gray-800 shrink-0">
                 <h2 class="text-xl font-bold text-gray-200 flex items-center gap-2">
                     <span>⚙️</span> Configuración del Proyecto
@@ -709,7 +722,7 @@
         x-transition.opacity x-cloak>
 
         <div class="bg-gray-800 w-full max-w-4xl rounded-xl shadow-2xl border border-gray-600 flex flex-col max-h-[90vh] animate-scale"
-            @click.away="closeModal()" x-transition:enter="transition ease-out duration-300"
+            @click.away="if (!showRecordModal) closeModal()" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
 
             <!-- Modal Header -->
@@ -810,6 +823,29 @@
                                 (Pitch)</label>
                             <input type="text" x-model="formData.pitch" placeholder="+0Hz"
                                 class="w-full bg-gray-700 border border-gray-600 rounded p-1 text-xs text-white">
+                        </div>
+                    </div>
+
+                    <!-- Asset Audio Control (v14.4 - Moved to Left Col for Groups visibility) -->
+                    <div x-show="isVideo" class="bg-blue-900/20 p-3 rounded border border-blue-500/20 mt-2"
+                        x-transition>
+                        <label class="flex items-center justify-between cursor-pointer">
+                            <span class="text-xs text-blue-300 font-bold">Mezclar Audio Original (Modo Cine)</span>
+                            <div
+                                class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="formData.asset_audio_bool"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer transition-transform duration-200"
+                                    style="top: 2px; left: 2px;" />
+                                <label
+                                    class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
+                            </div>
+                        </label>
+                        <div x-show="formData.asset_audio_bool" class="mt-2 flex items-center gap-2" x-transition>
+                            <span class="text-[10px] text-gray-500">Volumen:</span>
+                            <input type="range" min="0" max="1" step="0.1" x-model="formData.asset_audio_vol"
+                                class="flex-1 h-1">
+                            <span class="text-[10px] font-mono text-blue-400"
+                                x-text="Math.round((formData.asset_audio_vol || 0.8)*100)+'%'"></span>
                         </div>
                     </div>
 
@@ -918,28 +954,6 @@
                             </button>
                         </div>
 
-                        <!-- Asset Audio Control (v4.6) -->
-                        <div x-show="isVideo" class="bg-blue-900/20 p-2 rounded border border-blue-500/20 mt-2"
-                            x-transition>
-                            <label class="flex items-center justify-between cursor-pointer">
-                                <span class="text-xs text-blue-300 font-bold">Aportar Sonido Original</span>
-                                <div
-                                    class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
-                                    <input type="checkbox" x-model="formData.asset_audio_bool"
-                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer transition-transform duration-200"
-                                        style="top: 2px; left: 2px;" />
-                                    <label
-                                        class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
-                                </div>
-                            </label>
-                            <div x-show="formData.asset_audio_bool" class="mt-2 flex items-center gap-2" x-transition>
-                                <span class="text-[10px] text-gray-500">Volumen:</span>
-                                <input type="range" min="0" max="1" step="0.1" x-model="formData.asset_audio_vol"
-                                    class="flex-1 h-1">
-                                <span class="text-[10px] font-mono text-blue-400"
-                                    x-text="Math.round((formData.asset_audio_vol || 0.8)*100)+'%'"></span>
-                            </div>
-                        </div>
 
                         <p class="text-[10px] text-gray-500 mt-1">Debe estar en la carpeta
                             <code>media/assets</code> o ser una ruta absoluta.
@@ -1134,7 +1148,7 @@
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
         <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm flex flex-col max-h-[90vh] animate-scale"
-            @click.away="showBlockModal = false">
+            @click.away="if (!showRecordModal) showBlockModal = false">
             <div class="p-6 border-b border-gray-800 shrink-0">
                 <h3 class="text-lg font-bold text-gray-200">Configurar Bloque</h3>
             </div>
@@ -1200,7 +1214,7 @@
         class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         x-transition.opacity x-cloak>
         <div class="bg-gray-900 border border-blue-500/30 rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] animate-scale"
-            @click.away="showGroupModal = false">
+            @click.away="if (!showRecordModal) showGroupModal = false">
             <div class="p-6 border-b border-gray-700 shrink-0">
                 <h3 class="text-lg font-bold text-blue-300">Configurar Grupo</h3>
             </div>
@@ -1243,12 +1257,32 @@
                                 <option value="cinematic">Cinematic</option>
                             </select>
                         </div>
-                        <div class="flex items-center gap-2 mt-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer mt-1">
                                 <input type="checkbox" x-model="groupForm.fit"
                                     class="rounded bg-gray-900 border-gray-600">
                                 <span class="text-xs text-gray-300">Fit (No Recortar)</span>
                             </label>
+
+                            <!-- Asset Audio Control for Groups (v14.1) -->
+                            <div class="bg-blue-900/40 p-1.5 rounded border border-blue-400/20">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <span class="text-[9px] text-blue-300 font-bold uppercase">Audio Original</span>
+                                    <div class="relative inline-block w-8 h-4 align-middle select-none">
+                                        <input type="checkbox" x-model="groupForm.asset_audio_bool"
+                                            class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer" />
+                                        <label
+                                            class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-700 cursor-pointer"></label>
+                                    </div>
+                                </label>
+                                <div x-show="groupForm.asset_audio_bool" class="mt-1 flex items-center gap-1"
+                                    x-transition>
+                                    <input type="range" min="0" max="1" step="0.1" x-model="groupForm.asset_audio_vol"
+                                        class="flex-1 h-0.5">
+                                    <span class="text-[8px] font-mono text-blue-400"
+                                        x-text="Math.round((groupForm.asset_audio_vol || 0.8)*100)+'%'"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1392,7 +1426,8 @@
                     title: '', master_asset: '', overlay: '', fit: false, zoom: '1.0:1.3',
                     usePanHor: false, panHorStart: 0, panHorEnd: 0,
                     usePanVer: false, panVerStart: 0, panVerEnd: 0,
-                    music: '', volume: 0.2, voice: '', voice_speed: '', audio: ''
+                    music: '', volume: 0.2, voice: '', voice_speed: '', audio: '',
+                    asset_audio_bool: false, asset_audio_vol: 0.8
                 },
 
                 // Settings Model
@@ -1453,9 +1488,19 @@
                             this.audioPreviewUrl = URL.createObjectURL(this.recordingBlob);
                             this.isRecording = false;
                             clearInterval(this.recordingInterval);
+
+                            // Reset preview player if exists
+                            this.$nextTick(() => {
+                                const player = this.$refs.audioPreview;
+                                if (player) {
+                                    player.pause();
+                                    player.currentTime = 0;
+                                    player.load(); // Force reload for new blob
+                                }
+                            });
                         };
 
-                        this.mediaRecorder.start();
+                        this.mediaRecorder.start(200); // v13.5: Use 200ms timeslice for better reliability
                         this.recordingInterval = setInterval(() => { this.recordingTimer++; }, 1000);
                     } catch (err) {
                         alert("Error al acceder al micrófono: " + err);
@@ -1466,6 +1511,12 @@
                     if (this.mediaRecorder && this.isRecording) {
                         this.mediaRecorder.stop();
                         this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    }
+                    // Immediate audio stop
+                    const player = this.$refs.audioPreview;
+                    if (player) {
+                        player.pause();
+                        player.currentTime = 0;
                     }
                 },
 
@@ -1511,6 +1562,11 @@
                     this.showRecordModal = false;
                     this.stopRecording();
                     this.recordingBlob = null;
+                    const player = this.$refs.audioPreview;
+                    if (player) {
+                        player.pause();
+                        player.currentTime = 0;
+                    }
                     if (this.audioPreviewUrl) URL.revokeObjectURL(this.audioPreviewUrl);
                     this.audioPreviewUrl = null;
                 },
@@ -1525,7 +1581,7 @@
                 },
 
                 // Getter para el panel de edición (usa formData.asset_type)
-                get isVideoForm() {
+                get isVideo() {
                     return this.isAssetVideo(this.formData.asset_type);
                 },
 
@@ -1662,7 +1718,10 @@
                                     }
                                 }
                                 if (blockMasterAsset && !hasValidAsset) {
-                                    scene.assets = [blockMasterAsset];
+                                    // v14.8 Fix: Non-destructive inheritance. Only set if empty.
+                                    if (!scene.assets || scene.assets.length === 0) {
+                                        scene.assets = [blockMasterAsset];
+                                    }
                                 }
                             });
 
@@ -1683,7 +1742,11 @@
                                             }
 
                                             if (groupMasterAsset && !hasValidAsset) {
-                                                newScene.assets = [groupMasterAsset];
+                                                // v14.8 Fix: Non-destructive inheritance. 
+                                                // If already has an object (even with null ID), preserve it for video_volume
+                                                if (!newScene.assets || newScene.assets.length === 0) {
+                                                    newScene.assets = [groupMasterAsset];
+                                                }
                                             }
                                         });
                                     }
@@ -1924,7 +1987,9 @@
                         volume: group.volume !== undefined ? group.volume : 0.2,
                         voice: group.voice || '',
                         voice_speed: group.voice_speed || '',
-                        audio: group.audio || ''
+                        audio: group.audio || '',
+                        asset_audio_bool: !!group.video_volume,
+                        asset_audio_vol: (typeof group.video_volume === 'number') ? group.video_volume : (group.video_volume ? 1.0 : 0.8)
                     };
 
                     // Parse existing move string
@@ -1984,6 +2049,7 @@
                         group.voice = this.groupForm.voice;
                         group.voice_speed = this.groupForm.voice_speed;
                         group.audio = this.groupForm.audio;
+                        group.video_volume = this.groupForm.asset_audio_bool ? parseFloat(this.groupForm.asset_audio_vol) : null;
 
                         // Apply Visuals to Scenes (Master Shot Interpolation)
                         if (group.scenes && group.scenes.length > 0) {
@@ -2044,6 +2110,7 @@
                                     fit: group.fit,
                                     zoom: sZoom,
                                     move: sMove,
+                                    video_volume: group.video_volume,
                                     shake: group.shake || false,
                                     rotate: group.rotate || null
                                 };
@@ -2127,7 +2194,13 @@
                             scene = this.script.blocks[blockIndex].scenes[sceneIndex];
                         }
 
-                        const asset = scene.assets && scene.assets.length > 0 ? scene.assets[0] : {};
+                        let asset = scene.assets && scene.assets.length > 0 ? scene.assets[0] : null;
+
+                        // v14.6: Fallback to Group Master Asset if in Group and no scene asset ID
+                        // NON-DESTRUCTIVE: We only use the group ID for the UI if the scene has no asset ID
+                        const displayAssetPath = (asset && asset.id) ? asset.id : (groupIndex !== null ? this.script.blocks[blockIndex].groups[groupIndex].master_asset : '');
+
+                        if (!asset) asset = {};
 
                         // Parse Subtitle for UI (Word-Based Sync v3.2)
                         // Note: If multiple subs exist, we load the first one into the editor fields for quick tweaking
@@ -2150,7 +2223,7 @@
 
                         this.formData = {
                             title: scene.title || '',
-                            asset_type: asset.id || asset.type || '',
+                            asset_type: displayAssetPath,
                             text: scene.text || '',
                             pause: scene.pause || 0.5,
                             subtitle: subTxt,
@@ -2165,8 +2238,8 @@
                             // Visual FX
                             overlay: (asset.overlay || '').replace('.mp4', '').replace('.mov', ''),
                             fit: asset.fit || false,
-                            asset_audio_bool: !!asset.audio,
-                            asset_audio_vol: (typeof asset.audio === 'number') ? asset.audio : (asset.audio ? 1.0 : 0.8),
+                            asset_audio_bool: asset.video_volume !== null && asset.video_volume !== undefined,
+                            asset_audio_vol: (typeof asset.video_volume === 'number') ? asset.video_volume : 0.8,
                             useZoom: !!asset.zoom,
                             zoomStr: asset.zoom || '1.0',
 
@@ -2292,18 +2365,19 @@
                     }
                     let moveStr = moveParts.length > 0 ? moveParts.join(' + ') : null;
 
+                    const isInGroup = this.editGroupIndex !== null;
                     const assetObj = {
-                        id: this.formData.asset_type,
-                        type: (this.formData.asset_type.toLowerCase().endsWith('.mp4') || this.formData.asset_type.toLowerCase().endsWith('.mov')) ? 'video' : 'image',
-                        zoom: currentZoom,
-                        move: moveStr,
+                        id: isInGroup ? null : this.formData.asset_type,
+                        type: this.isAssetVideo(this.formData.asset_type || '') ? 'video' : 'image',
+                        zoom: isInGroup ? null : currentZoom,
+                        move: isInGroup ? null : moveStr,
                         overlay: this.formData.overlay || null,
-                        fit: this.formData.fit,
-                        audio: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null,
-                        shake: this.formData.shake || false,
-                        shake_intensity: parseInt(this.formData.shake_intensity || 5),
-                        rotate: this.formData.rotate || null,
-                        w_rotate: this.formData.w_rotate || null
+                        fit: isInGroup ? false : this.formData.fit,
+                        video_volume: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null,
+                        shake: isInGroup ? false : (this.formData.shake || false),
+                        shake_intensity: isInGroup ? 0 : parseInt(this.formData.shake_intensity || 5),
+                        rotate: isInGroup ? null : (this.formData.rotate || null),
+                        w_rotate: isInGroup ? null : (this.formData.w_rotate || null)
                     };
 
                     // 2. Build Scene Object
@@ -2649,7 +2723,8 @@
 
                 <!-- Preview Audio -->
                 <template x-if="audioPreviewUrl">
-                    <audio :src="audioPreviewUrl" controls class="w-full h-8 brightness-90"></audio>
+                    <audio x-ref="audioPreview" :src="audioPreviewUrl" controls
+                        class="w-full h-8 brightness-90"></audio>
                 </template>
 
                 <!-- Controls -->
@@ -2674,9 +2749,20 @@
                                 class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg font-bold text-sm transition">
                                 Reintentar
                             </button>
-                            <button @click="uploadRecording()"
-                                class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition transform active:scale-95">
-                                ✅ Usar Audio
+                            <button @click="uploadRecording()" :disabled="isSaving"
+                                class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="!isSaving">✅ Usar Audio</span>
+                                <span x-show="isSaving" class="flex items-center justify-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    Subiendo...
+                                </span>
                             </button>
                         </div>
                     </template>
@@ -2695,7 +2781,7 @@
         class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4" x-transition
         x-cloak>
         <div class="bg-gray-900 border border-indigo-500/50 rounded-xl shadow-[0_0_50px_rgba(79,70,229,0.3)] w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-scale"
-            @click.away="showBulkModal = false">
+            @click.away="if (!showRecordModal) showBulkModal = false">
 
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/50">
                 <div>

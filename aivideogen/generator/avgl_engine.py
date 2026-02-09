@@ -31,7 +31,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -41,6 +41,7 @@ class AVGLAsset:
         self.rotate = rotate
         self.shake_intensity = shake_intensity
         self.w_rotate = w_rotate
+        self.video_volume = video_volume
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -282,7 +283,8 @@ def parse_avgl_json(json_text):
                     shake=a_data.get("shake", False),
                     rotate=a_data.get("rotate"),
                     shake_intensity=a_data.get("shake_intensity", 5),
-                    w_rotate=a_data.get("w_rotate")
+                    w_rotate=a_data.get("w_rotate"),
+                    video_volume=a_data.get("video_volume")
                 ))
             
             for sfx_data in s_data.get("sfx", []):
@@ -311,27 +313,41 @@ def parse_avgl_json(json_text):
                 scene.text = clean_txt
                 scene.subtitles = extracted_subs or s_data.get("subtitles", [])
 
-                # Inheritance from Group Master Asset
-                assets_to_use = s_data.get("assets", [])
-                if not assets_to_use and master_asset:
-                    assets_to_use = [master_asset]
+                # Inheritance from Group Master Asset (v14.5 Refined)
+                raw_assets = s_data.get("assets", [])
+                if not raw_assets and master_asset:
+                    raw_assets = [master_asset]
                 
-                for a_data in assets_to_use:
-                    if isinstance(a_data, str): scene.assets.append(AVGLAsset(a_data))
-                    else: scene.assets.append(AVGLAsset(
-                        a_data.get("id") or a_data.get("type"), 
-                        a_data.get("zoom"), 
-                        a_data.get("move"), 
-                        a_data.get("overlay"), 
-                        a_data.get("fit", False),
-                        shake=a_data.get("shake", False),
-                        rotate=a_data.get("rotate"),
-                        shake_intensity=a_data.get("shake_intensity", 5)
-                    ))
+                for a_data in raw_assets:
+                    if isinstance(a_data, str):
+                        scene.assets.append(AVGLAsset(a_data))
+                    else:
+                        # v14.7: Clearer inheritance. Ignore 'video'/'image' as valid IDs.
+                        target_id = a_data.get("id")
+                        if (not target_id or target_id in ['video', 'image']) and master_asset:
+                            target_id = master_asset if isinstance(master_asset, str) else (master_asset.get("id") or master_asset.get("type"))
+                        
+                        scene.assets.append(AVGLAsset(
+                            target_id, 
+                            a_data.get("zoom"), 
+                            a_data.get("move"), 
+                            a_data.get("overlay"), 
+                            a_data.get("fit", False),
+                            shake=a_data.get("shake", False),
+                            rotate=a_data.get("rotate"),
+                            shake_intensity=a_data.get("shake_intensity", 5),
+                            w_rotate=a_data.get("w_rotate"),
+                            video_volume=a_data.get("video_volume")
+                        ))
 
                 for sfx_data in s_data.get("sfx", []):
                     if isinstance(sfx_data, str): scene.sfx.append(AVGLSFX(sfx_data))
-                    else: scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), sfx_data.get("volume", 0.5), sfx_data.get("offset", 0)))
+                    else: 
+                        sfx_vol = sfx_data.get("volume")
+                        if sfx_vol is None: sfx_vol = 0.5
+                        sfx_off = sfx_data.get("offset")
+                        if sfx_off is None: sfx_off = 0
+                        scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), float(sfx_vol), int(sfx_off)))
                 
                 block.scenes.append(scene)
 
