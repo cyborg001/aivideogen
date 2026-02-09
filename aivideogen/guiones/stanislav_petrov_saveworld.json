@@ -1,0 +1,94 @@
+{
+    "title": "Stanislav Petrov: El Hombre que Salvó al Mundo",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "Viral Dirge - Ryan Stasik.mp3",
+    "blocks": [
+        {
+            "title": "INTRO: El Silencio Nuclear",
+            "scenes": [
+                {
+                    "title": "Hook de Impacto",
+                    "text": "Sabías que el mundo estuvo a solo segundos de una guerra nuclear total y un solo hombre detuvo el apocalipsis por pura intuición.",
+                    "assets": [
+                        {
+                            "id": "doomsday_countdown_clock.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Bienvenida NotiACI",
+                    "text": "Bienvenidos a NotiACI. Esta es la historia de Stanislav Petrov, el oficial soviético que salvó a la humanidad en 1983.",
+                    "assets": [
+                        {
+                            "id": "agi_pentagon_war_room.png",
+                            "zoom": "1.1:1.0",
+                            "move": "HOR:0:20",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "NUDO: La Falsa Alarma",
+            "scenes": [
+                {
+                    "title": "Alerta de Misiles",
+                    "text": "Los radares soviéticos detectaron cinco misiles nucleares lanzados desde Estados Unidos. Todo indicaba una invasión inminente.",
+                    "assets": [
+                        {
+                            "id": "cold_war_satellite_race.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "La Decisión",
+                    "text": "A pesar de la presión, Petrov decidió NO reportar el ataque a sus superiores, sospechando que se trataba de un error técnico.",
+                    "assets": [
+                        {
+                            "id": "classified_stamp_files.png",
+                            "zoom": "1.2:1.1",
+                            "move": "VER:0:10",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "CIERRE: El Legado",
+            "scenes": [
+                {
+                    "title": "La Verdad",
+                    "text": "Tenía razón. Fue un reflejo solar en las nubes. Si Petrov hubiera seguido el protocolo, hoy no estaríamos aquí.",
+                    "assets": [
+                        {
+                            "id": "earth_from_space_dark.png",
+                            "zoom": "1.0:1.5",
+                            "w_rotate": 3.0,
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Debate Final",
+                    "text": "¿Crees que la intuición humana es superior a los algoritmos en momentos críticos? Comenta abajo y suscríbete a NotiACI.",
+                    "assets": [
+                        {
+                            "id": "aivideogen_news_end.png",
+                            "zoom": "1.1:1.0",
+                            "move": "VER:100:0",
+                            "fit": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
