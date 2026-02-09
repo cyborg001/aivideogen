@@ -222,12 +222,23 @@
                     }
                 })
                     .then(response => {
-                        alert("Aplicación apagada. Puede cerrar esta pestaña.");
-                        window.close();
+                        // v13.5: Robust window closing trick
+                        // Using window.open('', '_self') makes the browser think 
+                        // this window was opened by script, allowing .close() to work.
+                        setTimeout(() => {
+                            window.open('', '_self').close();
+                            // Fallback if close still fails
+                            document.body.innerHTML = `
+                                <div style="background:#121212; color:white; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
+                                    <h1 style="color:#cf6679;">🔌 Aplicación Apagada</h1>
+                                    <p>El servidor se ha detenido. Ya puedes cerrar esta ventana manualmente.</p>
+                                </div>`;
+                        }, 500);
                     })
                     .catch(err => {
                         console.error("Error shutdown:", err);
-                        alert("Se envió la señal de apagado.");
+                        // Even if it fails, try to close if status 0 (server died fast) or special error
+                        window.open('', '_self').close();
                     });
             }
         }

@@ -471,15 +471,12 @@ def youtube_callback(request):
 def upload_to_youtube_view(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     
-    # Check if already uploaded to prevent duplicates
+    # v13.5: Informational only, no longer blocks (User Request)
+    already_uploaded = False
     if project.youtube_video_id:
-        video_url = f"https://www.youtube.com/watch?v={project.youtube_video_id}"
-        messages.info(request, f"[INFO] Este video ya fue subido a YouTube anteriormente.")
-        return render(request, 'generator/youtube_upload_success.html', {
-            'video_url': video_url,
-            'fallback_url': request.build_absolute_uri('/'),
-            'already_uploaded': True
-        })
+        already_uploaded = True
+        video_url = f"https://www.youtube.com/watch?v={project.youtube_video_id.split(' ')[0]}" if ' ' in project.youtube_video_id else f"https://www.youtube.com/watch?v={project.youtube_video_id}"
+        messages.info(request, f"[INFO] Nota: Este video ya tiene registros de subida previos: {project.youtube_video_id}")
     
     if not project.output_video or not project.output_exists:
         messages.error(request, "[ERROR] El video aun no se ha generado o el archivo no existe.")
@@ -848,21 +845,21 @@ def save_project_script_json(request, project_id):
                         if 'scenes' in block:
                             for scene in block['scenes']:
                                 if 'assets' in scene:
-                                    for asset in scene['assets']:
-                                        if isinstance(asset, dict) and 'type' in asset:
-                                            # If it's a URL or path, strip it
-                                            if '://' in asset['type'] or '/media/' in asset['type']:
-                                                # v11.9 Fix: Preserve Absolute Paths if they exist locally
-                                                # Only strip if it's NOT a valid absolute path on disk
-                                                val = asset['type']
-                                                is_valid_abs = False
-                                                try:
-                                                    if os.path.isabs(val) and os.path.exists(val):
-                                                        is_valid_abs = True
-                                                except: pass
+                                            for asset in scene['assets']:
+                                                if isinstance(asset, dict):
+                                                    for key in ['id', 'type']:
+                                                        if key in asset:
+                                                            val = str(asset[key])
+                                                            if ('://' in val or ':\\' in val or '/media/' in val):
+                                                                # v11.9 Fix: Preserve Absolute Paths if they exist locally
+                                                                is_valid_abs = False
+                                                                try:
+                                                                    if os.path.isabs(val) and os.path.exists(val):
+                                                                        is_valid_abs = True
+                                                                except: pass
 
-                                                if not is_valid_abs:
-                                                    asset['type'] = os.path.basename(asset['type'])
+                                                                if not is_valid_abs:
+                                                                    asset[key] = os.path.basename(val)
                         # Groups
                         if 'groups' in block:
                             for group in block['groups']:
@@ -1141,7 +1138,7 @@ def toggle_auto_upload(request, project_id):
     """
     project = get_object_or_404(VideoProject, id=project_id)
     project.auto_upload_youtube = not project.auto_upload_youtube
-    project.save()
+    # Replaced project.save() with a more specific one to avoid overwriting background state
     
     status_str = "ACTIVADA" if project.auto_upload_youtube else "DESACTIVADA"
     project.log_output += f"\\n[System] 🔄 Subida automática {status_str} por el usuario."

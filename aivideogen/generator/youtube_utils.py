@@ -213,6 +213,7 @@ def trigger_auto_upload(project):
     Safe to call from background thread.
     """
     import logging
+    from datetime import datetime
     logger = logging.getLogger(__name__)
     
     # 1. Check if authorized
@@ -223,15 +224,16 @@ def trigger_auto_upload(project):
         return False
 
     if not youtube:
-        project.log_output += "\n[YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización. Debes autorizar al menos una vez manualmente."
+        project.log_output += "\n[YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización."
         project.save(update_fields=['log_output'])
         return False
         
-    # 2. Check if already uploaded
+    # v13.5: Support for multiple uploads (User Request)
+    # Replaced blocking check with just a log if it exists
     if project.youtube_video_id:
-        return True
+        logger.info(f"[YouTube] Proyecto {project.id} ya tiene IDs previos: {project.youtube_video_id}")
         
-        # 3. Prepare metadata
+    # 3. Prepare metadata
     try:
         from .utils import get_human_title
         title = get_human_title(project.title)
@@ -244,24 +246,22 @@ def trigger_auto_upload(project):
         script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
         tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
         
-        # 2. Automatic Contextual Tags (Extracted from title/content)
+        # 2. Automatic Contextual Tags
         contextual_tags = generate_contextual_tags(project)
         tags_list.extend(contextual_tags)
         
         # 3. Fixed Global Tags (.env)
         fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
-        # Clean quotes
         if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
            (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
             fixed_tags = fixed_tags[1:-1].strip()
         tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
         
-        # Deduplicate and limit
         final_tags = list(dict.fromkeys(tags_list))[:20]
  
         # 4. Upload
-        logger.info(f"[YouTube] Iniciando subida automática para proyecto {project.id}: {title}")
-        project.log_output += f"\n[YouTube] [START] Iniciando subida con Tags Contextuales: {', '.join(final_tags[:5])}..."
+        logger.info(f"[YouTube] Iniciando subida para proyecto {project.id}: {title}")
+        project.log_output += f"\n[YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
         project.save(update_fields=['log_output'])
         
         result = upload_video(youtube, project.output_video.path, title, description, tags=final_tags)
@@ -269,19 +269,29 @@ def trigger_auto_upload(project):
         if result and 'id' in result:
              video_id = result['id']
              video_url = f"https://www.youtube.com/watch?v={video_id}"
-             project.youtube_video_id = video_id
+             
+             # v13.5: ID with Timestamp (Append strategy)
+             timestamp = datetime.now().strftime('%d/%m %H:%M')
+             entry = f"{video_id} ({timestamp})"
+             
+             if project.youtube_video_id:
+                 # Accumulate multiple IDs separated by space or newline
+                 project.youtube_video_id = f"{project.youtube_video_id} | {entry}"
+             else:
+                 project.youtube_video_id = entry
+                 
              project.log_output += f"\n[YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
-             project.save()
-             logger.info(f"[YouTube] Subida automática exitosa - Video ID: {video_id}")
+             project.save(update_fields=['youtube_video_id', 'log_output'])
+             logger.info(f"[YouTube] Subida exitosa - Video ID: {video_id}")
              return True
         else:
-            project.log_output += "\n[YouTube] [WARNING] La subida terminó pero no se recibió confirmación de ID."
+            project.log_output += "\n[YouTube] [WARNING] La subida terminó sin confirmación de ID."
             project.save(update_fields=['log_output'])
             
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"[YouTube] Error en subida automática: {error_msg}")
-        project.log_output += f"\n[YouTube] [ERROR] Error en subida automática: {error_msg}"
+        logger.error(f"[YouTube] Error en subida: {error_msg}")
+        project.log_output += f"\n[YouTube] [ERROR] Error en subida: {error_msg}"
         project.save(update_fields=['log_output'])
         
     return False

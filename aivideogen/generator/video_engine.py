@@ -322,7 +322,7 @@ def generate_video_avgl(project):
         
         # Prepare
         project.status = 'processing'
-        project.save()
+        project.save(update_fields=['status'])
         
         # Log Video Format
         format_type = "SHORT" if project.aspect_ratio == 'portrait' else "VIDEO"
@@ -341,7 +341,7 @@ def generate_video_avgl(project):
 
         # Update project title if specified and NOT already set by user manually
         if script.title and project.title in ["Sin Título", "Video Sin Título", "Proyecto sin título", ""]:
-            project.title = script.title; project.save()
+            project.title = script.title; project.save(update_fields=['title'])
 
         # FORCE OVERRIDE: Apply Project Voice to Script
         if project.voice_id:
@@ -418,7 +418,8 @@ def generate_video_avgl(project):
         # Check if we have at least some audio or scenes
         if not audio_files:
             logger.log("❌ Error fatal: No se generó ningún audio.")
-            project.status = 'error'; project.save()
+            project.status = 'error'
+            project.save(update_fields=['status'])
             play_finish_sound(success=False)
             return
             
@@ -493,8 +494,8 @@ def generate_video_avgl(project):
                 clip = None
                 if scene.assets:
                     asset = scene.assets[0]
-                    # v11.9 Fix: Support Absolute Paths Priority
-                    raw_path = str(asset.type or asset.id or "").strip()
+                    # v11.9 Fix: Support Absolute Paths Priority & Robustness
+                    raw_path = str(getattr(asset, 'type', '') or getattr(asset, 'id', '') or "").strip()
                     asset_path = None
                     
                     # 1. Check Absolute Path (Priority)
@@ -560,9 +561,38 @@ def generate_video_avgl(project):
                     
                     if not clip and os.path.exists(asset_path):
                         # ═══════════════════════════════════════════════════════════════════
-                        # MASTER SHOT / GROUP INTERPOLATION (v5.2)
+                        # MASTER SHOT / GROUP INTERPOLATION & V5.0 EFFECTS
                         eff_zoom = asset.zoom or "1.0:1.3"
                         eff_move = asset.move or "HOR:50:50"
+                        eff_shake = getattr(asset, 'shake', False)
+                        eff_shake_intensity = getattr(asset, 'shake_intensity', 5)
+                        eff_rotate = getattr(asset, 'rotate', None)
+                        
+                        # v5.0 Directional Aliases (Extended Support)
+                        MOVE_ALIASES = {
+                            "UP": "VER:100:0",
+                            "DOWN": "VER:0:100",
+                            "LEFT": "HOR:100:0",
+                            "RIGHT": "HOR:0:100",
+                            "CENTER": "HOR:50:50"
+                        }
+                        
+                        raw_move = str(eff_move).strip().upper()
+                        if raw_move in MOVE_ALIASES:
+                            eff_move = MOVE_ALIASES[raw_move]
+                        
+                        # v5.0 Parsing: Extract SHAKE/ROTATE from eff_move if present
+                        if eff_move and 'SHAKE' in eff_move.upper():
+                            match = re.search(r'SHAKE:(\d+)', eff_move, re.IGNORECASE)
+                            eff_shake = True
+                            if match: eff_shake_intensity = int(match.group(1))
+                        
+                        if eff_move and 'ROTATE' in eff_move.upper():
+                            match = re.search(r'ROTATE:([-0-9.]+):([-0-9.]+)', eff_move, re.IGNORECASE)
+                            if match: eff_rotate = f"{match.group(1)}:{match.group(2)}"
+                            else:
+                                match_static = re.search(r'ROTATE:([-0-9.]+)', eff_move, re.IGNORECASE)
+                                if match_static: eff_rotate = match_static.group(1)
                         
                         if scene.group_id and scene.group_settings:
                             g = scene.group_settings
@@ -636,9 +666,9 @@ def generate_video_avgl(project):
                                 move=eff_move,
                                 overlay_path=overlay_path, 
                                 fit=asset.fit,
-                                shake=getattr(asset, 'shake', False),
-                                shake_intensity=getattr(asset, 'shake_intensity', 5),
-                                rotate=getattr(asset, 'rotate', None),
+                                shake=eff_shake,
+                                shake_intensity=eff_shake_intensity,
+                                rotate=eff_rotate,
                                 w_rotate=getattr(asset, 'w_rotate', None)
                             )
                 else:
@@ -1085,17 +1115,17 @@ def generate_video_avgl(project):
             project.timestamps = "\n".join(timestamps_list)
             project.status = 'completed'
             project.progress = 100
-            project.save()
+            project.save(update_fields=['output_video', 'duration', 'timestamps', 'status', 'progress'])
             
             logger.log(f"✅ ¡Video generado con éxito! ({output_path})")
         project.progress_total = 100.0 # Ensure final progress is 100%
-        project.status = 'completed'; project.save()
+        project.status = 'completed'; project.save(update_fields=['status', 'progress_total'])
         play_finish_sound(success=True)
         logger.log(f"[Done] Exito en {time.time()-start_time:.1f} segundos!")
 
     except Exception as e:
         logger.log(f"[FATAL] Error en renderizado: {e}")
-        project.status = 'failed'; project.save()
+        project.status = 'failed'; project.save(update_fields=['status'])
         play_finish_sound(success=False)
         raise e
     finally:
