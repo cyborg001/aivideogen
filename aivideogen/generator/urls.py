@@ -38,6 +38,7 @@ urlpatterns = [
     path('script/editor/', views.script_editor_standalone, name='script_editor_standalone'),
     path('api/script/save_file/', views.save_script_file, name='save_script_file'),
     path('api/asset/browse/', views.browse_local_asset, name='browse_local_asset'),
+    path('api/voice/upload/', views.upload_recording, name='upload_recording'),
     path('project/<int:project_id>/download_json/', views.download_project_script_json, name='download_project_script_json'),
     path('project/<int:project_id>/toggle_auto_upload/', views.toggle_auto_upload, name='toggle_auto_upload'),
     

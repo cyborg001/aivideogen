@@ -389,7 +389,47 @@ def stop_project(request, project_id):
             messages.info(request, "Generación cancelada. El proceso se detendrá en el próximo paso seguro.")
     return redirect('generator:project_detail', project_id=project.id)
 
+@csrf_exempt
+def upload_recording(request):
+    """Saves a voice recording blob sent from the browser."""
+    if request.method == 'POST' and request.FILES.get('audio'):
+        try:
+            audio_file = request.FILES['audio']
+            
+            # 1. Ensure recordings directory exists
+            recordings_dir = os.path.join(settings.MEDIA_ROOT, 'assets', 'recordings')
+            os.makedirs(recordings_dir, exist_ok=True)
+            
+            # 2. Generate unique filename
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"rec_{timestamp}.webm"
+            file_path = os.path.join(recordings_dir, filename)
+            
+            # 3. Save physical file
+            with open(file_path, 'wb+') as destination:
+                for chunk in audio_file.chunks():
+                    destination.write(chunk)
+            
+            # 4. Create Asset in DB with relative path
+            relative_path = f"assets/recordings/{filename}"
+            Asset.objects.create(
+                name=f"Grabación {timestamp}",
+                file=relative_path
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'path': relative_path,
+                'filename': filename
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
 def delete_asset(request, asset_id):
+
     asset = get_object_or_404(Asset, id=asset_id)
     if request.method == 'POST':
         asset_name = asset.name
@@ -404,19 +444,23 @@ def delete_asset(request, asset_id):
     return redirect('generator:asset_list')
 
 def asset_list(request):
-    # Reconcile physical folder with database
+    # Reconcile physical folder with database (Recursive)
     media_assets_path = os.path.join(settings.MEDIA_ROOT, 'assets')
     if not os.path.exists(media_assets_path):
         os.makedirs(media_assets_path)
     
-    # Get all files in the assets folder
+    # Recursively find all files in the assets folder
     try:
-        files_in_folder = os.listdir(media_assets_path)
-        for filename in files_in_folder:
-            asset_rel_path = f'assets/{filename}'
-            if not Asset.objects.filter(file=asset_rel_path).exists():
-                Asset.objects.create(file=asset_rel_path, name=filename)
+        for root, dirs, files in os.walk(media_assets_path):
+            for filename in files:
+                # Calculate path relative to media root
+                absolute_file_path = os.path.join(root, filename)
+                asset_rel_path = os.path.relpath(absolute_file_path, settings.MEDIA_ROOT).replace('\\', '/')
+                
+                if not Asset.objects.filter(file=asset_rel_path).exists():
+                    Asset.objects.create(file=asset_rel_path, name=filename)
     except Exception as e:
+        print(f"Error reconciling assets: {e}")
         pass
 
     assets = Asset.objects.all().order_by('-uploaded_at')

@@ -14,9 +14,10 @@ def main():
         if filter_type == 'audio':
             dialog_title = "Seleccionar Archivo de Audio (SFX/Música)"
             file_types = [
-                ("Audio Files", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac"),
+                ("Audio Files", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac *.webm"),
                 ("MP3", "*.mp3"),
                 ("WAV", "*.wav"),
+                ("WebM Audio", "*.webm"),
                 ("All files", "*.*")
             ]
         else:

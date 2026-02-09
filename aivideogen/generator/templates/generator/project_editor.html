@@ -815,8 +815,13 @@
 
                     <!-- CUSTOM AUDIO (New) -->
                     <div class="mt-4 bg-gray-800 p-2 rounded border border-gray-700/50">
-                        <label class="block text-xs uppercase text-green-400 font-bold mb-1">Audio Personalizado (Voz
-                            Real)</label>
+                        <label class="block text-xs uppercase text-green-400 font-bold mb-1 flex justify-between">
+                            <span>Audio Personalizado (Voz Real)</span>
+                            <button @click="showRecordModal = true"
+                                class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
+                                <span>🎙️</span> Grabar
+                            </button>
+                        </label>
                         <div class="flex gap-1">
                             <input type="text" x-model="formData.audio"
                                 placeholder="ruta/archivo.mp3 (en assets o media)"
@@ -1334,8 +1339,13 @@
 
                     <!-- Custom Audio for Group -->
                     <div class="bg-blue-900/20 p-2 rounded border border-blue-500/20">
-                        <label class="block text-[10px] uppercase text-green-400 font-bold mb-1">Audio Personalizado
-                            (Voz Real Grupo)</label>
+                        <label class="block text-[10px] uppercase text-green-400 font-bold mb-1 flex justify-between">
+                            <span>Audio Personalizado (Voz Real Grupo)</span>
+                            <button @click="showRecordModal = true"
+                                class="text-[8px] text-red-400 hover:text-red-300 flex items-center gap-1">
+                                <span>🎙️</span> Grabar
+                            </button>
+                        </label>
                         <div class="flex gap-1">
                             <input type="text" x-model="groupForm.audio" placeholder="ruta/archivo.mp3"
                                 class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white font-mono">
@@ -1370,6 +1380,7 @@
                 showBlockModal: false,
                 showGroupModal: false,
                 showBulkModal: false,
+                showRecordModal: false,
                 editIndex: null,
                 editBlockIndex: 0,
                 editGroupIndex: null,
@@ -1414,6 +1425,94 @@
                     asset_audio_vol: 0.8,
                     useZoom: false, zoomStart: 1.0, zoomEnd: 1.2,
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
+                },
+
+                // Recording State
+                isRecording: false,
+                mediaRecorder: null,
+                audioChunks: [],
+                audioPreviewUrl: null,
+                recordingBlob: null,
+                recordingTimer: 0,
+                recordingInterval: null,
+
+                async startRecording() {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        this.mediaRecorder = new MediaRecorder(stream);
+                        this.audioChunks = [];
+                        this.isRecording = true;
+                        this.recordingTimer = 0;
+
+                        this.mediaRecorder.ondataavailable = (e) => {
+                            if (e.data.size > 0) this.audioChunks.push(e.data);
+                        };
+
+                        this.mediaRecorder.onstop = () => {
+                            this.recordingBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                            this.audioPreviewUrl = URL.createObjectURL(this.recordingBlob);
+                            this.isRecording = false;
+                            clearInterval(this.recordingInterval);
+                        };
+
+                        this.mediaRecorder.start();
+                        this.recordingInterval = setInterval(() => { this.recordingTimer++; }, 1000);
+                    } catch (err) {
+                        alert("Error al acceder al micrófono: " + err);
+                    }
+                },
+
+                stopRecording() {
+                    if (this.mediaRecorder && this.isRecording) {
+                        this.mediaRecorder.stop();
+                        this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    }
+                },
+
+                async uploadRecording() {
+                    if (!this.recordingBlob) return;
+
+                    this.isSaving = true;
+                    const formData = new FormData();
+                    formData.append('audio', this.recordingBlob, 'recording.webm');
+
+                    try {
+                        const res = await fetch('/api/voice/upload/', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            // Assign to appropriate field
+                            if (this.showModal) {
+                                // Scene Edit Modal
+                                this.formData.audio = data.path;
+                            } else if (this.showSettingsModal) {
+                                // Not implemented for global yet, but could be
+                            } else if (this.showGroupModal) {
+                                this.groupForm.audio = data.path;
+                            }
+
+                            this.showRecordModal = false;
+                            this.recordingBlob = null;
+                            if (this.audioPreviewUrl) URL.revokeObjectURL(this.audioPreviewUrl);
+                            this.audioPreviewUrl = null;
+                        } else {
+                            alert("Error al subir: " + data.message);
+                        }
+                    } catch (e) {
+                        alert("Error de red: " + e);
+                    } finally {
+                        this.isSaving = false;
+                    }
+                },
+
+                cancelRecording() {
+                    this.showRecordModal = false;
+                    this.stopRecording();
+                    this.recordingBlob = null;
+                    if (this.audioPreviewUrl) URL.revokeObjectURL(this.audioPreviewUrl);
+                    this.audioPreviewUrl = null;
                 },
 
                 isAssetVideo(path) {
@@ -2519,7 +2618,79 @@
         });
     </script>
 
+    <!-- RECORDING MODAL -->
+    <div x-show="showRecordModal" style="display: none;"
+        class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[60] p-4" x-transition
+        x-cloak>
+        <div class="bg-gray-900 border border-red-500/50 rounded-xl shadow-[0_0_50px_rgba(239,68,68,0.2)] w-full max-w-sm overflow-hidden animate-scale"
+            @click.away="cancelRecording()">
+
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/50">
+                <h3 class="text-lg font-bold text-red-400">🎙️ Grabadora de Voz</h3>
+                <button @click="cancelRecording()" class="text-gray-500 hover:text-white">&times;</button>
+            </div>
+
+            <div class="p-8 flex flex-col items-center gap-6">
+                <!-- Recording Animation / Timer -->
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                    <template x-if="isRecording">
+                        <div class="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+                    </template>
+                    <div class="z-10 text-4xl" :class="isRecording ? 'text-red-500' : 'text-gray-600'">🎙️</div>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-2xl font-mono text-white" x-text="'00:' + String(recordingTimer).padStart(2, '0')">
+                    </p>
+                    <p class="text-xs text-gray-500 uppercase mt-1"
+                        x-text="isRecording ? 'Grabando...' : (audioPreviewUrl ? 'Grabación completa' : 'Listo para grabar')">
+                    </p>
+                </div>
+
+                <!-- Preview Audio -->
+                <template x-if="audioPreviewUrl">
+                    <audio :src="audioPreviewUrl" controls class="w-full h-8 brightness-90"></audio>
+                </template>
+
+                <!-- Controls -->
+                <div class="flex gap-4 w-full mt-4">
+                    <template x-if="!isRecording && !audioPreviewUrl">
+                        <button @click="startRecording()"
+                            class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95">
+                            🔴 Iniciar
+                        </button>
+                    </template>
+
+                    <template x-if="isRecording">
+                        <button @click="stopRecording()"
+                            class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95 border border-red-500/50">
+                            ⏹️ Detener
+                        </button>
+                    </template>
+
+                    <template x-if="audioPreviewUrl">
+                        <div class="flex gap-2 w-full">
+                            <button @click="audioChunks = []; audioPreviewUrl = null; startRecording()"
+                                class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg font-bold text-sm transition">
+                                Reintentar
+                            </button>
+                            <button @click="uploadRecording()"
+                                class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition transform active:scale-95">
+                                ✅ Usar Audio
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-950/50 border-t border-gray-800 text-[10px] text-gray-500 text-center">
+                El audio se guardará como asset y se asignará automáticamente a la escena.
+            </div>
+        </div>
+    </div>
+
     <!-- BULK TEXT EDITOR MODAL -->
+
     <div x-show="showBulkModal" style="display: none;"
         class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4" x-transition
         x-cloak>

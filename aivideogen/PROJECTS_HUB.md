@@ -28,6 +28,7 @@ Este documento es nuestra central de mando. Aquí rastreamos el progreso de cada
 - [ ] **TODO:** Generar el lote final de 5 imágenes de soporte faltantes.
 - [ ] **TODO:** Realizar render final en v2.17.6 usando Overlays de "polvo" y "luz".
 - [ ] **TODO:** Revisar la sincronización de las pausas dramáticas con los hitos clave.
+- [ ] **Ruta de Guiones:** `C:\Users\hp\aivideogen\notiaci\documentales`
 
 ---
 
@@ -45,22 +46,26 @@ Este documento es nuestra central de mando. Aquí rastreamos el progreso de cada
 ---
 
 ## 💡 4. Serie: "Sabías Que?" (Shorts)
-**Estado:** Planeación e Ideación
-**Objetivo:** Crear una serie de videos cortos (30-60s) sobre descubrimientos accidentales.
+**Estado:** Producción Activa
+**Objetivo:** Crear una serie de videos cortos (30-60s) sobre descubrimientos accidentales y obstinación histórica.
 
-- [x] Crear carpeta de proyecto `noticias/proyecto_sabias_que`.
-- [x] Definir lista inicial de 6 descubrimientos.
-- [x] Redactar los 6 guiones en formato de 5 columnas en `guiones_pro_v1.md`.
-- [/] **TODO:** Generar assets visuales temáticos para cada caso.
-    - [x] Guía de estilo "Moderno no-futurista" lista en `prompts_visuales.md`.
-    - [x] Imágenes Casos 1, 2, 3 y 4 listas en `media/assets`.
-    - [ ] Casos 5 y 6 pendientes (Esperando reinicio de cuota de IA).
+- [x] Crear carpeta de proyecto `notiaci/sabias que`.
+- [x] Definir lista inicial de hechos (Post-it, H. Pylori, Microondas, Viagra, Rayos X, Penicilina, Velcro).
+- [x] Lanzar primeros 7 videos de la serie.
+- [/] **TODO:** Redactar y producir nuevos guiones:
+    - [ ] Caso: **El Sastre Volador** (Franz Reichelt).
+    - [ ] Caso: **La Coca-Cola** (Error de mezcla).
+    - [ ] Caso: **Louis Pasteur** (Riesgo extremo con la vacuna de la rabia).
+    - [ ] Caso: **La Sacarina** (El químico que olvidó lavarse las manos).
+- [/] **TODO:** Generar assets visuales faltantes para los nuevos casos.
+- [ ] **Ruta de Guiones:** `C:\Users\hp\aivideogen\notiaci\sabias que`
 
 ---
 
 ## 🛠️ Herramientas de Apoyo
+- **Guía de Prompts (IA):** `docs/GUIA_PROMPTS_IA.md`
 - **Script de conteo**: `count_lines.py` (Funcional).
-- **Manuales**: `GUIA_DE_EFECTOS.md`, `MANUAL_COMPLETO.md`.
+- **Manuales**: `GUIA_DE_EFECTOS.md`, `MANUAL_COMPLETO.md`, `REGLAS_DE_ORO.md`.
 
 ---
 *¿Deseas que continuemos con alguna de estas tareas o prefieres abrir un nuevo frente de trabajo?*

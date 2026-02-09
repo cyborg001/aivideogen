@@ -1,0 +1,125 @@
+{
+    "title": "Tesla Model Pi: El Fin del iPhone",
+    "voice": "es-DO-EmilioNeural",
+    "speed": 1.1,
+    "background_music": "Epic_Journey_-_Yung_Logos.mp3",
+    "music_volume": 0.15,
+    "blocks": [
+        {
+            "title": "Hook Impactante",
+            "scenes": [
+                {
+                    "title": "Intro: El Rumor",
+                    "text": "[TENSO]¿Es este el dispositivo que destruirá a [PHO]apol|Apple[/PHO] y [PHO]samsun|Samsung[/PHO] para siempre?[/TENSO] Elon [PHO]masc|Musk[/PHO] podría estar a punto de cambiar las reglas del juego.",
+                    "assets": [
+                        {
+                            "type": "tesla_model_pi_concept.png",
+                            "zoom": "1.0:1.2",
+                            "move": "SHAKE:5"
+                        },
+                        {
+                            "type": "tesla_xai_conflict_diagram.png",
+                            "zoom": "1.1",
+                            "move": "UP"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Características Revolucionarias",
+            "scenes": [
+                {
+                    "title": "Solar Charging",
+                    "text": "Se rumorea que el [PHO]model pai|Model Pi[/PHO] tendrá carga solar integrada en la carcasa, eliminando los cargadores para siempre.",
+                    "assets": [
+                        {
+                            "type": "tesla_phone_solar_back.png",
+                            "zoom": "1.3:1.0",
+                            "rotate": "-2:2"
+                        }
+                    ]
+                },
+                {
+                    "title": "Starlink Nativo",
+                    "text": "Pero lo más loco es la conexión satelital nativa. Internet de alta velocidad en cualquier lugar del planeta, incluso en Marte.",
+                    "assets": [
+                        {
+                            "type": "starlink_network_orbit.png",
+                            "zoom": "1.0:1.1",
+                            "w_rotate": 10,
+                            "fit": false
+                        },
+                        {
+                            "type": "musk_spacex_xai.png",
+                            "zoom": "1.2",
+                            "move": "DOWN"
+                        }
+                    ]
+                },
+                {
+                    "title": "Neuralink",
+                    "text": "¿Y la integración con [PHO]niuralinc|Neuralink[/PHO]? Controlar tu teléfono con la mente ya no parece ciencia ficción.",
+                    "assets": [
+                        {
+                            "type": "neuralink_future_interface.png",
+                            "zoom": "1.2",
+                            "move": "ROTATE:0:5 + SHAKE:3"
+                        },
+                        {
+                            "type": "neuralink_robot_surgeon_closeup.png",
+                            "zoom": "1.4:1.0"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Conclusión Profunda",
+            "scenes": [
+                {
+                    "title": "Reflexión",
+                    "text": "Si esto es real, el [PHO]aifon diesiséis|iPhone 16[/PHO] nacerá obsoleto. No es solo un teléfono, es la llave maestra del ecosistema de Elon.",
+                    "assets": [
+                        {
+                            "type": "elon_musk_holding_phone.png",
+                            "zoom": "1.0:1.3"
+                        },
+                        {
+                            "type": "musk_agi_claim_visual.png",
+                            "zoom": "1.1",
+                            "move": "LEFT"
+                        }
+                    ]
+                },
+                {
+                    "title": "Pregunta Debate",
+                    "text": "¿Te comprarías un teléfono Tesla aunque costara el doble que un iPhone? Déjalo en los comentarios.",
+                    "assets": [
+                        {
+                            "type": "question_mark_tech.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:50:50"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Suscripción",
+            "scenes": [
+                {
+                    "title": "CTA Final",
+                    "text": "Recuerda, dale like y suscríbete para no perderte el futuro de la tecnología.",
+                    "assets": [
+                        {
+                            "type": "suscribete.mp4",
+                            "zoom": "1.0:1.0",
+                            "fit": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
