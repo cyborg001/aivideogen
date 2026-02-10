@@ -20,6 +20,7 @@ Para que una IA (como ChatGPT, Gemini o Claude) te ayude a crear guiones perfect
 >     - `text`: Narración con tags de emoción.
 >     - `assets`: Cada escena debe tener un array de assets con:
 >         - `type`: Nombre del archivo (ej: `imagen_01.png`).
+>         - `video_volume`: (Opcional, solo video) Volumen del audio original (0.0 a 1.0).
 >         - `zoom`: `"inicio:fin"` (ej: `"1.0:1.2"`).
 >         - `move`: Combinar efectos con `+`. Ej: `"HOR:0:100 + SHAKE:5 + ROTATE:-2:2"`.
 >         - `w_rotate`: (Opcional) Rotación constante en grados/seg (ej: `45` para un giro suave).

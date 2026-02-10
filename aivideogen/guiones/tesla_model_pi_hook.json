@@ -1,6 +1,6 @@
 {
     "title": "Tesla Model Pi: El Fin del iPhone",
-    "voice": "es-ES-AlvaroNeural",
+    "voice": "es-DO-EmilioNeural",
     "background_music": "Viral Dirge - Ryan Stasik.mp3",
     "blocks": [
         {
@@ -79,7 +79,7 @@
                 },
                 {
                     "title": "Call to Action",
-                    "text": "Soy Álvaro, y esto es NotiACI. Síguenos para no perderte el próximo salto de la humanidad. Suscríbete.",
+                    "text": "Soy Álvaro, y esto es NotiACI. ¡Ah y recuerda, el futuro es hoy! Suscríbete.",
                     "assets": [
                         {
                             "id": "aivideogen_news_end.png",

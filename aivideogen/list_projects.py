@@ -1,9 +1,16 @@
+
 import os
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+import sys
+
+# Setup Django environment
+sys.path.append(os.getcwd())
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aivideogen.settings')
 django.setup()
+
 from generator.models import VideoProject
 
-print("Ultimos 10 proyectos:")
-for p in VideoProject.objects.all().order_by('-id')[:10]:
-    print(f"ID: {p.id} | Title: {p.title} | Status: {p.status} | Progress: {p.progress_total}")
+projects = VideoProject.objects.all().order_by('-created_at')[:20]
+print("ID|Title|Status|Date")
+for p in projects:
+    print(f"{p.id}|{p.title}|{p.status}|{p.created_at.strftime('%Y-%m-%d')}")

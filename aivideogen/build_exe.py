@@ -8,24 +8,25 @@ def build():
     base_dir = os.getcwd()
     
     # Collect data to include (source, dest)
+    # PERSONAL SNAPSHOT: Include notiaci and guiones, exclude heavy media
     datas = [
         ('generator/templates', 'generator/templates'),
         ('researcher/templates', 'researcher/templates'),
-        ('generator/static', 'generator/static'), # Added static for CSS/JS
+        ('generator/static', 'generator/static'),
         ('config', 'config'),
         ('docs', 'docs'),
-        ('media/overlays', 'media/overlays'),
-        ('media/music', 'media/music'), # Added music
-        ('media/sfx', 'media/sfx'),     # Added sfx
+        ('../notiaci', 'notiaci'),   # Corregido: reside un nivel arriba
+        ('guiones', 'guiones'),      # Incluimos todos los guiones
         ('README.txt', '.'),
+        ('../MANUAL_DE_USUARIO.md', '.'), # Incluimos manual raíz
         ('VERSIONES.md', '.'),
-        ('.env.example', '.'),
+        ('.env', '.'),               # Incluimos el .env real para snapshot personal
         ('manage.py', '.'),
         ('db.sqlite3', '.'), 
         ('favicon.ico', '.'),
     ]
     
-    # ... (metadata block omitted for brevity in instruction, keeping same as before) ...
+    # Metadata and other hooks
     try:
         datas.extend(copy_metadata('imageio'))
         datas.extend(copy_metadata('tqdm'))
@@ -43,14 +44,14 @@ def build():
         'django.contrib.staticfiles',
         'researcher.apps',
         'generator.apps',
-        'generator.middleware', # Critical v5.8
+        'generator.middleware',
         'whitenoise',
     ]
 
     # Prepare opts
     opts = [
         'run_app.py',
-        '--name=AIVideogen_v8.5_Portable',
+        '--name=AIVideogen_v8.5_SNAPSHOT_Archi',
         '--onedir',
         '--noconfirm',
         '--clean',
@@ -68,18 +69,24 @@ def build():
     for imp in hidden_imports:
         opts.append(f'--hidden-import={imp}')
 
-    print("Building executable...")
+    print("Building personal SNAPSHOT executable (EXCLUDING MEDIA)...")
     run(opts)
 
     # POST-BUILD
     import shutil
-    dist_dir = os.path.join(base_dir, 'dist', 'AIVideogen_v8.5_Portable')
+    dist_dir = os.path.join(base_dir, 'dist', 'AIVideogen_v8.5_SNAPSHOT_Archi')
     if os.path.exists(dist_dir):
-        # Ensure folders exist
+        # Ensure media folders exist even if empty
         os.makedirs(os.path.join(dist_dir, 'media', 'assets'), exist_ok=True)
         os.makedirs(os.path.join(dist_dir, 'media', 'videos'), exist_ok=True)
-        print("Finalizing distribution: Folders and .env ready.")
-        shutil.copy2('.env.example', os.path.join(dist_dir, '.env')) # Create default .env
+        os.makedirs(os.path.join(dist_dir, 'media', 'music'), exist_ok=True)
+        os.makedirs(os.path.join(dist_dir, 'media', 'sfx'), exist_ok=True)
+        os.makedirs(os.path.join(dist_dir, 'media', 'overlays'), exist_ok=True)
+        
+        print("Finalizing SNAPSHOT: Folders ready. Remember to copy your 'media' content manually.")
+        # Ensure there is an .env
+        if not os.path.exists(os.path.join(dist_dir, '.env')):
+            shutil.copy2('.env', os.path.join(dist_dir, '.env'))
         print("Done!")
 
 if __name__ == "__main__":

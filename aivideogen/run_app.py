@@ -1,5 +1,59 @@
 import os
 import sys
+
+# v13.7: ABSOLUTE EMERGENCY ROUTING (Self-Contained)
+# Intercepts browse calls at the earliest possible stage to prevent Django/Browser startup.
+if "--browse" in sys.argv:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        import json
+        import sys
+        
+        # Get filter type from args
+        idx = sys.argv.index("--browse")
+        filter_type = sys.argv[idx + 1] if len(sys.argv) > idx + 1 else 'visual'
+        
+        # UI Setup
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        if filter_type == 'audio':
+            dialog_title = "Seleccionar Archivo de Audio (SFX/Música)"
+            file_types = [("Audio Files", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac *.webm"), ("All files", "*.*")]
+        else:
+            dialog_title = "Seleccionar Asset (Imagen o Video)"
+            file_types = [("Media Files", "*.png *.jpg *.jpeg *.mp4 *.mov *.avi *.webm *.gif"), ("All files", "*.*")]
+            
+        file_path = filedialog.askopenfilename(title=dialog_title, filetypes=file_types)
+        root.destroy()
+        
+        # Clean response
+        res = {}
+        if not file_path:
+            res = {'status': 'cancelled'}
+        else:
+            res = {
+                'status': 'success',
+                'path': file_path,
+                'filename': os.path.basename(file_path)
+            }
+        
+        # Ensure pure JSON output without buffering issues
+        output = json.dumps(res)
+        sys.stdout.write(output + "\n")
+        sys.stdout.flush()
+    except Exception as e:
+        try:
+            sys.stdout.write(json.dumps({'status': 'error', 'error': str(e)}) + "\n")
+            sys.stdout.flush()
+        except:
+            pass
+    
+    # Critical: Use os._exit to kill the process immediately and avoid any duplication
+    os._exit(0)
+
 import webbrowser
 import threading
 import time

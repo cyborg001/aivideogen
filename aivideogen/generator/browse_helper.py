@@ -3,10 +3,8 @@ from tkinter import filedialog
 import sys
 import json
 
-def main():
+def run_file_dialog(filter_type='visual'):
     try:
-        filter_type = sys.argv[1] if len(sys.argv) > 1 else 'visual'
-        
         root = tk.Tk()
         root.withdraw()
         root.attributes('-topmost', True)
@@ -37,17 +35,31 @@ def main():
         root.destroy()
         
         if not file_path:
-            print(json.dumps({'status': 'cancelled'}))
+            return {'status': 'cancelled'}
         else:
             import os
-            print(json.dumps({
+            return {
                 'status': 'success',
                 'path': file_path,
                 'filename': os.path.basename(file_path)
-            }))
+            }
             
     except Exception as e:
-        print(json.dumps({'status': 'error', 'error': str(e)}))
+        return {'status': 'error', 'error': str(e)}
+
+def main():
+    import json
+    # v13.5/6: Smart arg parsing for routed calls
+    filter_type = 'visual'
+    if "--browse" in sys.argv:
+        idx = sys.argv.index("--browse")
+        if len(sys.argv) > idx + 1:
+            filter_type = sys.argv[idx + 1]
+    elif len(sys.argv) > 1:
+        filter_type = sys.argv[1]
+    
+    result = run_file_dialog(filter_type)
+    print(json.dumps(result))
 
 if __name__ == "__main__":
     main()

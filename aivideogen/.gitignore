@@ -55,3 +55,26 @@ last_activity.txt
 project_*.mp4
 script_*.json
 uploaded_media_*
+notiaci/
+*.json.dump
+temp_script_dump.json
+dump_project_json.py
+
+# Guiones Personales a Ignorar (No borrar localmente)
+guiones/analisis_financiero_spacex_xai.md
+guiones/newsletter_feb_inicio.json
+guiones/prompts_news_feb.md
+guiones/tesla_model_pi.json
+guiones/test_estilo_erik.md
+guiones/sabias_que_groenlandia.json
+guiones/moltbook_short.json
+guiones/debug_ducking_robust.json
+guiones/doc_groenlandia_trump.json
+guiones/guion_ejemplo_default.txt
+guiones/guion_prueba_efectos.txt
+guiones/guion_video_demo_pro.txt
+guiones/master_test_v86.json
+guiones/test_ducking.json
+guiones/test_volume_lock.json
+guiones/test_vortice_w.json
+guiones/demo_efectos_v5.json

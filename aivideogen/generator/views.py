@@ -1131,30 +1131,48 @@ def browse_local_asset(request):
     try:
         filter_type = request.GET.get('type', 'visual') # 'visual' or 'audio'
         
-        # Use sys.executable to ensure we use the same python environment
-        helper_path = os.path.join(settings.BASE_DIR, 'generator', 'browse_helper.py')
+        # v13.5: Support for PyInstaller (sys.frozen)
+        if getattr(sys, 'frozen', False):
+            # In DIST mode: call the EXE with the --browse routing flag
+            cmd = [sys.executable, "--browse", filter_type]
+        else:
+            # In DEV mode: call the script directly with python
+            helper_path = os.path.join(settings.BASE_DIR, 'generator', 'browse_helper.py')
+            cmd = [sys.executable, helper_path, filter_type]
         
         result = subprocess.run(
-            [sys.executable, helper_path, filter_type],
+            cmd,
             capture_output=True,
             text=True,
             timeout=300 # 5 minute timeout
         )
         
         if result.returncode != 0:
-            return JsonResponse({'error': f"Helper failed: {result.stderr}"}, status=500)
+            return JsonResponse({'error': f"Helper failed: {result.stderr or result.stdout}"}, status=500)
             
         # Extract JSON from stdout (in case of warnings/extra output)
         out = result.stdout.strip()
         try:
-            start_idx = out.find('{')
-            end_idx = out.rfind('}') + 1
-            if start_idx == -1 or end_idx == 0:
-                raise ValueError("No JSON found in output")
-            json_str = out[start_idx:end_idx]
+            # Look for the LAST line that starts with { and ends with }
+            # PyInstaller might print warnings before
+            json_str = ""
+            for line in reversed(out.splitlines()):
+                line = line.strip()
+                if line.startswith('{') and line.endswith('}'):
+                    json_str = line
+                    break
+            
+            if not json_str:
+                # Fallback to search if not in a single line
+                start_idx = out.find('{')
+                end_idx = out.rfind('}') + 1
+                if start_idx == -1 or end_idx == 0:
+                     raise ValueError(f"No JSON found in output. Total output length: {len(out)}")
+                json_str = out[start_idx:end_idx]
+            
             data = json.loads(json_str)
         except Exception as e:
-            return JsonResponse({'error': f"Failed to parse helper output: {out}. Error: {e}"}, status=500)
+            return JsonResponse({'error': f"Failed to parse helper output. Error: {e}. Raw (capped): {out[:200]}"}, status=500)
             
         return JsonResponse(data)
         
