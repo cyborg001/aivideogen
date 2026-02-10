@@ -249,10 +249,12 @@ def parse_avgl_json(json_text):
     script.music_volume_lock = data.get("music_volume_lock", False)
     
     for block_data in data.get("blocks", []):
+        try: b_vol = float(block_data.get("volume", 0.2))
+        except: b_vol = 0.2
         block = AVGLBlock(
             title=block_data.get("title", "Bloque"), 
             music=block_data.get("music"), 
-            volume=block_data.get("volume", 0.2)
+            volume=b_vol
         )
         # Block-level Voice Overrides
         block.voice = block_data.get("voice")
@@ -289,7 +291,10 @@ def parse_avgl_json(json_text):
             
             for sfx_data in s_data.get("sfx", []):
                 if isinstance(sfx_data, str): scene.sfx.append(AVGLSFX(sfx_data))
-                else: scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), sfx_data.get("volume", 0.5), sfx_data.get("offset", 0)))
+                else: 
+                    try: vol = float(sfx_data.get("volume", 0.5))
+                    except: vol = 0.5
+                    scene.sfx.append(AVGLSFX(sfx_data.get("type") or sfx_data.get("id"), vol, int(sfx_data.get("offset", 0))))
             
             block.scenes.append(scene)
 

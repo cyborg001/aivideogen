@@ -778,7 +778,9 @@ def generate_video_avgl(project):
                         
                         if os.path.exists(sfx_path):
                             try:
-                                s_clip = AudioFileClip(sfx_path).with_effects([afx.MultiplyVolume(sfx_item.volume)])
+                                # v15.7: Force float cast to prevent numpy ufunc error (dtype <U3)
+                                vol_safe = float(sfx_item.volume)
+                                s_clip = AudioFileClip(sfx_path).with_effects([afx.MultiplyVolume(vol_safe)])
                                 if clips_to_close is not None: clips_to_close.append(s_clip)
                                 
                                 # AVGL v4: Offset is word-based. 
@@ -793,7 +795,7 @@ def generate_video_avgl(project):
                                         delay = (audio_clip.duration / len(words)) * sfx_item.offset
                                 
                                 scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, duration - delay)))
-                                logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {sfx_item.volume}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
+                                logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {vol_safe}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
                             except Exception as e:
                                 logger.log(f"    ⚠️ Error SFX {sfx_item.type}: {e}")
 
