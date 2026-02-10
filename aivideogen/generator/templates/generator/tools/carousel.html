@@ -1,0 +1,430 @@
+{% extends 'generator/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="carousel-tool-container">
+    <div class="card glass">
+        <h1 style="color: var(--primary-color); margin-top: 0; display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 2rem;">🎞️</span> Carousel Tool <small
+                style="font-size: 0.9rem; opacity: 0.6; font-weight: normal;">v1.0</small>
+        </h1>
+        <p style="opacity: 0.8; margin-bottom: 25px;">Convierte ráfagas de imágenes en un video MP4 fluido en segundos.
+            Perfecto para B-Roll y carruseles rápidos.</p>
+
+        <div class="tool-grid">
+            <!-- Left Side: Folder & Files -->
+            <div class="drop-zone-container">
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <span style="font-size: 3rem;">📁</span>
+                        <h3>Arrastra una carpeta aquí</h3>
+                        <p>o usa el botón para explorar</p>
+                        <button class="btn btn-secondary" onclick="browseFolder()" style="margin-top: 15px;">🔍 Explorar
+                            Carpeta</button>
+                    </div>
+                </div>
+
+                <div id="file-info" class="file-info shadow" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong id="folder-name">Carpeta: -</strong>
+                        <span id="image-count" class="badge">0 Imágenes</span>
+                    </div>
+                    <div id="image-preview-strip" class="preview-strip">
+                        <!-- Tiny previews will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Config -->
+            <div class="config-panel">
+                <div class="input-group">
+                    <label>Duración Total (segundos)</label>
+                    <input type="number" id="duration" value="5" min="1" max="60" step="0.5">
+                    <small>Las imágenes se repartirán uniformemente en este tiempo.</small>
+                </div>
+
+                <div class="input-group">
+                    <label>Límite de Imágenes</label>
+                    <input type="number" id="limit" value="100" min="2" max="500">
+                </div>
+
+                <div class="input-group">
+                    <label>Nombre del Archivo</label>
+                    <input type="text" id="filename" placeholder="mi_carrusel.mp4"
+                        value="carousel_{{ now|date:'Ymd_His' }}.mp4">
+                </div>
+
+                <div class="input-group">
+                    <label>Carpeta de Salida (Ruta Absoluta)</label>
+                    <input type="text" id="output_path" value="{{ default_output_path }}">
+                    <small>Asegúrate de que la ruta exista o sea válida en Windows.</small>
+                </div>
+
+                <button id="btn-process" class="btn btn-primary" onclick="processCarousel()"
+                    style="width: 100%; padding: 15px; margin-top: 10px; font-size: 1.1rem;" disabled>
+                    CREAR VIDEO MP4
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Overlay -->
+        <div id="progress-overlay" class="overlay" style="display: none;">
+            <div class="loader-content">
+                <div class="spinner"></div>
+                <h2 id="status-text">Procesando Video...</h2>
+                <p>Esto puede tardar unos segundos dependiendo del número de imágenes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass {
+        background: rgba(30, 30, 30, 0.7) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    }
+
+    .tool-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 25px;
+    }
+
+    .drop-zone {
+        border: 2px dashed rgba(187, 134, 252, 0.3);
+        border-radius: 15px;
+        height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .drop-zone.dragover {
+        border-color: var(--secondary-color);
+        background: rgba(3, 218, 198, 0.1);
+        transform: scale(1.02);
+    }
+
+    .badge {
+        background: var(--primary-color);
+        color: black;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .file-info {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+    }
+
+    .preview-strip {
+        display: flex;
+        gap: 5px;
+        overflow-x: auto;
+        margin-top: 10px;
+        padding-bottom: 5px;
+    }
+
+    .preview-strip img {
+        height: 40px;
+        border-radius: 4px;
+        opacity: 0.7;
+    }
+
+    .preview-item {
+        position: relative;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .preview-box {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        font-size: 0.8rem;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--surface-color);
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        transition: all 0.2s;
+    }
+
+    .remove-btn:hover {
+        background: var(--primary-color);
+        color: black;
+        transform: scale(1.2);
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        color: var(--primary-color);
+    }
+
+    .input-group small {
+        display: block;
+        font-size: 0.75rem;
+        opacity: 0.6;
+        margin-top: -5px;
+        margin-bottom: 10px;
+    }
+
+    /* Overlay & Spinner */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(187, 134, 252, 0.2);
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 900px) {
+        .tool-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    let selectedImages = [];
+    let selectedFolderPath = "";
+
+    const dropZone = document.getElementById('drop-zone');
+    const btnProcess = document.getElementById('btn-process');
+
+    // Drag and Drop Logic
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+
+        if (files.length > 0) {
+            uploadFiles(files);
+        } else if (e.dataTransfer.items.length > 0) {
+            alert("Arquitecto, para carpetas locales use el botón 'Explorar Carpeta'. El arrastre directo está limitado por la seguridad del navegador.");
+        }
+    });
+
+    function uploadFiles(files) {
+        const overlay = document.getElementById('progress-overlay');
+        const statusText = document.getElementById('status-text');
+
+        overlay.style.display = 'flex';
+        statusText.innerText = "Subiendo " + files.length + " imágenes...";
+
+        const formData = new FormData();
+        files.forEach(file => formData.append('images', file));
+
+        fetch("{% url 'generator:api_upload_carousel_images' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                overlay.style.display = 'none';
+                if (data.status === 'success') {
+                    // CUMULATIVE: Append instead of replace
+                    selectedImages = [...selectedImages, ...data.images];
+                    selectedFolderPath = "Selección Mixta";
+
+                    document.getElementById('file-info').style.display = 'block';
+                    document.getElementById('folder-name').innerText = "Modo: Selección Personalizada";
+
+                    refreshUI();
+                } else {
+                    alert("❌ ERROR\n\n" + data.message);
+                }
+            })
+            .catch(err => {
+                overlay.style.display = 'none';
+                alert("❌ FALLO DE CARGA");
+            });
+    }
+
+    function removeImage(index) {
+        selectedImages.splice(index, 1);
+        refreshUI();
+    }
+
+    function refreshUI() {
+        document.getElementById('image-count').innerText = selectedImages.length + " Imágenes seleccionadas";
+        btnProcess.disabled = selectedImages.length < 2;
+        updatePreviewStrip();
+    }
+
+    function updatePreviewStrip() {
+        const strip = document.getElementById('image-preview-strip');
+        strip.innerHTML = '';
+
+        // We only show first 50 previews for performance
+        selectedImages.slice(0, 50).forEach((imgObj, index) => {
+            const container = document.createElement('div');
+            container.className = 'preview-item';
+
+            const isObject = typeof imgObj === 'object';
+            const imageUrl = isObject ? imgObj.url : null;
+            const name = isObject ? imgObj.name : imgObj.split('\\').pop().split('/').pop();
+
+            const img = document.createElement('div');
+            img.className = 'preview-box';
+
+            if (imageUrl) {
+                // SUCCESS: Real thumbnail
+                img.style.backgroundImage = `url(${imageUrl})`;
+                img.style.backgroundSize = 'cover';
+                img.style.backgroundPosition = 'center';
+                img.innerHTML = '';
+            } else {
+                // FALLBACK: Icon for local folder files
+                img.innerHTML = `<span>🖼️</span><small>${name.substring(0, 8)}...</small>`;
+            }
+            img.title = name;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '✕';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => removeImage(index);
+
+            container.appendChild(img);
+            container.appendChild(removeBtn);
+            strip.appendChild(container);
+        });
+
+        if (selectedImages.length > 50) {
+            const more = document.createElement('span');
+            more.innerText = "+" + (selectedImages.length - 50);
+            more.style.alignSelf = 'center';
+            more.style.opacity = '0.5';
+            strip.appendChild(more);
+        }
+    }
+
+    function browseFolder() {
+        fetch("{% url 'generator:browse_folder' %}")
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Cumulative: Add folder images to the list
+                    selectedImages = [...selectedImages, ...data.images];
+
+                    document.getElementById('file-info').style.display = 'block';
+                    document.getElementById('folder-name').innerText = "Modo: Selección Mixta";
+
+                    refreshUI();
+                }
+            });
+    }
+
+    function processCarousel() {
+        const overlay = document.getElementById('progress-overlay');
+        const statusText = document.getElementById('status-text');
+
+        overlay.style.display = 'flex';
+        statusText.innerText = "Procesando " + selectedImages.length + " imágenes...";
+
+        // v15.9.4: Extract only full paths for backend
+        const finalPaths = selectedImages.map(img => typeof img === 'object' ? img.full : img);
+
+        const payload = {
+            images: finalPaths,
+            output_folder: document.getElementById('output_path').value,
+            filename: document.getElementById('filename').value,
+            duration: document.getElementById('duration').value,
+            limit: document.getElementById('limit').value
+        };
+
+        fetch("{% url 'generator:api_process_carousel' %}", {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                overlay.style.display = 'none';
+                if (data.status === 'success') {
+                    alert("✅ ÉXITO\n\nVideo creado en:\n" + data.path);
+                } else {
+                    alert("❌ ERROR\n\n" + data.message);
+                }
+            })
+            .catch(err => {
+                overlay.style.display = 'none';
+                alert("❌ ERROR FATAL\n\nFallo en la conexión con el servidor.");
+            });
+    }
+</script>
+{% endblock %}

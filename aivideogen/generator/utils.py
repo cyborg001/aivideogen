@@ -16,7 +16,7 @@ def generate_script_ai(news_item):
     """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        return None, "Error: No se encontró GEMINI_API_KEY en las variables de entorno.", None
+        return None, "Error: No se encontró GEMINI_API_KEY en las variables de entorno.", None, None
 
     prompt = f"""
 Eres un guionista experto en YouTube Shorts de tecnología y ciencias para el canal "Noticias de IA y ciencias".
@@ -74,9 +74,9 @@ Responde ÚNICAMENTE el JSON.
             
             return data.get('script'), data.get('prompts'), data.get('music_suggestion'), hashtags_str
         else:
-            return None, f"Error de API Gemini: {response.status_code} - {response.text}", None
+            return None, f"Error de API Gemini: {response.status_code} - {response.text}", None, None
     except Exception as e:
-        return None, f"Error durante la generación con IA: {str(e)}", None
+        return None, f"Error durante la generación con IA: {str(e)}", None, None
 
 def extract_sources_from_script(script_text):
     """
@@ -261,8 +261,10 @@ def generate_video_process(project):
     try:
         generate_video_avgl(project)
     except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
         logger = ProjectLogger(project)
-        logger.log(f"[ERROR] Error CRITICO en Motor V4: {e}")
+        logger.log(f"[ERROR] Error CRITICO en Motor V15.7: {e}\n{tb}")
         project.status = 'error'
         project.save()
 

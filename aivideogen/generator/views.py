@@ -59,6 +59,35 @@ def browse_script(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
+def browse_folder(request):
+    """Local server-side directory picker."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        folder_path = filedialog.askdirectory(title="Seleccionar carpeta de imágenes")
+        
+        root.destroy()
+        
+        if folder_path:
+            # v15.9.2: Automatically scan for images in the folder
+            valid_extensions = ('.png', '.jpg', '.jpeg', '.webp')
+            images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) 
+                      if f.lower().endswith(valid_extensions)]
+            
+            return JsonResponse({
+                'status': 'success',
+                'path': folder_path,
+                'count': len(images),
+                'images': images
+            })
+        return JsonResponse({'status': 'cancel'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
 def home(request):
     search_query = request.GET.get('q', '')
     projects_list = VideoProject.objects.all().order_by('-created_at')
@@ -1264,3 +1293,105 @@ def shutdown_app(request):
         
         return JsonResponse({'status': 'ok', 'message': 'Apagando servidor y cerrando ventanas...'})
     return JsonResponse({'status': 'error'}, status=400)
+
+# ═══════════════════════════════════════════════════════════════════
+# v15.9.2: CAROUSEL TOOL
+# ═══════════════════════════════════════════════════════════════════
+
+def carousel_tool_view(request):
+    """Renders the standalone carousel tool page."""
+    return render(request, 'generator/tools/carousel.html', {
+        'default_output_path': os.path.join(settings.MEDIA_ROOT, 'outputs')
+    })
+
+@csrf_exempt
+def process_carousel_api(request):
+    """
+    API Endpoint to process a list of images into an MP4 video.
+    Supports local paths for efficiency.
+    """
+    if request.method == 'POST':
+        import json
+        try:
+            data = json.loads(request.body)
+            image_paths = data.get('images', [])
+            output_folder = data.get('output_folder', '').strip()
+            filename = data.get('filename', 'carousel_video.mp4').strip()
+            total_duration = float(data.get('duration', 5.0))
+            image_limit = int(data.get('limit', 100))
+            
+            if not image_paths:
+                return JsonResponse({'status': 'error', 'message': 'No se enviaron imágenes.'})
+            
+            # Limit images
+            if len(image_paths) > image_limit:
+                image_paths = image_paths[:image_limit]
+            
+            # Ensure output folder exists
+            if not output_folder:
+                output_folder = os.path.join(settings.MEDIA_ROOT, 'outputs')
+            
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+            
+            final_output_path = os.path.join(output_folder, filename)
+            
+            # Implement processing in tools_logic.py (Async/Threaded if needed)
+            from .tools_logic import create_image_carousel_mp4
+            
+            # For now, run in current thread for feedback (small jobs)
+            # or use threading for large ones. 
+            success, message = create_image_carousel_mp4(image_paths, final_output_path, total_duration)
+            
+            if success:
+                return JsonResponse({'status': 'success', 'path': final_output_path})
+            else:
+                return JsonResponse({'status': 'error', 'message': message})
+                
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+            
+    return JsonResponse({'status': 'error', 'message': 'Solo peticiones POST.'}, status=405)
+
+@csrf_exempt
+def upload_carousel_images(request):
+    """
+    Handles binary image uploads from Drag & Drop.
+    Saves them to a temporary folder in media/uploads/carousel_temp/
+    """
+    if request.method == 'POST':
+        files = request.FILES.getlist('images')
+        import time
+        # Create a unique session folder for this upload batch
+        # v15.9.6: Use more precision to avoid collisions in rapid drops
+        batch_id = f"batch_{int(time.time() * 1000)}"
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'uploads', 'carousel_temp', batch_id)
+        
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+            
+        saved_paths = []
+        relative_urls = []
+        for f in files:
+            # v15.9.7: Expanded extensions
+            if not f.name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.jfif', '.bmp', '.tiff')):
+                continue
+                
+            file_path = os.path.join(temp_dir, f.name)
+            with open(file_path, 'wb+') as destination:
+                for chunk in f.chunks():
+                    destination.write(chunk)
+            saved_paths.append(file_path)
+            
+            # v15.9.7: Use urllib.parse.quote for safe URLs (handles spaces, local chars)
+            from urllib.parse import quote
+            safe_name = quote(f.name)
+            rel_url = f"{settings.MEDIA_URL}uploads/carousel_temp/{batch_id}/{safe_name}"
+            relative_urls.append({'full': file_path, 'url': rel_url, 'name': f.name})
+            
+        if saved_paths:
+            return JsonResponse({'status': 'success', 'images': relative_urls, 'batch_id': batch_id})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'No se guardaron imágenes válidas.'})
+            
+    return JsonResponse({'status': 'error', 'message': 'Solo peticiones POST.'}, status=405)

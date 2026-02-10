@@ -43,6 +43,38 @@ def safe_float(val, default=0.0):
     except:
         return default
 
+# ═══════════════════════════════════════════════════════════════════
+# MONKEY PATCH: Absolute Audio Immunity (v15.9)
+# ═══════════════════════════════════════════════════════════════════
+try:
+    from moviepy.audio.io.readers import FFMPEG_AudioReader
+    _original_get_frame = FFMPEG_AudioReader.get_frame
+
+    def _patched_get_frame(self, tt):
+        try:
+            # Fix 1: Zero-length timeframe
+            if hasattr(tt, "__len__") and len(tt) == 0:
+                return np.zeros((0, self.nchannels))
+            
+            # Fix 2: Execute original but catch ANY internal error (like out of bounds)
+            return _original_get_frame(self, tt)
+            
+        except Exception as e:
+            # If moviepy logic fails internally (math errors, corrupt buffer access)
+            # return silent buffer instead of crashing the whole video
+            try:
+                # Calculate required shape
+                length = len(tt) if hasattr(tt, "__len__") else 1
+                return np.zeros((length, self.nchannels))
+            except:
+                return np.zeros((0, 2)) # Absolute fallback
+
+    FFMPEG_AudioReader.get_frame = _patched_get_frame
+    logger.info("🛡️ [SYSTEM] Absolute Audio Immunity Active (MoviePy patched).")
+except Exception as e:
+    logger.warning(f"⚠️ [SYSTEM] Could not apply Audio Immunity: {e}")
+# ═══════════════════════════════════════════════════════════════════
+
 def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
     """
     Applies optimized Ken Burns effect with robust sizing and movement.
@@ -248,10 +280,31 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     v_clip = v_clip.with_position("center")
     
     # Audio Logic
-    video_volume = float(video_volume or 0.0)
-    if video_volume > 0:
-        v_clip = v_clip.with_effects([afx.MultiplyVolume(video_volume)])
-    else:
+    try:
+        # v15.8 UNIVERSAL AUDIO GUARD: Proactive integrity check for ALL assets
+        if v_clip.audio:
+            try:
+                # 1. Test Read: Start of file
+                v_clip.audio.to_soundarray(nbytes=2, buffersize=1000, fps=44100)
+                
+                # 2. Test Read: End of file (Common corruption point)
+                if v_clip.duration > 1.0:
+                    end_test = max(0, v_clip.duration - 0.5)
+                    v_clip.audio.subclipped(end_test).to_soundarray(nbytes=2, fps=44100)
+                    
+            except Exception as e:
+                logger.warning(f"  🔥 [CORRUPT AUDIO DETECTED]: {os.path.basename(video_path)} -> {e}. Stripping audio to save render.")
+                v_clip = v_clip.without_audio()
+                video_volume = 0.0
+
+        video_volume = float(video_volume or 0.0)
+        if video_volume > 0 and v_clip.audio:
+             pass # Already verified above
+        else:
+             v_clip = v_clip.without_audio()
+             
+    except Exception as e:
+        logger.warning(f"  ⚠️ [Audio Asset Error] Fallo general en asset {os.path.basename(video_path)}. Silenciando. Error: {e}")
         v_clip = v_clip.without_audio()
     
     layers = [v_clip]
@@ -982,8 +1035,15 @@ def generate_video_avgl(project):
                                     return float(peak_vol * factor)
 
                             bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
-                            final_audio = CompositeAudioClip([block_video.audio, bg_audio_final])
-                            block_video = block_video.with_audio(final_audio)
+                            
+                            # Safe Block Composition (v15.7 Fix)
+                            b_sources = []
+                            if block_video.audio: b_sources.append(block_video.audio)
+                            if bg_audio_final: b_sources.append(bg_audio_final)
+                            
+                            if b_sources:
+                                final_audio = CompositeAudioClip(b_sources)
+                                block_video = block_video.with_audio(final_audio)
                     except Exception as e:
                         logger.log(f"  ⚠️ Error música bloque: {e}")
 
@@ -1123,6 +1183,7 @@ def generate_video_avgl(project):
                                 factors[(t >= ms) & (t <= me)] = 0.0
                             
                             # v9.4 Fix: Ensure (N, 1) for stereo broadcasting
+                            if t.size == 0: return np.zeros((0, 1))
                             return (base_vols * factors)[:, None]
                         else:
                             try:
@@ -1147,7 +1208,14 @@ def generate_video_avgl(project):
                             return float(cur_peak * factor)
 
                     bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
-                    final_video = final_video.with_audio(CompositeAudioClip([final_video.audio, bg_audio_final]))
+                    
+                    # Safe Audio Composition (v15.7 Fix for IndexError)
+                    audio_sources = []
+                    if final_video.audio: audio_sources.append(final_video.audio)
+                    if bg_audio_final: audio_sources.append(bg_audio_final)
+                    
+                    if audio_sources:
+                        final_video = final_video.with_audio(CompositeAudioClip(audio_sources))
                     
         except Exception as e:
             logger.log(f"[Error] Error procesando música global: {e}")

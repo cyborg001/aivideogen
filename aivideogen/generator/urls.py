@@ -16,6 +16,7 @@ urlpatterns = [
     path('assets/upload/', views.upload_asset, name='upload_asset'),
     path('assets/<int:asset_id>/delete/', views.delete_asset, name='delete_asset'),
     path('api/browse/', views.browse_script, name='browse_script'),
+    path('api/browse-folder/', views.browse_folder, name='browse_folder'),
     path('youtube/authorize/', views.youtube_authorize, name='youtube_authorize'),
     path('youtube/callback/', views.youtube_callback, name='youtube_callback'),
     path('project/<int:project_id>/youtube-upload/', views.upload_to_youtube_view, name='youtube_upload'),
@@ -53,5 +54,10 @@ urlpatterns = [
     # v12.5: Progress & Shutdown
     path('api/shutdown/', views.shutdown_app, name='shutdown_app'),
     path('api/project/<int:project_id>/status/', views.get_project_status, name='api_project_status'),
+
+    # Carousel Tool (v15.9.2)
+    path('tools/carousel/', views.carousel_tool_view, name='carousel_tool'),
+    path('api/tools/process-carousel/', views.process_carousel_api, name='api_process_carousel'),
+    path('api/tools/upload-carousel-images/', views.upload_carousel_images, name='api_upload_carousel_images'),
 ]
 
