@@ -19,8 +19,12 @@
                         <span style="font-size: 3rem;">📁</span>
                         <h3>Arrastra una carpeta aquí</h3>
                         <p>o usa el botón para explorar</p>
-                        <button class="btn btn-secondary" onclick="browseFolder()" style="margin-top: 15px;">🔍 Explorar
-                            Carpeta</button>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-secondary" onclick="browseFolder()">🔍 Explorar Carpeta</button>
+                            <button class="btn btn-info" onclick="browseFiles()"
+                                style="background-color: #bb86fc; color: black; border: none;">📸 Seleccionar
+                                Imágenes</button>
+                        </div>
                     </div>
                 </div>
 
@@ -368,6 +372,21 @@
             more.style.opacity = '0.5';
             strip.appendChild(more);
         }
+    }
+
+    function browseFiles() {
+        fetch("{% url 'generator:api_browse_images' %}")
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Replace or Cumulative? User said "I see assets but can't change it"
+                    // Let's make it a fresh selection if they use this button
+                    selectedImages = data.paths;
+                    document.getElementById('file-info').style.display = 'block';
+                    document.getElementById('folder-name').innerText = "Modo: Selección de Archivos";
+                    refreshUI();
+                }
+            });
     }
 
     function browseFolder() {

@@ -63,6 +63,7 @@ class AVGLScene:
         self.subtitle = ""
         self.subtitles = []
         self.voice_intervals = [] # v6.5: Granular Ducking Intervals (start, end)
+        self.word_timings = []    # v16.5: Word-level timestamps for Dynamic Subtitles
         self.group_id = None
         self.group_settings = None
 
@@ -109,124 +110,300 @@ def parse_speed(val):
         except: return 1.0
     return 1.0
 
-def extract_subtitles_v35(text):
+def parse_escena(text):
     """
-    Extracts subtitles and narration from tags. 
-    Supports:
-    - [SUB]text[/SUB] -> Narration and Subtitle are the same.
-    - [SUB: count | text] -> Subtitle with specific word count duration.
-    - [PHO]narration | subtitle[/PHO] -> Narrator says one thing, subtitle shows another.
-    v8.7: Enhanced with [PHO] to handle phonetic overrides like "IAs".
+    v17.2: Parses scene text and extracts 3 separate strings:
+    - fonetica: Text for TTS (uses phonetic parts from PHO tags)
+    - display: Text for subtitles (uses display parts from PHO tags)
+    - highlights: List of dicts with highlighted text and word offset
+    
+    Example:
+        Input: "Esto es [PHO:h]cul|cool[/PHO] ;)"
+        Output: ("Esto es cul ;)", "Esto es cool ;)", [{"text": "cool", "offset":2}])
+    
+    v17.2.5: Highlights now include word offset for correct timing sync
     """
     import re
     
-    # 1. Identify all tags
-    patterns = {
-        'wrapped': re.compile(r'\[\s*SUB\s*\](.*?)\s*\[\s*/SUB\s*\]', re.IGNORECASE | re.DOTALL),
-        'simple': re.compile(r'\[\s*SUB\s*:\s*(.*?)\s*\]', re.IGNORECASE),
-        'pho': re.compile(r'\[\s*PHO\s*\](.*?)\s*\[\s*/PHO\s*\]', re.IGNORECASE | re.DOTALL)
-    }
+    fonetica_parts = []
+    display_parts = []
+    highlights = []
     
+    # Pattern to match [PHO] or [PHO:modifier] tags (any modifier: h, s, e, t, etc.)
+    # v17.2.3: Fixed to support all modifiers, not just :h
+    pho_pattern = r'\[PHO(?::[a-zA-Z]+)?\](.*?)\[/PHO\]'
+    
+    last_idx = 0
+    for match in re.finditer(pho_pattern, text, re.IGNORECASE):
+        # Add literal text before tag
+        before = text[last_idx:match.start()]
+        fonetica_parts.append(before)
+        display_parts.append(before)
+        
+        # Extract tag content
+        content = match.group(1)
+        is_highlight = ':h' in match.group(0).lower()
+        
+        # Split by | to get phonetic and display
+        if '|' in content:
+            parts = content.split('|', 1)
+            phonetic = parts[0].strip()
+            display_text = parts[1].strip()
+        else:
+            phonetic = content.strip()
+            display_text = "" # v19.6.2: No pipe = No DYN (Architect's Golden Rule)
+        
+        # Calculate word offset BEFORE adding phonetic to parts
+        # v17.2.5: Offset is where phonetic starts in fonetica_str
+        current_fonetica = ''.join(fonetica_parts)
+        word_offset = len(current_fonetica.split())
+        
+        # Add to respective strings
+        fonetica_parts.append(phonetic)
+        display_parts.append(display_text)
+        
+        # If highlight, add to list with offset
+        if is_highlight:
+            # v19.6.3: Use phonetic text if display is empty (asymmetric mode)
+            h_text = display_text if display_text else phonetic
+            highlights.append({
+                "text": h_text,
+                "offset": word_offset
+            })
+        
+        last_idx = match.end()
+    
+    # Add remaining text
+    rest = text[last_idx:]
+    fonetica_parts.append(rest)
+    display_parts.append(rest)
+    
+    fonetica_str = ''.join(fonetica_parts)
+    display_str = ''.join(display_parts)
+    
+    return fonetica_str, display_str, highlights
+
+def extract_subtitles_v35(text, force_dynamic=False):
+    """
+    Extracts subtitles and narration from tags.
+    v17.2.7: REFACTOR - Split original text first, then parse chunks.
+    Ensures perfect sync between fonetica_str and display_str.
+    """
+    import re
+    
+    # v17.2.19: Hardened cleanup with DOTALL support
+    def _cleanup(content):
+        if not content: return ""
+        # Remove all bracket tags like [TENSO], [EPICO], [DYN], etc.
+        res = re.sub(r'\[.*?\]', '', content, flags=re.IGNORECASE | re.DOTALL)
+        # Remove parentheses for extra safety
+        res = re.sub(r'\(.*?\)', '', res, flags=re.DOTALL)
+        return res.strip()
+
+    # 1. Identify all tags in ORIGINAL text to avoid index mismatch
+    patterns = {
+        'wrapped': re.compile(r'\[\s*(?:SUB|TITLE)(?::\s*(.*?))?\s*\](.*?)\s*\[\s*/(?:SUB|TITLE)\s*\]', re.IGNORECASE | re.DOTALL),
+        'simple': re.compile(r'\[\s*(?:SUB|TITLE)\s*:\s*(.*?)\s*\]', re.IGNORECASE),
+        'dyn': re.compile(r'\[\s*DYN\s*\](.*?)\s*\[\s*/DYN\s*\]', re.IGNORECASE | re.DOTALL)
+    }
+
     all_tags = []
     for t_type, pattern in patterns.items():
         for m in pattern.finditer(text):
-            all_tags.append({
+            tag_info = {
                 'start': m.start(),
                 'end': m.end(),
-                'content': m.group(1).strip(),
-                'type': t_type
-            })
+                'type': t_type,
+                'length': m.end() - m.start()
+            }
+            if t_type == 'wrapped':
+                tag_info['param'] = (m.group(1) or "").strip()
+                tag_info['content'] = (m.group(2) or "").strip()
+            else:
+                tag_info['content'] = m.group(1).strip()
             
-    # Sort and remove overlaps (first one wins)
-    all_tags.sort(key=lambda x: x['start'])
+            all_tags.append(tag_info)
+            
+    # Sort and remove overlaps
+    all_tags.sort(key=lambda x: (int(x['start']), -int(x['length'])))
     tags = []
     last_end = 0
     for t in all_tags:
-        if t['start'] >= last_end:
+        t_start = int(t['start'])
+        if t_start >= last_end:
             tags.append(t)
-            last_end = t['end']
+            last_end = int(t['end'])
             
-    # 2. Build clean text and subtitles
-    current_clean_text = ""
+    # 2. Build subtitles by parsing each chunk
     last_idx = 0
-    raw_subs = []
+    raw_subs_unfiltered = []
+    scene_highlights = []
+    fonetica_full_parts = []
+    fonetica_offset = 0 
     
-    for tag in tags:
-        # Text before tag
-        before = text[last_idx:tag['start']]
-        current_clean_text += before
+    # helper for sub-chunking
+    def _add_sub(text, f_part, is_dyn, offset, is_highlight=False):
+        p_words = f_part.split()
+        d_words = text.split()
         
-        # Word index in current clean text
-        word_offset = len(current_clean_text.split())
-        
-        content = tag['content']
-        display_text = ""
-        narrator_text = ""
-        word_count = 3
-        
-        if tag['type'] == 'pho':
-            # Format: narration | subtitle | [optional visibility]
-            if '|' in content:
-                parts = [p.strip() for p in content.split('|')]
+        # v17.3.2: Sub-chunking (Limit to 10 words for better readability)
+        limit = 10
+        if len(d_words) > 11: # Threshold to trigger split
+            # We need to distribute phonetic words proportionally
+            # but since we already parsed, we use simple ratio
+            ratio = len(p_words) / len(d_words)
+            
+            for i in range(0, len(d_words), limit):
+                chunk_d = d_words[i : i + limit]
+                # estimate phonetic words for this chunk
+                start_p = int(i * ratio)
+                end_p = int((i + limit) * ratio) if (i + limit) < len(d_words) else len(p_words)
+                chunk_p = p_words[start_p : end_p]
                 
-                # Check for visibility flag (v9.8)
-                if len(parts) >= 3:
-                    vis_flag = parts[2].lower().strip()
-                    if vis_flag in ['false', 'no', '0', 'off', 'oculto']:
-                        display_text = "" # Hide subtitle explicitly
-                
-                narrator_text = parts[0]
-                display_text = display_text if len(parts) > 1 and display_text != "" else (parts[1] if len(parts) > 1 else parts[0])
-                
-                # If display_text was explicitly hidden but logic above reset it, fix it:
-                if len(parts) >= 3:
-                     # Re-check visibility because the single-line ternary above is tricky
-                     vis_flag = parts[2].lower().strip()
-                     if vis_flag in ['false', 'no', '0', 'off', 'oculto']:
-                         display_text = ""
-                         
-            else:
-                narrator_text = content
-                display_text = content
-            
-            # Recalculate word count based on narrator text
-            word_count = len(narrator_text.split())
-            if word_count < 2: word_count = 3
-            
-            # v9.8 Support for Hidden Subtitles via PHO
-            if display_text == "": word_count = 0 # No display -> 0 words visually
-            
-        elif tag['type'] == 'simple' and '|' in content:
-            # Format: count | subtitle
-            parts = [p.strip() for p in content.split('|')]
-            try:
-                word_count = int(parts[0])
-                display_text = parts[1] if len(parts) > 1 else ""
-            except:
-                display_text = parts[0]
-            narrator_text = display_text # Simple SUB usually repeats
-            
+                raw_subs_unfiltered.append({
+                    "text": " ".join(chunk_d),
+                    "offset": offset + start_p,
+                    "word_count": len(chunk_d),
+                    "phonetic_count": len(chunk_p),
+                    "is_dynamic": is_dyn,
+                    "is_highlight": is_highlight
+                })
         else:
-            # Standard [SUB] or [SUB:...]
-            display_text = content
-            narrator_text = content
-            word_count = len(display_text.split())
-            if word_count < 2: word_count = 3
+            raw_subs_unfiltered.append({
+                "text": text,
+                "offset": offset,
+                "word_count": len(d_words),
+                "phonetic_count": len(p_words),
+                "is_dynamic": is_dyn,
+                "is_highlight": is_highlight
+            })
+
+    for tag in tags:
+        # Literal text before tag
+        before_raw = text[last_idx:tag['start']]
+        if before_raw.strip():
+            f_part, d_part, h_list = parse_escena(before_raw)
+            clean_text = _cleanup(d_part.strip())
+
+            f_part, d_part, h_list = parse_escena(before_raw)
+            clean_text = _cleanup(d_part.strip())
+
+            # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
+            if force_dynamic and clean_text:
+                _add_sub(clean_text, f_part, force_dynamic, fonetica_offset)
             
-        raw_subs.append({"text": display_text, "offset": word_offset, "word_count": word_count})
+            # Add highlights
+            for h in h_list:
+                h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
+                scene_highlights.append(h)
+                
+            # v17.3: Clean f_part before counting words to match TTS output (ignores [PAUSA], [TENSO], etc.)
+            f_part_clean = re.sub(r'\[.*?\]', '', f_part)
+            f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+            fonetica_offset += len(f_part_clean.split())
+            fonetica_full_parts.append(f_part)
         
-        # Add content to narration
-        current_clean_text += narrator_text
+        # Tag content
+        content_raw = tag.get('content', '')
+        
+        # v18.7: Support for [SUB: count | text] and [TITLE: count | text] syntax
+        # If count is provided, it overrides phonetic_count to control subtitle stay-duration
+        p_count_override = None
+        # v19.6: Force highlights and specific Y-pos for titles
+        is_highlight_tag = True if tag['type'] == 'simple' else False
+        y_pos_override = 0.45 if tag['type'] == 'simple' else 0.70
+        display_text = content_raw
+        
+        if '|' in content_raw and tag['type'] == 'simple':
+            p_parts = content_raw.split('|', 1)
+            params_raw = p_parts[0].strip()
+            display_text = p_parts[1].strip()
+            
+            # v19.2: Support extended syntax [SUB: count:style | text]
+            if ':' in params_raw:
+                param_pieces = params_raw.split(':', 1)
+                try: p_count_override = int(param_pieces[0].strip())
+                except: pass
+                
+                style_code = param_pieces[1].strip().lower()
+                if style_code in ['h', 'highlight', 'resaltado']:
+                    is_highlight_tag = True
+            else:
+                try: p_count_override = int(params_raw)
+                except: pass
+        
+        f_part, d_part, h_list = parse_escena(display_text)
+        is_dyn = tag['type'] == 'dyn'
+        
+        # v18.7.1: Apply override if exists
+        sub_info = {
+            "text": _cleanup(d_part),
+            "f_part": f_part,
+            "is_dyn": is_dyn or force_dynamic,
+            "offset": fonetica_offset,
+            "y_position": y_pos_override # v19.6
+        }
+        
+        # helper handles the raw_subs_unfiltered append
+        _add_sub(sub_info["text"], sub_info["f_part"], sub_info["is_dyn"], sub_info["offset"], is_highlight=is_highlight_tag)
+        
+        # Propagate custom Y position to the last added sub
+        if raw_subs_unfiltered:
+            raw_subs_unfiltered[-1]["y_position"] = y_pos_override
+        
+        # v18.7.2: Force phonetic_count if override was valid
+        if p_count_override is not None and raw_subs_unfiltered:
+            raw_subs_unfiltered[-1]["phonetic_count"] = p_count_override
+        
+        for h in h_list:
+            h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
+            scene_highlights.append(h)
+            
+        # v17.3: Clean f_part before counting words to match TTS output
+        # v18.1 FIX: Simple tags [SUB: Header] should NOT be narrated (Arquitecto's Request)
+        if tag['type'] != 'simple':
+            f_part_clean = re.sub(r'\[.*?\]', '', f_part)
+            f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+            fonetica_offset += len(f_part_clean.split())
+            fonetica_full_parts.append(f_part)
+        
         last_idx = tag['end']
         
     # Final piece
-    current_clean_text += text[last_idx:]
+    rest_raw = text[last_idx:]
+    if rest_raw.strip():
+        f_part, d_part, h_list = parse_escena(rest_raw)
+        clean_text = _cleanup(d_part.strip())
+
+        # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
+        if force_dynamic and clean_text:
+            _add_sub(clean_text, f_part, force_dynamic, fonetica_offset)
+        
+        for h in h_list:
+            h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
+            scene_highlights.append(h)
+        
+        # v17.3: Clean f_part (Unified)
+        f_part_clean = re.sub(r'\[.*?\]', '', f_part)
+        f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+        fonetica_offset += len(f_part_clean.split())
+        fonetica_full_parts.append(f_part)
+
+    # 3. Add highlights as extra subtitles at y=0.35
+    raw_subs = [s for s in raw_subs_unfiltered]
+    for h in scene_highlights:
+        raw_subs.append({
+            "text": _cleanup(h["text"]), # v17.2.21: Cleanup highlights too
+            "offset": h["offset"],
+            "word_count": len(h["text"].split()),
+            "phonetic_count": len(h["text"].split()), # v19.6: consistency
+            "is_dynamic": False,
+            "is_highlight": True,
+            "y_position": 0.35
+        })
     
-    # Strip any stray brackets (safety)
-    clean_text = re.sub(r'\[\s*/?SUB\s*(?::.*?)?\]', '', current_clean_text, flags=re.IGNORECASE)
-    clean_text = re.sub(r'\[\s*/?PHO\s*\]', '', clean_text, flags=re.IGNORECASE)
-    
-    return clean_text.strip(), raw_subs
+    fonetica_final = ' '.join(fonetica_full_parts)
+    return fonetica_final.strip(), raw_subs
 
 def parse_avgl_json(json_text):
     data = None
@@ -270,7 +447,8 @@ def parse_avgl_json(json_text):
             scene.subtitle = s_data.get("subtitle", "")
             scene.audio = s_data.get("audio") # v5.3: Custom Audio Support
             
-            clean_txt, extracted_subs = extract_subtitles_v35(scene.text)
+            force_dynamic = data.get("dynamic_subtitles", False)
+            clean_txt, extracted_subs = extract_subtitles_v35(scene.text, force_dynamic=force_dynamic)
             scene.text = clean_txt
             scene.subtitles = extracted_subs or s_data.get("subtitles", [])
             
@@ -360,31 +538,21 @@ def parse_avgl_json(json_text):
     return script
 
 def translate_emotions(text, use_ssml=False):
+    """
+    v17.3: Devuelve el texto limpio. Las emociones ahora se manejan por segmentación
+    en generate_audio_edge para evitar el escape de SSML de edge-tts 7.x.
+    """
     if not use_ssml: return text
-    import xml.sax.saxutils as saxutils
-    emotions = {
-        'TENSO': {'pitch': '-10Hz', 'rate': '-15%'},
-        'EPICO': {'pitch': '+5Hz', 'rate': '+10%', 'volume': '+15%'},
-        'SUSPENSO': {'pitch': '-5Hz', 'rate': '-25%'},
-        'GRITANDO': {'pitch': '+15Hz', 'rate': '+20%', 'volume': 'loud'},
-        'SUSURRO': {'pitch': '-12Hz', 'rate': '-20%', 'volume': '-30%'},
-    }
-    processed_text = saxutils.escape(text)
-    for tag, attrs in emotions.items():
-        pattern = rf'\[{tag}\](.*?)\[/{tag}\]'
-        attr_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
-        processed_text = re.sub(pattern, rf'<prosody {attr_str}>\1</prosody>', processed_text, flags=re.IGNORECASE | re.DOTALL)
-    processed_text = re.sub(r'\[PAUSA:([\d\.]+)\]', r'<break time="\1s"/>', processed_text, flags=re.IGNORECASE)
-    return processed_text
+    # Simplemente limpiamos las etiquetas si se pide limpieza, 
+    # la lógica real de aplicación ahora está en la segmentación.
+    clean = re.sub(r'\[/?(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\]', '', text, flags=re.IGNORECASE)
+    return clean
 
 def wrap_ssml(text, voice, speed="+0%", pitch=None):
-    if '<prosody' in text or '<break' in text:
-        content = text
-        attrs = []
-        if speed != "+0%": attrs.append(f'rate="{speed}"')
-        if pitch and pitch != "+0Hz": attrs.append(f'pitch="{pitch}"')
-        if attrs: content = f'<prosody {" ".join(attrs)}>{text}</prosody>'
-        return f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-ES"><voice name="{voice}">{content}</voice></speak>'
+    """
+    DEPRECATED v17.3: edge-tts 7.x escapa todo el texto enviado a Communicate,
+    haciendo imposible el envío de SSML manual sin que se lea literalmente.
+    """
     return text
 
 # ═══════════════════════════════════════════════════════════════════
@@ -394,61 +562,55 @@ def wrap_ssml(text, voice, speed="+0%", pitch=None):
 
 async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rate="+0%", pitch="+0Hz", scene=None):
     """
-    Robust Segmented Engine (v6.5)
-    Splits by [PAUSA:X.X], strips all other tags, and joins audio files.
-    Tracks voice_intervals if scene object is provided.
-    v8.6.3: Support for SSML Emotions and [PAUSA] handling within SSML.
+    Robust Segmented Engine (v17.3)
+    Splits by [PAUSA:X.X] AND Emotions [TAG]...[/TAG].
+    Since edge-tts escapes SSML, we must physically split audio and join it.
     """
     import edge_tts
     
-    # 1. Pre-process for SSML if we detect emotions keys
-    # We do this here to catch [EPICO], etc BEFORE splitting by pauses if possible,
-    # BUT pause splitting breaks the XML structure if not careful.
-    # STRATEGY: 
-    # 1. Split by Pause First (keep structure safe)
-    # 2. Convert each segment to SSML individually
-    
-    pause_pattern = r'\[PAUSA:([\d\.]+)\]'
-    parts = re.split(pause_pattern, text, flags=re.IGNORECASE)
+    emotions_map = {
+        'TENSO': {'pitch': '-2Hz', 'rate': '-5%'},
+        'EPICO': {'pitch': '+5Hz', 'rate': '+10%'},
+        'SUSPENSO': {'pitch': '-5Hz', 'rate': '-25%'},
+        'GRITANDO': {'pitch': '+15Hz', 'rate': '+20%'},
+        'SUSURRO': {'pitch': '-4Hz', 'rate': '-10%'},
+    }
+
+    # v17.3: Unified Segmentation (Pauses + Emotions)
+    # Regex perrona que atrapa [PAUSA:X] o [TAG]...[/TAG]
+    # Atrapamos el contenido de las emociones para procesarlo con sus settings
     segments = []
     
-    for i, part in enumerate(parts):
-        if i % 2 == 1:
-            try: segments.append(('pause', float(part)))
-            except: pass
-        else:
-            # CLEANING vs SSML
-            # If we want emotions, we MUST NOT strip [EPICO] etc here.
-            # But we must strip [ZOOM], [MOVE] etc.
+    # Primero extraemos las foneticas reales
+    fonetica_raw, _, _ = parse_escena(text)
+    
+    # Buscamos etiquetas de emocion: [TAG]contenido[/TAG]
+    # v19.6 Support for [TITLE] along with [PHO], [SFX], [BOX], [SUB]
+    pattern = r'(\[PAUSA:[\d\.]+\]|\[(PHO|SFX|BOX|SUB|TITLE|SUB:.*?|TITLE:.*?|PHO:.*?)\]|\[(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\].*?\[/(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\])'
+    parts = re.split(pattern, fonetica_raw, flags=re.IGNORECASE | re.DOTALL)
+    
+    for part in parts:
+        if not part: continue
+        
+        # ¿Es una pausa?
+        pause_match = re.match(r'\[PAUSA:([\d\.]+)\]', part, re.IGNORECASE)
+        if pause_match:
+            segments.append(('pause', float(pause_match.group(1)), {}))
+            continue
             
-            # Step A: Translate Emotions to SSML tags
-            # valid SSML tags: <prosody>, <break>, <p>, <s>, <phoneme>
-            # We assume translate_emotions handles the bracket-to-xml conversion.
-            part_with_ssml = translate_emotions(part, use_ssml=True)
+        # ¿Es una emoción?
+        emo_match = re.match(r'\[(TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\](.*?)\[/\1\]', part, re.IGNORECASE | re.DOTALL)
+        if emo_match:
+            emo_tag = emo_match.group(1).upper()
+            emo_text = emo_match.group(2).strip()
+            if emo_text:
+                segments.append(('text', emo_text, emotions_map.get(emo_tag, {})))
+            continue
             
-            # Step B: Clean NON-SSML tags
-            # We want to remove [ZOOM:...] but KEEP <prosody...>
-            # Regex to remove [TAGS] that are NOT part of the standard set we just generated?
-            # Easier: Remove known visual tags specifically, or remove all [...] 
-            # Since translate_emotions converts [EPICO] -> <prosody>, [EPICO] is gone.
-            # So likely we can just strip any REMAINING brackets.
-            
-            # Remove specific instruction tags we know
-            clean = re.sub(r'(?i)\[(ZOOM|MOVE|FIT|AUDIO|SFX|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION|SUB|PHO).*?\]', '', part_with_ssml)
-            
-            # Remove any other residual bracket tags that are NOT [PAUSA] (already handled)
-            # CAUTION: If user wrote "text [text] text", this kills it. But that's standard AVGL behavior.
-            clean = re.sub(r'\[.*?\]', '', clean)
-            
-            # Remove parentheses comments
-            clean = re.sub(r'\(.*?\)', '', clean)
-            
-            # Remove explicit property lines if there are any left (legacy pipe format artifacts)
-            clean = re.sub(r'(?i)\b(SPEED|ZOOM|AUDIO|SFX|FIT|MOVE|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION)\s*:.*', '', clean)
-            
-            clean = clean.strip()
-            if clean: 
-                segments.append(('text', clean))
+        # Es texto normal (o restos)
+        clean_text = re.sub(r'\[.*?\]', '', part).strip()
+        if clean_text:
+            segments.append(('text', clean_text, {}))
 
     if not segments: return False
     
@@ -461,7 +623,7 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
     voice_intervals = []
     
     try:
-        for i, (tag, val) in enumerate(segments):
+        for i, (tag, val, settings_emo) in enumerate(segments):
             if tag == 'pause':
                 silence = AudioClip(lambda t: np.zeros(2), duration=val).with_fps(44100)
                 audio_clips.append(silence)
@@ -470,25 +632,50 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
                 seg_path = os.path.join(temp_dir, f"{prefix}_{i}.mp3")
                 temp_files.append(seg_path)
                 
-                # IMPORTANT: wrap in <speak> if it contains XML tags, otherwise plain text
-                final_text = val
-                if '<prosody' in val or '<break' in val:
-                    # EMERGENCY FIX: EdgeTTS is not parsing SSML correctly on this env.
-                    # We strip tags to ensure clean audio.
-                    import xml.sax.saxutils as saxutils
-                    
-                    print(f"[WARN] SSML Emotion tags ignored for stability. Generating plain text.")
-                    # Remove tags
-                    clean_text = re.sub(r'<[^>]+>', '', val)
-                    # Unescape (since translate_emotions escaped it)
-                    final_text = saxutils.unescape(clean_text)
-                    
-                    print(f"[DEBUG] Plain Text Payload: {final_text}") 
-                    communicate = edge_tts.Communicate(final_text, voice, rate=rate, pitch=pitch)
-                else:
-                    communicate = edge_tts.Communicate(final_text, voice, rate=rate, pitch=pitch)
+                # Combinar settings base con los de la emocion
+                seg_rate = settings_emo.get('rate', rate)
+                seg_pitch = settings_emo.get('pitch', pitch)
                 
-                await communicate.save(seg_path)
+                # v17.3: Clean all visual tags before TTS
+                clean = re.sub(r'(?i)\[(ZOOM|MOVE|FIT|AUDIO|SFX|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION|SUB).*?\]', '', val)
+                clean = re.sub(r'\[.*?\]', '', clean) # Residuals
+                clean = re.sub(r'\(.*?\)', '', clean) # Comments
+                clean = clean.strip()
+                
+                if not clean: continue
+
+                communicate = edge_tts.Communicate(clean, voice, rate=seg_rate, pitch=seg_pitch)
+
+                # v16.5: Stream to capture word boundaries
+                with open(seg_path, "wb") as f:
+                    async for event in communicate.stream():
+                        e_type = event.get("type", "").lower()
+                        if e_type == "audio":
+                            f.write(event["data"])
+                        elif e_type in ["wordboundary", "word_boundary"]:
+                            if scene:
+                                start_s = event["offset"] / 10_000_000
+                                dur_s = event["duration"] / 10_000_000
+                                scene.word_timings.append({
+                                    "start": current_time + start_s,
+                                    "end": current_time + start_s + dur_s,
+                                    "word": event["text"]
+                                })
+                        elif e_type in ["sentenceboundary", "sentence_boundary"]:
+                            # Fallback: Interpolate words if no WordBoundaries are emitted
+                            if scene and not any(wt['start'] >= current_time + (event["offset"]/10_000_000) for wt in scene.word_timings):
+                                s_text = event.get("text", "")
+                                s_words = s_text.split()
+                                if s_words:
+                                    s_start_s = event["offset"] / 10_000_000
+                                    s_dur_s = event["duration"] / 10_000_000
+                                    w_dur = s_dur_s / len(s_words)
+                                    for idx, word in enumerate(s_words):
+                                        scene.word_timings.append({
+                                            "start": current_time + s_start_s + (idx * w_dur),
+                                            "end": current_time + s_start_s + ((idx + 1) * w_dur),
+                                            "word": word
+                                        })
                 if os.path.exists(seg_path):
                     clip = AudioFileClip(seg_path)
                     voice_intervals.append((current_time, current_time + clip.duration))
@@ -671,8 +858,8 @@ def convert_scene_to_line(scene):
     text = scene.get("text") or scene.get("voice") or ""
     
     # Asset logic
-    asset_name = "negro.png"
-    asset_instr = "" # Default empty (v9.8 Fix: No more dots)
+    asset_name = "" # v16.7.6: Default to empty for better synchronization
+    asset_instr = ""
     
     # Support both 'assets' (list) and 'asset' (single string/object)
     assets_list = scene.get("assets")
@@ -684,7 +871,7 @@ def convert_scene_to_line(scene):
         if isinstance(asset, str):
             asset_name = asset
         else:
-            asset_name = asset.get("id") or asset.get("type") or "negro.png"
+            asset_name = asset.get("id") or asset.get("type") or ""
         
         # Instructions (Zoom/Fit/Move)
         instr_parts = []

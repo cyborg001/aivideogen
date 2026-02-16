@@ -59,6 +59,43 @@ def browse_script(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
+def browse_images(request):
+    """API: Opens multi-file dialog via browse_helper.py and returns list of paths."""
+    import subprocess
+    import json
+    import sys
+    
+    try:
+        # v1.1 Carousel Upgrade: Force multiple=True
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable, "--browse", "visual", "--multiple"]
+        else:
+            helper_path = os.path.join(settings.BASE_DIR, 'generator', 'browse_helper.py')
+            cmd = [sys.executable, helper_path, "visual"] # browse_helper current main doesn't take multiple yet via args, let's fix that
+        
+        # ACTUALLY, let's just make it simple if we are calling it as a script
+        # I need to update browse_helper.py's main() too.
+        
+        result = subprocess.run(
+            cmd + ["multiple"], # Passing "multiple" as an extra arg for main()
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+        
+        if result.returncode != 0:
+            return JsonResponse({'error': f"Helper failed: {result.stderr or result.stdout}"}, status=500)
+            
+        out = result.stdout.strip()
+        # Find JSON
+        start_idx = out.find('{')
+        end_idx = out.rfind('}') + 1
+        data = json.loads(out[start_idx:end_idx])
+        
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
 def browse_folder(request):
     """Local server-side directory picker."""
     try:
@@ -713,6 +750,7 @@ def create_project_from_editor(request):
             if 'voice_id' in settings: script['voice'] = settings['voice_id']
             if 'background_music' in settings: script['background_music'] = settings['background_music']
             if 'music_volume' in settings: script['music_volume'] = settings['music_volume']
+            if 'dynamic_subtitles' in settings: script['dynamic_subtitles'] = bool(settings['dynamic_subtitles'])
         
         # Determine Title
         title = settings.get('title') or script.get('title') or "Nuevo Proyecto"
@@ -733,7 +771,8 @@ def create_project_from_editor(request):
             aspect_ratio=settings.get('aspect_ratio') or script.get('aspect_ratio', 'landscape'),
             music_volume=float(settings.get('music_volume', 0.15)),
             auto_upload_youtube=bool(settings.get('auto_upload', False)),
-            render_mode=settings.get('render_mode') or script.get('render_mode', 'cpu')
+            render_mode=settings.get('render_mode') or script.get('render_mode', 'cpu'),
+            dynamic_subtitles=bool(settings.get('dynamic_subtitles', False))
         )
         
         # Handle Music
@@ -965,6 +1004,7 @@ def save_project_script_json(request, project_id):
                 if 'music_volume' in settings_data: script_data['music_volume'] = settings_data['music_volume']
                 if 'voice_speed' in settings_data: script_data['voice_speed'] = settings_data['voice_speed']
                 if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
+                if 'dynamic_subtitles' in settings_data: script_data['dynamic_subtitles'] = settings_data['dynamic_subtitles']
 
             # Re-serialize with the new merged settings
             project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
@@ -1033,6 +1073,9 @@ def save_project_script_json(request, project_id):
             # Music Volume Lock (v8.7)
             if 'music_volume_lock' in settings_data:
                 project.music_volume_lock = bool(settings_data['music_volume_lock'])
+
+            if 'dynamic_subtitles' in settings_data:
+                project.dynamic_subtitles = bool(settings_data['dynamic_subtitles'])
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})

@@ -98,6 +98,7 @@ class VideoProject(models.Model):
     youtube_video_id = models.CharField(max_length=100, blank=True, null=True, help_text="YouTube video ID after upload (prevents duplicates)")
     auto_upload_youtube = models.BooleanField(default=False, help_text="Subir automáticamente a YouTube al finalizar la generación")
     music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
+    dynamic_subtitles = models.BooleanField(default=False, help_text="Fuerza el modo karaoke (dinámico) para todo el video")
     
     log_output = models.TextField(blank=True)
     duration = models.FloatField(default=0.0, help_text="Duración total del video en segundos")

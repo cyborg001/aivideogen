@@ -124,6 +124,11 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     # ═══════════════════════════════════════════════════════════════════
     # 2. LOAD & BASE SCALING
     # ═══════════════════════════════════════════════════════════════════
+    if not image_path or not os.path.isfile(image_path):
+        logger.error(f"❌ [apply_ken_burns] Ruta inválida o no es un archivo: {image_path}")
+        from moviepy import ColorClip
+        return ColorClip(size=target_size, color=(0,0,0), duration=duration)
+
     img = Image.open(image_path).convert("RGB")
     w_orig, h_orig = img.size
     target_w, target_h = target_size
@@ -133,17 +138,30 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     scale_h = target_h / h_orig
     
     is_fit = (fit == "contain" or fit is True)
+    
+    # v19.6: Portrait Auto-Scan
+    # If image is vertical and no specific move is requested, force a vertical scan (Top to Bottom)
+    is_portrait = h_orig / w_orig > 1.2
+    if is_portrait and not move:
+        move = "VER:100:0"
+        logger.log(f"    📸 Portrait detectado: Aplicando Auto-Scan vertical (Top -> Bottom)")
+    
     if is_fit:
         base_scale = min(scale_w, scale_h)
     else:
-        base_scale = max(scale_w, scale_h)
+        # v19.6: If we are scanning vertically a portrait, base_scale must cover width
+        if is_portrait and move and 'VER' in move.upper():
+            base_scale = scale_w 
+        else:
+            base_scale = max(scale_w, scale_h)
     
     # Smart Slack: Add 15% buffer if moving on a constrained axis
     if not is_fit:
         has_hor = any(c['dir'] == 'HOR' for c in move_configs)
         has_ver = any(c['dir'] == 'VER' for c in move_configs)
+        # Avoid extra slack if we already forced base_scale for vertical scan
         if has_hor and scale_w >= (base_scale * 0.99): base_scale *= 1.15
-        if has_ver and scale_h >= (base_scale * 0.99): base_scale *= 1.15
+        if has_ver and scale_h >= (base_scale * 0.99) and not is_portrait: base_scale *= 1.15
 
     # OPTIMIZATION: Work with pre-scaled image
     working_scale = base_scale * max(z_start, z_end)
@@ -355,6 +373,239 @@ class CacheProgressBarLogger(proglog.ProgressBarLogger):
                 status_text = f"Item {value}/{total} ({p_val:.1f}%) | {speed:.2f} its/s"
                 self.cache.set(f"project_{self.project_id}_progress", p_val, timeout=60)
                 self.cache.set(f"project_{self.project_id}_status_text", status_text, timeout=60)
+
+def render_pro_subtitles(text, duration, target_size, active_word_index=None, full_highlight=False, word_timings=None, is_dynamic=False, y_position=0.70, is_highlight=False):
+    """
+    v16.5 PRO: Modular Premium Subtitle Renderer.
+    - full_highlight: If True, the entire block is Neon Yellow (Movie Mode).
+    - word_timings: List of {start, end, word} for high-precision Shorts mode.
+    - is_dynamic: Triggers logic for progressive word appearance.
+    - y_position: Vertical position (0.0-1.0), default 0.70. v17.0: Enables dual-layer (highlight/karaoke).
+    - is_highlight: v18.1: Emphatic highlight [PHO:h] mode (Yellow on Black Box).
+    """
+    from moviepy import TextClip, ColorClip, CompositeVideoClip, vfx
+    
+    # 1. Config & Font Robustness
+    try:
+        font_list = TextClip.list('font')
+        font = 'Arial-Bold' if 'Arial-Bold' in font_list else ('Arial' if 'Arial' in font_list else 'C:/Windows/Fonts/arialbd.ttf')
+    except:
+        font = 'C:/Windows/Fonts/arialbd.ttf' if os.path.exists('C:/Windows/Fonts/arialbd.ttf') else 'C:/Windows/Fonts/arial.ttf'
+    
+    # v17.2.13: Standard Width (85% of screen)
+    standard_width = int(target_size[0] * 0.85)
+    fontsize = int(target_size[1] * 0.05) if (is_dynamic or is_highlight) else int(target_size[1] * 0.045)
+    
+    # v17.0: Customizable vertical position for dual-layer rendering
+    y_pos = int(target_size[1] * y_position)
+    
+    # Base Color Logic
+    highlight_color = '#FFFF00' # Neon Yellow
+    # v19.1: Platinum Grey (#D1D1D1) for a more cinematic look
+    base_color = highlight_color if (full_highlight or is_highlight) else '#D1D1D1'
+    stroke_color = '#000000'
+    bg_color = 'black' if is_highlight else None 
+    
+    def wrap_text(t, max_chars=30): # v17.2.13: Lower limit for better 2-line balance
+        words = t.split()
+        lines = []
+        current_line = []
+        for w in words:
+            if len(' '.join(current_line + [w])) <= max_chars:
+                current_line.append(w)
+            else:
+                lines.append(' '.join(current_line))
+                current_line = [w]
+        if current_line:
+            lines.append(' '.join(current_line))
+        return '\n'.join(lines)
+
+    if is_dynamic and word_timings:
+        # ... [Karaoke Logic truncated for this edit] ...
+        # ═══════════════════════════════════════════════════════════════════
+        # [MODE: DYN] Karaoke Stretchy-Mask (v16.7.13) - Phonetic Support
+        # ═══════════════════════════════════════════════════════════════════
+        # v17.3.3: Sincronizado con avgl_engine (10 palabras)
+        sub_clips = []
+        chunk_size = 10
+        
+        # v16.7.13: Vertical clearance
+        safe_h_composite = int(fontsize * 3.0) 
+        
+        def create_safe_text_clip(word, color, duration):
+            try:
+                temp = TextClip(text=f" {word} ", font_size=fontsize, font=font, method='label')
+                w_measured = temp.w; temp.close()
+            except:
+                w_measured = int(fontsize * len(word) * 0.55)
+
+            return TextClip(
+                text=word,
+                font_size=fontsize,
+                color=color,
+                stroke_color=stroke_color,
+                stroke_width=2.5,
+                font=font,
+                method='caption',
+                size=(w_measured, safe_h_composite),
+                text_align='center',
+                vertical_align='center',
+                bg_color=(0, 0, 0, 0)
+            ).with_duration(duration)
+
+        # v17.1: Preprocess text to handle padding placeholders and escapes
+        # 1. Replace escaped underscores (\\_) with a temporary token
+        text_processed = text.replace("\\_", "<<<UNDERSCORE>>>")
+        # 2. Filter out standalone _ placeholders (padding tokens)
+        words_raw = text_processed.split()
+        words_filtered = [w for w in words_raw if w != "_"]
+        # 3. Restore escaped underscores
+        words_final = [w.replace("<<<UNDERSCORE>>>", "_") for w in words_filtered]
+        # 4. Rejoin
+        text_clean = " ".join(words_final)
+        
+        # source of truth for display (after filtering)
+        visible_words_all = text_clean.split()
+        
+        for i in range(0, len(visible_words_all), chunk_size):
+            chunk_visible = visible_words_all[i : i + chunk_size]
+            chunk_phrase = " ".join(chunk_visible)
+            if not chunk_phrase: continue
+            
+            # Map chunk to timings
+            chunk_start_idx = i
+            chunk_end_idx = i + len(chunk_visible)
+            relevant_t = word_timings[chunk_start_idx : chunk_end_idx]
+            
+            if relevant_t:
+                chunk_start = relevant_t[0].get('start', 0)
+                chunk_end = relevant_t[-1].get('end', chunk_start + 0.5)
+            else:
+                chunk_start = 0; chunk_end = duration
+            
+            chunk_duration = chunk_end - chunk_start
+            if chunk_duration <= 0: chunk_duration = 0.5
+
+            # 1. Create the BASE phrase (White)
+            # v16.7.17: Precise width measurement for centering
+            try:
+                temp_p = TextClip(text=chunk_phrase, font_size=fontsize, font=font, method='label')
+                chunk_width = temp_p.w; temp_p.close()
+            except:
+                chunk_width = int(fontsize * len(chunk_phrase) * 0.5)
+
+            base_phrase_clip = create_safe_text_clip(chunk_phrase, base_color, chunk_duration)
+            
+            # v17.2.13: Use standard width container for consistent alignment
+            chunk_offset_x = (standard_width - chunk_width) // 2
+            chunk_clips = [base_phrase_clip.with_position((chunk_offset_x, 0))]
+            
+            # 2. Layer individual yellow highlights
+            for word_idx, w_info in enumerate(relevant_t):
+                word_text = w_info.get('word', '').strip()
+                if not word_text: continue
+                
+                # v16.7.17: Precise prefix measurement for perfect alignment
+                prefix_words = chunk_visible[:word_idx]
+                prefix_text = " ".join(prefix_words) + " " if prefix_words else ""
+                try:
+                    temp_p = TextClip(text=prefix_text, font_size=fontsize, font=font, method='label')
+                    x_in_chunk = temp_p.w; temp_p.close()
+                except:
+                    x_in_chunk = int(fontsize * len(prefix_text) * 0.5)
+
+
+                w_high_dur = w_info.get('end', 0) - w_info.get('start', 0)
+                if w_high_dur <= 0: w_high_dur = 0.1
+                
+                # v17.2: Adelantar 200ms para sincronización óptima
+                w_high_start_rel = max(0, w_info.get('start', 0) - chunk_start - 0.20)
+                
+                # Create the highlight clip
+                w_high_full = create_safe_text_clip(word_text, highlight_color, w_high_dur)
+                
+                # Position relative to base phrase
+                # v16.7.19: Raise yellow highlight by 4px for perfect alignment
+                chunk_clips.append(w_high_full.with_start(w_high_start_rel).with_position((chunk_offset_x + x_in_chunk, -4)))
+
+            
+            # 3. Composite as a Wide Strip (target_size[0] width)
+            # v16.7.17: This ensures no clip mask is ever outside the boundary, preventing broadcast errors
+            # 3. Composite with Standard Width (v17.2.13)
+            # This ensures all blocks have the same horizontal origin/centering
+            chunk_comp = CompositeVideoClip(chunk_clips, size=(standard_width, safe_h_composite), bg_color=None)
+            sub_clips.append(chunk_comp.with_start(chunk_start))
+                
+        if not sub_clips: return None
+        
+        # Center the whole sub-strip based on standard_width
+        final_x = (target_size[0] - standard_width) // 2
+        return CompositeVideoClip(sub_clips, size=(target_size[0], safe_h_composite), bg_color=None).with_duration(duration).with_position((final_x, y_pos - 2))
+
+    else:
+        # v19.1: Universal Anti-Clipping for Standard Subs
+        # We use an oversized height (1.5x) to ensure strokes/descenders are safe.
+        # This prevents the "cut" reported by the Arquitecto.
+        t_height_universal = int(fontsize * 1.5)
+        
+        # Mode Logic
+        if is_highlight:
+            # 1. Detect natural width first (v18.6)
+            # This avoids the "Size is mandatory when method is caption" error.
+            temp_t = TextClip(text=text, font_size=fontsize, font=font, method='label')
+            natural_w = temp_t.w
+            temp_t.close()
+
+            # 2. Create text with MASSIVE vertical room (v18.6)
+            # v18.6: 2.5x height is necessary to bypass MoviePy/IM clipping on Windows
+            t_height = int(fontsize * 2.5)
+            t_width = natural_w + int(fontsize * 0.5) # Slight horizontal buffer
+            
+            t_clip = TextClip(
+                text=text,
+                font_size=fontsize,
+                color=base_color,
+                stroke_color=stroke_color,
+                stroke_width=3.0,
+                font=font,
+                method='caption',
+                size=(t_width, t_height) # Both defined = No ValueError
+            ).with_duration(duration)
+
+            # 3. Create a background box that is strictly TALL (v18.6)
+            bg_w = t_clip.w + int(fontsize * 1.5) # Wide padding
+            bg_h = t_height # Tall padding
+            
+            bg_clip = ColorClip(size=(bg_w, bg_h), color=(0,0,0)).with_duration(duration)
+            
+            # 4. Composite text on background (centered)
+            final_clip = CompositeVideoClip([
+                bg_clip,
+                t_clip.with_position('center')
+            ], size=(bg_w, bg_h)).with_duration(duration)
+            
+            # Position logic: Center horizontally, use specific y_pos
+            final_clip = final_clip.with_position(('center', y_pos))
+            
+        else:
+            # v19.1: Universal Anti-Clipping for Standard Subs
+            # Force height to avoid clipping on Windows/ImageMagick
+            final_clip = TextClip(
+                text=text,
+                font_size=fontsize,
+                color=base_color,
+                stroke_color=stroke_color,
+                stroke_width=3.0,
+                font=font,
+                method='caption',
+                size=(standard_width, t_height_universal), 
+                text_align='center'
+            ).with_duration(duration)
+            
+            # Position: Center horizontally
+            final_clip = final_clip.with_position(((target_size[0] - standard_width) // 2, y_pos))
+        
+        return final_clip
 
 def generate_video_avgl(project):
     """
@@ -603,21 +854,28 @@ def generate_video_avgl(project):
                 
                 # ASSET LOADING & FALLBACK
                 clip = None
-                if scene.assets:
-                    asset = scene.assets[0]
+                # v16.7.20: Filter out empty assets to treat them like no-assets (fast mode)
+                # v16.7.21: Also filter out generic category placeholders ('image', 'video', etc.)
+                def is_valid_asset(a):
+                    asset_id = (getattr(a, 'id', '') or getattr(a, 'type', '') or '').strip()
+                    if not asset_id:
+                        return False
+                    if asset_id.lower() in ['video', 'image', 'none', 'null']:
+                        return False
+                    return True
+                
+                valid_assets = [a for a in scene.assets if is_valid_asset(a)]
+                if valid_assets:
+                    asset = valid_assets[0]
                     # v14.7 Fix: Prioritize ID over Type to avoid 'video'/'image' string leaks
                     # getattr(asset, 'id') should be the real filename or absolute path.
                     raw_path = str(getattr(asset, 'id', '') or getattr(asset, 'type', '') or "").strip()
-                    
-                    # Safeguard: If the ID is just a category name, treat it as empty to force fallback/intro
-                    if raw_path.lower() in ['video', 'image', 'none', 'null']:
-                        raw_path = ""
                         
                     asset_path = None
                     
                     # 1. Check Absolute Path (Priority)
                     norm_path = os.path.normpath(raw_path)
-                    if norm_path and os.path.isabs(norm_path) and os.path.exists(norm_path):
+                    if norm_path and os.path.isabs(norm_path) and os.path.isfile(norm_path):
                          asset_path = norm_path
                          logger.log(f"    ✅ Ruta ABSOLUTA detectada y validada: {os.path.basename(asset_path)}")
                          logger.log(f"       Path: {asset_path}")
@@ -630,21 +888,21 @@ def generate_video_avgl(project):
                         asset_path = os.path.join(assets_dir, fname)
                         
                         # Tolerance: if not found, try extensions
-                        if not os.path.exists(asset_path):
+                        if not os.path.isfile(asset_path):
                             for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
-                                if os.path.exists(asset_path + ext): 
+                                if os.path.isfile(asset_path + ext): 
                                     asset_path += ext
                                     break
                     
                     # LOG RESULT
-                    if os.path.exists(asset_path):
+                    if os.path.isfile(asset_path):
                         if not os.path.isabs(raw_path):
                             logger.log(f"    ✅ Asset encontrado en media/assets: {os.path.basename(asset_path)}")
                     else:
-                        logger.log(f"    ❌ Asset NO encontrado: '{raw_path}'")
+                        logger.log(f"    ❌ Asset NO encontrado o es directorio: '{raw_path}'")
                         logger.log(f"       Buscado en: {asset_path}")
 
-                    if not os.path.exists(asset_path):
+                    if not os.path.isfile(asset_path):
                         logger.log(f"    🔍 Buscando respaldo (fallback)...")
                         # Smart Fallback
                         fallback_candidates = [
@@ -669,6 +927,7 @@ def generate_video_avgl(project):
                             except: pass
                         
                         if not found_fb:
+                            from moviepy import ColorClip
                             clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
                             logger.log("    🛑 SIN ASSETS DISPONIBLES. Usando fondo negro.")
                         else:
@@ -676,7 +935,7 @@ def generate_video_avgl(project):
                             clip = apply_ken_burns(asset_path, duration, target_size, zoom="1.1:1.0", move="HOR:50:50")
                             clips_to_close.append(clip)
                     
-                    if not clip and os.path.exists(asset_path):
+                    if not clip and os.path.isfile(asset_path):
                         # Determine Asset Type (Image vs Video)
                         is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm'))
                         
@@ -857,75 +1116,131 @@ def generate_video_avgl(project):
                     final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
                     audio_clip = final_scene_audio
 
-                # SUBTITLE RENDERING (Enhanced v6.2)
-                # Priority: scene.subtitles (list from tags) > scene.subtitle (single string)
+                # SUBTITLE RENDERING (Modular v16.0)
                 sub_clips_dynamic = []
                 try:
-                    # Common Font detection
-                    try:
-                        font_list = TextClip.list('font')
-                        font = 'Arial-Bold' if 'Arial-Bold' in font_list else 'C:/Windows/Fonts/arial.ttf'
-                    except:
-                        font = 'C:/Windows/Fonts/arial.ttf'
-                    
-                    fontsize = int(target_size[1] * 0.035)
-                    
                     if hasattr(scene, 'subtitles') and scene.subtitles:
-                        # v6.8: Use the same splitting logic for consistency
-                        clean_text_for_count = scene.text
-                        words_in_scene = clean_text_for_count.split()
-                        total_words_scene = len(words_in_scene)
-                        timing_base = voice_duration if voice_duration > 0 else duration
+                        # v17.2.1: CRITICAL FIX - Use full duration (voice + pause) for timing
+                        # Previously used only voice_duration, causing subtitle desync with scene pauses
+                        timing_base = duration  # duration already = voice_duration + scene.pause (line 781)
+                        # v16.7.12: Unified Word Count (Clean text to match TTS output)
+                        # v16.7.23: Professional subtitle standards (Netflix/HBO)
+                        MIN_READING_SPEED = 2.6  # palabras/segundo (estándar profesional)
+                        MIN_SUBTITLE_DURATION = 1.0  # segundos
+                        MAX_SUBTITLE_DURATION = 7.0  # segundos
                         
-                        logger.log(f"[Subs] Renderizando {len(scene.subtitles)} subtitulos de enfasis. Palabras totales: {total_words_scene}")
+                        clean_scene_text = re.sub(r'\[.*?\]', '', scene.text)
+                        total_words_scene = len(clean_scene_text.split())
                         
                         for idx, sub_data in enumerate(scene.subtitles):
                             s_text = sub_data.get('text', '')
                             s_offset = sub_data.get('offset', 0)
                             s_w_count = sub_data.get('word_count', 4)
+                            phonetic_count = sub_data.get('phonetic_count', s_w_count)  # v17.0: Phonetic mapping
+                            is_highlight = sub_data.get('is_highlight', False)           # v17.0: Highlight mode
+                            y_pos = sub_data.get('y_position', 0.70)                     # v17.0: Vertical position (v17.2.10: Moved up to 0.70)
+                            is_dynamic = sub_data.get('is_dynamic', False)
+                            is_movie_mode = sub_data.get('movie_mode', False)
                             
-                            if not s_text: continue
+                            if not s_text or s_w_count < 0: continue
                             
-                            # Estimate timing
-                            s_start = (s_offset / total_words_scene) * timing_base if total_words_scene > 0 else 0
-                            s_dur = (s_w_count / total_words_scene) * timing_base if total_words_scene > 0 else 2.5
+                            # v17.0: Enhanced timing logic with phonetic consolidation
+                            relevant_timings = None
+                            consolidated_timing = None
                             
-                            # Sanitize
+                            # v18.9: Support word timings for ALL subtitles (Dynamic or Static) if available
+                            if hasattr(scene, 'word_timings') and scene.word_timings:
+                                # Extract timings using phonetic_count (not word_count)
+                                relevant_timings = scene.word_timings[s_offset : s_offset + phonetic_count]
+                                
+                                # v17.0: Consolidate if phonetic words > display words
+                                if phonetic_count > s_w_count and len(relevant_timings) > 0:
+                                    # Multiple phonetic words → Single display text
+                                    consolidated_timing = {
+                                        'word': s_text,
+                                        'start': relevant_timings[0]['start'],
+                                        'end': relevant_timings[-1]['end']
+                                    }
+                                    s_start = consolidated_timing['start']
+                                    s_dur = consolidated_timing['end'] - s_start
+                                    logger.log(f"      [PHO] Consolidated {phonetic_count}p → 1d: \"{s_text}\" ({s_dur:.2f}s)")
+                                elif len(relevant_timings) > 0:
+                                    # v18.9: Perfect sync for static/header subs using phonetic_count
+                                    s_start = relevant_timings[0]['start']
+                                    s_dur = relevant_timings[-1]['end'] - s_start
+                                    
+                                    # v17.2.8: Advance highlight clips by 200ms
+                                    if is_highlight:
+                                        s_start = max(0, s_start - 0.20)
+                                else:
+                                    # Fallback if slice resulted in empty timings
+                                    s_start = 0
+                                    s_dur = 1.5
+                            else:
+                                # Fallback: distribución uniforme con mínimo legible
+                                s_start = (s_offset / total_words_scene) * timing_base if total_words_scene > 0 else 0
+                                
+                                # Calcular duración proporcional usando phonetic_count
+                                proportional_dur = (phonetic_count / total_words_scene) * timing_base if total_words_scene > 0 else 1.5
+                                
+                                # Calcular duración mínima legible basada en estándar profesional
+                                min_legible_dur = s_w_count / MIN_READING_SPEED
+                                
+                                # Usar el mayor entre proporcional y mínimo legible
+                                s_dur = max(proportional_dur, min_legible_dur)
+                                
+                                # Aplicar límites min/max
+                                s_dur = max(MIN_SUBTITLE_DURATION, min(MAX_SUBTITLE_DURATION, s_dur))
+                            
                             s_start = min(s_start, duration - 0.1)
-                            s_dur = min(s_dur, duration - s_start)
-                            if s_dur < 0.4: s_dur = 0.5
+                            s_dur = max(0.1, min(s_dur, duration - s_start))
                             
-                            logger.log(f"       [{idx+1}] '{s_text[:20]}...' @ {s_start:.2f}s (dur: {s_dur:.2f}s, offset: {s_offset})")
+                            # v17.2.9: TEMPORARY - Disable yellow karaoke highlights as requested by the Architect
+                            # We keep the DYN timing but render as static white subtitles for visual cleanup
+                            d_txt_clip = render_pro_subtitles(
+                                s_text, s_dur, target_size, 
+                                full_highlight=is_movie_mode,
+                                is_dynamic=False,  # Forced to False to remove yellow highlights
+                                word_timings=relevant_timings,
+                                y_position=y_pos,
+                                is_highlight=is_highlight
+                            )
                             
-                            # v7.2: Fixed height for the black bar ensures perfect vertical centering
-                            # Font size is reduced, but the bar height is generous (2.8x font size)
-                            box_height = int(fontsize * 2.8)
-                            
-                            d_txt_clip = TextClip(
-                                text=s_text,
-                                font_size=fontsize,
-                                color='yellow',
-                                bg_color='black',
-                                font=font,
-                                method='caption',
-                                text_align='center',
-                                horizontal_align='center',
-                                vertical_align='center',
-                                size=(int(target_size[0]*0.85), box_height)
-                            ).with_start(s_start).with_duration(s_dur)
-                            
-                            # Only adding horizontal margins for that "wide" look, vertical is handled by box_height
-                            d_txt_clip = d_txt_clip.with_effects([vfx.Margin(left=30, right=30, color=(0,0,0))])
-                            d_txt_clip = d_txt_clip.with_position(('center', 0.85), relative=True)
-                            
-                            sub_clips_dynamic.append(d_txt_clip)
+                            if d_txt_clip:
+                                d_txt_clip = d_txt_clip.with_start(s_start)
+                                
+                                # v17.3.3: Prevención de Solapamiento (Clipping)
+                                # Si hay un subtítulo siguiente en la misma posición vertical, 
+                                # recortamos este clip para que termine justo cuando empieza el otro.
+                                try:
+                                    if idx + 1 < len(scene.subtitles):
+                                        next_sub = scene.subtitles[idx + 1]
+                                        # Solo si están en la misma línea (evita interferir entre SUB y PHO:h)
+                                        if next_sub.get('y_position', 0.70) == y_pos:
+                                            # Calculamos el inicio del siguiente para recortar
+                                            # (asumimos la misma lógica de timing del bucle)
+                                            if is_dynamic and hasattr(scene, 'word_timings') and scene.word_timings:
+                                                next_offset = next_sub.get('offset', 0)
+                                                if next_offset < len(scene.word_timings):
+                                                    next_start = scene.word_timings[next_offset]['start']
+                                                    if next_sub.get('is_highlight', False):
+                                                        next_start = max(0, next_start - 0.20)
+                                                    
+                                                    # Recortar duración si hay solapamiento
+                                                    if s_start + s_dur > next_start:
+                                                        s_dur = max(0.1, next_start - s_start)
+                                                        d_txt_clip = d_txt_clip.with_duration(s_dur)
+                                                        logger.log(f"      [Clip] Solapamiento detectado. Recortando chunk {idx} a {s_dur:.2f}s")
+                                except: pass
+
+                                sub_clips_dynamic.append(d_txt_clip)
                         
                         if sub_clips_dynamic:
                             clip = CompositeVideoClip([clip] + sub_clips_dynamic)
-                            logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos en escena.")
-                        
+                            logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos PRO v16.5.")
                 except Exception as e:
-                    logger.log(f"    [WARNING] Error renderizando subtitulos: {e}")
+                    import traceback
+                    logger.log(f"    [WARNING] Error renderizando subtitulos PRO: {e}\n{traceback.format_exc()}")
 
                 # v14.0 Audio Mixing: Mix Voice + Original Video Sound (if volume > 0)
                 # v14.3: Robust check for audio presence
