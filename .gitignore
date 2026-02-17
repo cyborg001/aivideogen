@@ -38,6 +38,7 @@ __pycache__/
 *.spec
 nuitka_log.txt
 aivideogen/client_secrets.json
+client_secrets.json
 
 # SÍ SE SUBEN (Esenciales y UI) ---
 !aivideogen/media/sfx/
@@ -59,4 +60,17 @@ edge_probe.py
 debug_json_parsing.py
 scripts/debug_*.py
 tests_and_debug/
+
+# Archivos Personales y Temporales (Root)
+*.mp4
+*.mp3
+*.wav
+project_*.json
+video_*.mp4
+app.log
+aivideogen/guiones/*
+!aivideogen/guiones/.gitkeep
+aivideogen/guiones_pro/*
+!aivideogen/guiones_pro/.gitkeep
+
 
