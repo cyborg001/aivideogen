@@ -39,7 +39,7 @@ __pycache__/
 nuitka_log.txt
 aivideogen/client_secrets.json
 
-# --- SÍ SE SUBEN (Esenciales y UI) ---
+# SÍ SE SUBEN (Esenciales y UI) ---
 !aivideogen/media/sfx/
 !aivideogen/media/overlays/
 !aivideogen/generator/static/
@@ -49,3 +49,14 @@ aivideogen/client_secrets.json
 !VERSIONES.md
 !README.md
 !MANUAL_DE_USUARIO.md
+
+# Logs y Debugging
+*.log
+debug_output.txt
+v16_debug_log.txt
+v16_debug_log_cmd.txt
+edge_probe.py
+debug_json_parsing.py
+scripts/debug_*.py
+tests_and_debug/
+
