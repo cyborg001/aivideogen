@@ -1246,6 +1246,20 @@ def generate_video_avgl(project):
                                             'end': curr_t + w_dur
                                         })
                                         curr_t += w_dur
+                            
+                            # v26.11: GLOBAL KARAOKE COMPENSATOR
+                            # "Audio Ferrari" Fix: Shift all visuals -80ms to catch up with audio.
+                            # This covers system latency and MP3 start gaps.
+                            if is_dynamic and final_timings:
+                                sync_offset = -0.08
+                                for wt in final_timings:
+                                    wt['start'] = max(0.0, wt['start'] + sync_offset)
+                                    wt['end'] = max(0.0, wt['end'] + sync_offset)
+                                
+                                # Update S_START to match new timings (Critical!)
+                                if final_timings:
+                                    s_start = final_timings[0]['start']
+                                    s_dur = final_timings[-1]['end'] - s_start
 
                             metadata = {
                                 'text': s_text,
