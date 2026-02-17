@@ -1771,6 +1771,14 @@ def generate_video_avgl(project):
         # v26.5: output_path might have changed!
         # Ensure the final project status reflects the correct file if changed earlier
         project.status = 'completed'; project.save(update_fields=['status', 'progress_total'])
+        
+        # v27.0: AUTOMATED GARBAGE COLLECTION
+        try:
+            from .utils import cleanup_garbage
+            cleanup_garbage(settings.BASE_DIR)
+        except Exception as ge:
+            logger.log(f"⚠️ Error en Garbage Collector: {ge}")
+
         play_finish_sound(success=True)
         logger.log(f"[Done] Exito en {time.time()-start_time:.1f} segundos!")
 

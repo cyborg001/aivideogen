@@ -282,3 +282,40 @@ def generate_video_process(project):
             print(f"[YouTube] Error fatal disparando subida automatica: {e}")
             project.log_output += f"\n[YouTube] [ERROR] Error fatal disparando subida automatica: {e}"
             project.save(update_fields=['log_output'])
+
+def cleanup_garbage(base_dir=None):
+    """
+    Agresively cleans up temporary files left by MoviePy and TTS engines.
+    """
+    import glob
+    import os
+    
+    if not base_dir:
+        base_dir = settings.BASE_DIR
+        
+    print(f"🧹 [Garbage Collector] Iniciando limpieza en {base_dir}...")
+    
+    # 1. Clean MoviePy Temp Files (*TEMP_MPY*)
+    # These are often locked until the process closes, but we try anyway.
+    temp_mpy_files = glob.glob(os.path.join(base_dir, "*TEMP_MPY*"))
+    for f in temp_mpy_files:
+        try:
+            os.remove(f)
+            print(f"   🗑️ Eliminado: {os.path.basename(f)}")
+        except Exception as e:
+            print(f"   ⚠️ No se pudo borrar {os.path.basename(f)}: {e}")
+
+    # 2. Clean Temp Audio Folder
+    # We clear the entire folder to ensure no residue is left.
+    temp_audio_dir = os.path.join(base_dir, 'aivideogen', 'media', 'temp_audio')
+    if os.path.exists(temp_audio_dir):
+        for f in os.listdir(temp_audio_dir):
+            if f == ".gitkeep": continue
+            file_path = os.path.join(temp_audio_dir, f)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                pass
+    
+    print("✨ [Garbage Collector] Limpieza finalizada.")
