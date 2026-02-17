@@ -16,6 +16,16 @@
 - **⚡ Renderizado Híbrido**: Utiliza **FFmpeg** puro para velocidad y **MoviePy** para composición compleja.
 - **🧠 Asistente IA Integrado**: Generación automática de guiones e investigación de temas.
 
+## 💡 Casos de Uso Ideales
+
+¿Para qué sirve **AIVideogen**? Es perfecto para creadores que quieren escalar su producción:
+
+- **🕵️ Faceless Channels**: Crea videos de curiosidades, noticias, tops o misterio sin grabar nada (automatización 100%).
+- **📚 Storytelling & Historia**: Narra eventos históricos, creepypastas o cuentos con música inmersiva, efectos de sonido y voces con emoción (`[TENSO]`, `[SUSURRO]`).
+- **🎙️ Visual Podcasts**: Convierte tu guion de podcast en un video dinámico con subtítulos tipo karaoke para retener la atención.
+- **📢 Marketing de Contenidos**: Genera videos promocionales rápidos para TikTok, Reels o Shorts.
+- **🏫 Educación**: Explica conceptos complejos con una voz clara y diagramas visuales perfectamente sincronizados.
+
 ## 🚀 Instalación Rápida
 
 1.  **Clonar el repositorio**:
