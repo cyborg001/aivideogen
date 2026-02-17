@@ -102,7 +102,7 @@ Este proyecto es el resultado de cientos de horas de ingeniería inversa, prueba
 
 - **☕ Buy me a Coffee**: [Enlace a tu Ko-fi/Patreon]
 - **💖 GitHub Sponsors**: [Enlace a GitHub Sponsors]
-- **💳 PayPal**: [Enlace a PayPal]
+- **💳 PayPal**: cgrs27@gmail.com
 
 Tu apoyo mantiene los servidores de prueba encendidos y el café fluyendo. ¡Gracias!
 
