@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/Status-Beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**AIVideogen** es un motor de generación de video automatizado impulsado por Inteligencia Artificial. Utiliza scripts en formato **AVGL (Audio-Visual Generation Language)** para crear contenido audiovisual complejo, con narración neuronal (EdgeTTS/ElevenLabs), sincronización de labios (LipSync), subtítulos dinámicos estilo karaoke y efectos visuales cinematográficos.
+**AIVideogen** es un motor de generación de video automatizado impulsado por Inteligencia Artificial. Utiliza scripts en formato **AVGL (Audio-Visual Generation Language)** para crear contenido audiovisual complejo, con narración neuronal (EdgeTTS/ElevenLabs), subtítulos dinámicos estilo karaoke y efectos visuales cinematográficos.
 
 ## ✨ Características Principales
 
@@ -14,7 +14,7 @@
     - `ZOOM:1.5:1.0`, `MOVE:HOR:50:50`, `SHAKE:5`, `ROTATE:15`.
     - Grupos de escenas para mantener el "Master Shot".
 - **⚡ Renderizado Híbrido**: Utiliza **FFmpeg** puro para velocidad y **MoviePy** para composición compleja.
-- **🧠 Asistente IA Integrado**: Generación automática de guiones, investigación de temas y análisis financiero.
+- **🧠 Asistente IA Integrado**: Generación automática de guiones e investigación de temas.
 
 ## 🚀 Instalación Rápida
 
