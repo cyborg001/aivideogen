@@ -63,9 +63,9 @@
 
 Mira lo que **AIVideogen** puede crear de forma totalmente autónoma:
 
-[![AIVideogen Demo](https://img.youtube.com/vi/TU_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=TU_VIDEO_ID)
+[![AIVideogen Demo](https://img.youtube.com/vi/-W2CiB3zAoU/0.jpg)](https://www.youtube.com/watch?v=-W2CiB3zAoU)
 
-*(Sustituya `TU_VIDEO_ID` en el enlace con el ID de su mejor video generado)*
+*(Ejemplo de video generado con AIVideogen: Narración, imágenes y subtítulos DYN)*
 
 ## 🎮 Uso Básico
 
