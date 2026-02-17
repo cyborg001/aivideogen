@@ -10,6 +10,7 @@ import numpy as np
 import logging
 import proglog
 from django.conf import settings
+from .subtitle_utils import compile_full_script_ass
 
 # v8.5 Notification Support
 if os.name == 'nt':
@@ -624,6 +625,10 @@ def generate_video_avgl(project):
     start_time = time.time()
     logger = ProjectLogger(project)
     
+    # v26.0: Global Subtitle Collection
+    all_srt_items = []
+    video_base_cursor = 0.0
+    
     # Init Progress
     project.progress = 5
     project.save(update_fields=['progress'])
@@ -1142,6 +1147,10 @@ def generate_video_avgl(project):
                             is_dynamic = sub_data.get('is_dynamic', False)
                             is_movie_mode = sub_data.get('movie_mode', False)
                             
+                            # v26.0: Collect for Post-Injection (Absolute Timing)
+                            # Timing must be: Global Cursor (completed blocks) + Block Cursor (previous scenes in current block) + local timing
+                            s_start_global_base = video_base_cursor + block_cursor
+                            
                             if not s_text or s_w_count < 0: continue
                             
                             # v17.0: Enhanced timing logic with phonetic consolidation
@@ -1195,7 +1204,60 @@ def generate_video_avgl(project):
                             s_start = min(s_start, duration - 0.1)
                             s_dur = max(0.1, min(s_dur, duration - s_start))
                             
-                            # v17.2.9: TEMPORARY - Disable yellow karaoke highlights as requested by the Architect
+                            # Alignment logic (SRT tags: {\an8} Top, {\an2} Bottom)
+                            align_tag = "{\\an8}" if y_pos < 0.6 else "{\\an2}"
+                            
+                            # v26.1: Populate all_srt_items (now used for ASS) with full metadata
+                            
+                            # v26.9: Karaoke Phonetic -> Visual Mapping
+                            # Fixes issue where [DYN] shows TTS phonetic text instead of visual text.
+                            final_timings = relevant_timings
+                            if is_dynamic and relevant_timings:
+                                v_words = s_text.split()
+                                p_words = relevant_timings
+                                
+                                if len(v_words) == len(p_words):
+                                    # 1:1 Match - Perfect Swap
+                                    final_timings = []
+                                    for i, w_obj in enumerate(p_words):
+                                        new_obj = w_obj.copy()
+                                        new_obj['word'] = v_words[i]
+                                        final_timings.append(new_obj)
+                                else:
+                                    # Mismatch - Proportional Distribution (Fallback)
+                                    # Example: [PHO]veintidos|22[/PHO] -> 1 visual, 1 phonetic ("veintidos")
+                                    # Example: [PHO]veintidos de enero|22/01[/PHO] -> 1 visual, 3 phonetic
+                                    logger.log(f"      [DYN] Mismatch: {len(v_words)}v vs {len(p_words)}p. Remapping...")
+                                    
+                                    start_t = p_words[0]['start']
+                                    end_t = p_words[-1]['end']
+                                    total_dur = end_t - start_t
+                                    total_chars = sum(len(w) for w in v_words)
+                                    if total_chars == 0: total_chars = 1 # Safety
+                                    
+                                    final_timings = []
+                                    curr_t = start_t
+                                    for w in v_words:
+                                        # Calculate duration based on character length ratio
+                                        w_dur = (len(w) / total_chars) * total_dur
+                                        final_timings.append({
+                                            'word': w,
+                                            'start': curr_t,
+                                            'end': curr_t + w_dur
+                                        })
+                                        curr_t += w_dur
+
+                            metadata = {
+                                'text': s_text,
+                                'start': s_start_global_base + s_start,
+                                'end': s_start_global_base + s_start + s_dur,
+                                'is_dynamic': is_dynamic,
+                                'y_pos': y_pos,
+                                'relevant_timings': final_timings if is_dynamic else None
+                            }
+                            all_srt_items.append(metadata)
+                            
+                            # v17.2.9: TEMPORARY - Disable yellow karaoke highlights for MoviePy (we only use FFmpeg now)
                             # We keep the DYN timing but render as static white subtitles for visual cleanup
                             d_txt_clip = render_pro_subtitles(
                                 s_text, s_dur, target_size, 
@@ -1208,6 +1270,9 @@ def generate_video_avgl(project):
                             
                             if d_txt_clip:
                                 d_txt_clip = d_txt_clip.with_start(s_start)
+                                
+                                # v26.0: Metadata already added to all_srt_items above
+                                pass
                                 
                                 # v17.3.3: Prevención de Solapamiento (Clipping)
                                 # Si hay un subtítulo siguiente en la misma posición vertical, 
@@ -1236,7 +1301,9 @@ def generate_video_avgl(project):
                                 sub_clips_dynamic.append(d_txt_clip)
                         
                         if sub_clips_dynamic:
-                            clip = CompositeVideoClip([clip] + sub_clips_dynamic)
+                            # v26.0: Bypass MoviePy text rendering for stability/speed (handled by FFmpeg injection)
+                            # clip = CompositeVideoClip([clip] + sub_clips_dynamic)
+                            pass
                             logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos PRO v16.5.")
                 except Exception as e:
                     import traceback
@@ -1376,6 +1443,8 @@ def generate_video_avgl(project):
                     'volume': bs_vol
                 })
                 block_clips.append(block_video)
+                # v26.0: Advance global cursor for next block
+                video_base_cursor += block_video.duration
 
         if not block_clips: raise Exception("No block clips generated")
 
@@ -1602,12 +1671,91 @@ def generate_video_avgl(project):
             project.output_video.name = f"videos/{output_filename}"
             project.duration = float(final_video.duration)
             project.timestamps = "\n".join(timestamps_list)
-            project.status = 'completed'
-            project.progress = 100
-            project.save(update_fields=['output_video', 'duration', 'timestamps', 'status', 'progress'])
+            # v26.6: Deferred completion until after subtitle injection (Wait for ASS burn-in)
+            project.progress_total = 95.0
+            project.save(update_fields=['output_video', 'duration', 'timestamps', 'progress_total'])
             
-            logger.log(f"✅ ¡Video generado con éxito! ({output_path})")
+            logger.log(f"✅ ¡Video base generado! ({output_path})")
+
+            # ═══════════════════════════════════════════════════════════════════
+            # v26.0 POST-INJECTION PHASE (THE YOUTUBE WAY)
+            # ═══════════════════════════════════════════════════════════════════
+            if all_srt_items:
+                logger.log("🎬 Iniciando Inyección Final de Subtítulos v26.1 (Format: ASS)...")
+                # v26.1: Use .ass instead of .srt for professional styling and position control
+                ass_path = output_path.replace('.mp4', '.ass')
+                final_output_path = output_path.replace('.mp4', '_final.mp4')
+                
+                # 1. Compile ASS (Professionally styled)
+                from .subtitle_utils import compile_full_script_ass
+                if compile_full_script_ass(all_srt_items, ass_path):
+                    # 2. FFmpeg Injection Command (Automated Binary Discovery)
+                    import subprocess
+                    import imageio_ffmpeg
+                    ff_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                    
+                    # v26.4: HYBRID PATH STRATEGY (The Golden Mean)
+                    # We run FFmpeg anchored to BASE_DIR to ensure the relative ASS path (no colons!) works.
+                    # HOWEVER, we use ABSOLUTE paths for Input/Output to guarantee file discovery regardless of CWD.
+                    try:
+                        base_dir = str(settings.BASE_DIR)
+                        rel_ass_path = os.path.relpath(ass_path, base_dir).replace('\\', '/')
+                        # Input/Output remain Absolute for maximum reliability
+                        
+                        ff_cmd = [
+                            ff_exe, '-y', '-i', output_path,
+                            '-vf', f"ass=filename='{rel_ass_path}'",
+                            '-c:a', 'copy',
+                            final_output_path
+                        ]
+                        
+                        logger.log(f"🎬 Ejecutando FFmpeg (CWD: {base_dir}): {ff_cmd}")
+                        
+                        # V26.5: Robust Execution with Timeout & Stderr Capture
+                        try:
+                            # 120s timeout to prevent zombie processes
+                            result = subprocess.run(ff_cmd, check=True, capture_output=True, cwd=base_dir, timeout=120)
+                            
+                            # Reemplazo final Robusto (Anti-Lock)
+                            if os.path.exists(final_output_path):
+                                try:
+                                    if os.path.exists(output_path):
+                                        try: os.remove(output_path)
+                                        except OSError: pass # Try to rename anyway
+                                    
+                                    os.rename(final_output_path, output_path)
+                                    logger.log(f"✅ Fusión exitosa. Video final reemplazó al original: {output_path}")
+                                except OSError as lock_err:
+                                    logger.log(f"⚠️ LOCK DETECTADO: No se pudo sobrescribir {output_path}. Usando ruta alternativa.")
+                                    # CRITICAL: Return the new file to avoid serving the old one
+                                    output_path = final_output_path
+                                    # Update project model to point to the new file
+                                    # We use RELATIVE path for Django FileField
+                                    rel_new_path = f"videos/{os.path.basename(output_path)}"
+                                    project.output_video.name = rel_new_path
+                                    project.save(update_fields=['output_video'])
+                                    logger.log(f"⚠️ Proyecto actualizado a: {rel_new_path}")
+
+                            else:
+                                logger.log("⚠️ Error: El video finalizado no se generó (File missing).")
+
+                        except subprocess.CalledProcessError as e:
+                            logger.log(f"❌ Error FFmpeg (Exit {e.returncode}): {e.stderr.decode('utf-8', errors='replace')}")
+                            # Don't raise immediately, let the original video survive if burning fails?
+                            # No, burning is critical.
+                            raise e
+                        except subprocess.TimeoutExpired:
+                            logger.log("❌ Error: Tiempo de espera agotado en FFmpeg (120s).")
+                            raise
+
+                    except Exception as fe:
+                        logger.log(f"⚠️ Error en fusión FFmpeg: {fe}")
+                        # If burning fails, we still have the original video (output_path).
+                        # We proceed, but warn.
+
         project.progress_total = 100.0 # Ensure final progress is 100%
+        # v26.5: output_path might have changed!
+        # Ensure the final project status reflects the correct file if changed earlier
         project.status = 'completed'; project.save(update_fields=['status', 'progress_total'])
         play_finish_sound(success=True)
         logger.log(f"[Done] Exito en {time.time()-start_time:.1f} segundos!")

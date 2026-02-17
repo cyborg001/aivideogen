@@ -1,0 +1,110 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{letterpaper, margin=1in}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{enumitem}
+
+\definecolor{riskred}{HTML}{C0392B}
+\definecolor{safegreen}{HTML}{27AE60}
+\definecolor{alertorange}{HTML}{E67E22}
+\definecolor{infoblue}{HTML}{2980B9}
+
+\title{\textbf{Plan de Rescate Estructural \\ Diagnóstico Crítico v21.2}}
+\author{Arquitecto Financiero}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{tcolorbox}[colback=riskred!5!white,colframe=riskred,title=\textbf{ESTADO ACTUAL: RETORNO A SUPERÁVIT OPERATIVO}]
+Tras corregir los datos de Credimas, el flujo de caja vuelve a ser positivo. Tienes un margen de \textbf{RD\$ 11,073.71} mensuales para iniciar la reconstrucción de tu escudo financiero.
+\end{tcolorbox}
+
+\section*{📊 Balance Mensual (Flujo de Caja)}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{L{c} R{c} C{c}}
+\toprule
+\textbf{Concepto} & \textbf{Monto (RD\$)} & \textbf{Estado} \\
+\midrule
+Ingreso Neto Mensual & 138,368.93 & \textcolor{safegreen}{Recibido} \\
+Gastos de Vida & 75,000.00 & \textcolor{riskred}{Fijo} \\
+Cuotas de Deudas & 52,295.22 & \textcolor{alertorange}{Bajo Control} \\
+\midrule
+\textbf{FLUJO DE CAJA LIBRE} & \textbf{11,073.71} & \textbf{SUPERÁVIT} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{📋 Radiografía de Deudas (Ordenada por Tasa)}
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabularx}{\textwidth}{l X r c r}
+\toprule
+\textbf{\#} & \textbf{Institución / Producto} & \textbf{Saldo (RD\$)} & \textbf{Tasa} & \textbf{Cuota} \\
+\midrule
+1 & Banreservas - Credimas & 16,000.00 & \textbf{60.00\%} & 3,000.00 \\
+2 & Banreservas - TC (Pequeña) & 15,304.22 & \textbf{60.00\%} & Variable \\
+3 & Banreservas - TC (Nueva) & 17,663.35 & \textbf{60.00\%} & Variable \\
+4 & Banreservas - TC (Min) & 9,500.00 & \textbf{60.00\%} & Variable \\
+5 & Qik - TC & 155,922.65 & \textbf{60.00\%} & Variable \\
+6 & Banreservas - Préstamo & 568,061.88 & 23.99\% & 17,437.67 \\
+7 & Scotiabank - Préstamo & 59,848.25 & 19.20\% & 4,321.70 \\
+8 & Banreservas - Préstamo & 1,294,052.00 & 10.90\% & 27,535.85 \\
+\midrule
+& \textbf{TOTALES} & \textbf{2,136,352.35} & & \textbf{52,295.22} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{🎯 PROTOCOLO DE EMERGENCIA (Fase 1)}
+
+\begin{itemize}[label=\checkmark]
+    \item \textbf{Prioridad Absoluta:} Construir el Fondo de Emergencia (FE).
+    \item \textbf{Meta:} RD\$ 75,000 (1 mes de gastos).
+    \item \textbf{Estrategia:} El 100\% del superávit (RD\$ 11,073) va al FE.
+    \item \textbf{Tiempo Estimado:} 6.7 meses.
+\end{itemize}
+
+\section*{📅 Cronograma de Avalancha (Post-FE)}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{c X l r}
+\toprule
+\textbf{Mes} & \textbf{Deuda Objetivo} & \textbf{Pago Extra} & \textbf{Resultado} \\
+\midrule
+7 & TC Pequeña (9.5k) & 11,073.71 & ELIMINADA \\
+8-9 & TC Mediana (15.3k) & 11,073.71 & ELIMINADA \\
+10-11 & Credimas (16k) & 11,073.71 + 3k & ELIMINADA \\
+12-13 & TC Nueva (17.6k) & 14,073.71 & ELIMINADA \\
+14-25 & TC Qik (155k) & 14,073.71 & ELIMINADA \\
+26-50 & Préstamo 23.99\% & 31,510.00 & ELIMINADA \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{📊 Dashboard de Control}
+\begin{itemize}
+    \item \textbf{Deuda Total Actual:} RD\$ 2,136,352
+    \item \textbf{Estatus FE:} 0 / 75,000 \textcolor{riskred}{(0\%)}
+    \item \textbf{Estatus Deuda Tóxica:} RD\$ 214,390 \textcolor{alertorange}{(60\%)}
+    \item \textbf{Fecha Libertad:} $\approx$ 92 meses.
+\end{itemize}
+
+\begin{tcolorbox}[colback=infoblue!5!white,colframe=infoblue,title=\textbf{💡 NOTA DE OPTIMIZACIÓN}]
+Lograr \textbf{+RD\$ 20,000/mes} extra reduce el tiempo de libertad de 92 meses a solo \textbf{45 meses}.
+\end{tcolorbox}
+
+\end{document}

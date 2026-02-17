@@ -202,8 +202,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
 
     # 1. Identify all tags in ORIGINAL text to avoid index mismatch
     patterns = {
-        'wrapped': re.compile(r'\[\s*(?:SUB|TITLE)(?::\s*(.*?))?\s*\](.*?)\s*\[\s*/(?:SUB|TITLE)\s*\]', re.IGNORECASE | re.DOTALL),
-        'simple': re.compile(r'\[\s*(?:SUB|TITLE)\s*:\s*(.*?)\s*\]', re.IGNORECASE),
+        'wrapped': re.compile(r'\[\s*(SUB|TITLE)(?::\s*(.*?))?\s*\](.*?)\s*\[\s*/(?:SUB|TITLE)\s*\]', re.IGNORECASE | re.DOTALL),
+        'simple': re.compile(r'\[\s*(SUB|TITLE)\s*:\s*(.*?)\s*\]', re.IGNORECASE),
         'dyn': re.compile(r'\[\s*DYN\s*\](.*?)\s*\[\s*/DYN\s*\]', re.IGNORECASE | re.DOTALL)
     }
 
@@ -217,9 +217,14 @@ def extract_subtitles_v35(text, force_dynamic=False):
                 'length': m.end() - m.start()
             }
             if t_type == 'wrapped':
-                tag_info['param'] = (m.group(1) or "").strip()
-                tag_info['content'] = (m.group(2) or "").strip()
-            else:
+                tag_info['tag_name'] = m.group(1).upper()
+                tag_info['param'] = (m.group(2) or "").strip()
+                tag_info['content'] = (m.group(3) or "").strip()
+            elif t_type == 'simple':
+                tag_info['tag_name'] = m.group(1).upper()
+                tag_info['content'] = m.group(2).strip()
+            else: # dyn
+                tag_info['tag_name'] = 'DYN'
                 tag_info['content'] = m.group(1).strip()
             
             all_tags.append(tag_info)
@@ -301,7 +306,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             f_part_clean = re.sub(r'\[.*?\]', '', f_part)
             f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
             fonetica_offset += len(f_part_clean.split())
-            fonetica_full_parts.append(f_part)
+            fonetica_full_parts.append(f_part_clean)
         
         # Tag content
         content_raw = tag.get('content', '')
@@ -310,8 +315,17 @@ def extract_subtitles_v35(text, force_dynamic=False):
         # If count is provided, it overrides phonetic_count to control subtitle stay-duration
         p_count_override = None
         # v19.6: Force highlights and specific Y-pos for titles
-        is_highlight_tag = True if tag['type'] == 'simple' else False
-        y_pos_override = 0.45 if tag['type'] == 'simple' else 0.70
+        # v19.6: Force highlights and specific Y-pos for titles
+        tag_name = tag.get('tag_name', 'SUB')
+        
+        if tag_name == 'TITLE':
+            # v26.7: Restore Title Logic (Top Placement)
+            y_pos_override = 0.15
+            is_highlight_tag = True
+        else:
+            # SUB or DYN
+            is_highlight_tag = True if tag['type'] == 'simple' else False
+            y_pos_override = 0.45 if tag['type'] == 'simple' else 0.70
         display_text = content_raw
         
         if '|' in content_raw and tag['type'] == 'simple':
@@ -365,7 +379,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             f_part_clean = re.sub(r'\[.*?\]', '', f_part)
             f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
             fonetica_offset += len(f_part_clean.split())
-            fonetica_full_parts.append(f_part)
+            fonetica_full_parts.append(f_part_clean)
         
         last_idx = tag['end']
         
@@ -387,7 +401,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
         f_part_clean = re.sub(r'\[.*?\]', '', f_part)
         f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
         fonetica_offset += len(f_part_clean.split())
-        fonetica_full_parts.append(f_part)
+        fonetica_full_parts.append(f_part_clean)
 
     # 3. Add highlights as extra subtitles at y=0.35
     raw_subs = [s for s in raw_subs_unfiltered]
@@ -647,6 +661,7 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
                 communicate = edge_tts.Communicate(clean, voice, rate=seg_rate, pitch=seg_pitch)
 
                 # v16.5: Stream to capture word boundaries
+                last_word_end = 0.0
                 with open(seg_path, "wb") as f:
                     async for event in communicate.stream():
                         e_type = event.get("type", "").lower()
@@ -656,9 +671,12 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
                             if scene:
                                 start_s = event["offset"] / 10_000_000
                                 dur_s = event["duration"] / 10_000_000
+                                end_s = start_s + dur_s
+                                last_word_end = max(last_word_end, end_s)
+                                
                                 scene.word_timings.append({
                                     "start": current_time + start_s,
-                                    "end": current_time + start_s + dur_s,
+                                    "end": current_time + end_s,
                                     "word": event["text"]
                                 })
                         elif e_type in ["sentenceboundary", "sentence_boundary"]:
@@ -670,20 +688,58 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
                                     s_start_s = event["offset"] / 10_000_000
                                     s_dur_s = event["duration"] / 10_000_000
                                     w_dur = s_dur_s / len(s_words)
+                                    last_word_end = max(last_word_end, s_start_s + s_dur_s)
+                                    
                                     for idx, word in enumerate(s_words):
                                         scene.word_timings.append({
                                             "start": current_time + s_start_s + (idx * w_dur),
                                             "end": current_time + s_start_s + ((idx + 1) * w_dur),
                                             "word": word
                                         })
+                
                 if os.path.exists(seg_path):
-                    clip = AudioFileClip(seg_path)
-                    voice_intervals.append((current_time, current_time + clip.duration))
-                    audio_clips.append(clip)
-                    current_time += clip.duration
-        
-        if scene:
-            scene.voice_intervals = voice_intervals
+                    try:
+                        clip = AudioFileClip(seg_path)
+                        
+                        # v26.8 FINETUNING: Recorte Exacto basado en Timestamps
+                        # En lugar de adivinar el padding, usamos el último timestamp real.
+                        # Si last_word_end > 0, sabemos donde termina la voz.
+                        # ELIMINADO EL MARGEN 0.1s para reducir desfase.
+                        if last_word_end > 0:
+                            # Use exact end time, no buffer
+                            new_duration = min(clip.duration, last_word_end)
+                            if new_duration < clip.duration:
+                                clip = clip.with_duration(new_duration)
+                        
+                        voice_intervals.append((current_time, current_time + clip.duration))
+                        audio_clips.append(clip)
+                        # REMOVED PREMATURE UPDATE: current_time += clip.duration
+                    except Exception as e:
+                        print(f"Error loading audio segment: {e}")
+
+                # v26.10: Auto-Calibration for Speed/Sync Drift
+                # If audio is faster than TTS timestamps (common with rate changes),
+                # we scale the word timings to match the actual audio duration.
+                # This fixes internal drift within the segment.
+                if last_word_end > 0 and audio_clips:
+                    actual_duration = audio_clips[-1].duration
+                    # Tolerance: Only scale if mismatch is significant (>1% or >20ms)
+                    if actual_duration < (last_word_end - 0.02): # Audio is shorter/faster
+                        scale_factor = actual_duration / last_word_end
+                        
+                        # Apply scaling to the WORDS we just added for this segment.
+                        # Since current_time hasn't been updated yet, these words start >= current_time.
+                        for wt in scene.word_timings:
+                            if wt['start'] >= current_time:
+                                # Relativize, Scale, Absolutize
+                                rel_start = wt['start'] - current_time
+                                rel_end = wt['end'] - current_time
+                                
+                                wt['start'] = current_time + (rel_start * scale_factor)
+                                wt['end'] = current_time + (rel_end * scale_factor)
+
+                if audio_clips:
+                     current_time += audio_clips[-1].duration
 
         if audio_clips:
             final_audio = concatenate_audioclips(audio_clips)
