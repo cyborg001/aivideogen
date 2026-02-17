@@ -59,6 +59,9 @@ Mira lo que **AIVideogen** puede crear de forma totalmente autónoma:
 
 ## 🎮 Uso Básico
 
+> 🎓 **¿Nuevo creando videos?**  
+> Mira nuestro **[Tutorial Paso a Paso: Tu Primer Guion](docs/TUTORIAL_CREACION_GUIONES.md)** para aprender a programar `.json` desde cero.
+
 Para generar un video desde un guion JSON:
 
 ```bash
