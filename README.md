@@ -47,6 +47,16 @@
     EDGE_TTS_RATE=+0%
     ```
 
+    👉 **[Ver Guía Detallada de Configuración de APIs](docs/GUIA_CONFIGURACION_APIS.md)** (Google AI Studio, YouTube OAuth, ElevenLabs)
+
+## 🎬 Showcase / Demo
+
+Mira lo que **AIVideogen** puede crear de forma totalmente autónoma:
+
+[![AIVideogen Demo](https://img.youtube.com/vi/TU_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=TU_VIDEO_ID)
+
+*(Sustituya `TU_VIDEO_ID` en el enlace con el ID de su mejor video generado)*
+
 ## 🎮 Uso Básico
 
 Para generar un video desde un guion JSON:
