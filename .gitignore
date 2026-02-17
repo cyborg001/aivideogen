@@ -59,7 +59,9 @@ v16_debug_log_cmd.txt
 edge_probe.py
 debug_json_parsing.py
 scripts/debug_*.py
+scripts/debug_*.py
 tests_and_debug/
+tests/
 
 # Archivos Personales y Temporales (Root)
 *.mp4

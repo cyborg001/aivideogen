@@ -1,0 +1,141 @@
+{
+    "title": "CERN: ¿Portales o Ciencia Profunda?",
+    "voice": "es-DO-EmilioNeural",
+    "background_music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "EL GANCHO: LA FRONTERA DE LA REALIDAD",
+            "scenes": [
+                {
+                    "title": "Impacto Inicial",
+                    "text": "[TITLE:¿PUERTA DIMENSIONAL?][SUB]¿Ha abierto el [PHO:h]CERN|CERN[/PHO] una puerta hacia otra dimensión? [TENSO] Esta es la pregunta que inunda internet cada vez que el Gran Colisionador de Hadrones alcanza niveles de energía récord.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "cern_tunnel_particles.png",
+                            "zoom": "1.0:1.4",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "El Mito Visual",
+                    "text": "[TITLE:MITO VS REALIDAD][SUB]Desde portales interdimensionales hasta teorías de conspiración sobre el fin del mundo. Pero hoy, vamos a separar el mito de la [PHO:h]física|FÍSICA[/PHO] más extrema del planeta.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "particle_collision_art.png",
+                            "zoom": "1.3:1.0",
+                            "move": "HOR:0:100",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "EL ORIGEN DEL MITO",
+            "scenes": [
+                {
+                    "title": "La Máquina de Dios",
+                    "text": "[TITLE:TEMPLO DE LA CIENCIA][SUB]Situado a cien metros bajo tierra, el CERN es el templo de la ciencia. Allí, un anillo de [PHO:h]veintisiete|27[/PHO] kilómetros acelera protones al noventa y nueve por ciento de la velocidad de la luz.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "cern_facility_aerial.png",
+                            "zoom": "1.1:1.3",
+                            "move": "VER:0:100",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "El Choque",
+                    "text": "[TITLE:BIG BANG CONTROLADO][SUB]Al chocar, recrean condiciones similares al [PHO:h]Big Bang|BIG BANG[/PHO]. Es aquí donde la ciencia ficción toca la realidad: la búsqueda de dimensiones extra-espaciales es una posibilidad científica real.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "abstract_particle_collision_art.png",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:50:50",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "DIMENSIONES VS PORTALES",
+            "scenes": [
+                {
+                    "title": "Física Teórica",
+                    "text": "[TITLE:TEORÍA DE CUERDAS][SUB]Los físicos no buscan portales estilo Hollywood. Buscan partículas invisibles que podrían escapar hacia [PHO:h]dimensiones|DIMENSIONES[/PHO] adicionales que no podemos percibir directamente.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "dark_matter_nebula.png",
+                            "zoom": "1.1:1.5",
+                            "move": "HOR:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Materia Oscura",
+                    "text": "[TITLE:MATERIA OSCURA][SUB]Resolver esto explicaría secretos como la verdadera naturaleza de la gravedad o la escurridiza [PHO:h]materia oscura|MATERIA OSCURA[/PHO], que compone el ochenta y cinco por ciento de nuestro universo.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "dark_matter_space_viz_premium_1771250184827.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:0:100",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "EXPECTATIVAS 2026",
+            "scenes": [
+                {
+                    "title": "La Gran Actualización",
+                    "text": "[TITLE:CERN 2026][SUB]En dos mil veintiséis, el CERN entrará en una fase de [PHO:h]alta luminosidad|ALTA LUMINOSIDAD[/PHO]. Esto significa más datos y choques más violentos para entender nuestro lugar en el multiverso.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "cern_atlas_detector_huge_1771250167860.png",
+                            "zoom": "1.2:1.0",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Cierre Científico",
+                    "text": "[TITLE:LA FRONTERA][SUB]No habrá portales mágicos, pero los descubrimientos que vienen podrían cambiar nuestra definición de realidad para siempre. Mantente en la frontera de lo posible.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "futuristic_sunrise_notiaci.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "CTA: NOTIACI",
+            "scenes": [
+                {
+                    "title": "Cierre NotiACI",
+                    "text": "[TITLE:SUSCRÍBETE][SUB]Si quieres saber qué sucede en las fronteras de la ciencia, suscríbete a [PHO:h]NotiACI|NotiACI[/PHO]. Tu fuente sobre el futuro de la información.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "notiaci_social_cta.png",
+                            "zoom": "1.0:1.1",
+                            "move": "HOR:50:50",
+                            "fit": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
