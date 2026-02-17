@@ -70,6 +70,7 @@ tests/
 project_*.json
 video_*.mp4
 app.log
+*TEMP_MPY*
 aivideogen/guiones/*
 !aivideogen/guiones/.gitkeep
 aivideogen/guiones_pro/*
