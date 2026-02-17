@@ -1,5 +1,0 @@
-Inteligencia Artificial Revolucionaria | ai_discovery.png | HOR:0:100+ZOOM_IN | La inteligencia artificial acaba de dar un salto cuántico que nadie esperaba
-Laboratorio del Futuro | lab_advanced.png | VER:0:100 | En este laboratorio secreto se gestó el descubrimiento que cambiará todo
-Tecnología Avanzada | tech_chip.png | ZOOM_IN:1.0:2.0 | [PAUSA:0.8] Observa la complejidad de esta arquitectura neural de nueva generación
-Impacto Global | world_network.png | HOR:20:80+VER:30:70 | Este avance tendrá repercusiones en todos los aspectos de nuestra vida
-Conclusión | conclusion_ai.png | ZOOM_OUT | ¿Estamos preparados para esta nueva era? Déjame tu opinión en los comentarios
