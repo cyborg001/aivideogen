@@ -1,0 +1,66 @@
+{
+    "title": "AVGL v4.0 Showcase",
+    "voice": "es-DO-EmilioNeural",
+    "speed": "1.05",
+    "style": "excited",
+    "background_music": "media/music/epic_tech.mp3",
+    "tags": "ia, tech, demo",
+    "blocks": [
+        {
+            "title": "Showcase",
+            "groups": [
+                {
+                    "title": "Master Group 1",
+                    "master_asset": "media/assets/cyberpunk_city.jpg",
+                    "zoom": "1.0:1.5",
+                    "move": "HOR:50:50",
+                    "scenes": [
+                        {
+                            "title": "Intro Dinámica",
+                            "text": "¡El futuro es [EPICO]ahora[/EPICO]! [PAUSA:0.3] Mira cómo sincronizamos el audio.",
+                            "subtitles": [
+                                {
+                                    "text": "FUTURE IS NOW",
+                                    "is_dynamic": true,
+                                    "y_position": 0.70
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Efectos Visuales",
+                            "text": "Activando modo [TENSO]turbo[/TENSO]. [SFX:glitch.mp3]",
+                            "assets": [
+                                {
+                                    "id": "media/assets/glitch_overlay.mp4",
+                                    "overlay": true,
+                                    "shake": true,
+                                    "shake_intensity": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "scenes": [
+                {
+                    "title": "Karaoke Mapeado",
+                    "text": "Podemos decir [PHO]veintidos|22[/PHO] de enero.",
+                    "note": "El tag PHO mapea la fonética 'veintidos' al visual '22' en el karaoke.",
+                    "asset": {
+                        "id": "media/assets/calendar.jpg",
+                        "rotate": "-5:5"
+                    }
+                },
+                {
+                    "title": "Rotación y Vórtice",
+                    "text": "Efectos de rotación para dar vida a imágenes estáticas.",
+                    "asset": {
+                        "id": "media/assets/galaxy.jpg",
+                        "w_rotate": true,
+                        "zoom": "1.0:2.0"
+                    }
+                }
+            ]
+        }
+    ]
+}

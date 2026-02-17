@@ -1,0 +1,35 @@
+{
+    "title": "Hola Mundo AVGL",
+    "voice": "es-MX-JorgeNeural",
+    "speed": "1.0",
+    "background_music": "media/music/inspiration.mp3",
+    "music_volume": 0.15,
+    "blocks": [
+        {
+            "title": "Intro",
+            "scenes": [
+                {
+                    "title": "Escena 1",
+                    "text": "Bienvenidos a AIVideogen. [PAUSA:0.5] Esta es una prueba del motor de video.",
+                    "asset": {
+                        "type": "image",
+                        "id": "media/assets/background.jpg",
+                        "zoom": "1.0:1.2",
+                        "move": "HOR:50:50"
+                    },
+                    "subtitle": "Hola Mundo con AVGL"
+                },
+                {
+                    "title": "Escena 2",
+                    "text": "Podemos controlar el zoom y el movimiento con precisión.",
+                    "asset": {
+                        "id": "media/assets/tech.jpg",
+                        "zoom": "1.5:1.0",
+                        "move": "HOR:0:100",
+                        "fit": true
+                    }
+                }
+            ]
+        }
+    ]
+}
