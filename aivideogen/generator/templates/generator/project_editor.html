@@ -197,7 +197,7 @@
                                                                 </template>
                                                                 <template x-if="!isAssetVideo(scene.assets[0])">
                                                                     <img :src="getAssetPath(scene.assets[0])"
-                                                                        class="w-full h-full object-cover opacity-80 transition hover:scale-110"
+                                                                        class="w-full h-full object-cover transition hover:scale-110"
                                                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E'; this.style.opacity=0.3">
                                                                 </template>
 
@@ -974,6 +974,36 @@
                     <h4
                         class="text-sm font-bold text-blue-400 uppercase tracking-widest border-b border-gray-700 pb-2 mb-4">
                         Configuración Visual</h4>
+
+                    <!-- MINI PREVIEW (v4.2) -->
+                    <div
+                        class="mb-4 aspect-video bg-black rounded-lg overflow-hidden border-2 border-gray-700 shadow-inner relative group/preview">
+                        <template x-if="formData.asset_type">
+                            <div class="w-full h-full">
+                                <template x-if="isVideo">
+                                    <video :src="getAssetPath(formData.asset_type) + '#t=1.0'"
+                                        class="w-full h-full object-contain" controls muted></video>
+                                </template>
+                                <template x-if="!isVideo">
+                                    <img :src="getAssetPath(formData.asset_type)" class="w-full h-full object-contain"
+                                        onerror="this.style.display='none'">
+                                </template>
+                                <div
+                                    class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span
+                                        class="text-[10px] text-white font-bold tracking-tighter uppercase px-2 py-1 bg-black/60 rounded">Vista
+                                        Previa</span>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!formData.asset_type">
+                            <div
+                                class="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-gray-900/50">
+                                <span class="text-4xl mb-2">🎞️</span>
+                                <span class="text-[10px] uppercase font-bold tracking-widest">Sin Asset</span>
+                            </div>
+                        </template>
+                    </div>
 
                     <!-- Asset Input -->
                     <div>
