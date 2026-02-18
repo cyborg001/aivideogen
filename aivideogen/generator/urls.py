@@ -26,6 +26,7 @@ urlpatterns = [
     path('sfx/', views.sfx_list, name='sfx_list'),
     path('sfx/upload/', views.upload_sfx, name='upload_sfx'),
     path('sfx/<int:sfx_id>/delete/', views.delete_sfx, name='delete_sfx'),
+    path('api/overlays/', views.get_overlays_api, name='get_overlays_api'),
     
     # Feature: Visual Script Editor
     path('project/new/from_editor/', views.create_project_from_editor, name='create_project_from_editor'),

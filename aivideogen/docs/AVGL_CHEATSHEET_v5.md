@@ -26,10 +26,10 @@
 ```json
 {
   "type": "video.mp4",
-  "overlay": "nieve_cayendo.mp4" 
+  "overlay": "light leaks" 
 }
 ```
-*Debe existir en `media/overlays/nieve_cayendo.mp4`*
+*Debe existir en `media/overlays/light leaks.mp4`*
 
 ---
 

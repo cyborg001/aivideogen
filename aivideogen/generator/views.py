@@ -685,6 +685,48 @@ def sfx_list(request):
     sfx_items = SFX.objects.all().order_by('-uploaded_at')
     return render(request, 'generator/sfx_list.html', {'sfx_items': sfx_items})
 
+def get_overlays_api(request):
+    """API: Scans media/overlays and returns a list of filenames for the editor."""
+    overlays_dir = os.path.join(settings.MEDIA_ROOT, 'overlays')
+    os.makedirs(overlays_dir, exist_ok=True)
+    
+    # Preset map for better names
+    presets = {
+        'dust': '✨ Polvo (Dust)',
+        'grain': '📽️ Grano de Cine (Grain)',
+        'light leaks': '☀️ Fugas de Luz (Light Leaks)',
+        'vhs': '📼 VHS Glitch'
+    }
+    
+    files = []
+    logger.debug(f"[Overlays API] Scanning directory: {overlays_dir}")
+    try:
+        if not os.path.exists(overlays_dir):
+            logger.warning(f"[Overlays API] Directory does not exist: {overlays_dir}")
+        else:
+            # Scan for mp4, mov (common overlay formats)
+            for f in os.listdir(overlays_dir):
+                if f.lower().endswith(('.mp4', '.mov', '.webm')):
+                    name_no_ext = os.path.splitext(f)[0]
+                    # Map to preset if exists, otherwise title case
+                    display_name = presets.get(name_no_ext.lower(), name_no_ext.replace('_', ' ').title())
+                    files.append({
+                        'id': name_no_ext,
+                        'name': display_name
+                    })
+            # Sort by name for consistency
+            files.sort(key=lambda x: x['name'])
+            logger.info(f"[Overlays API] Found {len(files)} overlays")
+    except Exception as e:
+        logger.error(f"[Overlays API] Error scanning: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({
+        'status': 'success', 
+        'count': len(files),
+        'overlays': files
+    })
+
 def upload_sfx(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')

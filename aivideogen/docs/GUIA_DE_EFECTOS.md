@@ -30,7 +30,7 @@ Añade capas de atmósfera (polvo, grano, luz).
 
 - **Sintaxis**: `OVERLAY:nombre:Volumen`
 - **Volumen**: Rango `0` a `10`.
-- **Efectos**: `dust`, `grain`, `light_leaks`.
+- **Efectos**: `dust`, `grain`, `light leaks`.
 - **Importante**: Si escribes solo `OVERLAY:dust`, el efecto será **mudo**. Usa `:1` para sonido sutil.
 
 ---
@@ -45,7 +45,7 @@ Para que tus datos técnicos se vean perfectos:
 ---
 
 ## 🚀 4. Ejemplo Combinado Profesional
-`FIT + HOR:0:100 + ZOOM:1.0:1.1 + OVERLAY:dust:1`
+`FIT + HOR:0:100 + ZOOM:1.0:1.1 + OVERLAY:dust`
 
 ---
 

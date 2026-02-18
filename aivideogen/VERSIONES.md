@@ -33,6 +33,7 @@ Este archivo registra la evolución del motor de eventos **AVGL**.
 | 2.9.8 | 2026-01-01 | **Human-Centric Gemini Fix** | Migración al endpoint estable `v1` y modelo `gemini-1.5-flash-latest`. Implementación de mensajes de error "humanizados". |
 | 2.9.9 | 2026-01-01 | **Actionable Error System** | Refinamiento de mensajes de error de IA para guiar al usuario en la resolución de problemas (API Keys, conexión, config). |
 | 2.10.0 | 2026-01-01 | **Gemini 2.5 Flash Upgrade** | Migración al modelo `gemini-2.5-flash` (2026) tras diagnóstico exhaustivo de la API. Corrección definitiva del error 404. |
+| 28.0.0 | 2026-02-18 | **Stable Release: High-Performance Engine** | Implementación de OpenCV para Ken Burns (Sub-pixel), aceleración NVENC P1 y previsualización dinámica en el editor visual. |
 | 2.10.1 | 2026-01-01 | **Gemini 2.5 Compatibility Fix** | Eliminación de `response_mime_type` no soportado. Parsing robusto de JSON desde respuestas de texto de Gemini 2.5. |
 | 2.10.2 | 2026-01-01 | **Smart Word Counter** | Corrección del timing de actualización del contador de palabras para que funcione correctamente con guiones generados por IA. |
 | 2.10.3 | 2026-01-01 | **UI Label Update** | Actualización del label del editor de guiones para reflejar el formato PRO de 4 columnas con guía rápida. |

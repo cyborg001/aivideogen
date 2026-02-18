@@ -96,9 +96,9 @@ Define una rotación **constante** independiente de la duración de la escena.
 ### 3. `overlay` (Capa Superior)
 Ahora soporta archivos personalizados.
 
-- **Antes**: Solo presets (`dust`, `grain`, `scratches`).
-- **Ahora**: Cualquier archivo `.mp4` en `media/overlays/`.
-    - Ej: `"overlay": "nieve_cayendo.mp4"`
+- **Antes**: Solo presets (`dust`, `grain`).
+- **Ahora**: Cualquier archivo `.mp4` en `media/overlays/` (ej: `light leaks`).
+    - Ej: `"overlay": "light leaks"`
     - Si el archivo no existe, el sistema lo ignora silenciosamente (sin error).
 
 ---

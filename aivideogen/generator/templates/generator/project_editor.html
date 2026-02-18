@@ -1034,13 +1034,8 @@
                     <!-- Overlay -->
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Overlay (Efecto Capa)</label>
-                        <select x-model="formData.overlay"
+                        <select x-model="formData.overlay" x-html="overlayOptionsHTML" x-init="fetchOverlays()"
                             class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm text-gray-200 focus:border-blue-500">
-                            <option value="">-- Ninguno --</option>
-                            <option value="dust">✨ Polvo (Dust)</option>
-                            <option value="grain">📽️ Grano de Cine (Grain)</option>
-                            <option value="light_leaks">☀️ Fugas de Luz (Light Leaks)</option>
-                            <option value="vhs">📼 VHS Glitch</option>
                         </select>
                     </div>
 
@@ -1319,13 +1314,9 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="text-[10px] text-gray-400 block">Efecto / Overlay</label>
-                            <select x-model="groupForm.overlay"
+                            <select x-model="groupForm.overlay" x-html="groupOverlayOptionsHTML"
+                                x-init="fetchOverlays()"
                                 class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-white">
-                                <option value="">Original</option>
-                                <option value="dust">Dust (Polvo)</option>
-                                <option value="grain">Film Grain</option>
-                                <option value="scratches">Old Film</option>
-                                <option value="cinematic">Cinematic</option>
                             </select>
                         </div>
                         <div class="flex flex-col gap-2">
@@ -1512,7 +1503,6 @@
                     render_mode: initialRenderMode,
                     voice_speed: '+0%',
                     music_volume_lock: initialMusicLock,
-                    music_volume_lock: initialMusicLock,
                     dynamic_subtitles: initialDynamic,
                     engine: initialEngine
                 },
@@ -1532,8 +1522,44 @@
                     overlay: '',
                     asset_audio_bool: false,
                     asset_audio_vol: 0.8,
-                    useZoom: false, zoomStart: 1.0, zoomEnd: 1.2,
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
+                },
+
+                overlays: [
+                    { id: 'dust', name: '✨ Polvo (Dust)' },
+                    { id: 'grain', name: '📽️ Grano de Cine (Grain)' },
+                    { id: 'light leaks', name: '☀️ Fugas de Luz (Light Leaks)' },
+                    { id: 'cenizas_y_brazas', name: '🔥 Cenizas Y Brazas' },
+                    { id: 'nieve_ventisca', name: '❄️ Nieve Ventisca' },
+                    { id: 'viento_polvo_de_estepa', name: '🌪️ Polvo de Estepa' }
+                ],
+
+                async fetchOverlays() {
+                    try {
+                        // Cache busting to ensure fresh disk scan
+                        const res = await fetch('/api/overlays/?v=' + Date.now());
+                        const data = await res.json();
+                        if (data && data.status === 'success' && data.overlays && data.overlays.length > 0) {
+                            console.log("[Editor] Overlays updated:", data.overlays.length);
+                            this.overlays = data.overlays;
+                        }
+                    } catch (e) {
+                        console.error("[Editor] Error fetching overlays:", e);
+                    }
+                },
+
+                get overlayOptionsHTML() {
+                    const dynamic = (this.overlays || []).map(ov =>
+                        `<option value="${ov.id}">${ov.name}</option>`
+                    ).join('');
+                    return '<option value="">-- Ninguno --</option>' + dynamic;
+                },
+
+                get groupOverlayOptionsHTML() {
+                    const dynamic = (this.overlays || []).map(ov =>
+                        `<option value="${ov.id}">${ov.name}</option>`
+                    ).join('');
+                    return '<option value="">Original</option>' + dynamic;
                 },
 
                 // Recording State
@@ -1691,15 +1717,15 @@
                     return '/media/assets/' + path;
                 },
 
-                init() {
+                async init() {
+                    // Load overlays immediately and independently
+                    this.fetchOverlays();
+
                     if (this.isStandalone) {
-                        // Initialize empty script for standalone mode
-                        this.script = {
-                            blocks: [{ title: 'Bloque 1', scenes: [] }]
-                        };
+                        this.script = { blocks: [{ title: 'Bloque 1', scenes: [] }] };
                         this.projectSettings.title = "Nuevo Guion (Sin Guardar)";
                     } else {
-                        this.loadScript();
+                        await this.loadScript();
                         // Auto-save only for Project Mode
                         setInterval(() => { if (!this.showModal && !this.showSettingsModal) this.saveScript(true); }, 60000);
                     }
