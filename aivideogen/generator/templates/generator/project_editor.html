@@ -50,7 +50,7 @@
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }})">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }}, '{{ engine|default:'edge'|escapejs }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -638,6 +638,15 @@
                 </div>
 
                 <!-- Global Voice ID -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Motor de Voz (TTS)</label>
+                    <select x-model="projectSettings.engine"
+                        class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        <option value="edge">Edge TTS (Gratis)</option>
+                        <option value="elevenlabs">ElevenLabs (Premium)</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">Voz Global (ID)</label>
                     <input type="text" x-model="projectSettings.voice_id"
@@ -1434,7 +1443,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false) => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false, initialEngine = 'edge') => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -1473,7 +1482,9 @@
                     render_mode: initialRenderMode,
                     voice_speed: '+0%',
                     music_volume_lock: initialMusicLock,
-                    dynamic_subtitles: initialDynamic
+                    music_volume_lock: initialMusicLock,
+                    dynamic_subtitles: initialDynamic,
+                    engine: initialEngine
                 },
 
                 voiceSpeedNum: 0,
@@ -1807,6 +1818,7 @@
                             if (data.settings.render_mode) this.projectSettings.render_mode = data.settings.render_mode;
                             if (data.settings.music_volume_lock !== undefined) this.projectSettings.music_volume_lock = data.settings.music_volume_lock;
                             if (data.settings.auto_upload !== undefined) this.projectSettings.auto_upload = data.settings.auto_upload;
+                            if (data.settings.engine) this.projectSettings.engine = data.settings.engine;
 
                             // Support for old key names
                             if (data.settings.voice) this.projectSettings.voice_id = data.settings.voice;
@@ -1842,6 +1854,7 @@
                     this.script.render_mode = this.projectSettings.render_mode;
                     this.script.music_volume_lock = this.projectSettings.music_volume_lock;
                     this.script.auto_upload = this.projectSettings.auto_upload;
+                    this.script.engine = this.projectSettings.engine;
 
                     // Also maintain a persistent settings object inside the script
                     if (!this.script.settings) this.script.settings = {};
@@ -1927,6 +1940,7 @@
                         scriptCopy.voice = this.projectSettings.voice_id;
                         scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
                         scriptCopy.render_mode = this.projectSettings.render_mode;
+                        scriptCopy.engine = this.projectSettings.engine;
 
                         // Ensure settings object exists
                         if (!scriptCopy.settings) scriptCopy.settings = {};

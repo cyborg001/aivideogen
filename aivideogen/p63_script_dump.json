@@ -1,0 +1,59 @@
+{
+    "title": "CERN: ¿Portales o Ciencia Profunda? (Copia) (Copia)",
+    "voice": "es-DO-EmilioNeural",
+    "background_music": "music/Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3",
+    "dynamic_subtitles": false,
+    "blocks": [
+        {
+            "title": "EL GANCHO: LA FRONTERA DE LA REALIDAD",
+            "scenes": [
+                {
+                    "title": "Impacto Inicial",
+                    "text": "[TITLE:¿PUERTA DIMENSIONAL?]¿Ha abierto el [PHO:h]CERN|CERN[/PHO] una puerta hacia otra dimensión? [TENSO] Esta es la pregunta que inunda internet cada vez que el Gran Colisionador de Hadrones alcanza niveles de energía récord.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "cern_tunnel_particles.png",
+                            "type": "image",
+                            "zoom": "1.0:1.4",
+                            "move": "VER:100:0",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": []
+        }
+    ],
+    "voice_speed": "+10%",
+    "music_volume": 0.3,
+    "aspect_ratio": "portrait",
+    "render_mode": "gpu",
+    "music_volume_lock": true,
+    "auto_upload": false,
+    "settings": {
+        "title": "CERN: ¿Portales o Ciencia Profunda? (Copia) (Copia)",
+        "background_music": "music/Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3",
+        "music_volume": 0.3,
+        "voice_id": "es-DO-EmilioNeural",
+        "aspect_ratio": "portrait",
+        "render_mode": "gpu",
+        "music_volume_lock": true,
+        "auto_upload": false,
+        "voice_speed": "+10%",
+        "dynamic_subtitles": false,
+        "engine": "edge"
+    },
+    "engine": "edge"
+}

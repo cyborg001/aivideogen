@@ -807,7 +807,10 @@ def create_project_from_editor(request):
 def project_editor(request, project_id):
     """Renders the main visual editor interface."""
     project = get_object_or_404(VideoProject, id=project_id)
-    return render(request, 'generator/project_editor.html', {'project': project})
+    return render(request, 'generator/project_editor.html', {
+        'project': project,
+        'engine': project.engine or 'edge'
+    })
 
 @csrf_exempt
 def json_to_text_api(request):
@@ -1061,6 +1064,10 @@ def save_project_script_json(request, project_id):
             # Global Voice ID
             if 'voice_id' in settings_data:
                 project.voice_id = settings_data['voice_id']
+
+            # TTS Engine
+            if 'engine' in settings_data:
+                project.engine = settings_data['engine']
 
             # Auto Upload
             if 'auto_upload' in settings_data:

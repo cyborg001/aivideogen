@@ -1,0 +1,122 @@
+{
+    "title": "Stanislav Petrov: El Hombre que Salvó al Mundo",
+    "voice": "es-MX-JorgeNeural",
+    "background_music": "Viral Dirge - Ryan Stasik.mp3",
+    "blocks": [
+        {
+            "title": "INTRO: El Silencio Nuclear",
+            "scenes": [
+                {
+                    "title": "ALERTA MÁXIMA",
+                    "text": "IMPACTO NUCLEAR INMINENTE.",
+                    "assets": [
+                        {
+                            "id": "nuclear_explosion_cinematic.png",
+                            "zoom": "1.0:1.5",
+                            "shake": true,
+                            "shake_intensity": 10
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "explosion_nuclear.mp3",
+                            "volume": 1.0
+                        }
+                    ]
+                },
+                {
+                    "title": "Hook de Impacto",
+                    "text": "Sabías que el mundo estuvo a solo segundos de la [SUB]ANIQUILACIÓN TOTAL[/SUB] y un solo hombre detuvo este apocalipsis por pura intuición. Esta es la historia de [PHO]Estanis-láf Pe-tróf|STANISLAV PETROV[/PHO].",
+                    "assets": [
+                        {
+                            "id": "doomsday_countdown_clock.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "La Amenaza",
+                    "text": "1983. En el búnker secreto de Moscú, los radares indican cinco misiles nucleares lanzados desde EE. UU. El fin del mundo ha comenzado.",
+                    "assets": [
+                        {
+                            "id": "soviet_military_bunker_1983.png",
+                            "zoom": "1.1:1.0",
+                            "move": "HOR:0:20",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "NUDO: La Falsa Alarma",
+            "scenes": [
+                {
+                    "title": "Alerta de Misiles",
+                    "text": "Los radares soviéticos detectaron cinco misiles nucleares lanzados desde Estados Unidos. Todo indicaba una invasión inminente.",
+                    "assets": [
+                        {
+                            "id": "cold_war_satellite_race.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "La Decisión",
+                    "text": "A pesar de la presión, Petrov decidió NO reportar el ataque a sus superiores, sospechando que se trataba de un error técnico.",
+                    "assets": [
+                        {
+                            "id": "classified_stamp_files.png",
+                            "zoom": "1.2:1.1",
+                            "move": "VER:0:10",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "CIERRE: El Legado",
+            "scenes": [
+                {
+                    "title": "La Verdad",
+                    "text": "Tenía razón. Fue un reflejo solar en las nubes. Si Petrov hubiera seguido el protocolo, hoy no estaríamos aquí.",
+                    "assets": [
+                        {
+                            "id": "earth_from_space_dark.png",
+                            "zoom": "1.0:1.5",
+                            "w_rotate": 3.0,
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Debate Final",
+                    "text": "¿Crees que la [SUB]INTUICIÓN HUMANA[/SUB] es superior a los algoritmos? Soy Álvaro, y esto es NotiACI. ¡Ah y recuerda, el futuro es hoy!",
+                    "assets": [
+                        {
+                            "id": "aivideogen_news_end.png",
+                            "zoom": "1.1:1.0",
+                            "move": "VER:100:0",
+                            "fit": true
+                        }
+                    ]
+                },
+                {
+                    "title": "Suscríbete",
+                    "text": "No olvides dar like, comentar y suscribirte nos ayudas muchismio con eso, gracias!",
+                    "assets": [
+                        {
+                            "id": "suscribete.mp4",
+                            "video_volume": 1.0
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

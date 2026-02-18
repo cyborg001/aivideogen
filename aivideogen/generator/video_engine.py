@@ -1690,6 +1690,8 @@ def generate_video_avgl(project):
             project.save(update_fields=['output_video', 'duration', 'timestamps', 'progress_total'])
             
             logger.log(f"✅ ¡Video base generado! ({output_path})")
+            phase1_end = time.time()
+            logger.log(f"⏱️ FASE 1 (Video Base) Duración: {phase1_end - start_time:.2f}s")
 
             # ═══════════════════════════════════════════════════════════════════
             # v26.0 POST-INJECTION PHASE (THE YOUTUBE WAY)
@@ -1716,9 +1718,18 @@ def generate_video_avgl(project):
                         rel_ass_path = os.path.relpath(ass_path, base_dir).replace('\\', '/')
                         # Input/Output remain Absolute for maximum reliability
                         
+                        # v27.1: Re-apply GPU Acceleration for Subtitle Injection (The "P1" Fix)
+                        video_codec_params = ['-c:v', 'libx264', '-preset', 'ultrafast'] # CPU Default
+
+                        if project.render_mode == 'gpu':
+                             # NVENC P1 = Fastest possible encoding (Low Latency / High Perf)
+                             logger.log("  🚀 [GPU] Activando NVENC P1 para inyección de subtítulos.")
+                             video_codec_params = ['-c:v', 'h264_nvenc', '-preset', 'p1', '-b:v', '5M']
+
                         ff_cmd = [
                             ff_exe, '-y', '-i', output_path,
                             '-vf', f"ass=filename='{rel_ass_path}'",
+                            *video_codec_params,
                             '-c:a', 'copy',
                             final_output_path
                         ]
@@ -1780,7 +1791,9 @@ def generate_video_avgl(project):
             logger.log(f"⚠️ Error en Garbage Collector: {ge}")
 
         play_finish_sound(success=True)
-        logger.log(f"[Done] Exito en {time.time()-start_time:.1f} segundos!")
+        phase2_end = time.time()
+        logger.log(f"⏱️ FASE 2 (Subtítulos) Duración: {phase2_end - phase1_end:.2f}s")
+        logger.log(f"[Done] Exito en {phase2_end-start_time:.1f} segundos!")
 
     except Exception as e:
         logger.log(f"[FATAL] Error en renderizado: {e}")
