@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from .models import Asset, VideoProject, YouTubeToken, Music, SFX
 from .utils import generate_video_process
-from .youtube_utils import get_flow, get_youtube_client, upload_video
+from .youtube_utils import get_flow, get_youtube_client, upload_video, get_project_social_copy
 import threading
 import os
 import logging
@@ -352,7 +352,17 @@ def create_project(request):
 
 def project_detail(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
-    return render(request, 'generator/detail.html', {'project': project})
+    social_copy = None
+    if project.status == 'completed':
+        try:
+            social_copy = get_project_social_copy(project)
+        except Exception as e:
+            logger.error(f"Error generating social copy: {e}")
+            
+    return render(request, 'generator/detail.html', {
+        'project': project,
+        'social_copy': social_copy
+    })
 
 def delete_project(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)

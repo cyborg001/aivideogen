@@ -132,7 +132,7 @@ def generate_youtube_description(project):
     description_parts = []
     
     # 1. Welcome
-    description_parts.append("👋 ¡Hola! Bienvenido a Notiaci")
+    description_parts.append("👋 ¡Hola! Bienvenidos a mi canal")
     description_parts.append("")
     
     # 2. Project Title (Humanized)
@@ -296,3 +296,49 @@ def trigger_auto_upload(project):
         project.save(update_fields=['log_output'])
         
     return False
+def get_project_social_copy(project):
+    """
+    Generates unified social metadata for manual uploading.
+    Includes Description, Tags, and a pinned Comment.
+    """
+    from .utils import get_human_title
+    
+    # 1. Title & Description
+    title = get_human_title(project.title)
+    description = generate_youtube_description(project)
+    
+    # 2. Extract Tags (Formatted for Studio copy-paste)
+    from .utils import extract_hashtags_from_script, generate_contextual_tags
+    script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
+    tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
+    contextual_tags = generate_contextual_tags(project)
+    tags_list.extend(contextual_tags)
+    
+    fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
+    if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
+       (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
+        fixed_tags = fixed_tags[1:-1].strip()
+    tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
+    
+    final_tags = list(dict.fromkeys(tags_list))[:20]
+    tags_for_studio = ", ".join(final_tags)
+    
+    # 3. Pinned Comment
+    # v14.0 Pattern: Thanks + Highlights + Call to Action
+    comment_parts = []
+    comment_parts.append(f"¡Gracias por ver! Si te gustó el video sobre '{title}', déjanos un comentario con tu opinión. 👇")
+    comment_parts.append("")
+    # Add top 3 tags as hashtags in comment
+    comment_hashtags = " ".join([f"#{t}" for t in final_tags[:5]])
+    comment_parts.append(comment_hashtags)
+    comment_parts.append("")
+    comment_parts.append("¡No olvides suscribirte para más noticias de IA y ciencia! 🚀")
+    
+    pinned_comment = "\n".join(comment_parts)
+    
+    return {
+        'title': title,
+        'description': description,
+        'tags': tags_for_studio,
+        'pinned_comment': pinned_comment
+    }

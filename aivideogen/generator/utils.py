@@ -29,7 +29,7 @@ REGLAS CRÍTICAS DE FORMATO:
 4. Las imágenes deben tener nombres descriptivos como 'robot_ia.png' o 'laboratorio_ciencia.mp4'.
 
 ESTRATEGIA DE CONTENIDO (HOOK-FIRST):
-- Inicio (0-2s): Empieza SIEMPRE con: "Bienvenidos a Noticias de IA y ciencias. Según informes de {news_item.source.name}, [DATO IMPACTANTE DIRECTO SIN RELLENO]".
+- Inicio (0-2s): Empieza SIEMPRE con: "Bienvenidos a mi canal. Según informes de {news_item.source.name}, [DATO IMPACTANTE DIRECTO SIN RELLENO]".
   Nota: Usa siempre "Inicio" como título de la primera escena, NUNCA uses "Gancho".
 - Ritmo: Cambia de imagen/escena cada 2-4 segundos (aproximadamente cada 8-12 palabras).
 - Conclusión Profunda: Incluye al menos una línea con "CONCLUSIÓN PROFUNDA" en el texto.
