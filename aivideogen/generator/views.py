@@ -620,8 +620,12 @@ def upload_to_youtube_view(request, project_id):
         return redirect('generator:home')
     except Exception as e:
         error_msg = str(e)
-        messages.error(request, f"[ERROR] Error al subir a YouTube: {error_msg}")
         logger.error(f"[YouTube] Error en upload: {error_msg}")
+        
+        if "uploadLimitExceeded" in error_msg or "exceeded the number of videos" in error_msg.lower():
+            messages.error(request, "[LÍMITE!] Has alcanzado el límite diario de subidas de YouTube. Debes esperar 24h o verificar tu canal con un número de teléfono.")
+        else:
+            messages.error(request, f"[ERROR] Error al subir a YouTube: {error_msg}")
         
         project.log_output += f"\n[YouTube] [ERROR] Error: {error_msg}"
         project.save()

@@ -138,6 +138,7 @@ MYMEMORY_EMAIL = os.getenv('MYMEMORY_EMAIL')
 YOUTUBE_REDIRECT_URI = os.getenv('YOUTUBE_REDIRECT_URI', 'http://127.0.0.1:8888/youtube/callback/')
 
 # YouTube Default Metadata
+GOOGLE_CLIENT_SECRETS_FILE = os.getenv('GOOGLE_CLIENT_SECRETS_FILE', 'client_secrets.json')
 YOUTUBE_FIXED_HASHTAGS = os.getenv(
     'YOUTUBE_FIXED_HASHTAGS',
     '#IA #notiaci #ciencia #tecnologia #noticias #avances #avancesmedicos #carlosramirez #descubrimientos'

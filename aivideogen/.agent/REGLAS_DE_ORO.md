@@ -60,3 +60,15 @@
 - Usar `.resize()` (v1.x) cuando la versión instalada es v2.x y usa `.resized()`.
 
 
+
+---
+
+## Trazabilidad y Credibilidad (NUEVO)
+
+### ⚠️ REGLA #4: FUENTES OBLIGATORIAS EN JSON
+**TODO guion de noticias o ciencia DEBE incluir un campo `sources`.**
+
+**Protocolo:**
+1. **Investigar:** Buscar al menos 2-3 fuentes fiables antes de redactar.
+2. **Campo `sources`:** Incluir las URLs o nombres de las fuentes en el nivel superior del JSON.
+3. **Comentarios de Social Media:** Estas fuentes DEBEN clonarse o referenciarse en los metadatos destinados a comentarios de LinkedIn/YouTube para aumentar la autoridad del contenido.

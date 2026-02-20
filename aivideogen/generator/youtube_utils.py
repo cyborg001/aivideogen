@@ -14,18 +14,19 @@ SCOPES = [
 ]
 
 def get_flow():
-    client_secrets_file = os.path.join(settings.BASE_DIR, 'client_secrets.json')
+    secrets_filename = settings.GOOGLE_CLIENT_SECRETS_FILE
+    client_secrets_file = os.path.join(settings.BASE_DIR, secrets_filename)
     
     # Check if the file exists
     if not os.path.exists(client_secrets_file):
         raise FileNotFoundError(
-            f"⚠️ El archivo 'client_secrets.json' no existe en {settings.BASE_DIR}.\n\n"
+            f"⚠️ El archivo '{secrets_filename}' no existe en {settings.BASE_DIR}.\n\n"
             "Para habilitar la integración con YouTube, necesitas:\n"
             "1. Ir a https://console.cloud.google.com/\n"
             "2. Crear un proyecto y habilitar la YouTube Data API v3\n"
             "3. Crear credenciales OAuth 2.0 (Aplicación de escritorio)\n"
             "4. Descargar el archivo JSON de credenciales\n"
-            "5. Renombrarlo a 'client_secrets.json'\n"
+            "5. Renombrarlo a '{secrets_filename}' (o el valor definido en su .env)\n"
             "6. Colocarlo en la carpeta raíz del proyecto\n\n"
             "Consulta la documentación para más detalles."
         )

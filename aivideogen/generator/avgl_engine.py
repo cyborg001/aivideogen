@@ -202,7 +202,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
 
     # 1. Identify all tags in ORIGINAL text to avoid index mismatch
     patterns = {
-        'wrapped': re.compile(r'\[\s*(SUB|TITLE)(?::\s*(.*?))?\s*\](.*?)\s*\[\s*/(?:SUB|TITLE)\s*\]', re.IGNORECASE | re.DOTALL),
+        'wrapped': re.compile(r'\[\s*(SUB|TITLE)(?::\s*(.*?))?\s*\](.*?)\s*\[\s*/\1\s*\]', re.IGNORECASE | re.DOTALL),
         'simple': re.compile(r'\[\s*(SUB|TITLE)\s*:\s*(.*?)\s*\]', re.IGNORECASE),
         'dyn': re.compile(r'\[\s*DYN\s*\](.*?)\s*\[\s*/DYN\s*\]', re.IGNORECASE | re.DOTALL)
     }
@@ -322,6 +322,10 @@ def extract_subtitles_v35(text, force_dynamic=False):
             # v26.7: Restore Title Logic (Top Placement)
             y_pos_override = 0.15
             is_highlight_tag = True
+            
+            # v27.2: Titles stay longer by default (60 phonetic units ~ 4-5s) if not specified
+            if p_count_override is None:
+                p_count_override = 60
         else:
             # SUB or DYN
             is_highlight_tag = True if tag['type'] == 'simple' else False
