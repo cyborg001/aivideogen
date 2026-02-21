@@ -205,8 +205,10 @@
                 <button onclick="copyToClipboard('desc-text', this)" class="btn"
                     style="padding: 2px 10px; font-size: 0.7rem; background: #334155; height: auto;">Copiar</button>
             </div>
-            <textarea id="desc-text" readonly
-                style="width: 100%; height: 120px; background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; resize: none; font-family: inherit;">{{ social_copy.description }}</textarea>
+            <textarea id="desc-text" placeholder="Escribe aquí la descripción profesional para YouTube..."
+                style="width: 100%; height: 120px; background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; resize: none; font-family: inherit; transition: border-color 0.2s; outline: none;"
+                onfocus="this.style.borderColor='#4f46e5'"
+                onblur="this.style.borderColor='#334155'">{{ social_copy.description }}</textarea>
         </div>
 
         <!-- Tags & Comment Grid -->
@@ -219,8 +221,9 @@
                     <button onclick="copyToClipboard('tags-text', this)" class="btn"
                         style="padding: 2px 10px; font-size: 0.7rem; background: #334155; height: auto;">Copiar</button>
                 </div>
-                <input id="tags-text" readonly value="{{ social_copy.tags }}"
-                    style="width: 100%; background: #0f172a; color: #22c55e; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; font-family: monospace;">
+                <input id="tags-text" placeholder="tag1, tag2, tag3, ai, ciencia..." value="{{ social_copy.tags }}"
+                    style="width: 100%; background: #0f172a; color: #22c55e; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; font-family: monospace; transition: border-color 0.2s; outline: none;"
+                    onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#334155'">
             </div>
 
             <!-- Pinned Comment -->
@@ -231,8 +234,10 @@
                     <button onclick="copyToClipboard('comment-text', this)" class="btn"
                         style="padding: 2px 10px; font-size: 0.7rem; background: #334155; height: auto;">Copiar</button>
                 </div>
-                <textarea id="comment-text" readonly
-                    style="width: 100%; height: 80px; background: #0f172a; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; resize: none; font-family: inherit;">{{ social_copy.pinned_comment }}</textarea>
+                <textarea id="comment-text" placeholder="Escribe aquí el comentario fijado para fomentar interacción..."
+                    style="width: 100%; height: 80px; background: #0f172a; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; resize: none; font-family: inherit; transition: border-color 0.2s; outline: none;"
+                    onfocus="this.style.borderColor='#4f46e5'"
+                    onblur="this.style.borderColor='#334155'">{{ social_copy.pinned_comment }}</textarea>
             </div>
         </div>
     </div>

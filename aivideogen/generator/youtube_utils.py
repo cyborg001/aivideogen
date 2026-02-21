@@ -167,7 +167,7 @@ def generate_youtube_description(project):
     
     fixed_hashtags_str = os.getenv(
         'YOUTUBE_FIXED_HASHTAGS',
-        '#IA #notiaci #ciencia #tecnologia #noticias #avances #avancesmedicos #carlosramirez #descubrimientos'
+        '' # v15.3: Si no hay en .env, dejamos vacío para que actúe el placeholder en la UI
     ).strip()
     
     # Clean quotes
@@ -308,9 +308,23 @@ def get_project_social_copy(project):
     """
     Generates unified social metadata for manual uploading.
     Includes Description, Tags, and a pinned Comment.
+    v15.3: Si no hay info social en .env, devolvemos vacío para usar placeholders en UI.
     """
     from .utils import get_human_title
+    import os
+
+    # Check if we have social configuration in .env
+    has_env_config = bool(os.getenv('YOUTUBE_FIXED_HASHTAGS'))
     
+    if not has_env_config:
+        # Modo Manual (Placeholders): Devolvemos vacío para que la UI use su texto de ejemplo
+        return {
+            'title': get_human_title(project.title),
+            'description': '',
+            'tags': '',
+            'pinned_comment': ''
+        }
+
     # 1. Title & Description
     title = get_human_title(project.title)
     description = generate_youtube_description(project)
