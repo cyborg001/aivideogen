@@ -37,6 +37,9 @@ def get_flow():
     )
     # Ensure redirect_uri is set after loading, very important for 'web' type
     flow.redirect_uri = settings.YOUTUBE_REDIRECT_URI
+    
+    # v15.1: Force consent so the user can actually switch accounts if they are logged in.
+    # We add this to the authorization_url later, but we can set it here if needed.
     return flow
 
 def get_youtube_client():
@@ -123,7 +126,11 @@ def upload_video(youtube, video_path, title, description, category_id="28", priv
         logger.info(f"[YouTube] Upload completado - Response: {response}")
         return response
     except Exception as e:
-        logger.error(f"[YouTube] Error durante upload: {str(e)}")
+        error_msg = str(e)
+        if "quotaExceeded" in error_msg:
+             logger.error(f"⚠️ [YouTube] LÍMITE DE CUOTA EXCEDIDO: YouTube ha bloqueado la subida por hoy (límite de 10,000 unidades API).")
+             raise Exception("Límite de cuota de YouTube excedido. Intenta de nuevo mañana.")
+        logger.error(f"[YouTube] Error durante upload: {error_msg}")
         raise
 
 def generate_youtube_description(project):
