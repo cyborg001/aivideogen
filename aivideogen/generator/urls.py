@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/browse-folder/', views.browse_folder, name='browse_folder'),
     path('youtube/authorize/', views.youtube_authorize, name='youtube_authorize'),
     path('youtube/callback/', views.youtube_callback, name='youtube_callback'),
+    path('youtube/reset/', views.youtube_reset_view, name='youtube_reset'),
     path('project/<int:project_id>/youtube-upload/', views.upload_to_youtube_view, name='youtube_upload'),
     path('music/', views.music_list, name='music_list'),
     path('music/upload/', views.upload_music, name='upload_music'),

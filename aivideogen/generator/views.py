@@ -551,7 +551,7 @@ def youtube_authorize(request):
         authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
-            prompt='consent'
+            prompt='consent' # v15.1: Forzar pantalla de selección de cuenta
         )
         request.session['oauth_state'] = state
         return redirect(authorization_url)
@@ -587,6 +587,19 @@ def youtube_callback(request):
     except Exception as e:
         messages.error(request, f"Error en la autorización de YouTube: {str(e)}")
         return redirect('generator:home')
+
+def youtube_reset_view(request):
+    """
+    v15.1: Elimina todos los tokens archivados para forzar el cambio de cuenta.
+    """
+    try:
+        count = YouTubeToken.objects.all().count()
+        YouTubeToken.objects.all().delete()
+        messages.success(request, f"✅ Se han eliminado {count} sesiones previas de YouTube. Ya puedes conectar una cuenta nueva.")
+    except Exception as e:
+        messages.error(request, f"Error al limpiar sesiones: {e}")
+    
+    return redirect('generator:youtube_authorize')
 
 def upload_to_youtube_view(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
