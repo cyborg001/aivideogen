@@ -1122,13 +1122,26 @@ def save_project_script_json(request, project_id):
                          Music.objects.filter(file__icontains=bg_music_input_decoded).first() or \
                          Music.objects.filter(name__iexact=bg_music_name).first() or \
                          Music.objects.filter(file__icontains=bg_music_name).first()
-                     
-                     if m: 
+
+                     # v18.0 Auto-Sync: If not found in DB, check disk
+                     if not m:
+                         physical_path = os.path.join(settings.MEDIA_ROOT, 'music', bg_music_name)
+                         if os.path.exists(physical_path):
+                             try:
+                                 m = Music.objects.create(
+                                     file=os.path.join('music', bg_music_name),
+                                     name=bg_music_name
+                                 )
+                                 # logger.info(f"Auto-Sync: Registrada nueva pista encontrada en disco: {bg_music_name}")
+                             except Exception as e:
+                                 # logger.error(f"Auto-Sync: Error registrando {bg_music_name}: {e}")
+                                 pass
+
+                     if m:
                          project.background_music = m
-                         # logger.info(f"Visual Editor: Música de fondo sincronizada: {m.name}")
                      else:
-                         # logger.warning(f"Visual Editor: No se encontró música para: {bg_music_input}")
-                         pass
+                         # v18.1: If truly not found, clear strictly.
+                         project.background_music = None
 
             # Global Voice ID
             if 'voice_id' in settings_data:
