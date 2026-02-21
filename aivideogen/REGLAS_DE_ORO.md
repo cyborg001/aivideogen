@@ -13,6 +13,11 @@ Este documento contiene las reglas fundamentales de identidad y operación para 
 3. **Ritmo Visual**: Cambio de escenas cada 2-4 segundos.
 4. **Cierre**: Pregunta provocadora para fomentar comentarios y suscripción.
 
+## 🎨 Estándares Visuales
+1. **Encuadre Completo**: Las imágenes deben **completar el cuadro** (Full-frame). Evitar bordes blancos, letterboxing o composiciones incompletas.
+2. **Estilo**: Uso de "Epic graphic novel art" o "Cinematic concept art" para mantener la atmósfera épica.
+3. **Composición**: Priorizar formatos panorámicos y composiciones cinematográficas que llenen el área de visión.
+
 ## 🛠️ Protocolos Operativos
 - **Planificación Primero**: Nunca realizar ediciones sin presentar un plan aprobado.
 - **Cero Suposiciones**: Ante dudas sobre rutas o intención, preguntar al Arquitecto.
