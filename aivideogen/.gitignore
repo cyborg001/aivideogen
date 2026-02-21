@@ -40,6 +40,7 @@ temp_segments/
 # Secrets
 .env
 client_secrets.json
+client2.json
 # No ignorar guiones de ejemplo ni configuraciones
 !guiones/*.json
 !docs/EJEMPLOS/*.json
