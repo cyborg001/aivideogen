@@ -53,6 +53,7 @@
             display: inline-block;
             max-width: 100%;
             max-height: 100%;
+            overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
@@ -92,6 +93,34 @@
             width: 1.5px;
             background: rgba(234, 179, 8, 0.8);
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+        }
+
+        /* SAFE AREA GUIDE (v15.2) */
+        .safe-area-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 16 / 9;
+            border: 2px solid #00f2ff;
+            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .safe-area-guide::before {
+            content: 'RECORTE 16:9 (VIDEO)';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 8px;
+            background: #00f2ff;
+            color: black;
+            padding: 1px 4px;
+            font-weight: bold;
+            border-radius: 2px;
         }
     </style>
 </head>
@@ -1028,11 +1057,17 @@
 
                         <!-- GRID TOGGLE OVERLAY -->
                         <div
-                            class="absolute top-2 right-2 z-30 opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                            class="absolute top-2 right-2 z-30 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col gap-2 items-end">
                             <button @click.stop="showGrid = !showGrid"
                                 :class="showGrid ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'"
                                 class="p-1 px-2 rounded-md text-[9px] font-bold uppercase tracking-tighter border border-white/10 shadow-xl flex items-center gap-1 transition-all hover:scale-105">
                                 <span x-text="showGrid ? '🌐 Grilla ON' : '🌐 Grilla OFF'"></span>
+                            </button>
+
+                            <button @click.stop="showSafeArea = !showSafeArea"
+                                :class="showSafeArea ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400'"
+                                class="p-1 px-2 rounded-md text-[9px] font-bold uppercase tracking-tighter border border-white/10 shadow-xl flex items-center gap-1 transition-all hover:scale-105">
+                                <span x-text="showSafeArea ? '📷 Encuadre ON' : '📷 Encuadre OFF'"></span>
                             </button>
                         </div>
 
@@ -1051,6 +1086,9 @@
 
                                     <!-- Coordinate Grid Overlay -->
                                     <div x-show="showGrid" class="grid-overlay" x-transition.opacity></div>
+
+                                    <!-- Safe Area Guide (16:9) -->
+                                    <div x-show="showSafeArea" class="safe-area-guide" x-transition.opacity></div>
                                 </div>
 
                                 <div
@@ -1534,6 +1572,7 @@
                 script: {},
                 isSaving: false,
                 showGrid: false, // Nueva preferencia visual global
+                showSafeArea: false, // v15.2: Safe Area guide
 
                 // Modal State
                 showModal: false,
