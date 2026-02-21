@@ -198,7 +198,8 @@ def generate_youtube_description(project):
     
     # 6. Promotion
     description_parts.append("━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    description_parts.append("🤖 Este video ha sido generado automáticamente por nuestra aplicación aiVideoGen")
+    description_parts.append("🤖 Este video ha sido generado automáticamente por aiVideoGen")
+    description_parts.append("📂 Proyecto Open Source: https://github.com/cyborg001/aivideogen")
     description_parts.append("")
     description_parts.append("📧 Para más información contáctanos:")
     description_parts.append("carlosaipro6@gmail.com")
