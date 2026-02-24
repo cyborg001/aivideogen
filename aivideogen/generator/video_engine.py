@@ -154,24 +154,29 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     # If Image is wider than Target, height limits.
     # If Image is taller than Target, width limits.
     
-    if is_fit == "contain" or is_fit is True:
-        # Fit logic not fully optimized for Ken Burns usually, but let's support basic center
-        # For performance, if it's strictly fit, maybe just static resize? 
-        # But user might want zoom on fit? Let's treat it as "Zoom inside black bars" 
-        # ... Implementing standard COVER logic involves calculating the largest crop efficiently.
-        pass 
-
     # Determine the maximum crop size that maintains target aspect ratio
-    if img_ar > tar_ar:
-        # Image is wider (Landscape source, Portrait target?)
-        # Max height, calculated width
-        base_h = h_orig
-        base_w = int(h_orig * tar_ar)
+    if is_fit:
+        # FIT (Contain) Logic: The "window" is larger than the image in the dimension that doesn't fit.
+        if img_ar > tar_ar:
+            # Image is wider than target. Width is the limiting factor for containment.
+            base_w = w_orig
+            base_h = int(w_orig / tar_ar)
+        else:
+            # Image is taller/squarer than target. Height is the limiting factor for containment.
+            base_h = h_orig
+            base_w = int(h_orig * tar_ar)
     else:
-        # Image is taller/squarer
-        # Max width, calculated height
-        base_w = w_orig
-        base_h = int(w_orig / tar_ar)
+        # COVER Logic (Default)
+        if img_ar > tar_ar:
+            # Image is wider (Landscape source, Portrait target?)
+            # Max height, calculated width
+            base_h = h_orig
+            base_w = int(h_orig * tar_ar)
+        else:
+            # Image is taller/squarer
+            # Max width, calculated height
+            base_w = w_orig
+            base_h = int(w_orig / tar_ar)
 
     # ═══════════════════════════════════════════════════════════════════
     # 3. FAST OPENCV MAKE_FRAME
@@ -270,8 +275,8 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             M = cv2.getAffineTransform(src_pts, dst_pts)
             
             # Apply Warp (Crop + Resize + Subpixel Interpolation)
-            # BORDER_REPLICATE ensures we don't get ugly black lines if we go 1px out
-            resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+            # BORDER_CONSTANT ensures black bars if we are in FIT mode or go out of bounds
+            resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
         except Exception as e:
             # Fallback (Safety net)
             print(f"Error in warpAffine: {e}")
