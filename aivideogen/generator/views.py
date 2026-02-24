@@ -927,9 +927,19 @@ def get_project_script_json(request, project_id):
             except Exception as e:
                 return JsonResponse({'error': f"Failed to convert script: {str(e)}"}, status=400)
     
-    # --- AUTO-REPAIR ASSETS ---
+    # --- AUTO-REPAIR & NORMALIZE ASSETS ---
     repaired = False
     
+    def normalize_asset_path(path):
+        if not path or not isinstance(path, str) or path.startswith('http'):
+            return path
+        # Normalize slashes
+        p = path.replace('\\', '/')
+        # If absolute path containing 'media', extract relative part
+        if 'media/' in p:
+            return '/' + p[p.find('media/'):]
+        return p
+
     def repair_scene_assets(scene):
         nonlocal repaired
         if 'assets' in scene:
@@ -939,7 +949,7 @@ def get_project_script_json(request, project_id):
                 if isinstance(asset, str):
                     is_video = asset.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))
                     new_assets.append({
-                        'id': asset,
+                        'id': normalize_asset_path(asset),
                         'type': 'video' if is_video else 'image'
                     })
                     repaired = True
@@ -947,14 +957,19 @@ def get_project_script_json(request, project_id):
                 
                 # Case 1: ID is missing, but TYPE contains the filename (Legacy Bug)
                 if not asset.get('id') and asset.get('type') and '.' in asset['type']:
-                    asset['id'] = asset['type']
+                    asset['id'] = normalize_asset_path(asset['type'])
                     asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi', '.webm')) else 'image'
                     repaired = True
                 # Case 2: Both present but ID is generic while TYPE has filename
                 elif asset.get('id') in ['image', 'video'] and asset.get('type') and '.' in asset['type']:
-                    asset['id'] = asset['type']
+                    asset['id'] = normalize_asset_path(asset['type'])
                     asset['type'] = 'video' if asset['id'].lower().endswith(('.mp4', '.mov', '.avi', '.webm')) else 'image'
                     repaired = True
+                elif asset.get('id'):
+                    original_id = asset['id']
+                    asset['id'] = normalize_asset_path(asset['id'])
+                    if asset['id'] != original_id: repaired = True
+
                 new_assets.append(asset)
             scene['assets'] = new_assets
 
@@ -966,15 +981,20 @@ def get_project_script_json(request, project_id):
         # 2. Repair groups and their nested scenes
         for group in block.get('groups', []):
             # Repair master_asset if string
-            if 'master_asset' in group and isinstance(group['master_asset'], str):
-                m_asset = group['master_asset']
-                if m_asset.strip():
-                    is_video = m_asset.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))
-                    group['master_asset'] = {
-                        'id': m_asset,
-                        'type': 'video' if is_video else 'image'
-                    }
-                    repaired = True
+            if 'master_asset' in group:
+                if isinstance(group['master_asset'], str):
+                    m_asset = group['master_asset']
+                    if m_asset.strip():
+                        is_video = m_asset.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))
+                        group['master_asset'] = {
+                            'id': normalize_asset_path(m_asset),
+                            'type': 'video' if is_video else 'image'
+                        }
+                        repaired = True
+                elif isinstance(group['master_asset'], dict) and group['master_asset'].get('id'):
+                    orig = group['master_asset']['id']
+                    group['master_asset']['id'] = normalize_asset_path(group['master_asset']['id'])
+                    if group['master_asset']['id'] != orig: repaired = True
             
             # Repair scenes inside group
             for scene in group.get('scenes', []):
@@ -982,9 +1002,16 @@ def get_project_script_json(request, project_id):
     
     # --- SYNC PROJECT SETTINGS ---
     # Inject current project settings into the JSON so the editor starts with the "Truth"
+    bg_music_path = ""
+    if project.background_music:
+        if project.background_music.file:
+            bg_music_path = normalize_asset_path(project.background_music.file.name)
+        else:
+            bg_music_path = project.background_music.name
+
     data['settings'] = {
         'title': project.title,
-        'background_music': project.background_music.file.name if project.background_music and project.background_music.file else (project.background_music.name if project.background_music else ""),
+        'background_music': bg_music_path,
         'music_volume': project.music_volume,
         'voice_id': project.voice_id,
         'aspect_ratio': project.aspect_ratio,
@@ -996,7 +1023,7 @@ def get_project_script_json(request, project_id):
     # Also sync root-level if missing (redundancy)
     if not data.get('title'): data['title'] = project.title
     if not data.get('voice'): data['voice'] = project.voice_id
-    if not data.get('background_music'): data['background_music'] = data['settings']['background_music']
+    if not data.get('background_music'): data['background_music'] = bg_music_path
 
     if repaired:
         project.script_text = json.dumps(data, indent=4, ensure_ascii=False)
@@ -1128,8 +1155,9 @@ def save_project_script_json(request, project_id):
                          physical_path = os.path.join(settings.MEDIA_ROOT, 'music', bg_music_name)
                          if os.path.exists(physical_path):
                              try:
+                                 # v18.2 Normalization Fix: Force forward slashes for DB/JSON consistency
                                  m = Music.objects.create(
-                                     file=os.path.join('music', bg_music_name),
+                                     file=f"music/{bg_music_name}",
                                      name=bg_music_name
                                  )
                                  # logger.info(f"Auto-Sync: Registrada nueva pista encontrada en disco: {bg_music_name}")

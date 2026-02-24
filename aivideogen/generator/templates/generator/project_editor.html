@@ -51,10 +51,14 @@
         .grid-asset-container {
             position: relative;
             display: inline-block;
+            min-width: 100px;
+            min-height: 100px;
             max-width: 100%;
             max-height: 100%;
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .grid-overlay {
@@ -165,10 +169,10 @@
             <div class="flex-1 overflow-y-auto p-4 space-y-8 pb-20">
 
                 <template x-if="script.blocks">
-                    <div id="blocks-container" x-init="setupSortable($el, null, 'blocks')">
-                        <template x-for="(block, bIndex) in script.blocks" :key="block._uId || bIndex">
+                    <div id="blocks-container" x-init="setupSortable($el, null, 'blocks')" data-type="blocks">
+                        <template x-for="(block, bIndex) in script.blocks" :key="block._uId || 'b'+bIndex">
                             <div
-                                class="mb-10 border border-gray-700 rounded-xl bg-gray-900/40 overflow-hidden relative group hover:border-gray-600 transition-all shadow-lg">
+                                class="mb-10 border border-gray-700 rounded-xl bg-gray-900/40 overflow-hidden relative group hover:border-gray-600 transition-all shadow-lg sortable-item">
 
                                 <!-- Block Header -->
                                 <div
@@ -214,9 +218,11 @@
                                 <!-- Scenes Grid -->
                                 <div class="p-4 bg-gray-900/20">
                                     <div class="space-y-3 scenes-container"
-                                        x-init="setupSortable($el, bIndex, 'scenes')">
-                                        <template x-for="(scene, sIndex) in block.scenes" :key="scene._uId || sIndex">
-                                            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer"
+                                        x-init="setupSortable($el, bIndex, 'scenes')" data-type="scenes"
+                                        :data-block="bIndex">
+                                        <template x-for="(scene, sIndex) in block.scenes"
+                                            :key="scene._uId || 's'+sIndex">
+                                            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer sortable-item"
                                                 @click="openModal(bIndex, sIndex)">
 
                                                 <!-- Index -->
@@ -339,9 +345,9 @@
 
 
                                     <!-- Groups Grid -->
-                                    <template x-for="(group, gIndex) in block.groups" :key="'g'+gIndex">
+                                    <template x-for="(group, gIndex) in block.groups" :key="group._uId || 'g'+gIndex">
                                         <div
-                                            class="mb-4 mt-6 border border-blue-500/30 rounded-xl bg-blue-900/10 overflow-hidden relative group/group">
+                                            class="mb-4 mt-6 border border-blue-500/30 rounded-xl bg-blue-900/10 overflow-hidden relative group/group sortable-item">
                                             <!-- Group Header (Visual Card) -->
                                             <div class="bg-blue-900/20 p-3 border-b border-blue-500/20 flex gap-4">
 
@@ -458,10 +464,11 @@
                                             </div>
 
                                             <div class="p-3 space-y-2 group-scenes-container"
-                                                x-init="setupSortable($el, bIndex, 'group-scenes', gIndex)">
+                                                x-init="setupSortable($el, bIndex, 'group-scenes', gIndex)"
+                                                data-type="group-scenes" :data-block="bIndex" :data-group="gIndex">
                                                 <template x-for="(scene, sIndex) in group.scenes"
-                                                    :key="scene._uId || sIndex">
-                                                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer"
+                                                    :key="scene._uId || 'gs'+sIndex">
+                                                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 flex gap-4 hover:border-blue-500/50 hover:bg-gray-800/80 transition relative group/scene cursor-pointer sortable-item"
                                                         @click.stop="openModal(bIndex, sIndex, gIndex)">
 
                                                         <div
@@ -597,7 +604,8 @@
 
                         <!-- Add Block Button -->
                         <div class="flex justify-center mt-6">
-                            <button @click="script.blocks.push({title: 'Nuevo Bloque', scenes: []})"
+                            <button
+                                @click="script.blocks.push({_uId: 'b'+Math.random().toString(36).substr(2,9), title: 'Nuevo Bloque', scenes: [], groups: []})"
                                 class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-600 hover:border-gray-500 flex items-center gap-2 shadow-lg hover:translate-y-[-2px] transition text-sm font-bold">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1046,8 +1054,23 @@
                                             class="block max-w-full max-h-full" controls muted></video>
                                     </template>
                                     <template x-if="!isVideo">
-                                        <img :src="getAssetPath(formData.asset_type)"
-                                            class="block max-w-full max-h-full" onerror="this.style.display='none'">
+                                        <div class="relative w-full h-full flex items-center justify-center">
+                                            <img :src="getAssetPath(formData.asset_type)"
+                                                class="block max-w-full max-h-full object-contain shadow-2xl"
+                                                @load="imageError = false"
+                                                @error="imageError = true; console.error('[Editor] Error cargando:', $el.src)">
+
+                                            <!-- Error Overlay -->
+                                            <div x-show="imageError" x-cloak
+                                                class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/40 text-red-400 p-4 text-center border-2 border-dashed border-red-500/50 rounded-lg">
+                                                <span class="text-2xl mb-1">⚠️</span>
+                                                <span
+                                                    class="text-[9px] font-bold uppercase tracking-widest px-2 py-1 bg-red-500/10 rounded">Error
+                                                    de Carga</span>
+                                                <p class="text-[8px] mt-2 opacity-70 leading-tight">El asset no existe o
+                                                    la ruta es incorrecta.</p>
+                                            </div>
+                                        </div>
                                     </template>
 
                                     <!-- Coordinate Grid Overlay -->
@@ -1547,6 +1570,7 @@
                 editBlockIndex: 0,
                 editGroupIndex: null,
                 bulkText: '',
+                imageError: false,
 
                 // Block Form
                 blockForm: { title: '', music: '', volume: 0.2, master_asset: '' },
@@ -1760,27 +1784,29 @@
                     let normalizedPath = path.replace(/\\/g, '/');
 
                     // Si ya es una URL absoluta (HTTP), no tocar
-                    if (path.startsWith('http')) return path;
+                    if (normalizedPath.startsWith('http')) return normalizedPath;
 
-                    // Si contiene "/media/", extraer la parte relativa para el navegador
-                    if (normalizedPath.includes('/media/')) {
-                        return '/' + normalizedPath.substring(normalizedPath.indexOf('media/'));
+                    // v16.0 Robust Resolution: Extraer /media/ de cualquier ruta absoluta o ya formateada
+                    const mediaIndex = normalizedPath.toLowerCase().indexOf('media/');
+                    if (mediaIndex !== -1) {
+                        return '/' + normalizedPath.substring(mediaIndex);
                     }
 
-                    // Si empieza con "media/", añadir / al principio
-                    if (normalizedPath.startsWith('media/')) return '/' + normalizedPath;
-
-                    // Si empieza con "assets/", añadir /media/ al principio
+                    // Si empieza con "assets/", añadir /media/ al principio (vanguardia local)
                     if (normalizedPath.startsWith('assets/')) return '/media/' + normalizedPath;
 
                     // Si ya es una ruta relativa al root que empieza con /, devolver tal cual
-                    if (path.startsWith('/')) return path;
+                    if (normalizedPath.startsWith('/')) return normalizedPath;
 
-                    // Si es una ruta absoluta de Windows que NO logramos capturar con /media/
-                    if (path.match(/^[a-zA-Z]:/)) return '';
+                    // Evitar rutas absolutas de Windows que el navegador no puede cargar (ej: C:/Users/...)
+                    // Si llegamos aquí y tiene formato de disco, probablemente está fuera de media/
+                    if (normalizedPath.match(/^[a-zA-Z]:/)) {
+                        console.warn("[Editor] Ruta absoluta fuera de media detectada:", normalizedPath);
+                        return '';
+                    }
 
-                    // Si es solo un nombre de archivo, asumir /media/assets/
-                    return '/media/assets/' + path;
+                    // Por defecto, si es solo un nombre de archivo, asumir /media/assets/
+                    return '/media/assets/' + normalizedPath;
                 },
 
                 async init() {
@@ -1808,30 +1834,70 @@
                         animation: 150,
                         handle: '.cursor-move',
                         ghostClass: 'bg-blue-600/20',
+                        group: type === 'blocks' ? 'blocks' : 'scenes', // Shared group for scenes
+                        draggable: '.sortable-item',
                         onEnd: (evt) => {
-                            const { oldIndex, newIndex, item, from } = evt;
-                            if (oldIndex === newIndex) return;
+                            const { oldIndex, newIndex, oldDraggableIndex, newDraggableIndex, from, to, item } = evt;
 
-                            // Revert Sortable DOM move - let Alpine handle it reactively
-                            from.insertBefore(item, from.children[oldIndex > newIndex ? oldIndex + 1 : oldIndex]);
+                            // 1. Check if actually moved in draggable terms
+                            if (from === to && oldDraggableIndex === newDraggableIndex) return;
 
-                            this.$nextTick(() => {
-                                if (type === 'blocks') {
-                                    const list = [...this.script.blocks];
-                                    const block = list.splice(oldIndex, 1)[0];
-                                    list.splice(newIndex, 0, block);
-                                    this.script.blocks = list;
-                                } else if (type === 'scenes') {
-                                    const list = [...this.script.blocks[bIndex].scenes];
-                                    const scene = list.splice(oldIndex, 1)[0];
-                                    list.splice(newIndex, 0, scene);
-                                    this.script.blocks[bIndex].scenes = list;
-                                } else if (type === 'group-scenes') {
-                                    const list = [...this.script.blocks[bIndex].groups[gIndex].scenes];
-                                    const scene = list.splice(oldIndex, 1)[0];
-                                    list.splice(newIndex, 0, scene);
-                                    this.script.blocks[bIndex].groups[gIndex].scenes = list;
+                            // 2. REVERT DOM IMMEDIATELY (Let Alpine handle the move reactively)
+                            // Robust Reversion: Move item back to its original physical position relative to all nodes
+                            const children = Array.from(from.children);
+                            if (from === to) {
+                                // Intra-container move
+                                if (oldIndex < newIndex) {
+                                    from.insertBefore(item, children[oldIndex]);
+                                } else {
+                                    from.insertBefore(item, children[oldIndex].nextSibling);
                                 }
+                            } else {
+                                // Inter-container move
+                                from.insertBefore(item, children[oldIndex] || null);
+                            }
+
+                            // 3. Update Data Reactively
+                            this.$nextTick(() => {
+                                // Identification
+                                const srcType = from.getAttribute('data-type');
+                                const dstType = to.getAttribute('data-type');
+                                const srcBlockIdx = parseInt(from.getAttribute('data-block'));
+                                const srcGroupIdx = from.hasAttribute('data-group') ? parseInt(from.getAttribute('data-group')) : null;
+                                const dstBlockIdx = parseInt(to.getAttribute('data-block'));
+                                const dstGroupIdx = to.hasAttribute('data-group') ? parseInt(to.getAttribute('data-group')) : null;
+
+                                let movingItem;
+                                let srcArray, dstArray;
+
+                                // Identify Source Array
+                                if (srcType === 'blocks') {
+                                    srcArray = this.script.blocks;
+                                } else if (srcType === 'scenes') {
+                                    srcArray = this.script.blocks[srcBlockIdx].scenes;
+                                } else if (srcType === 'group-scenes') {
+                                    srcArray = this.script.blocks[srcBlockIdx].groups[srcGroupIdx].scenes;
+                                }
+
+                                // Identify Destination Array
+                                if (dstType === 'blocks') {
+                                    dstArray = this.script.blocks;
+                                } else if (dstType === 'scenes') {
+                                    dstArray = this.script.blocks[dstBlockIdx].scenes;
+                                } else if (dstType === 'group-scenes') {
+                                    dstArray = this.script.blocks[dstBlockIdx].groups[dstGroupIdx].scenes;
+                                }
+
+                                if (!srcArray || !dstArray) return;
+
+                                // Perform Move Atomically
+                                movingItem = srcArray.splice(oldDraggableIndex, 1)[0];
+                                dstArray.splice(newDraggableIndex, 0, movingItem);
+
+                                // Identity Safeguard
+                                this.sanitizeScript(this.script);
+
+                                // Save
                                 this.saveScript(true);
                             });
                         }
@@ -1920,7 +1986,9 @@
                             }
                         });
 
-                        if (!data.blocks[0].scenes) data.blocks[0].scenes = [];
+                        if (data.blocks && data.blocks.length > 0 && !data.blocks[0].scenes) {
+                            data.blocks[0].scenes = [];
+                        }
                         this.script = data;
                         if (this.script.voice_speed) {
                             this.projectSettings.voice_speed = this.script.voice_speed;
@@ -2551,6 +2619,7 @@
 
                     // 2. Build Scene Object
                     const newScene = {
+                        _uId: 's' + Math.random().toString(36).substr(2, 9),
                         title: this.formData.title,
                         text: this.formData.text,
                         pause: parseFloat(this.formData.pause),
@@ -2562,7 +2631,6 @@
                         sfx: this.formData.sfx // Save SFX array
                     };
 
-                    // 3. Update Script Model
                     // 3. Update Script Model
                     let sceneList;
                     if (this.editGroupIndex !== null) {
@@ -2611,12 +2679,14 @@
                     const scene = this.script.blocks[blockIndex].scenes[sceneIndex];
                     const copy = JSON.parse(JSON.stringify(scene)); // Deep copy
                     copy.title += " (Copia)";
+                    copy._uId = 's' + Math.random().toString(36).substr(2, 9); // New ID for copy
                     this.script.blocks[blockIndex].scenes.splice(sceneIndex + 1, 0, copy);
                     this.saveScript(this.isStandalone);
                 },
 
                 addBlock() {
                     this.script.blocks.push({
+                        _uId: 'b' + Math.random().toString(36).substr(2, 9),
                         title: 'Nuevo Bloque',
                         scenes: [],
                         groups: []
@@ -2629,6 +2699,7 @@
                         this.script.blocks[blockIndex].groups = [];
                     }
                     this.script.blocks[blockIndex].groups.push({
+                        _uId: 'g' + Math.random().toString(36).substr(2, 9),
                         title: 'Nuevo Master Shot',
                         master_asset: '',
                         zoom: '1.0:1.3',
