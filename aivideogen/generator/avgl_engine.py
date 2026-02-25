@@ -196,8 +196,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
         if not content: return ""
         # Remove all bracket tags like [TENSO], [EPICO], [DYN], etc.
         res = re.sub(r'\[.*?\]', '', content, flags=re.IGNORECASE | re.DOTALL)
-        # Remove parentheses for extra safety
-        res = re.sub(r'\(.*?\)', '', res, flags=re.DOTALL)
+        # v27.3: SE PERMITEN PARÉNTESIS (Arquitecto's Request para BLAME!)
+        # res = re.sub(r'\(.*?\)', '', res, flags=re.DOTALL)
         return res.strip()
 
     # 1. Identify all tags in ORIGINAL text to avoid index mismatch

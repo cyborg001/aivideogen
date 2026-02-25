@@ -1,0 +1,52 @@
+{
+    "title": "PROMO: BLAME! - El Abismo de Silicio",
+    "voice": "es-ES-AlvaroNeural",
+    "aspect_ratio": "portrait",
+    "render_mode": "gpu",
+    "background_music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+    "music_volume": 0.4,
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "Promo Teaser",
+            "scenes": [
+                {
+                    "title": "Gancho Inicial",
+                    "text": "[MISTICO][TITLE: EL MAGNÍFICO UNIVERSO DE NIHEI (BLAME!)]En @Cyborg001, nos adentramos en abismos que desafían la lógica. Hoy, exploramos la obra maestra de Tsutomu Nihei: una megaestructura que ha devorado el Sistema Solar.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.6:2.0",
+                            "move": "VER:0:100",
+                            "overlay": "light leaks"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Escala Inhumana",
+                    "text": "[TENSO]Contempla la escala imposible de una Esfera de Dyson infinita. Una pesadilla de hormigón donde la humanidad es solo un recuerdo borroso.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_dyson_scale.png",
+                            "zoom": "1.8:1.5",
+                            "move": "VER:100:0",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "Llamado a la Acción",
+                    "text": "[EPICO][TITLE: VIDEO COMPLETO EN EL CANAL]Descubre el secreto de la Ciudad en 'BLAME! - El Abismo de Silicio'. El viaje definitivo por el universo de Nihei comienza aquí. Suscríbete.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/killy_silhouette.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

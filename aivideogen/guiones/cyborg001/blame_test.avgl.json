@@ -1,0 +1,26 @@
+{
+    "title": "BLAME! - El Abismo de Silicio (TEST)",
+    "voice": "es-DO-EmilioNeural",
+    "aspect_ratio": "landscape",
+    "render_mode": "gpu",
+    "blocks": [
+        {
+            "title": "LA MEGAESTRUCTURA",
+            "scenes": [
+                {
+                    "title": "Introducción",
+                    "text": "[TENSO]Imagina una ciudad que ya no conoce límites. Una megaestructura que ha devorado planetas enteros y que sigue expandiéndose, piso tras piso, hacia la oscuridad absoluta del espacio profundo. Aquí, la humanidad es solo un error en un código que ya nadie puede leer.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50 + VER:0:100",
+                            "fit": false,
+                            "overlay": "grain"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

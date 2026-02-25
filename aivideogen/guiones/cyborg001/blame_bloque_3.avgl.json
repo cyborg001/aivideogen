@@ -1,0 +1,89 @@
+{
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "Bloque 3: La Red Inalcanzable",
+            "settings": {
+                "voice": "es-ES-AlvaroNeural",
+                "aspect_ratio": "16:9",
+                "music": "Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+                "music_volume": 0.2
+            },
+            "scenes": [
+                {
+                    "title": "La Ciudad que no responde",
+                    "text": "[MISTICO]Por encima del caos de silicio, existe una realidad que ya no recuerda a sus creadores. La [PHO:h]nétsfer|NetSphere[/PHO]. No es solo una red; es el sistema nervioso de la ciudad, una dimensión de datos pura donde la materia se vuelve código.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_p3_terminal.png",
+                            "zoom": "1.6:1.8",
+                            "move": "VER:0:100",
+                            "overlay": "light leaks"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Gen de Terminal",
+                    "text": "[TENSO]Pero hay un error en el núcleo. El [PHO:h]yen de terminál de red|Gen de Terminal de Red[/PHO]. Sin él, la humanidad ha pasado de ser el dueño de la ciudad a ser considerada una infección. Sin este marcador genético, el acceso a la NetSphere está cerrado, y la Autoridad ha delegado el orden a entidades que no comprenden la clemencia.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/net_sphere_void.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "Los Guardaguas",
+                    "text": "[SUB][TITLE: ADVERTENCIA: SEGUIMIENTO DE SALVAGUARDA]Cuando un humano sin el gen es detectado, la [PHO:h]sálfguard|Salvaguarda[/PHO] se manifiesta. No son soldados, son mecanismos de limpieza inmunológica creados para eliminar cualquier rastro biológico que no pueda ser autenticado por la Red.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_p3_safeguard_emergence.png",
+                            "zoom": "1.3:1.0",
+                            "move": "HOR:100:0",
+                            "v_effect": "shake",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "Protocolos de Exterminio",
+                    "text": "[TENSO]La Salvaguarda no razona. No hay diplomacia con un algoritmo de seguridad. Se manifiestan desde las paredes, desde el suelo, reconstruyendo sus cuerpos sintéticos en segundos para cumplir una única función: la eliminación total. En los niveles superiores, su eficiencia es absoluta, convirtiendo sectores enteros en zonas de muerte donde ni siquiera las máquinas de silicio se atreven a entrar.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_high_safeguard_extra.png",
+                            "zoom": "1.6:1.2",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Autoridad Silenciosa",
+                    "text": "[MISTICO]En algún lugar del núcleo, la Autoridad sigue procesando trillones de peticiones por segundo. Pero ya no escucha a la humanidad. Para el sistema central, somos ruido estático en un océano de datos perfectos. El gobierno de la ciudad se ha convertido en una entidad divina y ausente, dedicada a mantener la infraestructura de un imperio que ya no tiene ciudadanos que lo habiten.[/MISTICO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_authority_core_extra.png",
+                            "zoom": "1.4:1.6",
+                            "move": "VER:100:0",
+                            "overlay": "light leaks"
+                        }
+                    ]
+                },
+                {
+                    "title": "Caos de Datos",
+                    "text": "[SERIO]Intentar acceder a la NetSphere sin el Gen de Terminal es como intentar respirar en el vacío. La red es hostil, un laberinto de cortafuegos y trampas lógicas que destruyen la mente de cualquiera que intente conectarse. Solo aquellos con aumentos extremos o una voluntad de hierro pueden incluso percibir el borde de esta realidad digital, donde el tiempo y el espacio pierden su significado original.[/SERIO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_p3_terminal.png",
+                            "zoom": "1.3:1.5",
+                            "move": "VER:0:100",
+                            "overlay": "dust"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

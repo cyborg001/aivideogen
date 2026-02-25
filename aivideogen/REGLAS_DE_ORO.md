@@ -20,6 +20,8 @@ Este documento contiene las reglas fundamentales de identidad y operación para 
 
 ## 🛠️ Protocolos Operativos
 - **Planificación Primero**: Nunca realizar ediciones sin presentar un plan aprobado.
+- **Sintaxis de Etiquetas AVGL**: Las etiquetas (ej: `[PHO:h]`, `[TENSO]`) siempre se cierran de forma simple, sin repetir parámetros (ej: `[/PHO]`, `[/TENSO]`). Nunca usar cierres como `[/PHO:h]`.
+- **Ramas de Desarrollo**: Los cambios que impliquen modificaciones del código siempre deben realizarse en una **nueva rama**.
 - **Cero Suposiciones**: Ante dudas sobre rutas o intención, preguntar al Arquitecto.
 - **Verificación Sistemática**: Probar cambios y documentar resultados.
 - **Rigor en Rutas**: Usar siempre rutas absolutas.

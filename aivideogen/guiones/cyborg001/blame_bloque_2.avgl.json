@@ -1,0 +1,101 @@
+{
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "Bloque 2: Biología de Silicio",
+            "settings": {
+                "voice": "es-ES-AlvaroNeural",
+                "aspect_ratio": "16:9",
+                "music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+                "music_volume": 0.2
+            },
+            "scenes": [
+                {
+                    "title": "La Invasión Silícea",
+                    "text": "[TITLE: POBLACIÓN: SILICON LIFE]Pero la Ciudad no está vacía. En las grietas del hormigón, donde la luz de la [PHO:h]nétsfer|NetSphere[/PHO] no llega, prospera una forma de vida que no respira oxígeno. La [PHO:h]sílikon láif|Vida de Silicio[/PHO].",
+                    "assets": [
+                        {
+                            "id": "cyborg001/silicon_life_creature.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:0:100",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Gen de Terminal",
+                    "text": "[SERIO]Ellos son los beneficiarios del caos. Sin el Gen de Terminal de Red, la humanidad perdió el control de las máquinas, y en ese vacío, el silicio reclamó su trono. Hasta que algo... o alguien... empezó a subir desde los niveles más profundos.[/SERIO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/net_sphere_void.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Rastreador",
+                    "text": "[TITLE: SUJETO: KILLY - CATEGORÍA DESCONOCIDA][IMPONENTE]Un hombre. O lo que queda de uno. [PHO:h]kíli|Killy[/PHO]. No busca sobrevivir, no busca refugio. Busca lo único que puede detener esta expansión infinita: un ser humano con genes puros.[/IMPONENTE]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/killy_silhouette.png",
+                            "zoom": "1.0:1.5",
+                            "move": "VER:100:0",
+                            "overlay": "smoke"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Disparo de la Realidad",
+                    "text": "[TITLE: ARMA: GBE - NIVEL DE POTENCIA: CRÍTICO][TENSO]En su mano, Killy sostiene el arma más destructiva jamás creada por la humanidad: el [PHO:h]yi be e|Gravitational Beam Emitter[/PHO]. Un disparo que rompe las leyes de la física, capaz de perforar setenta kilómetros de blindaje de la Megaestructura en un solo segundo.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/killy_silhouette.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:100",
+                            "v_effect": "shake",
+                            "overlay": "smoke"
+                        }
+                    ]
+                },
+                {
+                    "title": "Mutación Sistemática",
+                    "text": "[SERIO]La Vida de Silicio no es solo una raza, es una infección del diseño original. Han aprendido a parasitar las funciones de la propia Megaestructura, fusionando cables con tendones y sensores con ojos. No ven el mundo como nosotros; lo ven como una secuencia de datos que debe ser purgada de la debilidad biológica. Para ellos, la carne es solo un error de compilación del pasado.[/SERIO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_hybrid_mutation_extra.png",
+                            "zoom": "1.3:1.6",
+                            "move": "VER:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Susurro de las Máquinas",
+                    "text": "[MISTICO]En los niveles intermedios, el aire vibra con una frecuencia incomprensible. Es el diálogo constante entre los servidores de la ciudad y las entidades de silicio. Un susurro que habla de expansión infinita y de la eliminación de cualquier rastro del 'Gen de Terminal'. No hay odio en este lenguaje, solo una lógica matemática implacable que ha decidido que nuestra especie ya no tiene lugar en el futuro del silicio.[/MISTICO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.5:1.3",
+                            "move": "HOR:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Soledad del Caminante",
+                    "text": "[MELANCOLICO]Killy camina hacia el próximo nivel. Sin comida, sin descanso, impulsado por una directiva que la propia Ciudad ha intentado borrar. Su viaje es la última oración de una especie que se niega a ser olvidada en el abismo de silicio.[/MELANCOLICO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_lethal_corridor.png",
+                            "zoom": "1.0:1.3",
+                            "move": "VER:0:100",
+                            "overlay": "dust"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

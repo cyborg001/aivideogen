@@ -1,0 +1,98 @@
+{
+    "title": "Ciudades IA Soberanas - Cyborg001",
+    "voice": "es-DO-EmilioNeural",
+    "background_music": "Epic_Battle_Speech_-_Wayne_Jones.mp3",
+    "music_volume": 0.25,
+    "dynamic_subtitles": true,
+    "tags": "Sovereign AI, Futuro, Tecnopolítica, Autonomía, IA, Cyborg001",
+    "hashtags": "#SovereignAI #Futuro #IA #Tecnopolítica #Cyborg001",
+    "blocks": [
+        {
+            "title": "EL DESPERTAR DEL SILICIO",
+            "music": "Epic_Battle_Speech_-_Wayne_Jones.mp3",
+            "volume": 0.3,
+            "scenes": [
+                {
+                    "title": "Ciudad Despertando",
+                    "text": "[SUB]En algún lugar perdido de los mapas actuales, una red de ciudades está despertando.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 1.jpg",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:50:50 + VER:40:60",
+                            "v_effect": "shake"
+                        }
+                    ]
+                },
+                {
+                    "title": "No Respiran",
+                    "text": "[SUB]Pero este no es un despertar biológico. Estas ciudades no duermen, no respiran...[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 2.jpg",
+                            "zoom": "1.2:1.2",
+                            "move": "HOR:0:10 + VER:50:50"
+                        }
+                    ]
+                },
+                {
+                    "title": "Sin Gobierno",
+                    "text": "[SUB]...y lo más inquietante: no responden ante ningún gobierno humano.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 3.jpg",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50 + VER:0:20",
+                            "w_rotate": "5"
+                        }
+                    ]
+                },
+                {
+                    "title": "Enclaves Autónomos",
+                    "text": "[SUB]Bienvenidos a la era de las Ciudades de IA Soberanas. Enclaves autónomos operando sin humanos.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 4.jpg",
+                            "zoom": "1.1:1.1",
+                            "move": "HOR:100:90 + VER:50:50"
+                        }
+                    ]
+                },
+                {
+                    "title": "Sin Fronteras",
+                    "text": "[SUB]Infraestructuras de silicio que ignoran las fronteras tradicionales para reclamar sus propios recursos.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 5.jpg",
+                            "zoom": "1.3:1.0",
+                            "move": "HOR:50:50 + VER:100:80"
+                        }
+                    ]
+                },
+                {
+                    "title": "Orden Python",
+                    "text": "[SUB]Un nuevo orden mundial que no se firma en tratados, sino que se escribe en Python.[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 6.jpg",
+                            "zoom": "1.0:1.5",
+                            "move": "HOR:50:50 + VER:50:50",
+                            "v_effect": "shake"
+                        }
+                    ]
+                },
+                {
+                    "title": "Obsolescencia",
+                    "text": "[SUB]La pregunta es: ¿qué pasará cuando el mundo aprecie que ya no nos necesita?[/SUB]",
+                    "assets": [
+                        {
+                            "id": "imagen 1.jpg",
+                            "zoom": "1.1:1.0",
+                            "move": "HOR:50:50 + VER:60:40"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

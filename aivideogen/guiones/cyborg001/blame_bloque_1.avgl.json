@@ -1,0 +1,100 @@
+{
+    "title": "BLAME! - Bloque 1: El Despertar del Silicio",
+    "voice": "es-ES-AlvaroNeural",
+    "aspect_ratio": "landscape",
+    "render_mode": "gpu",
+    "background_music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+    "music_volume": 0.2,
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "La Megaestructura: El Horizonte de Silicio",
+            "scenes": [
+                {
+                    "title": "Introducción",
+                    "text": "[TITLE: EL ABISMO DE NIHEI]Imagina un mundo donde la humanidad ha perdido las llaves de su propia casa: una megaconstrucción colosal que ha devorado el sistema solar y sigue expandiéndose sin control. Este es el universo de [PHO:h]tsutómu nihéi|Tsutomu Nihei[/PHO]. Un laberinto de silicio y hormigón donde la escala de lo construido ha superado nuestra capacidad de comprensión.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.6:1.8",
+                            "move": "VER:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "Oscuridad Inicial",
+                    "text": "[MISTICO]Mira hacia arriba. ¿Qué ves?[PAUSA:1.0] En la Ciudad, el arriba es solo otra capa de hormigón. El abajo es un abismo de cables que se extiende hasta donde la lógica se rompe. Aquí, si esperabas encontrar estrellas, has llegado milenios tarde.[/MISTICO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_lethal_corridor.png",
+                            "zoom": "1.2:1.4",
+                            "move": "HOR:50:50 + VER:0:50",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Ciudad Infinita",
+                    "text": "[TITLE: ESTRUCTURA INTERIOR - CAPA 4]Lo que el ojo percibe no es un planeta. Es la [PHO:h]esféra de dáison|Esfera de Dyson[/PHO]. Una red de estratas que ha envuelto la órbita de Júpiter, procesando cada gramo de materia del Sistema Solar en blindaje y acero. Una construcción que crece sin propósito, sin testigos, y lo más aterrador: sin la supervisión de un creador biológico.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_dyson_scale.png",
+                            "zoom": "1.6:1.4",
+                            "move": "VER:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "Atmósfera Letal",
+                    "text": "[TENSO]En los niveles superiores, el aire es un mito. La atmósfera es tan gélida y tan delgada que tus pulmones colapsarían en segundos si no fueras más que un simple humano. En este laberinto del silicio, ser puramente biológico es una desventaja táctica letal.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_lethal_atmosphere.png",
+                            "zoom": "1.6:1.8",
+                            "move": "VER:100:20",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "Los Constructores",
+                    "text": "[TENSO]Mientras dormimos, los Constructores siguen replicando el código. Chispas de soldadura iluminan abismos donde la materia se dobla y se refina en un ciclo infinito. No saben por qué construyen. Solo saben que la expansión debe continuar.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_builders_high_contrast.jpg",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Abismo de los Siglos",
+                    "text": "[MISTICO]El tiempo aquí no se mide en años, sino en capas de sedimentación tecnológica. Cada estrata que recorres representa siglos de abandono. Ciudades enteras han florecido y muerto en los rincones oscuros de la Ciudad, sin que el sol haya tocado jamás sus cimientos. Somos sombras caminando entre los huesos de una civilización que olvidó cómo morir.[/MISTICO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_builders_shadow.png",
+                            "zoom": "1.5:1.7",
+                            "move": "VER:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "Infección de Silicio",
+                    "text": "[TENSO]Pero la Ciudad no está vacía. En el silencio de los pasillos industriales, algo más está despertando. Una forma de vida que no respira ni sangra, sino que procesa y se adapta. La frontera entre lo orgánico y lo sintético se ha vuelto tan delgada como el rastro de un sensor en la oscuridad.[/TENSO]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/silicon_life_creature.png",
+                            "zoom": "1.6:1.2",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

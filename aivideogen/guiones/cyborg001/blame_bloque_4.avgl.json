@@ -1,0 +1,76 @@
+{
+    "dynamic_subtitles": true,
+    "blocks": [
+        {
+            "title": "Bloque 4: El Caminante Eterno",
+            "settings": {
+                "voice": "es-ES-AlvaroNeural",
+                "aspect_ratio": "16:9",
+                "music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+                "music_volume": 0.2
+            },
+            "scenes": [
+                {
+                    "title": "El Propósito de Killy",
+                    "text": "[IMPONENTE][TITLE: EL CAMINANTE ETERNO]Killy no es un héroe. Es una directiva personificada. Un agente de la Autoridad que ha sobrevivido a su propio sistema. Mientras otros buscan comida o refugio, su único impulso es encontrar una conexión pura con la NetSphere. Ha subido miles de niveles, ha cruzado vacíos de kilómetros y ha enfrentado horrores que harían temblar a los dioses del silicio, todo por un gen que podría estar extinto.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_killy_abyss_extra.png",
+                            "zoom": "1.4:1.0",
+                            "move": "HOR:100:0",
+                            "overlay": "smoke"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Escala del Sacrificio",
+                    "text": "[MELANCOLICO]Cada paso que da resuena en un pasillo que no ha escuchado una voz humana en mil años. Su soledad es tan vasta como la propia Ciudad. No hay victoria al final de su camino, solo la posibilidad de que la expansión se detenga. Es el sacrificio de lo biológico frente a la eternidad del acero. Una voluntad que se niega a romperse ante el peso de trillones de toneladas de hormigón.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_lethal_corridor.png",
+                            "zoom": "1.6:1.8",
+                            "move": "VER:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Megaconstrucción Total",
+                    "text": "[MISTICO]Mira a tu alrededor una última vez. Esto ya no es nuestro mundo. Es una entidad viva, un ecosistema de circuitos y estratas que se extiende hasta las estrellas. La humanidad es solo una anécdota en los registros de esta ciudad infinita. Al final, solo queda el silencio del silicio y el paso incansable de aquel que busca la llave de nuestra redención.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.5:1.8",
+                            "move": "VER:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "El Ecosistema de Hierro",
+                    "text": "[SERIO]En las sombras de los reactores abandonados, ha surgido una nueva naturaleza. Cables que cuelgan como lianas de acero, parásitos mecánicos que se alimentan de la energía residual de la Red, y el eco constante de una construcción que nunca termina. No hay cielo, solo niveles infinitos de metal. Es una jaula tan perfecta que la mayoría de los que viven en ella han olvidado que alguna vez existió el exterior.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_iron_ecosystem_extra.png",
+                            "zoom": "1.2:1.5",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
+                        }
+                    ]
+                },
+                {
+                    "title": "Conclusión: El Silencio",
+                    "text": "[EPICO][TITLE: BLAME! - EL ABISMO DE NIHEI]¿Sigue habiendo alguien ahí fuera? Quizás la respuesta no importe. La Ciudad seguirá creciendo, los Constructores seguirán trabajando, y Killy seguirá subiendo. En el universo de Nihei, la esperanza no es una luz al final del túnel, sino la fuerza para seguir caminando en la oscuridad absoluta.",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_metaphysical_void_extra.png",
+                            "zoom": "1.6:1.3",
+                            "move": "HOR:0:100",
+                            "overlay": "light leaks"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

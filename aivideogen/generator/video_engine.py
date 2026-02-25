@@ -468,7 +468,10 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
     stroke_color = '#000000'
     bg_color = 'black' if is_highlight else None 
     
-    def wrap_text(t, max_chars=30): # v17.2.13: Lower limit for better 2-line balance
+    # v27.3: Dynamic Wrap Limit based on orientation
+    wrap_limit = 20 if target_size[0] < target_size[1] else 35
+
+    def wrap_text(t, max_chars=30): 
         words = t.split()
         lines = []
         current_line = []
@@ -612,16 +615,19 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
         
         # Mode Logic
         if is_highlight:
+            # v27.3: Enable wrapping for Titles
+            text = wrap_text(text, max_chars=wrap_limit)
+            line_count = len(text.split('\n'))
+
             # 1. Detect natural width first (v18.6)
-            # This avoids the "Size is mandatory when method is caption" error.
             temp_t = TextClip(text=text, font_size=fontsize, font=font, method='label')
             natural_w = temp_t.w
             temp_t.close()
 
-            # 2. Create text with MASSIVE vertical room (v18.6)
-            # v18.6: 2.5x height is necessary to bypass MoviePy/IM clipping on Windows
-            t_height = int(fontsize * 2.5)
-            t_width = natural_w + int(fontsize * 0.5) # Slight horizontal buffer
+            # 2. Create text with DYNAMIC height (v27.3)
+            # v18.6 base was 2.5x. Now we scale by lines.
+            t_height = int(fontsize * 1.5 * line_count) + int(fontsize * 1.0)
+            t_width = min(standard_width, natural_w + int(fontsize * 0.5)) 
             
             t_clip = TextClip(
                 text=text,
@@ -631,12 +637,12 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
                 stroke_width=3.0,
                 font=font,
                 method='caption',
-                size=(t_width, t_height) # Both defined = No ValueError
+                size=(t_width, t_height)
             ).with_duration(duration)
 
-            # 3. Create a background box that is strictly TALL (v18.6)
-            bg_w = t_clip.w + int(fontsize * 1.5) # Wide padding
-            bg_h = t_height # Tall padding
+            # 3. Create a background box
+            bg_w = t_clip.w + int(fontsize * 1.5)
+            bg_h = t_height 
             
             bg_clip = ColorClip(size=(bg_w, bg_h), color=(0,0,0)).with_duration(duration)
             
@@ -650,8 +656,12 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
             final_clip = final_clip.with_position(('center', y_pos))
             
         else:
+            # v27.3: Dynamic wrap for standard subs too
+            text = wrap_text(text, max_chars=wrap_limit)
+            line_count = len(text.split('\n'))
+            t_height_dynamic = int(fontsize * 1.4 * line_count) + int(fontsize * 0.5)
+
             # v19.1: Universal Anti-Clipping for Standard Subs
-            # Force height to avoid clipping on Windows/ImageMagick
             final_clip = TextClip(
                 text=text,
                 font_size=fontsize,
@@ -660,7 +670,7 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
                 stroke_width=3.0,
                 font=font,
                 method='caption',
-                size=(standard_width, t_height_universal), 
+                size=(standard_width, t_height_dynamic), 
                 text_align='center'
             ).with_duration(duration)
             
