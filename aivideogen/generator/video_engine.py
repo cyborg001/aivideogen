@@ -53,9 +53,9 @@ try:
 
     def _patched_get_frame(self, tt):
         try:
-            # Fix 1: Zero-length timeframe
-            if hasattr(tt, "__len__") and len(tt) == 0:
-                return np.zeros((0, self.nchannels))
+            # v14.9 Trace: Log if silence is being injected
+            if hasattr(tt, "__len__") and len(tt) > 0:
+                pass # Normal operation log would be too noisy here
             
             # Fix 2: Execute original but catch ANY internal error (like out of bounds)
             return _original_get_frame(self, tt)
@@ -342,6 +342,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     
     # Trim from start_time
     v_clip = v_clip.subclipped(start_time, required_end)
+    logger.info(f"    🎬 [Debug] Video recortado. Duración: {v_clip.duration:.2f}s | Audio: {v_clip.audio is not None}")
     
     # Scaling logic (Contain vs Cover)
     w_orig, h_orig = v_clip.size
@@ -376,10 +377,17 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
                 logger.warning(f"  🔥 [CORRUPT AUDIO DETECTED]: {os.path.basename(video_path)} -> {e}. Stripping audio to save render.")
                 v_clip = v_clip.without_audio()
                 video_volume = 0.0
+        else:
+            logger.info(f"    ⚠️  El clip de video NO tiene pista de audio: {os.path.basename(video_path)}")
 
         video_volume = float(video_volume or 0.0)
         if video_volume > 0 and v_clip.audio:
-             pass # Already verified above
+             # v14.9: Force audio track retention before effects
+             v_audio = v_clip.audio
+             v_clip = v_clip.with_effects([afx.MultiplyVolume(video_volume)])
+             # Re-attach audio if was lost during effect (MoviePy edge case)
+             if not v_clip.audio and v_audio: v_clip = v_clip.with_audio(v_audio)
+             logger.info(f"    🔊 [Audio] Volumen de activo aplicado: {video_volume} | Audio OK: {v_clip.audio is not None}")
         else:
              v_clip = v_clip.without_audio()
              
@@ -399,7 +407,10 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
         layers.append(overlay)
         
-    return CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
+    final_clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
+    if v_clip.audio:
+        final_clip = final_clip.with_audio(v_clip.audio)
+    return final_clip
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -923,7 +934,10 @@ def generate_video_avgl(project):
                 
                 # v14.3: Duration is voice + pause. If no voice, it's just pause.
                 voice_duration = audio_clip.duration if audio_clip else 0.0
-                duration = voice_duration + scene.pause
+                
+                try: s_pause = float(scene.pause or 0.0)
+                except: s_pause = 0.0
+                duration = voice_duration + s_pause
                 
                 if duration <= 0:
                     duration = 1.0 # Minimal failsafe
@@ -961,14 +975,28 @@ def generate_video_avgl(project):
                         if '://' in fname or ':\\' in fname or '/media/' in fname:
                              fname = os.path.basename(fname)
                         
-                        asset_path = os.path.join(assets_dir, fname)
+                        # Search in multiple potential directories
+                        search_dirs = [
+                            assets_dir,
+                            os.path.join(settings.MEDIA_ROOT, 'videos'),
+                            os.path.join(settings.MEDIA_ROOT, 'uploads'),
+                            os.path.join(settings.MEDIA_ROOT, 'outputs')
+                        ]
                         
-                        # Tolerance: if not found, try extensions
-                        if not os.path.isfile(asset_path):
+                        found_path = None
+                        for s_dir in search_dirs:
+                            test_path = os.path.join(s_dir, fname)
+                            if os.path.isfile(test_path):
+                                found_path = test_path
+                                break
+                            # Try extensions
                             for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
-                                if os.path.isfile(asset_path + ext): 
-                                    asset_path += ext
+                                if os.path.isfile(test_path + ext):
+                                    found_path = test_path + ext
                                     break
+                            if found_path: break
+                        
+                        asset_path = found_path if found_path else os.path.join(assets_dir, fname)
                     
                     # LOG RESULT
                     if os.path.isfile(asset_path):
@@ -1123,7 +1151,22 @@ def generate_video_avgl(project):
                                 sync_start_time += s_dur
 
                         if is_video:
-                            v_vol = float(getattr(asset, 'video_volume', 0.0) or 0.0)
+                            # v14.9: Smart Default - If not specified, we assume user wants sound (Cinema Mode)
+                            raw_v_vol = getattr(asset, 'video_volume', None)
+                            v_vol = float(raw_v_vol) if raw_v_vol is not None else 1.0
+                            
+                            # v14.8: Auto-Persistence (Cinema mode)
+                            if v_vol > 0 and voice_duration < 1.0:
+                                try:
+                                    from moviepy import VideoFileClip
+                                    temp_v = VideoFileClip(asset_path)
+                                    if temp_v.duration > duration:
+                                        logger.log(f"    🎬 [MODO CINE] Auto-Persistencia Activada: {duration:.2f}s -> {temp_v.duration:.2f}s")
+                                        duration = temp_v.duration
+                                    temp_v.close()
+                                except Exception as e:
+                                    logger.log(f"    ⚠️ Error en Auto-Persistencia: {e}")
+
                             logger.log(f"  📽️ Asset detectado como VÍDEO (v14.0): {os.path.basename(asset_path)} | Sync: {sync_start_time:.2f}s | Vol: {v_vol}")
                             clip = process_video_asset(
                                 asset_path, duration, target_size,
@@ -1404,9 +1447,10 @@ def generate_video_avgl(project):
                     clip = clip.with_audio(audio_clip)
                 elif clip.audio:
                     # v14.3: If NO text/voice, but video has audio, leave it as is
-                    pass
+                    logger.log(f"    🔊 [Audio] Usando audio original del video (No hay locución).")
                 else:
                     # v14.3: No voice, no video audio = silent clip
+                    #logger.log(f"    🔇 [Audio] Escena silenciosa (No hay voz ni audio de video).")
                     clip = clip.without_audio()
 
                 block_scene_clips.append(clip)

@@ -12,7 +12,7 @@
             "scenes": [
                 {
                     "title": "Introducción",
-                    "text": "[TITLE: EL ABISMO DE NIHEI]Imagina un mundo donde la humanidad ha perdido las llaves de su propia casa: una megaconstrucción colosal que ha devorado el sistema solar y sigue expandiéndose sin control. Este es el universo de [PHO:h]tsutómu nihéi|Tsutomu Nihei[/PHO]. Un laberinto de silicio y hormigón donde la escala de lo construido ha superado nuestra capacidad de comprensión.",
+                    "text": "[TITLE: EL ABISMO DE NIHEI]Imagina un mundo donde la humanidad ha perdido las llaves de su propia casa: una [PHO:h]megaconstrucción|megaconstrucción[/PHO] colosal que ha devorado el sistema solar y sigue expandiéndose sin control. Este es el universo de [PHO:h]tsutómu nihéi|Tsutomu Nihei[/PHO]. Un laberinto de silicio y hormigón donde la escala de lo construido ha superado nuestra capacidad de comprensión.",
                     "assets": [
                         {
                             "id": "cyborg001/blame_megastructure_test.png",
@@ -36,7 +36,7 @@
                 },
                 {
                     "title": "La Ciudad Infinita",
-                    "text": "[TITLE: ESTRUCTURA INTERIOR - CAPA 4]Lo que el ojo percibe no es un planeta. Es la [PHO:h]esféra de dáison|Esfera de Dyson[/PHO]. Una red de estratas que ha envuelto la órbita de Júpiter, procesando cada gramo de materia del Sistema Solar en blindaje y acero. Una construcción que crece sin propósito, sin testigos, y lo más aterrador: sin la supervisión de un creador biológico.",
+                    "text": "[TITLE: ESTRUCTURA INTERIOR - CAPA 4]Lo que el ojo percibe no es un planeta. Es la [PHO:h]esféra de dáison|Esfera de Dyson[/PHO]. Una red de estratas que ha envuelto la órbita de Júpiter, procesando cada gramo de materia del Sistema Solar en blindaje y acero. Una construcción que crece sin propósito, sin testigos, y lo más aterrador: sin la supervisión de un creador [PHO:h]biológico|biológico[/PHO].",
                     "assets": [
                         {
                             "id": "cyborg001/blame_dyson_scale.png",
@@ -48,7 +48,7 @@
                 },
                 {
                     "title": "Atmósfera Letal",
-                    "text": "[TENSO]En los niveles superiores, el aire es un mito. La atmósfera es tan gélida y tan delgada que tus pulmones colapsarían en segundos si no fueras más que un simple humano. En este laberinto del silicio, ser puramente biológico es una desventaja táctica letal.[/TENSO]",
+                    "text": "[TENSO]En los niveles superiores, el aire es un mito. La atmósfera es tan gélida y tan delgada que tus pulmones colapsarían en segundos si no fueras más que un simple humano. En este laberinto del silicio, ser puramente [PHO:h]biológico|biológico[/PHO] es una desventaja táctica letal.[/TENSO]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_lethal_atmosphere.png",
@@ -60,7 +60,7 @@
                 },
                 {
                     "title": "Los Constructores",
-                    "text": "[TENSO]Mientras dormimos, los Constructores siguen replicando el código. Chispas de soldadura iluminan abismos donde la materia se dobla y se refina en un ciclo infinito. No saben por qué construyen. Solo saben que la expansión debe continuar.[/TENSO]",
+                    "text": "[TENSO]Mientras dormimos, los [PHO:h]constructores|Constructores[/PHO] siguen replicando el código. Chispas de soldadura iluminan abismos donde la materia se dobla y se refina en un ciclo infinito. No saben por qué construyen. Solo saben que la expansión debe continuar.[/TENSO]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_builders_high_contrast.jpg",
@@ -84,7 +84,7 @@
                 },
                 {
                     "title": "Infección de Silicio",
-                    "text": "[TENSO]Pero la Ciudad no está vacía. En el silencio de los pasillos industriales, algo más está despertando. Una forma de vida que no respira ni sangra, sino que procesa y se adapta. La frontera entre lo orgánico y lo sintético se ha vuelto tan delgada como el rastro de un sensor en la oscuridad.[/TENSO]",
+                    "text": "[TENSO]Pero la Ciudad no está vacía. En el silencio de los pasillos industriales, algo más está despertando. Una forma de vida que no respira ni sangra, sino que procesa y se adapta. La frontera entre lo orgánico y lo [PHO:h]sintético|sintético[/PHO] se ha vuelto tan delgada como el rastro de un sensor en la oscuridad.[/TENSO]",
                     "assets": [
                         {
                             "id": "cyborg001/silicon_life_creature.png",

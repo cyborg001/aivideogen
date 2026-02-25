@@ -1,14 +1,13 @@
 {
+    "title": "BLAME! - Bloque 2: Biología de Silicio",
+    "voice": "es-ES-AlvaroNeural",
+    "aspect_ratio": "landscape",
+    "background_music": "Nebula_-_The_Grey_Room___Density__Time_yrGUYVC.mp3",
+    "music_volume": 0.25,
     "dynamic_subtitles": true,
     "blocks": [
         {
-            "title": "Bloque 2: Biología de Silicio",
-            "settings": {
-                "voice": "es-ES-AlvaroNeural",
-                "aspect_ratio": "16:9",
-                "music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
-                "music_volume": 0.2
-            },
+            "title": "Vida de Silicio y el Gen de Terminal",
             "scenes": [
                 {
                     "title": "La Invasión Silícea",
@@ -24,7 +23,7 @@
                 },
                 {
                     "title": "El Gen de Terminal",
-                    "text": "[SERIO]Ellos son los beneficiarios del caos. Sin el Gen de Terminal de Red, la humanidad perdió el control de las máquinas, y en ese vacío, el silicio reclamó su trono. Hasta que algo... o alguien... empezó a subir desde los niveles más profundos.[/SERIO]",
+                    "text": "[SERIO]Ellos son los beneficiarios del caos. Sin el [PHO:h]yen de terminal de red|Gen de Terminal de Red[/PHO], la humanidad perdió el control de las máquinas, y en ese vacío, el silicio reclamó su trono. Hasta que algo... o alguien... empezó a subir desde los niveles más profundos.[/SERIO]",
                     "assets": [
                         {
                             "id": "cyborg001/net_sphere_void.png",
@@ -61,7 +60,7 @@
                 },
                 {
                     "title": "Mutación Sistemática",
-                    "text": "[SERIO]La Vida de Silicio no es solo una raza, es una infección del diseño original. Han aprendido a parasitar las funciones de la propia Megaestructura, fusionando cables con tendones y sensores con ojos. No ven el mundo como nosotros; lo ven como una secuencia de datos que debe ser purgada de la debilidad biológica. Para ellos, la carne es solo un error de compilación del pasado.[/SERIO]",
+                    "text": "[SERIO]La Vida de Silicio no es solo una raza, es una infección del diseño original. Han aprendido a parasitar las funciones de la propia [PHO:h]megaestructura|Megaestructura[/PHO], fusionando cables con tendones y sensores con ojos. No ven el mundo como nosotros; lo ven como una secuencia de datos que debe ser purgada de la debilidad biológica. Para ellos, la carne es solo un error de compilación del pasado.[/SERIO]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_hybrid_mutation_extra.png",
@@ -73,7 +72,7 @@
                 },
                 {
                     "title": "El Susurro de las Máquinas",
-                    "text": "[MISTICO]En los niveles intermedios, el aire vibra con una frecuencia incomprensible. Es el diálogo constante entre los servidores de la ciudad y las entidades de silicio. Un susurro que habla de expansión infinita y de la eliminación de cualquier rastro del 'Gen de Terminal'. No hay odio en este lenguaje, solo una lógica matemática implacable que ha decidido que nuestra especie ya no tiene lugar en el futuro del silicio.[/MISTICO]",
+                    "text": "[MISTICO]En los niveles intermedios, el aire vibra con una frecuencia incomprensible. Es el diálogo constante entre los servidores de la ciudad y las [PHO:h]entidades de silicio|entidades de silicio[/PHO]. Un susurro que habla de expansión infinita y de la eliminación de cualquier rastro del '[PHO:h]yen de terminal|Gen de Terminal[/PHO]'. No hay odio en este lenguaje, solo una lógica matemática implacable que ha decidido que nuestra especie ya no tiene lugar en el futuro del silicio.[/MISTICO]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_megastructure_test.png",

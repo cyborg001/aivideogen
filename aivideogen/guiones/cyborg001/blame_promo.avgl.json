@@ -12,7 +12,7 @@
             "scenes": [
                 {
                     "title": "Gancho Inicial",
-                    "text": "[MISTICO][TITLE: EL MAGNÍFICO UNIVERSO DE NIHEI (BLAME!)]En @Cyborg001, nos adentramos en abismos que desafían la lógica. Hoy, exploramos la obra maestra de Tsutomu Nihei: una megaestructura que ha devorado el Sistema Solar.",
+                    "text": "[MISTICO][TITLE: EL MAGNÍFICO UNIVERSO DE NIHEI (BLAME!)]En [PHO:h]saiborg cero cero uno|@Cyborg001[/PHO], nos adentramos en abismos que desafían la lógica. Hoy, exploramos la obra maestra de [PHO]tsutomu nihei|Tsutomu Nihei[/PHO]: una megaestructura que ha devorado el Sistema Solar.",
                     "assets": [
                         {
                             "id": "cyborg001/blame_megastructure_test.png",
@@ -24,7 +24,7 @@
                 },
                 {
                     "title": "La Escala Inhumana",
-                    "text": "[TENSO]Contempla la escala imposible de una Esfera de Dyson infinita. Una pesadilla de hormigón donde la humanidad es solo un recuerdo borroso.",
+                    "text": "[TENSO]Contempla la escala imposible de una [PHO:h]esfera de daisson|Esfera de Dyson[/PHO] infinita. Una pesadilla de hormigón donde la humanidad es solo un recuerdo borroso.",
                     "assets": [
                         {
                             "id": "cyborg001/blame_dyson_scale.png",
@@ -36,7 +36,7 @@
                 },
                 {
                     "title": "Llamado a la Acción",
-                    "text": "[EPICO][TITLE: VIDEO COMPLETO EN EL CANAL]Descubre el secreto de la Ciudad en 'BLAME! - El Abismo de Silicio'. El viaje definitivo por el universo de Nihei comienza aquí. Suscríbete.",
+                    "text": "[EPICO][TITLE: VIDEO COMPLETO EN EL CANAL]Descubre el secreto de la Ciudad en '[PHO:h]blame|BLAME![/PHO] - El Abismo de Silicio'. El viaje definitivo por el universo de [PHO]nihei|Nihei[/PHO] comienza aquí. Suscríbete.",
                     "assets": [
                         {
                             "id": "cyborg001/killy_silhouette.png",

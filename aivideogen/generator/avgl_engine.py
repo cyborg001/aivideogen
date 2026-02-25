@@ -31,7 +31,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -42,6 +42,7 @@ class AVGLAsset:
         self.shake_intensity = shake_intensity
         self.w_rotate = w_rotate
         self.video_volume = video_volume
+        self.fast_assembly = fast_assembly
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -461,7 +462,8 @@ def parse_avgl_json(json_text):
             scene.voice = s_data.get("voice") or script.voice
             scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed
             scene.pitch = s_data.get("pitch")
-            scene.pause = s_data.get("pause", 0.0)
+            try: scene.pause = float(s_data.get("pause", 0.0))
+            except: scene.pause = 0.0
             scene.subtitle = s_data.get("subtitle", "")
             scene.audio = s_data.get("audio") # v5.3: Custom Audio Support
             
@@ -538,7 +540,8 @@ def parse_avgl_json(json_text):
                             rotate=a_data.get("rotate"),
                             shake_intensity=a_data.get("shake_intensity", 5),
                             w_rotate=a_data.get("w_rotate"),
-                            video_volume=a_data.get("video_volume")
+                            video_volume=a_data.get("video_volume"),
+                            fast_assembly=a_data.get("fast_assembly", False)
                         ))
 
                 for sfx_data in s_data.get("sfx", []):

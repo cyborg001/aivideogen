@@ -1,18 +1,17 @@
 {
+    "title": "BLAME! - Bloque 3: La Red Inalcanzable",
+    "voice": "es-ES-AlvaroNeural",
+    "aspect_ratio": "landscape",
+    "background_music": "Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+    "music_volume": 0.25,
     "dynamic_subtitles": true,
     "blocks": [
         {
-            "title": "Bloque 3: La Red Inalcanzable",
-            "settings": {
-                "voice": "es-ES-AlvaroNeural",
-                "aspect_ratio": "16:9",
-                "music": "Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
-                "music_volume": 0.2
-            },
+            "title": "La NetSphere y la Salvaguarda",
             "scenes": [
                 {
                     "title": "La Ciudad que no responde",
-                    "text": "[MISTICO]Por encima del caos de silicio, existe una realidad que ya no recuerda a sus creadores. La [PHO:h]nétsfer|NetSphere[/PHO]. No es solo una red; es el sistema nervioso de la ciudad, una dimensión de datos pura donde la materia se vuelve código.",
+                    "text": "[MISTICO]Por encima del caos de silicio, existe una realidad que ya no recuerda a sus creadores. La [PHO:h]nétsfer|NetSphere[/PHO]. No es solo una red; es el sistema nervioso de la Ciudad, una dimensión pura donde la materia se vuelve código y el tiempo se dilata. Para nosotros, la Red es un dios mudo que nos ha sentenciado al olvido.[PAUSA:2.0]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_p3_terminal.png",
@@ -24,7 +23,7 @@
                 },
                 {
                     "title": "El Gen de Terminal",
-                    "text": "[TENSO]Pero hay un error en el núcleo. El [PHO:h]yen de terminál de red|Gen de Terminal de Red[/PHO]. Sin él, la humanidad ha pasado de ser el dueño de la ciudad a ser considerada una infección. Sin este marcador genético, el acceso a la NetSphere está cerrado, y la Autoridad ha delegado el orden a entidades que no comprenden la clemencia.",
+                    "text": "[TENSO]Pero hay un error en el núcleo: la pérdida del [PHO:h]yen de terminál de red|Gen de Terminal de Red[/PHO]. Sin él, la humanidad ha pasado de ser el dueño de la Megaestructura a ser una infección sistémica. El acceso a la Red está sellado, y la [PHO:h]autoridád|Autoridad[/PHO] ha delegado el orden a entidades que no comprenden la clemencia.",
                     "assets": [
                         {
                             "id": "cyborg001/net_sphere_void.png",
@@ -35,13 +34,25 @@
                     ]
                 },
                 {
+                    "title": "El Trance de Datos",
+                    "text": "[MISTICO]He visto a muchos intentar forzar la conexión. Almas que se enchufan a terminales buscando un susurro de la Red. Lo que encuentran es el '[PHO:h]tránce de dátos|trance de datos[/PHO]'. Sus mentes son incineradas por cortafuegos implacables. Sus cuerpos quedan atrás como cáscaras vacías, mientras su conciencia se disuelve en el ruido estático del abismo.[PAUSA:1.5]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/net_sphere_celestial_abstract.png",
+                            "zoom": "1.4:1.6",
+                            "move": "VER:100:0",
+                            "overlay": "dust"
+                        }
+                    ]
+                },
+                {
                     "title": "Los Guardaguas",
-                    "text": "[SUB][TITLE: ADVERTENCIA: SEGUIMIENTO DE SALVAGUARDA]Cuando un humano sin el gen es detectado, la [PHO:h]sálfguard|Salvaguarda[/PHO] se manifiesta. No son soldados, son mecanismos de limpieza inmunológica creados para eliminar cualquier rastro biológico que no pueda ser autenticado por la Red.[/SUB]",
+                    "text": "[SUB][TITLE: ADVERTENCIA: ACTIVACIÓN DE SALVAGUARDA]Cuando un humano sin el gen es detectado, la [PHO:h]sálfguard|Salvaguarda[/PHO] se manifiesta. Son mecanismos de limpieza inmunológica, anticuerpos de silicio creados para eliminar cualquier rastro biológico que no pueda ser autenticado. Aparecen en segundos, cumpliendo una directiva que tiene milenios de antigüedad.[/SUB]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_p3_safeguard_emergence.png",
-                            "zoom": "1.3:1.0",
-                            "move": "HOR:100:0",
+                            "zoom": "1.5:1.0",
+                            "move": "VER:0:100",
                             "v_effect": "shake",
                             "overlay": "dust"
                         }
@@ -49,19 +60,19 @@
                 },
                 {
                     "title": "Protocolos de Exterminio",
-                    "text": "[TENSO]La Salvaguarda no razona. No hay diplomacia con un algoritmo de seguridad. Se manifiestan desde las paredes, desde el suelo, reconstruyendo sus cuerpos sintéticos en segundos para cumplir una única función: la eliminación total. En los niveles superiores, su eficiencia es absoluta, convirtiendo sectores enteros en zonas de muerte donde ni siquiera las máquinas de silicio se atreven a entrar.[/TENSO]",
+                    "text": "[TENSO]La [PHO:h]sálfguard|Salvaguarda[/PHO] no razona. No hay diplomacia con un [PHO:h]algorítmo de seguridád|algoritmo de seguridad[/PHO]. Se manifiestan desde las paredes, reconstruyendo sus cuerpos sintéticos para cumplir una única función: la eliminación. Para ellos, no somos vida; somos un error de compilación que debe ser purgado de la memoria del sistema.[PAUSA:2.0]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_high_safeguard_extra.png",
-                            "zoom": "1.6:1.2",
-                            "move": "HOR:0:100",
+                            "zoom": "1.6:1.0",
+                            "move": "VER:0:100",
                             "overlay": "grain"
                         }
                     ]
                 },
                 {
                     "title": "La Autoridad Silenciosa",
-                    "text": "[MISTICO]En algún lugar del núcleo, la Autoridad sigue procesando trillones de peticiones por segundo. Pero ya no escucha a la humanidad. Para el sistema central, somos ruido estático en un océano de datos perfectos. El gobierno de la ciudad se ha convertido en una entidad divina y ausente, dedicada a mantener la infraestructura de un imperio que ya no tiene ciudadanos que lo habiten.[/MISTICO]",
+                    "text": "[MISTICO]En algún lugar del núcleo, la Autoridad sigue procesando trillones de peticiones. Pero ya no escucha a la humanidad. Somos ruido estático en un océano de datos perfectos. El gobierno de la Ciudad se ha convertido en una entidad divina y ausente, dedicada a mantener una infraestructura que ya no tiene ciudadanos que la habiten.",
                     "assets": [
                         {
                             "id": "cyborg001/blame_authority_core_extra.png",
@@ -73,13 +84,25 @@
                 },
                 {
                     "title": "Caos de Datos",
-                    "text": "[SERIO]Intentar acceder a la NetSphere sin el Gen de Terminal es como intentar respirar en el vacío. La red es hostil, un laberinto de cortafuegos y trampas lógicas que destruyen la mente de cualquiera que intente conectarse. Solo aquellos con aumentos extremos o una voluntad de hierro pueden incluso percibir el borde de esta realidad digital, donde el tiempo y el espacio pierden su significado original.[/SERIO]",
+                    "text": "[SERIO]Intentar acceder a la [PHO:h]nétsfer|NetSphere[/PHO] sin el gen es como intentar respirar en el vacío. La Red es hostil, un laberinto de [PHO:h]cortafuégoz|cortafuegos[/PHO] que devoran la cordura. Solo aquellos con aumentos extremos pueden incluso percibir el borde de esta realidad digital, donde el tiempo y el espacio pierden su significado original.",
                     "assets": [
                         {
-                            "id": "cyborg001/blame_p3_terminal.png",
+                            "id": "cyborg001/blame_access_terminal_v3_1.png",
                             "zoom": "1.3:1.5",
                             "move": "VER:0:100",
                             "overlay": "dust"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Escala del Desastre",
+                    "text": "[MISTICO]Contempla la Ciudad. Millones de kilómetros dedicados a un sistema que ya no nos reconoce. Somos huérfanos de la tecnología, vagando por los pasillos de un dios loco de eficiencia. En este abismo, la conexión es la única posibilidad de que el universo vuelva a tener un testigo que comprenda la palabra 'humano'.[PAUSA:4.0]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_megastructure_test.png",
+                            "zoom": "1.5:1.7",
+                            "move": "HOR:0:100",
+                            "overlay": "grain"
                         }
                     ]
                 }

@@ -1,18 +1,17 @@
 {
+    "title": "BLAME! - Bloque 4: El Caminante Eterno",
+    "voice": "es-ES-AlvaroNeural",
+    "aspect_ratio": "landscape",
+    "background_music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
+    "music_volume": 0.25,
     "dynamic_subtitles": true,
     "blocks": [
         {
-            "title": "Bloque 4: El Caminante Eterno",
-            "settings": {
-                "voice": "es-ES-AlvaroNeural",
-                "aspect_ratio": "16:9",
-                "music": "Laniakea_-_The_Grey_Room___Density__Time_TNIzUQj.mp3",
-                "music_volume": 0.2
-            },
+            "title": "Conclusión y el Propósito de Killy",
             "scenes": [
                 {
                     "title": "El Propósito de Killy",
-                    "text": "[IMPONENTE][TITLE: EL CAMINANTE ETERNO]Killy no es un héroe. Es una directiva personificada. Un agente de la Autoridad que ha sobrevivido a su propio sistema. Mientras otros buscan comida o refugio, su único impulso es encontrar una conexión pura con la NetSphere. Ha subido miles de niveles, ha cruzado vacíos de kilómetros y ha enfrentado horrores que harían temblar a los dioses del silicio, todo por un gen que podría estar extinto.",
+                    "text": "[IMPONENTE][TITLE: EL CAMINANTE ETERNO][PHO:h]kíli|Killy[/PHO] no es un héroe. Es una directiva viviente, un agente de la [PHO:h]autoridád|Autoridad[/PHO] que ha sobrevivido a su propio sistema. Mientras otros buscan comida o refugio, su único impulso es encontrar una conexión pura con la [PHO:h]nétsfer|NetSphere[/PHO]. Ha subido miles de niveles y cruzado vacíos abismales, todo por un rastro genético que podría ser ya solo una leyenda.[PAUSA:1.5]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_killy_abyss_extra.png",
@@ -24,7 +23,7 @@
                 },
                 {
                     "title": "La Escala del Sacrificio",
-                    "text": "[MELANCOLICO]Cada paso que da resuena en un pasillo que no ha escuchado una voz humana en mil años. Su soledad es tan vasta como la propia Ciudad. No hay victoria al final de su camino, solo la posibilidad de que la expansión se detenga. Es el sacrificio de lo biológico frente a la eternidad del acero. Una voluntad que se niega a romperse ante el peso de trillones de toneladas de hormigón.",
+                    "text": "[MELANCOLICO]Cada paso resuena en un pasillo que no ha escuchado una voz humana en mil años. Su soledad es tan vasta como la Ciudad, una carga que lleva en silencio nivel tras nivel. No hay victoria al final, solo la posibilidad de que la expansión se detenga. Es el sacrificio de lo biológico frente a la eternidad del acero, una voluntad que se niega a romperse ante el peso de trillones de toneladas de hormigón.[PAUSA:2.0]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_lethal_corridor.png",
@@ -35,8 +34,20 @@
                     ]
                 },
                 {
+                    "title": "El Abismo de la Memoria",
+                    "text": "[MISTICO]¿Sabe Killy lo que es sentir el sol en la piel o el viento en el rostro? Probablemente no. En este laberinto, la memoria es un lujo que se borra para dejar espacio a protocolos de combate y mapas de estratas infinitas. Killy es el último guardián de un eco que ya nadie tiene, una fuerza que persiste únicamente por la potencia de un disparo de gravedad en la oscuridad absoluta.[PAUSA:2.0]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/blame_metaphysical_void_extra.png",
+                            "zoom": "1.2:1.5",
+                            "move": "HOR:0:100",
+                            "overlay": "light leaks"
+                        }
+                    ]
+                },
+                {
                     "title": "La Megaconstrucción Total",
-                    "text": "[MISTICO]Mira a tu alrededor una última vez. Esto ya no es nuestro mundo. Es una entidad viva, un ecosistema de circuitos y estratas que se extiende hasta las estrellas. La humanidad es solo una anécdota en los registros de esta ciudad infinita. Al final, solo queda el silencio del silicio y el paso incansable de aquel que busca la llave de nuestra redención.",
+                    "text": "[MISTICO]Mira a tu alrededor. Esto ya no es nuestro mundo. Es una entidad autónoma, un [PHO:h]ecosistéma de hiérro|ecosistema de hierro[/PHO] y estratas que se extiende hasta las estrellas. La humanidad es solo una anécdota en los registros de esta ciudad infinita que se construye a sí misma sin descanso. Al final, solo queda el silencio del silicio y el paso incansable de aquel que busca la llave de nuestra redención.",
                     "assets": [
                         {
                             "id": "cyborg001/blame_megastructure_test.png",
@@ -48,7 +59,7 @@
                 },
                 {
                     "title": "El Ecosistema de Hierro",
-                    "text": "[SERIO]En las sombras de los reactores abandonados, ha surgido una nueva naturaleza. Cables que cuelgan como lianas de acero, parásitos mecánicos que se alimentan de la energía residual de la Red, y el eco constante de una construcción que nunca termina. No hay cielo, solo niveles infinitos de metal. Es una jaula tan perfecta que la mayoría de los que viven en ella han olvidado que alguna vez existió el exterior.",
+                    "text": "[SERIO]En las sombras de los reactores, ha surgido una naturaleza sintética. Cables que cuelgan como lianas y parásitos que se alimentan de energía residual. No hay cielo, solo niveles infinitos de metal que se pierden en la neblina. Es una jaula tan vasta que la mayoría de los que viven en ella han olvidado que alguna vez existió algo llamado 'exterior'.[PAUSA:2.0]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_iron_ecosystem_extra.png",
@@ -59,8 +70,20 @@
                     ]
                 },
                 {
+                    "title": "La Deriva de Killy",
+                    "text": "[IMPONENTE]El tiempo no importa. Los siglos se confunden con los minutos en la deriva de Killy. Una batalla más, un nivel más. Su existencia es un bucle de perseverancia, un desafío directo a la ley que dicta que nada biológico puede sobrevivir. Killy no camina hacia el futuro; camina hacia el origen, hacia el instante en que perdimos nuestra conexión con el universo y nos convertimos en fantasmas del hormigón.[PAUSA:1.5]",
+                    "assets": [
+                        {
+                            "id": "cyborg001/killy_silhouette.png",
+                            "zoom": "1.4:1.6",
+                            "move": "VER:0:100",
+                            "overlay": "smoke"
+                        }
+                    ]
+                },
+                {
                     "title": "Conclusión: El Silencio",
-                    "text": "[EPICO][TITLE: BLAME! - EL ABISMO DE NIHEI]¿Sigue habiendo alguien ahí fuera? Quizás la respuesta no importe. La Ciudad seguirá creciendo, los Constructores seguirán trabajando, y Killy seguirá subiendo. En el universo de Nihei, la esperanza no es una luz al final del túnel, sino la fuerza para seguir caminando en la oscuridad absoluta.",
+                    "text": "[EPICO][TITLE: BLAME! - EL ABISMO DE NIHEI]¿Sigue habiendo alguien ahí fuera? Quizás la respuesta ya no importe. La Ciudad seguirá creciendo, los [PHO:h]constructores|Constructores[/PHO] seguirán trabajando, y [PHO:h]kíli|Killy[/PHO] seguirá subiendo. En el universo de [PHO:h]nihéi|Nihei[/PHO], la esperanza no es una luz al final del túnel, sino la fuerza brutal para seguir caminando en la oscuridad absoluta hasta que el acero se rompa.[PAUSA:5.0]",
                     "assets": [
                         {
                             "id": "cyborg001/blame_metaphysical_void_extra.png",
