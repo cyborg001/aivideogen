@@ -31,7 +31,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -43,6 +43,7 @@ class AVGLAsset:
         self.w_rotate = w_rotate
         self.video_volume = video_volume
         self.fast_assembly = fast_assembly
+        self.cinema_mode = cinema_mode
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -474,18 +475,26 @@ def parse_avgl_json(json_text):
             
             for a_data in s_data.get("assets", []):
                 if isinstance(a_data, str): scene.assets.append(AVGLAsset(a_data))
-                else: scene.assets.append(AVGLAsset(
-                    a_data.get("id") or a_data.get("type"), 
-                    a_data.get("zoom"), 
-                    a_data.get("move"), 
-                    a_data.get("overlay"), 
-                    a_data.get("fit", False),
-                    shake=a_data.get("shake", False),
-                    rotate=a_data.get("rotate"),
-                    shake_intensity=a_data.get("shake_intensity", 5),
-                    w_rotate=a_data.get("w_rotate"),
-                    video_volume=a_data.get("video_volume")
-                ))
+                else: 
+                    # v15.1: Robust Path Detection (id vs type)
+                    target_id = a_data.get("id")
+                    if not target_id or target_id in ['video', 'image']:
+                        target_id = a_data.get("type")
+                    
+                    scene.assets.append(AVGLAsset(
+                        target_id, 
+                        a_data.get("zoom"), 
+                        a_data.get("move"), 
+                        a_data.get("overlay"), 
+                        a_data.get("fit", False),
+                        shake=a_data.get("shake", False),
+                        rotate=a_data.get("rotate"),
+                        shake_intensity=a_data.get("shake_intensity", 5),
+                        w_rotate=a_data.get("w_rotate"),
+                        video_volume=a_data.get("video_volume"),
+                        fast_assembly=a_data.get("fast_assembly", False),
+                        cinema_mode=a_data.get("cinema_mode", False)
+                    ))
             
             for sfx_data in s_data.get("sfx", []):
                 if isinstance(sfx_data, str): scene.sfx.append(AVGLSFX(sfx_data))

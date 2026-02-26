@@ -22,14 +22,14 @@
 | # | Institución | Producto | Saldo (RD$) | Tasa | Cuota Mensual |
 | :-- | :--- | :--- | :--- | :--- | :--- |
 | 1 | Banreservas | Credimas | **16,000.00** | **60.00%** | **3,000.00** |
-| 2 | Banreservas | TC | 15,304.22 | **60.00%** | Variable |
-| 3 | Banreservas | TC | 17,663.35 | **60.00%** | Variable |
-| 4 | Banreservas | TC | 9,500.00 | **60.00%** | Variable |
-| 5 | Qik | TC | 155,922.65 | **60.00%** | Variable |
+| 2 | Banreservas | TC | **8,749.80** | **60.00%** | Variable |
+| 3 | Banreservas | TC | **156,873.30** | **60.00%** | Variable |
+| 4 | Banreservas | TC | **14,365.30** | **60.00%** | Variable |
+| 5 | Qik | TC | **149,824.59** | **60.00%** | Variable |
 | 6 | Banreservas | Préstamo | 568,061.88 | 23.99% | 17,437.67 |
 | 7 | Scotiabank | Préstamo | 59,848.25 | 19.20% | 4,321.70 |
 | 8 | Banreservas | Préstamo | 1,294,052.00 | 10.90% | 27,535.85 |
-| | **TOTALES** | | **2,136,352.35** | | **52,295.22** |
+| | **TOTALES** | | **2,267,775.12** | | **52,295.22** |
 
 ---
 
@@ -48,11 +48,11 @@
 
 | Mes | Deuda Objetivo | Pago Extra | Resultado |
 | :--- | :--- | :--- | :--- |
-| 7 | TC Pequeña (9.5k) | 11,073.71 | ✅ ELIMINADA |
-| 8-9 | TC Mediana (15.3k) | 11,073.71 | ✅ ELIMINADA |
+| 7 | TC Banreservas 2 (8.7k) | 11,073.71 | ✅ ELIMINADA |
+| 8-9 | TC Banreservas 4 (14.3k) | 11,073.71 | ✅ ELIMINADA |
 | 10-11 | Credimas (16k) | 11,073.71 + 3k | ✅ ELIMINADA |
-| 12-13 | TC Nueva (17.6k) | 14,073.71* | ✅ ELIMINADA |
-| 14-25 | TC Qik (155k) | 14,073.71 | ✅ ELIMINADA |
+| 12-23 | TC Qik (149.8k) | 14,073.71 | ✅ ELIMINADA |
+| 24-35 | TC Banreservas 3 (156.8k) | 14,073.71 | ✅ ELIMINADA |
 
 *\*Nota: El flujo aumenta a RD$ 14,073 tras liberar la cuota de Credimas.*
 
@@ -76,10 +76,10 @@
 ---
 
 ## 📊 Dashboard de Control
-*   **Deuda Total Actual:** RD$ 2,136,352
+*   **Deuda Total Actual:** RD$ 2,267,775
 *   **Estatus FE:** 🔴 RD$ 0 / RD$ 75,000
-*   **Estatus Deuda Tóxica:** 🔴 RD$ 214,390
-*   **Nueva Fecha Libertad:** ~92 meses.
+*   **Estatus Deuda Tóxica (60%):** 🔴 RD$ 345,813
+*   **Nueva Fecha Libertad:** ~98 meses.
 
 > [!TIP]
 > **Oportunidad:** Lograr +RD$ 20,000/mes extra reduce el tiempo de libertad de 92 meses a solo 45 meses.

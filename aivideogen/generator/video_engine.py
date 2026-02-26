@@ -74,6 +74,45 @@ try:
     logger.info("🛡️ [SYSTEM] Absolute Audio Immunity Active (MoviePy patched).")
 except Exception as e:
     logger.warning(f"⚠️ [SYSTEM] Could not apply Audio Immunity: {e}")
+
+def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0):
+    """
+    v15.0: Direct FFmpeg Muxing (Stream Copy)
+    Combines video and audio without re-encoding pixels.
+    Nearly instantaneous.
+    """
+    import subprocess
+    
+    # v15.4: Clean Replacement (No amix)
+    # The new audio_path TOTALLY replaces the video's original audio.
+    # This prevents tone/speed alterations and keeps the process simple.
+    cmd = [
+        'ffmpeg', '-i', video_path, '-i', audio_path,
+        '-c:v', 'copy', 
+        '-c:a', 'aac', 
+        '-map', '0:v:0', '-map', '1:a:0',
+        '-shortest', '-y', output_path
+    ]
+
+    # Apply volume to the NEW audio if specified (rare in fast mode but supported)
+    if video_volume != 1.0 and video_volume > 0:
+        cmd = [
+            'ffmpeg', '-i', video_path, '-i', audio_path,
+            '-c:v', 'copy',
+            '-filter_complex', f'[1:a]volume={video_volume}[a]',
+            '-map', '0:v:0', '-map', '[a]',
+            '-c:a', 'aac',
+            '-shortest', '-y', output_path
+        ]
+
+    logger.info(f"🚀 [FastAssembly] Ejecutando Muxing de Reemplazo: {' '.join(cmd)}")
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return True
+    except Exception as e:
+        logger.error(f"❌ [FastAssembly] Error en Muxing: {e}")
+        if hasattr(e, 'stderr'): logger.error(f"   Stderr: {e.stderr}")
+        return False
 # ═══════════════════════════════════════════════════════════════════
 
 def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
@@ -1155,8 +1194,10 @@ def generate_video_avgl(project):
                             raw_v_vol = getattr(asset, 'video_volume', None)
                             v_vol = float(raw_v_vol) if raw_v_vol is not None else 1.0
                             
-                            # v14.8: Auto-Persistence (Cinema mode)
-                            if v_vol > 0 and voice_duration < 1.0:
+                            # v15.2: Explicit Cinema mode (Auto-Persistence)
+                            is_cinema = getattr(asset, 'cinema_mode', False)
+                            
+                            if is_cinema and voice_duration < 1.0:
                                 try:
                                     from moviepy import VideoFileClip
                                     temp_v = VideoFileClip(asset_path)
@@ -1168,14 +1209,59 @@ def generate_video_avgl(project):
                                     logger.log(f"    ⚠️ Error en Auto-Persistencia: {e}")
 
                             logger.log(f"  📽️ Asset detectado como VÍDEO (v14.0): {os.path.basename(asset_path)} | Sync: {sync_start_time:.2f}s | Vol: {v_vol}")
-                            clip = process_video_asset(
-                                asset_path, duration, target_size,
-                                overlay_path=overlay_path,
-                                fit=asset.fit,
-                                clips_to_close=clips_to_close,
-                                start_time=sync_start_time,
-                                video_volume=v_vol
-                            )
+                            
+                            # v15.0: Fast Assembly Check
+                            is_fast = getattr(asset, 'fast_assembly', False)
+                            
+                            if is_fast and not overlay_path:
+                                # v15.5: Pure Fast Path (Direct Copy for Master Assembly)
+                                if not audio_clip and v_vol == 1.0 and is_cinema:
+                                    logger.log(f"    🚀 [FastAssembly] MODO ENSAMBLAJE PURO: Copia directa de {os.path.basename(asset_path)}")
+                                    clip = VideoFileClip(asset_path)
+                                    if clips_to_close is not None: clips_to_close.append(clip)
+                                    if clip.size != target_size: clip = clip.resized(target_size)
+                                    is_fast_success = True
+                                else:
+                                    logger.log(f"    ⚡ [FastAssembly] Modo Inyección Directa Activado para: {os.path.basename(asset_path)}")
+                                    # 1. Prepare scene audio (Voice or Silence)
+                                    temp_scene_audio = os.path.join(temp_audio_dir, f"fast_audio_{s_idx}.aac")
+                                    
+                                    if audio_clip:
+                                        audio_clip.write_audiofile(temp_scene_audio, logger=None)
+                                    else:
+                                        # Inyectar silencio de la duración de la escena
+                                        logger.log(f"    🔇 Inyectando silencio de {duration:.2f}s para inyección directa.")
+                                        from moviepy import AudioClip
+                                        silent_audio = AudioClip(lambda t: 0, duration=duration)
+                                        silent_audio.write_audiofile(temp_scene_audio, fps=44100, logger=None)
+                                        silent_audio.close()
+                                    
+                                    # 2. Mux
+                                    temp_scene_video = os.path.join(temp_audio_dir, f"fast_scene_{s_idx}.mp4")
+                                    success = fast_mux_audio_video(asset_path, temp_scene_audio, temp_scene_video, video_volume=v_vol if audio_clip else 0.0)
+                                    
+                                    if success:
+                                        from moviepy import VideoFileClip
+                                        clip = VideoFileClip(temp_scene_video)
+                                        if clips_to_close is not None: clips_to_close.append(clip)
+                                        if clip.size != target_size: clip = clip.resized(target_size)
+                                        is_fast_success = True
+                                    else:
+                                        logger.log(f"    ⚠️ Falló FastAssembly. Reintentando con renderizado estándar.")
+                                        is_fast_success = False
+                                
+                                if not is_fast_success:
+                                    is_fast = False # Fallback to standard
+                                    
+                            if not is_fast or overlay_path:
+                                clip = process_video_asset(
+                                    asset_path, duration, target_size,
+                                    overlay_path=overlay_path,
+                                    fit=asset.fit,
+                                    clips_to_close=clips_to_close,
+                                    start_time=sync_start_time,
+                                    video_volume=v_vol
+                                )
                         else:
                             # Apply Ken Burns (Standard image logic)
                             clip = apply_ken_burns(
