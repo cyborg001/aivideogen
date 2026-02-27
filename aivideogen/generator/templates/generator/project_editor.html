@@ -1877,22 +1877,22 @@
                     // Si ya es una URL absoluta (HTTP), no tocar
                     if (normalizedPath.startsWith('http')) return normalizedPath;
 
-                    // v16.0 Robust Resolution: Extraer /media/ de cualquier ruta absoluta o ya formateada
-                    const mediaIndex = normalizedPath.toLowerCase().indexOf('media/');
+                    // v16.1 Hybrid Resolution: Intentar extraer /media/ incluso de rutas de disco duro
+                    const lowPath = normalizedPath.toLowerCase();
+                    const mediaIndex = lowPath.indexOf('media/');
                     if (mediaIndex !== -1) {
                         return '/' + normalizedPath.substring(mediaIndex);
                     }
 
-                    // Si empieza con "assets/", añadir /media/ al principio (vanguardia local)
+                    // Si empieza con "assets/", añadir /media/ al principio
                     if (normalizedPath.startsWith('assets/')) return '/media/' + normalizedPath;
 
                     // Si ya es una ruta relativa al root que empieza con /, devolver tal cual
                     if (normalizedPath.startsWith('/')) return normalizedPath;
 
-                    // Evitar rutas absolutas de Windows que el navegador no puede cargar (ej: C:/Users/...)
-                    // Si llegamos aquí y tiene formato de disco, probablemente está fuera de media/
+                    // Seguridad: Bloquear rutas absolutas de disco que el navegador no cargará
                     if (normalizedPath.match(/^[a-zA-Z]:/)) {
-                        console.warn("[Editor] Ruta absoluta fuera de media detectada:", normalizedPath);
+                        console.warn("[Editor] Ruta absoluta bloqueada por navegador. El backend debería haberla convertido a relativa:", normalizedPath);
                         return '';
                     }
 

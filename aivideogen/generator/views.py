@@ -933,12 +933,20 @@ def get_project_script_json(request, project_id):
     def normalize_asset_path(path):
         if not path or not isinstance(path, str) or path.startswith('http'):
             return path
-        # Normalize slashes
-        p = path.replace('\\', '/')
-        # If absolute path containing 'media', extract relative part
-        if 'media/' in p:
-            return '/' + p[p.find('media/'):]
-        return p
+        
+        # Lowercase for robust detection of 'media/'
+        p_low = path.replace('\\', '/').lower()
+        media_idx = p_low.find('media/')
+        
+        if media_idx != -1:
+            # Extract relative part starting from /media/
+            return '/' + path.replace('\\', '/')[media_idx:]
+            
+        # If it starts with 'assets/', assume it's in media
+        if p_low.startswith('assets/'):
+            return '/media/' + path.replace('\\', '/')
+            
+        return path.replace('\\', '/')
 
     def repair_scene_assets(scene):
         nonlocal repaired
@@ -1047,42 +1055,36 @@ def save_project_script_json(request, project_id):
         if 'script' in data:
             script_data = data['script']
             
-            # SANITIZATION: Clean Asset URLs to Basenames (v11.8 Persistence Fix)
-            # This ensures DB always stores filename, not full URL from frontend
+            # SANITIZATION: Clean Asset URLs and Paths to Relative format (v11.8 Persistence Fix)
+            # This ensures DB always stores relative paths or basenames, never drive letters (C:)
             try:
-                if isinstance(script_data, dict) and 'blocks' in script_data:
-                    for block in script_data['blocks']:
-                        # Block Scenes
-                        if 'scenes' in block:
-                            for scene in block['scenes']:
-                                if 'assets' in scene:
-                                            for asset in scene['assets']:
-                                                if isinstance(asset, dict):
-                                                    for key in ['id', 'type']:
-                                                        if key in asset:
-                                                            val = str(asset[key])
-                                                            if ('://' in val or ':\\' in val or '/media/' in val):
-                                                                # v11.9 Fix: Preserve Absolute Paths if they exist locally
-                                                                is_valid_abs = False
-                                                                try:
-                                                                    if os.path.isabs(val) and os.path.exists(val):
-                                                                        is_valid_abs = True
-                                                                except: pass
+                def clean_script_assets(obj):
+                    if isinstance(obj, list):
+                        for item in obj: clean_script_assets(item)
+                    elif isinstance(obj, dict):
+                        # 1. Handle actual assets in 'assets' array
+                        if 'assets' in obj and isinstance(obj['assets'], list):
+                            for asset in obj['assets']:
+                                if isinstance(asset, dict):
+                                    for key in ['id', 'type', 'path']:
+                                        if key in asset and isinstance(asset[key], str):
+                                            asset[key] = normalize_asset_path(asset[key])
+                        # 2. Handle group/block master_assets
+                        if 'master_asset' in obj:
+                            if isinstance(obj['master_asset'], str):
+                                obj['master_asset'] = normalize_asset_path(obj['master_asset'])
+                            elif isinstance(obj['master_asset'], dict) and 'id' in obj['master_asset']:
+                                obj['master_asset']['id'] = normalize_asset_path(obj['master_asset']['id'])
+                        
+                        # Recursive call for nested blocks/groups
+                        for k, v in obj.items():
+                            if k in ['blocks', 'scenes', 'groups']:
+                                clean_script_assets(v)
 
-                                                                if not is_valid_abs:
-                                                                    asset[key] = os.path.basename(val)
-                        # Groups
-                        if 'groups' in block:
-                            for group in block['groups']:
-                                if 'scenes' in group:
-                                    for scene in group['scenes']:
-                                        if 'assets' in scene:
-                                            for asset in scene['assets']:
-                                                 if isinstance(asset, dict) and 'type' in asset:
-                                                     if '://' in asset['type'] or '/media/' in asset['type']:
-                                                         asset['type'] = os.path.basename(asset['type'])
+                if isinstance(script_data, dict):
+                    clean_script_assets(script_data)
             except Exception as e:
-                pass # Don't break save if structure is weird
+                logger.warning(f"[Persistence Fix] Error sanitizing assets: {e}")
         
         project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
         
