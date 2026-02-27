@@ -909,6 +909,24 @@ def text_to_json_api(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
+def normalize_asset_path(path):
+    if not path or not isinstance(path, str) or path.startswith('http'):
+        return path
+    
+    # Lowercase for robust detection of 'media/'
+    p_low = path.replace('\\', '/').lower()
+    media_idx = p_low.find('media/')
+    
+    if media_idx != -1:
+        # Extract relative part starting from /media/
+        return '/' + path.replace('\\', '/')[media_idx:]
+        
+    # If it starts with 'assets/', assume it's in media
+    if p_low.startswith('assets/'):
+        return '/media/' + path.replace('\\', '/')
+        
+    return path.replace('\\', '/')
+
 def get_project_script_json(request, project_id):
     """API: Returns the project script as JSON. Auto-validates/initializes."""
     project = get_object_or_404(VideoProject, id=project_id)
@@ -930,23 +948,6 @@ def get_project_script_json(request, project_id):
     # --- AUTO-REPAIR & NORMALIZE ASSETS ---
     repaired = False
     
-    def normalize_asset_path(path):
-        if not path or not isinstance(path, str) or path.startswith('http'):
-            return path
-        
-        # Lowercase for robust detection of 'media/'
-        p_low = path.replace('\\', '/').lower()
-        media_idx = p_low.find('media/')
-        
-        if media_idx != -1:
-            # Extract relative part starting from /media/
-            return '/' + path.replace('\\', '/')[media_idx:]
-            
-        # If it starts with 'assets/', assume it's in media
-        if p_low.startswith('assets/'):
-            return '/media/' + path.replace('\\', '/')
-            
-        return path.replace('\\', '/')
 
     def repair_scene_assets(scene):
         nonlocal repaired
