@@ -8,12 +8,14 @@
             "scenes": [
                 {
                     "title": "El Túnel Geodésico",
-                    "text": "[TITLE]Bloque 1: El Gancho (La Visión)[/TITLE] Ethan Ramírez despertó con el corazón martilleando contra las costillas. Acababa de salir de ese sueño otra vez. Una interfaz [PHO:hache u de|HUD] inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un agujero de gusano.",
+                    "text": "[TITLE]Prólogo: El Velo Gravitacional[/TITLE] [SUSPENSO]Ethan Ramírez despertó con el corazón martilleando contra las costillas.[PAUSA:0.5] Acababa de salir de ese sueño otra vez.[/SUSPENSO] [EPICO]Una interfaz [PHO:hache u de|HUD:h] inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un [PHO:aguhero de gusano|agujero de gusano:h].[/EPICO]",
                     "assets": [
                         {
                             "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
-                            "zoom": "1.0:1.4",
+                            "zoom": "1.0:1.6",
                             "move": "HOR:50:50 + VER:0:100",
+                            "shake": true,
+                            "shake_intensity": 8,
                             "fit": false
                         }
                     ]
@@ -55,12 +57,13 @@
                 {
                     "title": "El Llamado",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "[TITLE]Bloque 3: El Taller de Carlos[/TITLE] —¡Ethan! ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
+                    "text": "[TITLE]El Taller de Carlos[/TITLE] —¡Ethan! [PAUSA:0.3] ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
                     "assets": [
                         {
                             "id": "carlos_taller_steampunk_png_1772310858143.png",
-                            "zoom": "1.1:1.1",
+                            "zoom": "1.1:1.2",
                             "move": "HOR:50:60",
+                            "shake": false,
                             "fit": false
                         }
                     ]
@@ -86,12 +89,12 @@
                 {
                     "title": "Bajo la Lona",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "[TITLE]Bloque 4: El Regalo[/TITLE] —Cion papi. Papi!... ¿Es lo que creo que es?",
+                    "text": "[TITLE]La Herencia[/TITLE] [SUSURRO]—Cion papi. [PAUSA:0.5] Papi!... ¿Es lo que creo que es?[/SUSURRO]",
                     "assets": [
                         {
                             "id": "ethan_looking_at_gift.png",
-                            "zoom": "1.1:1.3",
-                            "move": "VER:50:60",
+                            "zoom": "1.1:1.4",
+                            "move": "VER:50:40",
                             "fit": false
                         }
                     ]
@@ -99,11 +102,11 @@
                 {
                     "title": "Revelación de la Moto",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "—¡Jajaja! Dios te bendiga, mijo. No es una de esas máquinas de lujo, pero tiene un núcleo de inducción Clase 3. Es puro hierro, Ethan. Latido puro.",
+                    "text": "[RISA]—¡Jajaja! [PAUSA:0.4] Dios te bendiga, mijo.[/RISA] [EPICO]No es una de esas máquinas de lujo, pero tiene un [PHO:núcleo de inducción|núcleo de inducción:h] Clase 3. Es puro hierro, Ethan. [PHO:Latido puro|Latido puro:h].[/EPICO]",
                     "assets": [
                         {
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
-                            "zoom": "1.3:1.0",
+                            "zoom": "1.4:1.0",
                             "move": "HOR:100:0",
                             "fit": false
                         }
@@ -130,11 +133,11 @@
                 {
                     "title": "Consejo de Padre",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "—Aprende a sentir el espacio-tiempo si tanto te gustan las motowaves. Puede que pronto necesites saber por dónde escapar cuando el cielo decida cerrarse.",
+                    "text": "[TENSO]—Aprende a sentir el [PHO:espacio tiempo|espacio-tiempo:h] si tanto te gustan las [PHO:mótoweivs|motowaves]. Puede que pronto necesites saber por dónde [PHO:escapar|escapar:h] cuando el cielo decida cerrarse.[/TENSO]",
                     "assets": [
                         {
                             "id": "carlos_warning_face_png_1772311268028.png",
-                            "zoom": "1.1:1.0",
+                            "zoom": "1.2:1.0",
                             "move": "HOR:0:10",
                             "fit": false
                         }
