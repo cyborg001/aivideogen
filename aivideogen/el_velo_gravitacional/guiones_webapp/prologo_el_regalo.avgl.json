@@ -9,7 +9,7 @@
             "scenes": [
                 {
                     "title": "El Túnel Geodésico",
-                    "text": "[TITLE]Prólogo: El Velo Gravitacional[/TITLE] [SUSPENSO]Ethan Ramírez despertó con el corazón martilleando contra las costillas.[PAUSA:0.5] Acababa de salir de ese sueño otra vez.[/SUSPENSO] [EPICO]Una interfaz [PHO:hache u de|HUD:h] inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un [PHO:aguhero de gusano|agujero de gusano:h].[/EPICO]",
+                    "text": "[TITLE]Prólogo: El Velo Gravitacional[/TITLE] Ethan Ramírez despertó con el corazón martilleando contra las costillas.[PAUSA:0.5] Acababa de salir de ese sueño otra vez. Una interfaz [PHO:hache u de|HUD:h] inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un [PHO:aguhero de gusano|agujero de gusano:h].",
                     "assets": [
                         {
                             "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
@@ -118,8 +118,8 @@
             "scenes": [
                 {
                     "title": "Bajo la Lona",
-                    "voice": "es-US-AlonsoNeural",
-                    "text": "[SUSURRO]—Cion papi. [PAUSA:0.5] Papi!... ¿Es lo que creo que es?[/SUSURRO]",
+                    "voice": "es-ES-AlvaroNeural",
+                    "text": "—Cion papi. [PAUSA:0.5] Papi!... ¿Es lo que creo que es?",
                     "assets": [
                         {
                             "id": "ethan_looking_at_gift.png",
@@ -131,8 +131,8 @@
                 },
                 {
                     "title": "Revelación de la Moto",
-                    "voice": "es-DO-EmilioNeural",
-                    "text": "[RISA]—¡Jajaja! [PAUSA:0.4] Dios te bendiga, mijo.[/RISA] [EPICO]No es una de esas máquinas de lujo, pero tiene un [PHO:núcleo de inducción|núcleo de inducción:h] Clase 3. Es puro hierro, Ethan. [PHO:Latido puro|Latido puro:h].[/EPICO]",
+                    "voice": "es-ES-AlvaroNeural",
+                    "text": "—¡Jajaja! [PAUSA:0.4] Dios te bendiga, mijo. No es una de esas máquinas de lujo, pero tiene un [PHO:núcleo de inducción|núcleo de inducción:h] Clase 3. Es puro hierro, Ethan. [PHO:Latido puro|Latido puro:h].",
                     "assets": [
                         {
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
@@ -170,8 +170,8 @@
                 },
                 {
                     "title": "Consejo de Padre",
-                    "voice": "es-DO-EmilioNeural",
-                    "text": "[TENSO]—Aprende a sentir el [PHO:espacio tiempo|espacio-tiempo:h] si tanto te gustan las [PHO:mótoweivs|motowaves]. Puede que pronto necesites saber por dónde [PHO:escapar|escapar:h] cuando el cielo decida cerrarse.[/TENSO]",
+                    "voice": "es-ES-AlvaroNeural",
+                    "text": "—Aprende a sentir el [PHO:espacio tiempo|espacio-tiempo:h] si tanto te gustan las [PHO:mótoweivs|motowaves]. Puede que pronto necesites saber por dónde [PHO:escapar|escapar:h] cuando el cielo decida cerrarse.",
                     "assets": [
                         {
                             "id": "carlos_warning_face_png_1772311268028.png",
