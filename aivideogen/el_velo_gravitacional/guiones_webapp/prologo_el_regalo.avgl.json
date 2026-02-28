@@ -1,0 +1,213 @@
+{
+    "title": "Prólogo: El Regalo - El Velo Gravitacional",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "prologue_cinematic_score.mp3",
+    "blocks": [
+        {
+            "title": "Bloque 1: El Gancho (La Visión)",
+            "scenes": [
+                {
+                    "title": "El Túnel Geodésico",
+                    "text": "Ethan Ramírez despertó con el corazón martilleando contra las costillas. Acababa de salir de ese sueño otra vez. Una interfaz HUD inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un agujero de gusano.",
+                    "assets": [
+                        {
+                            "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
+                            "zoom": "1.0:1.4",
+                            "move": "HOR:50:50 + VER:0:100",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 2: Realidad Industrial",
+            "scenes": [
+                {
+                    "title": "Amanecer en el Distrito RD",
+                    "text": "Despertó con el sabor amargo de la calima industrial. El aire del Distrito RD era una suspensión pesada cargada de residuos. Hoy cumplía diecisiete años.",
+                    "assets": [
+                        {
+                            "id": "distrito_rd_haze_png_1772310841360.png",
+                            "zoom": "1.2:1.0",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "El Domo de Goglee City",
+                    "text": "A través de la ventana, el domo de Goglee City brillaba a lo lejos con una pureza insultante. Una luna artificial a la que Ethan nunca tendría invitación.",
+                    "assets": [
+                        {
+                            "id": "goglee_city_dome_far_png_1772311229677.png",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:0:30",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 3: El Taller de Carlos",
+            "scenes": [
+                {
+                    "title": "El Llamado",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "—¡Ethan! ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
+                    "assets": [
+                        {
+                            "id": "carlos_taller_steampunk_png_1772310858143.png",
+                            "zoom": "1.1:1.1",
+                            "move": "HOR:50:60",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Descripción de Carlos",
+                    "voice": "es-ES-AlvaroNeural",
+                    "text": "Carlos lo esperaba junto al banco de trabajo. Un hombre de lógica férrea para quien el universo era una máquina vasta cuya única religión era el mantenimiento preventivo.",
+                    "assets": [
+                        {
+                            "id": "carlos_taller_steampunk_png_1772310858143.png",
+                            "zoom": "1.0:1.1",
+                            "move": "HOR:20:0",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 4: El Regalo",
+            "scenes": [
+                {
+                    "title": "Bajo la Lona",
+                    "voice": "es-US-AlonsoNeural",
+                    "text": "—Cion papi. Papi!... ¿Es lo que creo que es?",
+                    "assets": [
+                        {
+                            "id": "ethan_looking_at_gift.png",
+                            "zoom": "1.1:1.3",
+                            "move": "VER:50:60",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Revelación de la Moto",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "—¡Jajaja! Dios te bendiga, mijo. No es una de esas máquinas de lujo, pero tiene un núcleo de inducción Clase 3. Es puro hierro, Ethan. Latido puro.",
+                    "assets": [
+                        {
+                            "id": "fenix_motowave_hero_shot_png_1772310888361.png",
+                            "zoom": "1.3:1.0",
+                            "move": "HOR:100:0",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 5: El Misterio Técnico",
+            "scenes": [
+                {
+                    "title": "La Data Maldita",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "—En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
+                    "assets": [
+                        {
+                            "id": "carlos_monitor_data_png_1772311256218.png",
+                            "zoom": "1.0:1.5",
+                            "move": "HOR:50:50",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "Consejo de Padre",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "—Aprende a sentir el espacio-tiempo si tanto te gustan las motowaves. Puede que pronto necesites saber por dónde escapar cuando el cielo decida cerrarse.",
+                    "assets": [
+                        {
+                            "id": "carlos_warning_face_png_1772311268028.png",
+                            "zoom": "1.1:1.0",
+                            "move": "HOR:0:10",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 6: El Ritual",
+            "scenes": [
+                {
+                    "title": "Cion Papi (Ritual)",
+                    "voice": "es-US-AlonsoNeural",
+                    "text": "—Papi... Ción papi.",
+                    "assets": [
+                        {
+                            "id": "ethan_bowing_respect_v2_png_1772311525093.png",
+                            "zoom": "1.0:1.1",
+                            "move": "VER:0:20",
+                            "fit": false
+                        }
+                    ]
+                },
+                {
+                    "title": "La Bendición",
+                    "voice": "es-DO-EmilioNeural",
+                    "text": "—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y que nunca se le olvide: aunque el fango nos llegue al cuello, nosotros siempre miramos al cielo.",
+                    "assets": [
+                        {
+                            "id": "carlos_bendicion_detalles_png_1772310875711.png",
+                            "zoom": "1.1:1.3",
+                            "move": "HOR:50:50",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 7: El Bautismo",
+            "scenes": [
+                {
+                    "title": "El Fénix",
+                    "voice": "es-US-AlonsoNeural",
+                    "text": "—La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
+                    "assets": [
+                        {
+                            "id": "fenix_motowave_hero_shot_png_1772310888361.png",
+                            "zoom": "1.0:1.5",
+                            "move": "VER:100:0",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Bloque 8: Final",
+            "scenes": [
+                {
+                    "title": "Orgullo y Sombra",
+                    "voice": "es-ES-AlvaroNeural",
+                    "text": "Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia. Darle la motowave era darle un sueño. Y en el Distrito RD, los sueños pesaban tanto como el plomo.",
+                    "assets": [
+                        {
+                            "id": "final_taller_shadow_png_1772311291464.png",
+                            "zoom": "1.5:1.0",
+                            "move": "HOR:50:50",
+                            "fit": false
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

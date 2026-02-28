@@ -115,7 +115,7 @@ def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0):
         return False
 # ═══════════════════════════════════════════════════════════════════
 
-def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
+def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None, clips_to_close=None, overlay_clip=None):
     """
     Applies optimized Ken Burns effect with robust sizing and movement.
     Supports diagonal movement: "HOR:start:end + VER:start:end"
@@ -352,18 +352,28 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         except: pass
 
     # 3. OVERLAY PROCESSING (Only if needed)
-    if overlay_path and os.path.exists(overlay_path):
-        overlay = VideoFileClip(overlay_path, has_mask=True)
+    if (overlay_path and os.path.exists(overlay_path)) or overlay_clip:
+        if overlay_clip:
+            overlay = overlay_clip
+        else:
+            overlay = VideoFileClip(overlay_path, has_mask=True)
+            if clips_to_close is not None: clips_to_close.append(overlay)
+        
         if overlay.duration < duration:
             overlay = overlay.with_effects([vfx.Loop(duration=duration)])
-        overlay = overlay.resized(target_size).subclipped(0, duration)
+        
+        # v15.8: Only resize if needed (prevents memory re-allocation)
+        if overlay.size != target_size:
+            overlay = overlay.resized(target_size)
+            
+        overlay = overlay.subclipped(0, duration)
         overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
         return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
     
     return clip.with_duration(duration)
 
 
-def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, video_volume=0.0):
+def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, video_volume=0.0, overlay_clip=None):
     """
     v14.0: Processes video with group-sync (start_time) and audio mixing (video_volume).
     """
@@ -437,12 +447,20 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     layers = [v_clip]
     
     # Overlay support
-    if overlay_path and os.path.exists(overlay_path):
-        overlay = VideoFileClip(overlay_path, has_mask=True)
-        if clips_to_close is not None: clips_to_close.append(overlay)
+    if (overlay_path and os.path.exists(overlay_path)) or overlay_clip:
+        if overlay_clip:
+            overlay = overlay_clip
+        else:
+            overlay = VideoFileClip(overlay_path, has_mask=True)
+            if clips_to_close is not None: clips_to_close.append(overlay)
+            
         if overlay.duration < duration:
             overlay = overlay.with_effects([vfx.Loop(duration=duration)])
-        overlay = overlay.resized(target_size).subclipped(0, duration)
+        
+        if overlay.size != target_size:
+            overlay = overlay.resized(target_size)
+            
+        overlay = overlay.subclipped(0, duration)
         overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
         layers.append(overlay)
         
@@ -753,6 +771,9 @@ def generate_video_avgl(project):
     # Init Progress
     project.progress = 5
     project.save(update_fields=['progress'])
+    
+    # v15.8: Asset Cache to prevent memory leaks and redundant FFmpeg processes
+    overlay_cache = {}
     
     try:
         audio_files = []
@@ -1172,11 +1193,25 @@ def generate_video_avgl(project):
 
                         logger.log(f"  🎬 Item {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                         
-                        # Overlay
+                        # v15.8: Overlay Cache Logic (Prevents RAM exhaustion)
+                        current_overlay_clip = None
                         overlay_path = None
                         if asset.overlay:
                             overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
-                            if not os.path.exists(overlay_path): overlay_path = None
+                            if os.path.exists(overlay_path):
+                                if overlay_path not in overlay_cache:
+                                    try:
+                                        logger.log(f"    📦 Cargando overlay en cache: {asset.overlay}")
+                                        oc = VideoFileClip(overlay_path, has_mask=True)
+                                        overlay_cache[overlay_path] = oc
+                                        clips_to_close.append(oc)
+                                    except Exception as oe:
+                                        logger.log(f"    ⚠️ Error cargando overlay: {oe}")
+                                        overlay_path = None
+                                
+                                current_overlay_clip = overlay_cache.get(overlay_path)
+                            else:
+                                overlay_path = None
                         
                         # v14.0 Sync Logic: Identify timing for groups
                         sync_start_time = 0.0
@@ -1256,7 +1291,7 @@ def generate_video_avgl(project):
                             if not is_fast or overlay_path:
                                 clip = process_video_asset(
                                     asset_path, duration, target_size,
-                                    overlay_path=overlay_path,
+                                    overlay_clip=current_overlay_clip,
                                     fit=asset.fit,
                                     clips_to_close=clips_to_close,
                                     start_time=sync_start_time,
@@ -1268,12 +1303,13 @@ def generate_video_avgl(project):
                                 asset_path, duration, target_size,
                                 zoom=eff_zoom,
                                 move=eff_move,
-                                overlay_path=overlay_path, 
+                                overlay_clip=current_overlay_clip, 
                                 fit=asset.fit,
                                 shake=eff_shake,
                                 shake_intensity=eff_shake_intensity,
                                 rotate=eff_rotate,
-                                w_rotate=getattr(asset, 'w_rotate', None)
+                                w_rotate=getattr(asset, 'w_rotate', None),
+                                clips_to_close=clips_to_close
                             )
                 else:
                     # v8.6: FAST AUDIO TEST MODE
@@ -2005,9 +2041,13 @@ def generate_video_avgl(project):
         # v12.5.3: Clear active project from global cache
         from django.core.cache import cache
         cache.delete("active_rendering_project_id")
+        
         try:
-            if 'final_video' in locals() and final_video: final_video.close()
-            # v9.6: Explicit closure of all tracked clips before deletion
+            # v15.8: Explicit closure of all tracked resources
+            if 'final_video' in locals() and final_video: 
+                try: final_video.close()
+                except: pass
+                
             for c in clips_to_close:
                 try: c.close()
                 except: pass
@@ -2016,12 +2056,29 @@ def generate_video_avgl(project):
                 try: c.close()
                 except: pass
                 
-            for _, p in audio_files: 
-                if p and os.path.exists(p): 
-                    try: os.remove(p)
-                    except Exception as e:
-                        logger.log(f"[Cleanup] No se pudo borrar {os.path.basename(p)}: {e}")
+            # v15.8: Close Cached Overlays
+            if 'overlay_cache' in locals():
+                for oc in overlay_cache.values():
+                    try: oc.close()
+                    except: pass
+                
         except Exception as e:
-            logger.log(f"[Cleanup] Error fatal en limpieza: {e}")
+            logger.log(f"[Cleanup] Error fatal en cierre de clips: {e}")
+            
+        # v15.8: Retry loop for file deletion (Windows WinError 32 fix)
+        if 'audio_files' in locals():
+            for name, p in audio_files:
+                if p and os.path.exists(p):
+                    success = False
+                    for attempt in range(3):
+                        try:
+                            os.remove(p)
+                            success = True
+                            break
+                        except:
+                            time.sleep(0.3 * (attempt + 1))
+                    
+                    if not success:
+                        logger.log(f"[Cleanup] No se pudo borrar {os.path.basename(p)} tras 3 intentos (posible bloqueo).")
         
     return output_path
