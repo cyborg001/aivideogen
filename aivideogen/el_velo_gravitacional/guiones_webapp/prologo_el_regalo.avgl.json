@@ -8,7 +8,7 @@
             "scenes": [
                 {
                     "title": "El Túnel Geodésico",
-                    "text": "Ethan Ramírez despertó con el corazón martilleando contra las costillas. Acababa de salir de ese sueño otra vez. Una interfaz HUD inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un agujero de gusano.",
+                    "text": "[TITLE]Bloque 1: El Gancho (La Visión)[/TITLE] Ethan Ramírez despertó con el corazón martilleando contra las costillas. Acababa de salir de ese sueño otra vez. Una interfaz [PHO:hache u de|HUD] inundaba su campo de visión con luz cian mientras la nave se lanzaba hacia el centro de un agujero de gusano.",
                     "assets": [
                         {
                             "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
@@ -25,7 +25,7 @@
             "scenes": [
                 {
                     "title": "Amanecer en el Distrito RD",
-                    "text": "Despertó con el sabor amargo de la calima industrial. El aire del Distrito RD era una suspensión pesada cargada de residuos. Hoy cumplía diecisiete años.",
+                    "text": "[TITLE]Bloque 2: Realidad Industrial[/TITLE] Despertó con el sabor amargo de la calima industrial. El aire del Distrito RD era una suspensión pesada cargada de residuos. Hoy cumplía diecisiete años.",
                     "assets": [
                         {
                             "id": "distrito_rd_haze_png_1772310841360.png",
@@ -37,7 +37,7 @@
                 },
                 {
                     "title": "El Domo de Goglee City",
-                    "text": "A través de la ventana, el domo de Goglee City brillaba a lo lejos con una pureza insultante. Una luna artificial a la que Ethan nunca tendría invitación.",
+                    "text": "A través de la ventana, el domo de [PHO:gúgel siti|Goglee City] brillaba a lo lejos con una pureza insultante. Una luna artificial a la que Ethan nunca tendría invitación.",
                     "assets": [
                         {
                             "id": "goglee_city_dome_far_png_1772311229677.png",
@@ -55,7 +55,7 @@
                 {
                     "title": "El Llamado",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "—¡Ethan! ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
+                    "text": "[TITLE]Bloque 3: El Taller de Carlos[/TITLE] —¡Ethan! ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
                     "assets": [
                         {
                             "id": "carlos_taller_steampunk_png_1772310858143.png",
@@ -86,7 +86,7 @@
                 {
                     "title": "Bajo la Lona",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "—Cion papi. Papi!... ¿Es lo que creo que es?",
+                    "text": "[TITLE]Bloque 4: El Regalo[/TITLE] —Cion papi. Papi!... ¿Es lo que creo que es?",
                     "assets": [
                         {
                             "id": "ethan_looking_at_gift.png",
@@ -117,7 +117,7 @@
                 {
                     "title": "La Data Maldita",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "—En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
+                    "text": "[TITLE]Bloque 5: El Misterio Técnico[/TITLE] —En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
                     "assets": [
                         {
                             "id": "carlos_monitor_data_png_1772311256218.png",
@@ -148,7 +148,7 @@
                 {
                     "title": "Cion Papi (Ritual)",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "—Papi... Ción papi.",
+                    "text": "[TITLE]Bloque 6: El Ritual[/TITLE] —Papi... Ción papi.",
                     "assets": [
                         {
                             "id": "ethan_bowing_respect_v2_png_1772311525093.png",
@@ -179,7 +179,7 @@
                 {
                     "title": "El Fénix",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "—La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
+                    "text": "[TITLE]Bloque 7: El Bautismo[/TITLE] —La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
                     "assets": [
                         {
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
@@ -197,7 +197,7 @@
                 {
                     "title": "Orgullo y Sombra",
                     "voice": "es-ES-AlvaroNeural",
-                    "text": "Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia. Darle la motowave era darle un sueño. Y en el Distrito RD, los sueños pesaban tanto como el plomo.",
+                    "text": "[TITLE]Bloque 8: Final[/TITLE] Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia. Darle la [PHO:mótoweiv|Motowave] era darle un sueño. Y en el Distrito RD, los sueños pesaban tanto como el plomo.",
                     "assets": [
                         {
                             "id": "final_taller_shadow_png_1772311291464.png",
