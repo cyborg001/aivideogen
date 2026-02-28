@@ -1,7 +1,8 @@
 {
     "title": "Prólogo: El Regalo - El Velo Gravitacional",
     "voice": "es-ES-AlvaroNeural",
-    "background_music": "prologue_cinematic_score.mp3",
+    "background_music": "epic_intro_Bd1ucC7.mp3",
+    "music_volume": 0.25,
     "blocks": [
         {
             "title": "Bloque 1: El Gancho (La Visión)",
@@ -12,11 +13,24 @@
                     "assets": [
                         {
                             "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
-                            "zoom": "1.0:1.6",
+                            "zoom": "1.0:1.8",
                             "move": "HOR:50:50 + VER:0:100",
                             "shake": true,
-                            "shake_intensity": 8,
+                            "shake_intensity": 10,
+                            "overlay": "light leaks.mp4",
                             "fit": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "rocket.mp3",
+                            "volume": 0.8,
+                            "offset": 0
+                        },
+                        {
+                            "id": "Camera_Flash_Impact.m4a",
+                            "volume": 1.0,
+                            "offset": 2000
                         }
                     ]
                 }
@@ -33,7 +47,15 @@
                             "id": "distrito_rd_haze_png_1772310841360.png",
                             "zoom": "1.2:1.0",
                             "move": "VER:100:0",
+                            "overlay": "viento_polvo_de_estepa.mp4",
                             "fit": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "cinematic_drone.mp3",
+                            "volume": 0.4,
+                            "offset": 0
                         }
                     ]
                 },
@@ -63,8 +85,15 @@
                             "id": "carlos_taller_steampunk_png_1772310858143.png",
                             "zoom": "1.1:1.2",
                             "move": "HOR:50:60",
-                            "shake": false,
+                            "overlay": "grain.mp4",
                             "fit": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Power_Tool_Electrical_Buzz.mp3",
+                            "volume": 0.3,
+                            "offset": 500
                         }
                     ]
                 },
@@ -108,7 +137,15 @@
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
                             "zoom": "1.4:1.0",
                             "move": "HOR:100:0",
+                            "overlay": "cenizas_y_brazas.mp4",
                             "fit": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Sports_Car_Speeding.mp3",
+                            "volume": 0.9,
+                            "offset": 1500
                         }
                     ]
                 }
