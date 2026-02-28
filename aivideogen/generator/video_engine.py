@@ -316,9 +316,33 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             # Apply Warp (Crop + Resize + Subpixel Interpolation)
             # BORDER_CONSTANT ensures black bars if we are in FIT mode or go out of bounds
             resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+            # v11.8: ROTATE Support (Sub-pixel accurate rotation)
+            if rotate:
+                r_start, r_end = 0.0, 0.0
+                if isinstance(rotate, str) and ':' in rotate:
+                    r_parts = rotate.split(':')
+                    r_start = float(r_parts[0])
+                    r_end = float(r_parts[1])
+                else:
+                    try: r_start = float(rotate); r_end = r_start
+                    except: pass
+                
+                angle = r_start + (r_end - r_start) * progress
+                # v27.4: Rotation around the center of the target frame
+                M_rot = cv2.getRotationMatrix2D((target_w/2, target_h/2), angle, 1.0)
+                resized = cv2.warpAffine(resized, M_rot, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+            # v27.5: W_ROTATE (Wheel Rotate / Degrees per second)
+            if w_rotate:
+                speed = float(w_rotate)
+                angle = speed * t
+                M_rot = cv2.getRotationMatrix2D((target_w/2, target_h/2), angle, 1.0)
+                resized = cv2.warpAffine(resized, M_rot, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
         except Exception as e:
             # Fallback (Safety net)
-            print(f"Error in warpAffine: {e}")
+            print(f"Error in warpAffine/rotate: {e}")
             return np.zeros((target_h, target_w, 3), dtype=np.uint8)
 
         # Convert BGR to RGB

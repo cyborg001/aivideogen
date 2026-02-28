@@ -17,6 +17,7 @@
                             "move": "HOR:50:50 + VER:0:100",
                             "shake": true,
                             "shake_intensity": 10,
+                            "rotate": "0:360",
                             "overlay": "light leaks.mp4",
                             "fit": false
                         }
