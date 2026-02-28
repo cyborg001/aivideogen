@@ -13,11 +13,11 @@
                     "assets": [
                         {
                             "id": "ethan_vision_wormhole_cian_png_1772310114281.png",
-                            "zoom": "1.0:1.8",
+                            "zoom": "1.5:1.8",
                             "move": "HOR:50:50 + VER:0:100",
                             "shake": true,
-                            "shake_intensity": 10,
-                            "rotate": "0:360",
+                            "shake_intensity": 4,
+                            "rotate": "0:90",
                             "overlay": "light leaks.mp4",
                             "fit": false
                         }
@@ -136,9 +136,9 @@
                     "assets": [
                         {
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
-                            "zoom": "1.4:1.0",
+                            "zoom": "1.2:1.0",
                             "move": "HOR:100:0",
-                            "overlay": "cenizas_y_brazas.mp4",
+                            "overlay": "dust.mp4",
                             "fit": false
                         }
                     ],
