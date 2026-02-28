@@ -79,7 +79,7 @@
             "scenes": [
                 {
                     "title": "El Llamado",
-                    "voice": "es-DO-EmilioNeural",
+                    "voice": "es-ES-AlvaroNeural",
                     "text": "—¡Ethan! [PAUSA:0.3] ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
                     "assets": [
                         {
@@ -157,7 +157,7 @@
             "scenes": [
                 {
                     "title": "La Data Maldita",
-                    "voice": "es-DO-EmilioNeural",
+                    "voice": "es-ES-AlvaroNeural",
                     "text": "—En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
                     "assets": [
                         {
@@ -188,7 +188,7 @@
             "scenes": [
                 {
                     "title": "Cion Papi (Ritual)",
-                    "voice": "es-US-AlonsoNeural",
+                    "voice": "es-ES-AlvaroNeural",
                     "text": "—Papi... Ción papi.",
                     "assets": [
                         {
@@ -201,7 +201,7 @@
                 },
                 {
                     "title": "La Bendición",
-                    "voice": "es-DO-EmilioNeural",
+                    "voice": "es-ES-AlvaroNeural",
                     "text": "—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y que nunca se le olvide: aunque el fango nos llegue al cuello, nosotros siempre miramos al cielo.",
                     "assets": [
                         {
@@ -219,7 +219,7 @@
             "scenes": [
                 {
                     "title": "El Fénix",
-                    "voice": "es-US-AlonsoNeural",
+                    "voice": "es-ES-AlvaroNeural",
                     "text": "—La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
                     "assets": [
                         {
