@@ -380,8 +380,13 @@ def extract_subtitles_v35(text, force_dynamic=False):
             scene_highlights.append(h)
             
         # v17.3: Clean f_part before counting words to match TTS output
-        # v18.1 FIX: Simple tags [SUB: Header] should NOT be narrated (Arquitecto's Request)
-        if tag['type'] != 'simple':
+        # v18.1 FIX: Simple tags [SUB: Header] or Wrapped [TITLE] tags should NOT be narrated
+        # v27.6: Silencing BOTH simple and wrapped TITLE tags from TTS
+        should_narrate = True
+        if tag['type'] == 'simple' or tag.get('tag_name') == 'TITLE':
+            should_narrate = False
+            
+        if should_narrate:
             f_part_clean = re.sub(r'\[.*?\]', '', f_part)
             f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
             fonetica_offset += len(f_part_clean.split())

@@ -42,7 +42,7 @@
             "scenes": [
                 {
                     "title": "Amanecer en el Distrito RD",
-                    "text": "[TITLE]Bloque 2: Realidad Industrial[/TITLE] Despertó con el sabor amargo de la calima industrial. El aire del Distrito RD era una suspensión pesada cargada de residuos. Hoy cumplía diecisiete años.",
+                    "text": "Despertó con el sabor amargo de la calima industrial. El aire del Distrito RD era una suspensión pesada cargada de residuos. Hoy cumplía diecisiete años.",
                     "assets": [
                         {
                             "id": "distrito_rd_haze_png_1772310841360.png",
@@ -80,7 +80,7 @@
                 {
                     "title": "El Llamado",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "[TITLE]El Taller de Carlos[/TITLE] —¡Ethan! [PAUSA:0.3] ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
+                    "text": "—¡Ethan! [PAUSA:0.3] ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!",
                     "assets": [
                         {
                             "id": "carlos_taller_steampunk_png_1772310858143.png",
@@ -119,7 +119,7 @@
                 {
                     "title": "Bajo la Lona",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "[TITLE]La Herencia[/TITLE] [SUSURRO]—Cion papi. [PAUSA:0.5] Papi!... ¿Es lo que creo que es?[/SUSURRO]",
+                    "text": "[SUSURRO]—Cion papi. [PAUSA:0.5] Papi!... ¿Es lo que creo que es?[/SUSURRO]",
                     "assets": [
                         {
                             "id": "ethan_looking_at_gift.png",
@@ -158,7 +158,7 @@
                 {
                     "title": "La Data Maldita",
                     "voice": "es-DO-EmilioNeural",
-                    "text": "[TITLE]Bloque 5: El Misterio Técnico[/TITLE] —En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
+                    "text": "—En el año 2100 vi un bamboleo de una estrella que no tenía sentido. En 2104 volví a ver ese patrón. No puede ser coincidencia. Algo en esos datos no me cuadra, no me gusta.",
                     "assets": [
                         {
                             "id": "carlos_monitor_data_png_1772311256218.png",
@@ -189,7 +189,7 @@
                 {
                     "title": "Cion Papi (Ritual)",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "[TITLE]Bloque 6: El Ritual[/TITLE] —Papi... Ción papi.",
+                    "text": "—Papi... Ción papi.",
                     "assets": [
                         {
                             "id": "ethan_bowing_respect_v2_png_1772311525093.png",
@@ -220,7 +220,7 @@
                 {
                     "title": "El Fénix",
                     "voice": "es-US-AlonsoNeural",
-                    "text": "[TITLE]Bloque 7: El Bautismo[/TITLE] —La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
+                    "text": "—La llamaré El Fénix. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
                     "assets": [
                         {
                             "id": "fenix_motowave_hero_shot_png_1772310888361.png",
@@ -238,7 +238,7 @@
                 {
                     "title": "Orgullo y Sombra",
                     "voice": "es-ES-AlvaroNeural",
-                    "text": "[TITLE]Bloque 8: Final[/TITLE] Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia. Darle la [PHO:mótoweiv|Motowave] era darle un sueño. Y en el Distrito RD, los sueños pesaban tanto como el plomo.",
+                    "text": "Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia. Darle la [PHO:mótoweiv|Motowave] era darle un sueño. Y en el Distrito RD, los sueños pesaban tanto como el plomo.",
                     "assets": [
                         {
                             "id": "final_taller_shadow_png_1772311291464.png",
