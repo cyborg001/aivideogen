@@ -403,18 +403,32 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         if overlay_clip:
             overlay = overlay_clip
         else:
-            overlay = VideoFileClip(overlay_path, has_mask=True)
+            # v30.5: Support static image overlays (PNG/JPG)
+            is_static = overlay_path.lower().endswith(('.png', '.jpg', '.jpeg'))
+            if is_static:
+                from moviepy import ImageClip
+                overlay = ImageClip(overlay_path).with_duration(duration)
+            else:
+                overlay = VideoFileClip(overlay_path, has_mask=True)
+            
             if clips_to_close is not None: clips_to_close.append(overlay)
         
         if overlay.duration < duration:
             overlay = overlay.with_effects([vfx.Loop(duration=duration)])
         
-        # v15.8: Only resize if needed (prevents memory re-allocation)
+        # v15.8: Only resize if needed
         if overlay.size != target_size:
             overlay = overlay.resized(target_size)
             
         overlay = overlay.subclipped(0, duration)
-        overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
+        
+        # v30.5: If it's a cockpit/static overlay, we might want higher opacity.
+        # However, for backward compatibility with 'dust', etc., we keep 0.4 for VIDEOS.
+        # But for PNGs we assume the user already handled the transparency (Alpha channel).
+        if not overlay_path.lower().endswith(('.png')):
+             overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+             
+        overlay = overlay.without_audio()
         return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
     
     return clip.with_duration(duration)
@@ -498,7 +512,14 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         if overlay_clip:
             overlay = overlay_clip
         else:
-            overlay = VideoFileClip(overlay_path, has_mask=True)
+            # v30.5: Support static image overlays (PNG/JPG)
+            is_static = overlay_path.lower().endswith(('.png', '.jpg', '.jpeg'))
+            if is_static:
+                from moviepy import ImageClip
+                overlay = ImageClip(overlay_path).with_duration(duration)
+            else:
+                overlay = VideoFileClip(overlay_path, has_mask=True)
+            
             if clips_to_close is not None: clips_to_close.append(overlay)
             
         if overlay.duration < duration:
@@ -508,7 +529,12 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
             overlay = overlay.resized(target_size)
             
         overlay = overlay.subclipped(0, duration)
-        overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
+        
+        # v30.5: Apply opacity ONLY if it's NOT a PNG (assuming PNGs have pre-baked alpha)
+        if not overlay_path.lower().endswith(('.png')):
+             overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+             
+        overlay = overlay.without_audio()
         layers.append(overlay)
         
     final_clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)

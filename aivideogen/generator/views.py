@@ -731,9 +731,9 @@ def get_overlays_api(request):
         if not os.path.exists(overlays_dir):
             logger.warning(f"[Overlays API] Directory does not exist: {overlays_dir}")
         else:
-            # Scan for mp4, mov (common overlay formats)
+            # Scan for mp4, mov (common overlay formats) and static images (v30.5)
             for f in os.listdir(overlays_dir):
-                if f.lower().endswith(('.mp4', '.mov', '.webm')):
+                if f.lower().endswith(('.mp4', '.mov', '.webm', '.png', '.jpg', '.jpeg')):
                     name_no_ext = os.path.splitext(f)[0]
                     # Map to preset if exists, otherwise title case
                     display_name = presets.get(name_no_ext.lower(), name_no_ext.replace('_', ' ').title())
