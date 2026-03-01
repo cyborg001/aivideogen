@@ -170,10 +170,20 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     
     sub_moves = move_str.split('+')
     for sm in sub_moves:
-        parts = sm.strip().split(':')
+        parts = [p.strip() for p in sm.strip().split(':') if p.strip()]
+        if not parts: continue
         mdir = parts[0].upper()
-        mstart = float(parts[1]) if len(parts) > 1 else 50.0
-        mend = float(parts[2]) if len(parts) > 2 else mstart
+        # v30.4: Robust Float Conversion
+        try:
+            mstart = float(parts[1]) if len(parts) > 1 else 50.0
+        except (ValueError, IndexError):
+            mstart = 50.0
+        
+        try:
+            mend = float(parts[2]) if len(parts) > 2 else mstart
+        except (ValueError, IndexError):
+            mend = mstart
+            
         move_configs.append({'dir': mdir, 'start': mstart, 'end': mend})
 
     # ═══════════════════════════════════════════════════════════════════
