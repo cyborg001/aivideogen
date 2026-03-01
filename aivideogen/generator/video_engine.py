@@ -258,21 +258,22 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         
         for cfg in move_configs:
             m_prog = cfg['start'] + (cfg['end'] - cfg['start']) * progress
-            # Map 0..100 to -0.5..0.5 (relative to slack)
-            # Actually, let's map directly to pixels relative to center
-            # 50% = 0 offset. 0% = -slack/2. 100% = +slack/2.
-            factor = (m_prog - 50.0) / 100.0 # -0.5 to 0.5
+            # v30.3: Direct Centering Logic (Absolute Coordinates)
+            # percentage 0..100 maps to 0..orig_dim
+            # The offset is the difference between this target center and the image center
+            target_pos = m_prog / 100.0
             
             if cfg['dir'] == 'HOR':
-                off_x += factor * slack_w
+                # Target X in pixels: target_pos * w_orig
+                # Current center is w_orig / 2
+                # Offset needed to reach target: target_pos * w_orig - w_orig / 2
+                off_x = (target_pos * w_orig) - (w_orig / 2.0)
+                # Clamp to slack to prevent black borders
+                off_x = max(-slack_w/2.0, min(slack_w/2.0, off_x))
                 has_hor = True
             elif cfg['dir'] == 'VER':
-                # Inverted Y? usually 0 is top.
-                # If we want 0% to be Top, then moving center UP means y decreases.
-                # slack is positive. 
-                # If we are at 0 (Top), center should be at h_orig/2 - slack/2 = min_y + h/2?
-                # Let's stick to: 0 -> Top Edge, 100 -> Bottom Edge.
-                off_y += factor * slack_h 
+                off_y = (target_pos * h_orig) - (h_orig / 2.0)
+                off_y = max(-slack_h/2.0, min(slack_h/2.0, off_y))
                 has_ver = True
 
         # Apply default center-lock if no move defined for axis

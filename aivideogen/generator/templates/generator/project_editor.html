@@ -1876,9 +1876,8 @@
                     const panV = parseFloat(this.formData.panVerStart) || 50;
 
                     const sizePercent = 100 / zoom;
-                    const slack = 100 - sizePercent;
-                    const left = (panH / 100) * slack;
-                    const top = (panV / 100) * slack;
+                    const left = Math.max(0, Math.min(100 - sizePercent, panH - (sizePercent / 2)));
+                    const top = Math.max(0, Math.min(100 - sizePercent, panV - (sizePercent / 2)));
 
                     return `width: ${sizePercent}%; height: ${sizePercent}%; left: ${left}%; top: ${top}%;`;
                 },
