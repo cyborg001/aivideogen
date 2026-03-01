@@ -1150,16 +1150,18 @@
                         <template x-if="formData.asset_type">
                             <div class="w-full h-full flex items-center justify-center bg-gray-950">
                                 <!-- Elastic Container (Snaps to Image Aspect Ratio) -->
-                                <div class="grid-asset-container">
+                                <div class="grid-asset-container"
+                                    :style="assetWidth > 0 ? `aspect-ratio: ${assetWidth}/${assetHeight}` : ''">
                                     <template x-if="isVideo">
                                         <video :src="getAssetPath(formData.asset_type) + '#t=1.0'"
-                                            class="block max-w-full max-h-full" controls muted></video>
+                                            class="block max-w-full max-h-full" controls muted
+                                            @loadedmetadata="onAssetLoad($event)"></video>
                                     </template>
                                     <template x-if="!isVideo">
                                         <div class="relative w-full h-full flex items-center justify-center">
                                             <img :src="getAssetPath(formData.asset_type)"
                                                 class="block max-w-full max-h-full object-contain shadow-2xl"
-                                                @load="imageError = false"
+                                                @load="onAssetLoad($event)"
                                                 @error="imageError = true; console.error('[Editor] Error cargando:', $el.src)">
 
                                             <!-- Error Overlay -->
@@ -1680,6 +1682,8 @@
                 editGroupIndex: null,
                 bulkText: '',
                 imageError: false,
+                assetWidth: 0,
+                assetHeight: 0,
 
                 // Block Form
                 blockForm: { title: '', music: '', volume: 0.2, master_asset: '' },
@@ -1875,11 +1879,64 @@
                     const panH = parseFloat(this.formData.panHorStart) || 50;
                     const panV = parseFloat(this.formData.panVerStart) || 50;
 
-                    const sizePercent = 100 / zoom;
-                    const left = Math.max(0, Math.min(100 - sizePercent, panH - (sizePercent / 2)));
-                    const top = Math.max(0, Math.min(100 - sizePercent, panV - (sizePercent / 2)));
+                    // 1. Aspect Ratio del Proyecto
+                    let targetAR = 16 / 9; // Default landscape
+                    if (this.projectSettings.aspect_ratio === 'portrait') targetAR = 9 / 16;
+                    else if (this.projectSettings.aspect_ratio === 'square') targetAR = 1.0;
 
-                    return `width: ${sizePercent}%; height: ${sizePercent}%; left: ${left}%; top: ${top}%;`;
+                    // 2. Aspect Ratio del Asset
+                    let assetAR = targetAR; // Fallback if unknown
+                    if (this.assetWidth > 0 && this.assetHeight > 0) {
+                        assetAR = this.assetWidth / this.assetHeight;
+                    }
+
+                    // 3. Base percentages (at Zoom 1.0)
+                    // Logic MUST match video_engine.py COVER mode
+                    let baseW_pct = 100;
+                    let baseH_pct = 100;
+
+                    if (this.formData.fit) {
+                        // FIT (Contain) Mode
+                        if (assetAR > targetAR) {
+                            // Asset is wider. Full width, height is partial.
+                            baseH_pct = (assetAR / targetAR) * 100;
+                        } else {
+                            // Asset is taller. Full height, width is partial.
+                            baseW_pct = (targetAR / assetAR) * 100;
+                        }
+                    } else {
+                        // COVER Mode (Default for Ken Burns)
+                        if (assetAR > targetAR) {
+                            // Asset is wider than target. Full height, width is partial.
+                            baseW_pct = (targetAR / assetAR) * 100;
+                        } else {
+                            // Asset is taller than target. Full width, height is partial.
+                            baseH_pct = (assetAR / targetAR) * 100;
+                        }
+                    }
+
+                    // 4. Apply Zoom
+                    const finalW = baseW_pct / zoom;
+                    const finalH = baseH_pct / zoom;
+
+                    // 5. Calculate Position (Center Panning)
+                    // We clamp to ensure we don't go outside the 0-100 range of the background
+                    const left = Math.max(0, Math.min(100 - finalW, panH - (finalW / 2)));
+                    const top = Math.max(0, Math.min(100 - finalH, panV - (finalH / 2)));
+
+                    return `width: ${finalW}%; height: ${finalH}%; left: ${left}%; top: ${top}%;`;
+                },
+
+                onAssetLoad(event) {
+                    this.imageError = false;
+                    if (event.target.tagName === 'IMG') {
+                        this.assetWidth = event.target.naturalWidth;
+                        this.assetHeight = event.target.naturalHeight;
+                    } else if (event.target.tagName === 'VIDEO') {
+                        this.assetWidth = event.target.videoWidth;
+                        this.assetHeight = event.target.videoHeight;
+                    }
+                    console.log(`[Editor] Asset Loaded: ${this.assetWidth}x${this.assetHeight} (AR: ${(this.assetWidth / this.assetHeight).toFixed(2)})`);
                 },
 
                 isAssetVideo(path) {
