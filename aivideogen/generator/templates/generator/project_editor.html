@@ -1166,7 +1166,9 @@
                                     </template>
 
                                     <!-- Coordinate Grid Overlay -->
-                                    <div x-show="showGrid" class="grid-overlay" x-transition.opacity></div>
+                                    <div x-show="showGrid" class="grid-overlay"
+                                        :style="`transform: scale(${1 / (parseFloat(formData.zoomStr) || 1.0)}); opacity: 0.8;`"
+                                        x-transition.opacity></div>
                                 </div>
 
                                 <div
