@@ -309,36 +309,48 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             [0, target_h]
         ])
         
-        try:
-            # Compute Affine Transform Matrix
-            M = cv2.getAffineTransform(src_pts, dst_pts)
-            
-            # Apply Warp (Crop + Resize + Subpixel Interpolation)
-            # BORDER_CONSTANT ensures black bars if we are in FIT mode or go out of bounds
-            resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
-
-            # v11.8: ROTATE Support (Sub-pixel accurate rotation)
-            if rotate:
-                r_start, r_end = 0.0, 0.0
-                if isinstance(rotate, str) and ':' in rotate:
+        # v11.8+: ROTATE & W_ROTATE Support (Integrated in Affine Matrix)
+        angle = 0.0
+        if rotate:
+            r_start, r_end = 0.0, 0.0
+            if isinstance(rotate, str) and ':' in rotate:
+                try:
                     r_parts = rotate.split(':')
                     r_start = float(r_parts[0])
                     r_end = float(r_parts[1])
-                else:
-                    try: r_start = float(rotate); r_end = r_start
-                    except: pass
-                
-                angle = r_start + (r_end - r_start) * progress
-                # v27.4: Rotation around the center of the target frame
-                M_rot = cv2.getRotationMatrix2D((target_w/2, target_h/2), angle, 1.0)
-                resized = cv2.warpAffine(resized, M_rot, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+                except: pass
+            else:
+                try: r_start = float(rotate); r_end = r_start
+                except: pass
+            angle += r_start + (r_end - r_start) * progress
 
-            # v27.5: W_ROTATE (Wheel Rotate / Degrees per second)
-            if w_rotate:
-                speed = float(w_rotate)
-                angle = speed * t
-                M_rot = cv2.getRotationMatrix2D((target_w/2, target_h/2), angle, 1.0)
-                resized = cv2.warpAffine(resized, M_rot, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+        if w_rotate:
+            try: angle += float(w_rotate) * t
+            except: pass
+
+        # Compute Final Affine Transform Matrix
+        # v30.0 FIX: Instead of rotating the RESULT frame (which creates black borders), 
+        # we rotate the SOURCE cropping area.
+        M = cv2.getAffineTransform(src_pts, dst_pts)
+        
+        if angle != 0:
+            # v30.1: Rotate the transformation matrix around the destination center.
+            # This is mathematically cleaner and prevents black borders because it still
+            # samples from the original 'img_bgr'.
+            T1 = np.array([[1, 0, -target_w/2], [0, 1, -target_h/2], [0, 0, 1]], dtype=np.float32)
+            R = cv2.getRotationMatrix2D((0, 0), angle, 1.0)
+            R_3x3 = np.vstack([R.astype(np.float32), [0, 0, 1]])
+            T2 = np.array([[1, 0, target_w/2], [0, 1, target_h/2], [0, 0, 1]], dtype=np.float32)
+            M_3x3 = np.vstack([M, [0, 0, 1]])
+            
+            # M_final = T2 * R * T1 * M
+            M_combined = T2 @ R_3x3 @ T1 @ M_3x3
+            M = M_combined[:2, :]
+
+        try:
+            # Apply Warp (Crop + Resize + Rotation + Subpixel Interpolation)
+            # Sampling directly from img_bgr ensures we don't see black if zoom is sufficient
+            resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
 
         except Exception as e:
             # Fallback (Safety net)
