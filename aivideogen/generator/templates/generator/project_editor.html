@@ -76,6 +76,16 @@
             background-size: 10% 10%, 10% 10%, 1% 1%, 1% 1%;
         }
 
+        /* v30.2: PRECISION VIEWFINDER */
+        .viewfinder {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+            pointer-events: none;
+            transition: all 0.15s ease-out;
+        }
+
         /* Highlight Axis */
         .grid-overlay::before {
             content: '';
@@ -1166,9 +1176,15 @@
                                     </template>
 
                                     <!-- Coordinate Grid Overlay -->
-                                    <div x-show="showGrid" class="grid-overlay"
-                                        :style="`transform: scale(${1 / (parseFloat(formData.zoomStr) || 1.0)}); opacity: 0.8;`"
-                                        x-transition.opacity></div>
+                                    <div x-show="showGrid" class="grid-overlay" x-transition.opacity></div>
+
+                                    <!-- Precision Viewfinder (v30.2) -->
+                                    <div x-show="showGrid" class="viewfinder" :style="viewfinderStyle"
+                                        x-transition.opacity>
+                                        <div
+                                            class="absolute top-0 left-0 bg-blue-600 text-white text-[8px] px-1 font-bold">
+                                            FRAME</div>
+                                    </div>
                                 </div>
 
                                 <div
@@ -1852,6 +1868,19 @@
                     }
                     if (this.audioPreviewUrl) URL.revokeObjectURL(this.audioPreviewUrl);
                     this.audioPreviewUrl = null;
+                },
+
+                get viewfinderStyle() {
+                    const zoom = parseFloat(this.formData.zoomStr) || 1.0;
+                    const panH = parseFloat(this.formData.panHorStart) || 50;
+                    const panV = parseFloat(this.formData.panVerStart) || 50;
+
+                    const sizePercent = 100 / zoom;
+                    const slack = 100 - sizePercent;
+                    const left = (panH / 100) * slack;
+                    const top = (panV / 100) * slack;
+
+                    return `width: ${sizePercent}%; height: ${sizePercent}%; left: ${left}%; top: ${top}%;`;
                 },
 
                 isAssetVideo(path) {
