@@ -1,0 +1,149 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+\usepackage{geometry}
+\usepackage{bookmark}
+\usepackage{enumitem}
+
+\geometry{margin=2.5cm}
+
+\title{Hoja de Trabajo: Física I - Conceptos Fundamentales}
+\author{Arquitecto: \underline{\hspace{5cm}} \quad Fecha: \underline{\hspace{3cm}}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Parte I: Teoría (10 puntos)}
+Responda de forma clara y precisa a las siguientes interrogantes:
+
+\begin{enumerate}[itemsep=1.5em]
+    \item \textbf{Etimología}: ¿De qué vocablo griego proviene la palabra ``Física'' y qué significa?
+    \item \textbf{Definición}: ¿Qué estudia la ciencia de la Física?
+    \item \textbf{Divisiones}: Mencione las dos grandes divisiones de la física y dé tres ejemplos de ramas de la Física Clásica.
+    \item \textbf{S.I.}: Enumere cinco (5) magnitudes fundamentales del Sistema Internacional junto con sus unidades básicas.
+    \item \textbf{Derivadas}: Explique qué son las magnitudes derivadas y proporcione dos ejemplos incluyendo sus unidades.
+    \item \textbf{Interdisciplinariedad}: Mencione tres ciencias con las que la física tiene una relación directa.
+    \item \textbf{Cifras Significativas (Ceros)}: Explique la regla de los ceros situados a la izquierda y la de los ceros intermedios.
+    \item \textbf{Redondeo (Suma/Resta)}: ¿Qué criterio define la cantidad de decimales en el resultado de una suma o resta?
+    \item \textbf{Redondeo (Prod/Div)}: ¿Cuál es la regla para determinar las cifras significativas en una multiplicación o división?
+    \item \textbf{Notación Científica}: Describa la principal utilidad de este sistema de representación.
+\end{enumerate}
+
+\newpage
+
+\section{Parte II: Ejercicios Prácticos}
+
+\subsection{Cifras Significativas y Redondeo}
+1. Determine el número de cifras significativas en:
+\begin{itemize}
+    \item a) 124 \hfill \underline{\hspace{2cm}}
+    \item b) 0.0035 \hfill \underline{\hspace{2cm}}
+    \item c) 12.0 \hfill \underline{\hspace{2cm}}
+    \item d) $1.2 \times 10^3$ \hfill \underline{\hspace{2cm}}
+\end{itemize}
+
+2. Realice las siguientes operaciones aplicando las reglas de redondeo:
+\begin{itemize}
+    \item Suma: $3.95 + 4.198 + 12.17 =$ \underline{\hspace{3cm}}
+    \item Resta: $18.94 - 8.4 =$ \underline{\hspace{3cm}}
+    \item Multiplicación: $18.94 \times 12.713 =$ \underline{\hspace{3cm}}
+    \item División: $36.72 / 4.5 =$ \underline{\hspace{3cm}}
+\end{itemize}
+
+\subsection{Notación Científica}
+3. Exprese en notación científica o decimal según corresponda:
+\begin{itemize}
+    \item 900,000 $\rightarrow$ \underline{\hspace{4cm}}
+    \item 0.000000658 $\rightarrow$ \underline{\hspace{4cm}}
+    \item $1.03 \times 10^{-5} \rightarrow$ \underline{\hspace{4cm}}
+    \item $7.00 \times 10^{12} \rightarrow$ \underline{\hspace{4cm}}
+\end{itemize}
+
+4. Realice las operaciones:
+\begin{itemize}
+    \item $(3.2 \times 10^6) \times (2.19 \times 10^8) =$ \underline{\hspace{4cm}}
+    \item $(2.13 \times 10^9) / (6.98 \times 10^{11}) =$ \underline{\hspace{4cm}}
+\end{itemize}
+
+\subsection{Conversiones Avanzadas}
+Resuelva las siguientes conversiones (muestre el procedimiento):
+\begin{enumerate}
+    \item Convierta 6 km a pies.
+    \item Convierta 5 millas/h a m/s.
+    \item Convierta $96,500 \text{ cm}^3/\text{min}$ a gal/s.
+    \item Convierta 1.2 km a pulgadas (in).
+    \item Convierta 0.94 gal/s a $\text{cm}^3/\text{hr}$.
+    \item Convierta 1500 km/s a millas/min.
+\end{enumerate}
+
+\newpage
+
+\section{Parte III: Estática y Vectores}
+
+\subsection{Ejercicio \#8: Dirección del vector resultante}
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
+    \draw[dashed, ->] (-8,0) -- (10,0) node[right] {$x$};
+    \draw[dashed, ->] (0,-8) -- (0,6) node[above] {$y$};
+    \draw[ultra thick, ->, blue] (0,0) -- ({10*cos(143)},{10*sin(143)}) node[left] {10u};
+    \draw[ultra thick, ->, red] (0,0) -- ({4*cos(30)},{4*sin(30)}) node[right] {4u};
+    \draw[ultra thick, ->, black] (0,0) -- (8,0) node[below] {8u};
+    \draw[ultra thick, ->, gray] (0,0) -- (0,-6) node[right] {6u};
+    \draw (0.8,0) arc (0:30:0.8) node[midway, right] {\tiny $30^\circ$};
+    \draw (0,1.2) arc (90:143:1.2) node[midway, above left] {\tiny $53^\circ$};
+\end{tikzpicture}
+\end{center}
+Opciones: \textbf{A) 30$^\circ$ \quad B) 37$^\circ$ \quad C) 45$^\circ$ \quad D) 53$^\circ$ \quad E) 60$^\circ$}
+
+\subsection{Ejercicio \#9: Módulo del vector resultante}
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
+    \draw[->] (-5,0) -- (14,0) node[right] {$x$};
+    \draw[->] (0,-8) -- (0,5) node[above] {$y$};
+    \draw[ultra thick, ->, blue] (0,0) -- ({4*cos(135)},{4*sin(135)}) node[above left] {$2\sqrt{2}$};
+    \draw[ultra thick, ->, red] (0,0) -- (13,0) node[below] {13};
+    \draw[ultra thick, ->, orange] (0,0) -- ({10*cos(233)},{10*sin(233)}) node[below left] {10};
+    \draw (-0.8,-0.1) arc (180:233:0.8) node[midway, left] {\tiny $53^\circ$};
+    \draw (0.8,0.1) arc (0:135:0.8) node[midway, above right] {\tiny $45^\circ$};
+\end{tikzpicture}
+\end{center}
+Opciones: \textbf{A) 1 \quad B) 2 \quad C) 3 \quad D) 4 \quad E) 5}
+
+\subsection{Ejercicio \#14: Cálculo de Fuerza ``F''}
+Si la fuerza resultante es horizontal, halle ``F''.
+\begin{center}
+\begin{tikzpicture}[scale=0.4]
+    \draw[->] (-10,0) -- (10,0);
+    \draw[->] (0,-10) -- (0,5);
+    \draw[ultra thick, ->, orange] (0,0) -- ({8*cos(53)},{8*sin(53)}) node[right] {F};
+    \draw[ultra thick, ->] (0,0) -- ({14*cos(210)},{14*sin(210)}) node[left] {14u};
+    \draw[ultra thick, ->] (0,0) -- (0,-9) node[right] {9u};
+    \draw (-1.5,0) arc (180:210:1.5) node[midway, left] {\tiny $30^\circ$};
+    \draw (1.5,0) arc (0:53:1.5) node[midway, right] {\tiny $53^\circ$};
+\end{tikzpicture}
+\end{center}
+Opciones: \textbf{A) 10N \quad B) 20 \quad C) 30 \quad D) 40 \quad E) 20$\sqrt{3}$}
+
+\subsection{Ejercicio \#15: Módulo de la resultante}
+\begin{center}
+\begin{tikzpicture}[scale=0.4]
+    \draw[<->] (-12,0) -- (12,0);
+    \draw[<->] (0,-12) -- (0,12);
+    \draw[ultra thick, ->] (0,0) -- ({10*cos(101)},{10*sin(101)}) node[above] {50u};
+    \draw[ultra thick, ->] (0,0) -- ({10*cos(350)},{10*sin(350)}) node[right] {50u};
+    \draw (0,1.5) arc (90:101:1.5) node[midway, above] {\tiny $11^\circ$};
+    \draw (1.5,0) arc (0:-10:1.5) node[midway, right] {\tiny $10^\circ$};
+\end{tikzpicture}
+\end{center}
+Opciones: \textbf{A) 8$\sqrt{10}$u \quad B) 18$\sqrt{10}$ \quad C) 50$\sqrt{2}$ \quad D) 50 \quad E) 40$\sqrt{5}$}
+
+\end{document}

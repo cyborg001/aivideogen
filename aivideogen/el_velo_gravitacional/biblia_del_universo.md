@@ -31,7 +31,7 @@
 
 ### ETHAN RAMÍREZ
 - **Edad**: 17 años (al inicio de la historia principal)
-- **Fecha de nacimiento**: 3 de febrero de 2095
+- **Fecha de nacimiento**: 3 de febrero de 2097
 - **Lugar de nacimiento**: Distrito RD, periferia de Goglee City
 - **Descripción física**: [A desarrollar en la narrativa]
 - **Personalidad**: 
@@ -45,7 +45,7 @@
     - Es la base que le permite aprender El Surfeo de Geodésicas
   - Leal a sus raíces pero anhela un futuro mejor
 - **Historia personal**:
-  - Madre desapareció cuando tenía ~5 años (2100)
+  - Madre desapareció cuando tenía ~5 años (2102)
   - Criado solo por su padre Carlos
   - Recibió su primera motowave como regalo de cumpleaños (17 años)
   - Pasó 10 meses transformándola en "El Fénix"
@@ -54,8 +54,8 @@
 
 ### CARLOS RAMÍREZ
 - **Edad**: 56 años (al inicio de la historia principal)
-- **Fecha de nacimiento**: 3 de enero de 2058 (año de La Gran Inundación)
-- **Lugar de nacimiento**: Distrito RD (hijo de refugiados caribeños)
+- **Fecha de nacimiento**: 3 de enero de 2058
+- **Lugar de nacimiento**: Quisqueya (República Dominicana)
 - **Descripción física**: 
   - Robusto, fuerte (mantiene condición física)
   - Pelo gris
@@ -68,10 +68,10 @@
   - Lleva el peso de la historia de su pueblo
 - **Profesión**: Mecánico experto y maestro del Distrito RD
 - **Historia personal**:
-  - Nacido el mismo año de La Gran Inundación
-  - Nunca conoció la isla de sus padres
-  - Tuvo a Ethan a los 37 años
-  - Esposa desapareció cuando Ethan tenía ~5 años
+  - Nacido 7 años antes de La Gran Inundación
+  - Recuerda con nitidez la isla de su infancia
+  - Tuvo a Ethan a los 39 años
+  - Esposa desapareció cuando Ethan tenía ~5 años (2102)
   - Crió solo a su hijo
 - **Relación con Ethan**: Padre amoroso que le enseñó mecánica, cultura y valores
 - **Herencia cultural**: Descendiente de refugiados del Caribe (isla específica sin confirmar)
@@ -257,7 +257,7 @@
 
 #### MADRE DE ETHAN
 - **Nombre**: [A definir]
-- **Estado**: Desaparecida desde 2100
+- **Estado**: Desaparecida desde 2102
 - **Edad al desaparecer**: ~27 años
 - **Misterio**: Circunstancias de su desaparición [A desarrollar]
 - **Impacto**: Su ausencia marca profundamente a Ethan y Carlos
@@ -356,7 +356,7 @@
   - **Plaza de Chatarra**: Mercado de piezas y desechos
   - **Taller de Carlos**: Pequeño agujero en edificio condenado
 
-### REGIONES CARIBEÑAS SUMERGIDAS (2058)
+### REGIONES CARIBEÑAS SUMERGIDAS (2065)
 - **Estado**: Sumergidas o devastadas por La Gran Inundación.
 - **Islas del Caribe**: Cuba, República Dominicana, Haití, Puerto Rico, Jamaica, Bahamas (todas bajo el agua).
 - **Miami**: Ahora es un arrecife de coral artificial bajo cien metros de agua salada.
@@ -626,16 +626,16 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 - **2048**: **Fundación de Goglee City** (domo corporativo)
 - **2045-2055**: Construcción de domos en continentes principales
 
-#### **2055-2060: LA GRAN INUNDACIÓN**
+#### **2060-2070: LA GRAN INUNDACIÓN**
 - **2052**: Temperatura global +3°C sobre niveles pre-industriales
 - **2055**: Inicio del derretimiento acelerado del Ártico
-- **2058**: **LA GRAN INUNDACIÓN**
+- **2065**: **LA GRAN INUNDACIÓN**
   - Colapso completo del casquete polar ártico
   - Nivel del mar sube 7-10 metros
   - **Islas del Caribe completamente sumergidas**: Cuba, República Dominicana, Haití, Puerto Rico, Jamaica, Bahamas
   - **Costas continentales devastadas**: Miami y sur de Florida, costa caribeña de Venezuela y Colombia, Centroamérica
   - ~45 millones de refugiados solo de islas caribeñas (muchos más de costas continentales; muchos murieron)
-- **2060**: Fundación oficial del **Distrito RD** (periferia de Goglee City)
+- **2067**: Fundación oficial del **Distrito RD** (periferia de Goglee City)
 
 #### **2060-2080: POST-INUNDACIÓN**
 - **2060-2070**: Asentamiento de refugiados en periferias
@@ -655,7 +655,7 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 
 ```
 2058 (3 de enero)    - Nacimiento de CARLOS RAMÍREZ
-                       (mismo año de La Gran Inundación)
+                       (Nacido 7 años antes de La Gran Inundación en Quisqueya)
                        Hijo de refugiados dominicanos
 
 2058-2093            - Carlos crece en Distrito RD
@@ -665,11 +665,11 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 ~2093                - Carlos conoce a la madre de Ethan
                        (Carlos tiene ~35 años)
 
-2095 (3 de febrero)  - Nacimiento de ETHAN RAMÍREZ
-                       (Carlos tiene 37 años y 1 mes)
+2097 (3 de febrero)  - Nacimiento de ETHAN RAMÍREZ
+                       (Carlos tiene 39 años y 1 mes)
 
-~2100                - Desaparición de la madre de Ethan
-                       (Ethan tiene ~5 años, Carlos ~42 años)
+~2102                - Desaparición de la madre de Ethan
+                       (Ethan tiene ~5 años, Carlos ~44 años)
 
 2100-2114            - Carlos cría solo a Ethan
                      - Le enseña mecánica y cultura caribeña
@@ -694,7 +694,7 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 
 ## EVENTOS CLAVE
 
-### LA GRAN INUNDACIÓN (2058)
+### LA GRAN INUNDACIÓN (2065)
 - **Causa**: Derretimiento completo del casquete polar ártico
 - **Consecuencia inmediata**: Nivel del mar +7-10 metros
 - **Regiones afectadas**: 

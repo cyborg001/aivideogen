@@ -1874,10 +1874,23 @@
                     this.audioPreviewUrl = null;
                 },
 
+                _safeEval(val, defaultValue = 0) {
+                    if (val === null || val === undefined || val === '') return defaultValue;
+                    try {
+                        const clean = String(val).replace(/[^0-9+\-*/().]/g, '');
+                        return Function('"use strict";return (' + clean + ')')() || defaultValue;
+                    } catch (e) {
+                        // Fallback to parseFloat if complex eval fails
+                        const f = parseFloat(val);
+                        return isNaN(f) ? defaultValue : f;
+                    }
+                },
+
                 get viewfinderStyle() {
-                    const zoom = parseFloat(this.formData.zoomStr) || 1.0;
-                    const panH = parseFloat(this.formData.panHorStart) || 50;
-                    const panV = parseFloat(this.formData.panVerStart) || 50;
+                    const zoom = this._safeEval(this.formData.zoomStr.split(':')[0], 1.0);
+                    const panH = this._safeEval(this.formData.panHorStart, 50);
+                    const panV = this._safeEval(this.formData.panVerStart, 50);
+                    const rotate = this._safeEval(this.formData.rotate ? this.formData.rotate.split(':')[0] : 0, 0);
 
                     // 1. Aspect Ratio del Proyecto
                     let targetAR = 16 / 9; // Default landscape
@@ -1924,7 +1937,7 @@
                     const left = Math.max(0, Math.min(100 - finalW, panH - (finalW / 2)));
                     const top = Math.max(0, Math.min(100 - finalH, panV - (finalH / 2)));
 
-                    return `width: ${finalW}%; height: ${finalH}%; left: ${left}%; top: ${top}%;`;
+                    return `width: ${finalW}%; height: ${finalH}%; left: ${left}%; top: ${top}%; transform: rotate(${rotate}deg);`;
                 },
 
                 onAssetLoad(event) {
@@ -2448,10 +2461,14 @@
                         // Reconstruct Move String
                         let moveParts = [];
                         if (this.groupForm.usePanHor) {
-                            moveParts.push(`HOR:${this.groupForm.panHorStart}:${this.groupForm.panHorEnd}`);
+                            const hStart = this.groupForm.panHorStart || 0;
+                            const hEnd = (this.groupForm.panHorEnd === null || this.groupForm.panHorEnd === undefined || this.groupForm.panHorEnd === '') ? hStart : this.groupForm.panHorEnd;
+                            moveParts.push(`HOR:${hStart}:${hEnd}`);
                         }
                         if (this.groupForm.usePanVer) {
-                            moveParts.push(`VER:${this.groupForm.panVerStart}:${this.groupForm.panVerEnd}`);
+                            const vStart = this.groupForm.panVerStart || 0;
+                            const vEnd = (this.groupForm.panVerEnd === null || this.groupForm.panVerEnd === undefined || this.groupForm.panVerEnd === '') ? vStart : this.groupForm.panVerEnd;
+                            moveParts.push(`VER:${vStart}:${vEnd}`);
                         }
                         group.move = moveParts.length > 0 ? moveParts.join(' + ') : '';
 
@@ -2785,10 +2802,14 @@
                     // Build Move String (Combine HOR + VER)
                     let moveParts = [];
                     if (this.formData.usePanHor) {
-                        moveParts.push(`HOR:${this.formData.panHorStart}:${this.formData.panHorEnd}`);
+                        const hStart = this.formData.panHorStart || 0;
+                        const hEnd = (this.formData.panHorEnd === null || this.formData.panHorEnd === undefined || this.formData.panHorEnd === '') ? hStart : this.formData.panHorEnd;
+                        moveParts.push(`HOR:${hStart}:${hEnd}`);
                     }
                     if (this.formData.usePanVer) {
-                        moveParts.push(`VER:${this.formData.panVerStart}:${this.formData.panVerEnd}`);
+                        const vStart = this.formData.panVerStart || 0;
+                        const vEnd = (this.formData.panVerEnd === null || this.formData.panVerEnd === undefined || this.formData.panVerEnd === '') ? vStart : this.formData.panVerEnd;
+                        moveParts.push(`VER:${vStart}:${vEnd}`);
                     }
                     let moveStr = moveParts.length > 0 ? moveParts.join(' + ') : null;
 

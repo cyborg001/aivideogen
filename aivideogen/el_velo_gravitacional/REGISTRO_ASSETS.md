@@ -37,24 +37,43 @@ Para el prólogo "El Regalo", se estiman necesarios los siguientes assets:
 - [x] **Asset 9**: Rostro de advertencia de Carlos (`carlos_warning_face_png_1772311268028.png`)
 - [x] **Asset 10**: Ritual de Respeto (`ethan_bowing_respect_v2_png_1772311525093.png`)
 - [x] **Asset 11**: Escena final del taller (`final_taller_shadow_png_1772311291464.png`)
+- [x] **Overlay UI**: Cabina con Manos de Piloto (`cockpit_overlay_hands.png`)
 
 ---
 
-## 🚀 Prompts de Generación (DNA Visual)
+---
 
-| Asset ID | Descripción Narrativa | Prompt de IA Utilizado | Estado |
-| :--- | :--- | :--- | :--- |
-| `vision_wormhole` | Visión POV HUD Cian | `Cinematic first-person view (POV) from inside a futuristic pilot cockpit... Translucent cyan HUD...` | ✅ Generada |
-| `distrito_rd` | Calima industrial y Domo | `Immersive wide shot of 'Distrito RD'... heavy, yellow-tinted industrial haze (calima)... pristine, glowing crystal dome...` | ✅ Generada |
-| `carlos_taller` | Taller de Carlos | `...` | ✅ Aprobada |
-| `carlos_bendicion` | Ritual de la Bendición | `...` | ✅ Aprobada |
-| `fenix_hero_shot` | Revelación del Fénix | `...` | ✅ Aprobada |
-| `goglee_dome` | Perspectiva de la Cúpula | `...` | ✅ Aprobada |
-| `ethan_curiosity` | Ethan ante el regalo | `...` | ✅ Aprobada |
-| `carlos_data` | Monitor con anomalía | `...` | ✅ Aprobada |
-| `carlos_warning` | Advertencia de Carlos | `...` | ✅ Aprobada |
-| `ethan_respect` | Ritual de Respeto | `...` | ✅ Aprobada |
-| `taller_shadow` | Final: Orgullo y Sombra | `...` | ✅ Aprobada |
+## 🦾 ERA EDGERUNNERS (v32.0 - v32.7)
+
+### ADN Visual Studio Trigger
+- **Estética**: Líneas cinéticas, colores neón saturados, sombras de alto contraste.
+- **Tecnología**: Hologramas avanzados, interfaces de luz, tech-jackets. **Cero pantallas analógicas**.
+
+### Personajes Canaónicos (Fieles a Referencia)
+- **Ethan**: Cabello corto rizado **rubio/miel**, atlético, rasgos latinos juveniles.
+- **Carlos**: Piel oscura, **barba canosa completa y densa**, gafas negras rectangulares. Vestuario: **Tech-jacket amarilla/negra**.
+
+### Inventario de Producción (Fiel)
+- [x] **Asset 1**: Visión Geodésica Fiel (`ethan_vision_wormhole_edgerunners_fiel_1772396352741.png`)
+- [x] **Asset 2**: Distrito RD Fiel v2 (`distrito_rd_edgerunners_fiel_v2_1772396386153.png`)
+- [x] **Asset 3**: Domo Goglee Fiel (`goglee_dome_edgerunners_fiel_1772396405878.png`)
+- [x] **Asset 4**: Carlos en el Taller Fiel (`carlos_taller_edgerunners_fiel_1772396424909.png`)
+- [x] **Asset 5**: El Fénix Reveal Fiel (`fenix_reveal_edgerunners_fiel_v2_1772396447054.png`)
+- [ ] **Asset 6**: Gratitud de Ethan (Pendiente Quota)
+- [ ] **Asset 7**: Anomalía de Datos (Pendiente Quota)
+- [ ] **Asset 8**: Bendición Fiel (Pendiente Quota)
+- [ ] **Asset 9**: Orgullo Final (Pendiente Quota)
+
+---
+
+## 🚀 Historial de Prompts (DNA Edgerunners)
+
+| Asset ID | Descripción | Prompt Clave |
+| :--- | :--- | :--- |
+| `vision_fiel` | POV Túnel | `...first-person view... Ethan with curly rubio/miel hair... Studio Trigger style...` |
+| `distrito_fiel` | Distrito RD | `...heavy yellow industrial haze... vibrant neon... Studio Trigger...` |
+| `carlos_fiel` | Carlos Taller | `...Carlos (dark skin, dense white beard, black glasses)... tech-jacket... holograms...` |
+| `fenix_fiel` | Motowave | `...muscular futuristic motorcycle... glowing parts... Carlos's high-tech workshop...` |
 
 ---
 

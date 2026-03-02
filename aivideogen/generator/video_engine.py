@@ -143,46 +143,56 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         return ColorClip(size=target_size, color=(0,0,0), duration=duration)
 
     h_orig, w_orig = img_bgr.shape[:2]
-    target_w, target_h = target_size
+    target_w, target_h = target_size # (width, height)
+    
+    # v30.8.1: Debug Coordinate Integrity
+    # logger.info(f"    📏 [Engine] Asset: {w_orig}x{h_orig} | Target: {target_w}x{target_h}")
+
+    def safe_eval_math(val, default=0.0):
+        """v30.6: Safely evaluates simple math expressions (e.g., '8*360')."""
+        if val is None: return default
+        # v31.3: Robust filtering of JS junk and nulls
+        s = str(val).lower().replace(' ', '').replace(',', '.')
+        if not s or s in ('undefined', 'nan', 'none', 'null'): 
+            return default
+            
+        # Only allow numbers and basic operators
+        if not re.match(r'^[\d\.\+\-\*\/\(\)]+$', s):
+            try: return float(s)
+            except: return default
+        try:
+            # Using eval with empty globals/locals for safety
+            return float(eval(s, {"__builtins__": None}, {}))
+        except:
+            return default
 
     # Parse Zoom
     z_start, z_end = 1.0, 1.0
     if zoom:
         if isinstance(zoom, str) and ':' in zoom:
             parts = zoom.split(':')
-            z_start = float(parts[0])
-            z_end = float(parts[1])
+            z_start = safe_eval_math(parts[0], 1.0)
+            z_end = safe_eval_math(parts[1], z_start)
         else:
-            try:
-                z_start = float(zoom)
-                z_end = z_start
-            except: pass
+            z_start = safe_eval_math(zoom, 1.0)
+            z_end = z_start
 
     # Parse Move
     # Supports "HOR:0:100 + VER:50:50" or simple "HOR:0:100"
     move_configs = []
     move_str = move if move else "HOR:50:50"
     
-    # Check for Portrait Auto-Scan hack
-    is_portrait = h_orig / w_orig > 1.2
-    if is_portrait and not move:
-        move_str = "VER:100:0"
+    # v30.6: REMOVED Portrait Auto-Scan hack
+    # This was causing discrepancies with the editor's viewfinder.
+    # If no move is defined, we stick to the provided string (defaults to 50:50).
     
     sub_moves = move_str.split('+')
     for sm in sub_moves:
         parts = [p.strip() for p in sm.strip().split(':') if p.strip()]
         if not parts: continue
         mdir = parts[0].upper()
-        # v30.4: Robust Float Conversion
-        try:
-            mstart = float(parts[1]) if len(parts) > 1 else 50.0
-        except (ValueError, IndexError):
-            mstart = 50.0
-        
-        try:
-            mend = float(parts[2]) if len(parts) > 2 else mstart
-        except (ValueError, IndexError):
-            mend = mstart
+        mstart = safe_eval_math(parts[1] if len(parts) > 1 else "50.0", 50.0)
+        mend = safe_eval_math(parts[2] if len(parts) > 2 else str(mstart), mstart)
             
         move_configs.append({'dir': mdir, 'start': mstart, 'end': mend})
 
@@ -266,25 +276,26 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         has_hor = False
         has_ver = False
         
+        # v30.10: Unificado con Frontend (Slack-based Panning)
         for cfg in move_configs:
+            # Porcentaje de paneo (0 a 100, donde 50 es el centro)
             m_prog = cfg['start'] + (cfg['end'] - cfg['start']) * progress
-            # v30.3: Direct Centering Logic (Absolute Coordinates)
-            # percentage 0..100 maps to 0..orig_dim
-            # The offset is the difference between this target center and the image center
-            target_pos = m_prog / 100.0
+            
+            # El Frontend mueve el div desde left:0 hasta left: (100 - zoom_width)
+            # En OpenCV, movemos el centro de la cámara.
+            # Rango de movimiento válido del centro = desde (w_orig/2 - slack_w/2) hasta (w_orig/2 + slack_w/2)
+            # Por lo tanto, el offset desde el centro oscila entre -slack_w/2 y +slack_w/2
+            
+            # Mapeo: 0% -> -slack/2 | 50% -> 0 | 100% -> +slack/2
+            factor = (m_prog - 50.0) / 50.0 # Rango de -1.0 a 1.0
             
             if cfg['dir'] == 'HOR':
-                # Target X in pixels: target_pos * w_orig
-                # Current center is w_orig / 2
-                # Offset needed to reach target: target_pos * w_orig - w_orig / 2
-                off_x = (target_pos * w_orig) - (w_orig / 2.0)
-                # Clamp to slack to prevent black borders
+                off_x = factor * (slack_w / 2.0)
+                # Clamp de seguridad estricto (no se puede ver negro)
                 off_x = max(-slack_w/2.0, min(slack_w/2.0, off_x))
-                has_hor = True
             elif cfg['dir'] == 'VER':
-                off_y = (target_pos * h_orig) - (h_orig / 2.0)
+                off_y = factor * (slack_h / 2.0)
                 off_y = max(-slack_h/2.0, min(slack_h/2.0, off_y))
-                has_ver = True
 
         # Apply default center-lock if no move defined for axis
         # (Already handled by 50% default in logic above effectively)
@@ -292,7 +303,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         # Shake Effect
         if shake:
             freq = 12.0
-            intensity = float(shake_intensity if shake_intensity else 5)
+            intensity = safe_eval_math(shake_intensity, 5.0)
             amp = intensity * 2.0 # Pixels
             off_x += np.sin(t * freq * 2 * np.pi) * amp
             off_y += np.cos(t * freq * 1.5 * np.pi) * amp
@@ -307,11 +318,37 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         
         # Source Points (The crop rectangle in original image)
         # Top-Left, Top-Right, Bottom-Left
-        src_pts = np.float32([
-            [cx - curr_w / 2, cy - curr_h / 2],
-            [cx + curr_w / 2, cy - curr_h / 2],
-            [cx - curr_w / 2, cy + curr_h / 2]
-        ])
+        # v11.8+: ROTATE & W_ROTATE Support
+        angle = 0.0
+        if rotate:
+            r_start, r_end = 0.0, 0.0
+            if isinstance(rotate, str) and ':' in rotate:
+                r_parts = rotate.split(':')
+                r_start = safe_eval_math(r_parts[0], 0.0)
+                r_end = safe_eval_math(r_parts[1], r_start)
+            else:
+                r_start = safe_eval_math(rotate, 0.0)
+                r_end = r_start
+            angle += r_start + (r_end - r_start) * progress
+
+        if w_rotate:
+            angle += safe_eval_math(w_rotate, 0.0) * t
+
+        # v30.9: Rotated Source Points (Matches Editor Viewfinder)
+        pivot = np.array([cx, cy])
+        p1 = np.array([cx - curr_w / 2, cy - curr_h / 2])
+        p2 = np.array([cx + curr_w / 2, cy - curr_h / 2])
+        p3 = np.array([cx - curr_w / 2, cy + curr_h / 2])
+        
+        if angle != 0:
+            rad = np.radians(-angle) # CSS CW -> OpenCV CCW
+            c, s = np.cos(rad), np.sin(rad)
+            R_mat = np.array([[c, -s], [s, c]])
+            p1 = pivot + R_mat @ (p1 - pivot)
+            p2 = pivot + R_mat @ (p2 - pivot)
+            p3 = pivot + R_mat @ (p3 - pivot)
+
+        src_pts = np.array([p1, p2, p3], dtype=np.float32)
         
         # Destination Points (The full target frame)
         dst_pts = np.float32([
@@ -320,43 +357,9 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             [0, target_h]
         ])
         
-        # v11.8+: ROTATE & W_ROTATE Support (Integrated in Affine Matrix)
-        angle = 0.0
-        if rotate:
-            r_start, r_end = 0.0, 0.0
-            if isinstance(rotate, str) and ':' in rotate:
-                try:
-                    r_parts = rotate.split(':')
-                    r_start = float(r_parts[0])
-                    r_end = float(r_parts[1])
-                except: pass
-            else:
-                try: r_start = float(rotate); r_end = r_start
-                except: pass
-            angle += r_start + (r_end - r_start) * progress
-
-        if w_rotate:
-            try: angle += float(w_rotate) * t
-            except: pass
-
         # Compute Final Affine Transform Matrix
-        # v30.0 FIX: Instead of rotating the RESULT frame (which creates black borders), 
-        # we rotate the SOURCE cropping area.
+        # v30.9 FIX: By rotating src_pts, M already contains the rotation.
         M = cv2.getAffineTransform(src_pts, dst_pts)
-        
-        if angle != 0:
-            # v30.1: Rotate the transformation matrix around the destination center.
-            # This is mathematically cleaner and prevents black borders because it still
-            # samples from the original 'img_bgr'.
-            T1 = np.array([[1, 0, -target_w/2], [0, 1, -target_h/2], [0, 0, 1]], dtype=np.float32)
-            R = cv2.getRotationMatrix2D((0, 0), angle, 1.0)
-            R_3x3 = np.vstack([R.astype(np.float32), [0, 0, 1]])
-            T2 = np.array([[1, 0, target_w/2], [0, 1, target_h/2], [0, 0, 1]], dtype=np.float32)
-            M_3x3 = np.vstack([M, [0, 0, 1]])
-            
-            # M_final = T2 * R * T1 * M
-            M_combined = T2 @ R_3x3 @ T1 @ M_3x3
-            M = M_combined[:2, :]
 
         try:
             # Apply Warp (Crop + Resize + Rotation + Subpixel Interpolation)
@@ -369,18 +372,6 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             return np.zeros((target_h, target_w, 3), dtype=np.uint8)
 
         # Convert BGR to RGB
-        return cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        
-        # Resize to Target
-        # INTER_LINEAR is fast and good for video. INTER_AREA better for downscaling static.
-        # INTER_CUBIC is slower.
-        # Given we want SPEED: Linear is standard.
-        if crop.size == 0: return np.zeros((target_h, target_w, 3), dtype=np.uint8)
-        
-        resized = cv2.resize(crop, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
-        
-        # 4. Color Convert (BGR -> RGB)
-        # MoviePy expects RGB
         return cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
 
     clip = VideoClip(make_frame, duration=duration)
@@ -422,11 +413,14 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             
         overlay = overlay.subclipped(0, duration)
         
-        # v30.5: If it's a cockpit/static overlay, we might want higher opacity.
-        # However, for backward compatibility with 'dust', etc., we keep 0.4 for VIDEOS.
-        # But for PNGs we assume the user already handled the transparency (Alpha channel).
-        if not overlay_path.lower().endswith(('.png')):
+        # v30.7: Apply opacity ONLY if it's NOT a UI overlay (PNG/WebP with Alpha)
+        is_ui_overlay = overlay_path and overlay_path.lower().endswith(('.png', '.webp'))
+        if not is_ui_overlay:
+             # Traditional video overlays (dust, flares) default to 0.4 opacity
              overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+        else:
+             # v31.1: Respect native PNG alpha mask. to_mask() calculates luma!
+             pass
              
         overlay = overlay.without_audio()
         return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
@@ -490,7 +484,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         else:
             logger.info(f"    ⚠️  El clip de video NO tiene pista de audio: {os.path.basename(video_path)}")
 
-        video_volume = float(video_volume or 0.0)
+        video_volume = safe_eval_math(video_volume, 0.0)
         if video_volume > 0 and v_clip.audio:
              # v14.9: Force audio track retention before effects
              v_audio = v_clip.audio
@@ -530,9 +524,13 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
             
         overlay = overlay.subclipped(0, duration)
         
-        # v30.5: Apply opacity ONLY if it's NOT a PNG (assuming PNGs have pre-baked alpha)
-        if not overlay_path.lower().endswith(('.png')):
+        # v30.7: Apply opacity ONLY if it's NOT a UI overlay (PNG/WebP with Alpha)
+        is_ui_overlay = overlay_path and overlay_path.lower().endswith(('.png', '.webp'))
+        if not is_ui_overlay:
              overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+        else:
+             # v31.1: Respect native PNG alpha mask.
+             pass
              
         overlay = overlay.without_audio()
         layers.append(overlay)
@@ -1270,12 +1268,28 @@ def generate_video_avgl(project):
                         current_overlay_clip = None
                         overlay_path = None
                         if asset.overlay:
-                            overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
-                            if os.path.exists(overlay_path):
+                            # v31.0: Multi-Format Overlay Resolution (Video & Images)
+                            raw_overlay = asset.overlay
+                            overlay_path = None
+                            
+                            # Check popular extensions
+                            for ext in ['', '.mp4', '.png', '.jpg', '.jpeg', '.webp', '.mov']:
+                                test_path = os.path.join(overlay_dir, f"{raw_overlay}{ext}")
+                                if os.path.exists(test_path) and os.path.isfile(test_path):
+                                    overlay_path = test_path
+                                    break
+                            
+                            if overlay_path:
                                 if overlay_path not in overlay_cache:
                                     try:
-                                        logger.log(f"    📦 Cargando overlay en cache: {asset.overlay}")
-                                        oc = VideoFileClip(overlay_path, has_mask=True)
+                                        logger.log(f"    📦 Cargando overlay: {os.path.basename(overlay_path)}")
+                                        # Use ImageClip for static, VideoFileClip for dynamic
+                                        if overlay_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                                            from moviepy import ImageClip
+                                            oc = ImageClip(overlay_path).with_duration(duration)
+                                        else:
+                                            oc = VideoFileClip(overlay_path, has_mask=True)
+                                        
                                         overlay_cache[overlay_path] = oc
                                         clips_to_close.append(oc)
                                     except Exception as oe:
@@ -1284,6 +1298,7 @@ def generate_video_avgl(project):
                                 
                                 current_overlay_clip = overlay_cache.get(overlay_path)
                             else:
+                                logger.log(f"    ❌ Overlay NO encontrado: {raw_overlay}")
                                 overlay_path = None
                         
                         # v14.0 Sync Logic: Identify timing for groups
@@ -1364,6 +1379,7 @@ def generate_video_avgl(project):
                             if not is_fast or overlay_path:
                                 clip = process_video_asset(
                                     asset_path, duration, target_size,
+                                    overlay_path=overlay_path,
                                     overlay_clip=current_overlay_clip,
                                     fit=asset.fit,
                                     clips_to_close=clips_to_close,
@@ -1376,6 +1392,7 @@ def generate_video_avgl(project):
                                 asset_path, duration, target_size,
                                 zoom=eff_zoom,
                                 move=eff_move,
+                                overlay_path=overlay_path,
                                 overlay_clip=current_overlay_clip, 
                                 fit=asset.fit,
                                 shake=eff_shake,
