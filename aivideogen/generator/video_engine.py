@@ -1868,6 +1868,22 @@ def generate_video_avgl(project):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
                             
+                            # v4.7: Block Fade-out/Fade-in Logic (Vectorized)
+                            block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
+                            if block_fade_t > 0:
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    # Fade In
+                                    m_fade_in = (t >= b_start) & (t <= (b_start + block_fade_t))
+                                    if np.any(m_fade_in):
+                                        p = (t[m_fade_in] - b_start) / block_fade_t
+                                        factors[m_fade_in] *= p
+                                    
+                                    # Fade Out
+                                    m_fade_out = (t >= (b_end - block_fade_t)) & (t <= b_end)
+                                    if np.any(m_fade_out):
+                                        p = (b_end - t[m_fade_out]) / block_fade_t
+                                        factors[m_fade_out] *= p
+
                             if t.size == 0: return np.zeros((0, 1))
                             return (float(peak_vol_val) * factors)[:, None]
                         else:
@@ -1881,6 +1897,21 @@ def generate_video_avgl(project):
                                 elif v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
+                            
+                            # v4.7: Block Fade-out/Fade-in Logic
+                            # Applies a smooth volume curve at the boundaries of each block
+                            block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
+                            if block_fade_t > 0:
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    # Fade In at start of block
+                                    if b_start <= t <= (b_start + block_fade_t):
+                                        p_in = (t - b_start) / block_fade_t
+                                        factor = factor * p_in
+                                    # Fade Out at end of block
+                                    elif (b_end - block_fade_t) <= t <= b_end:
+                                        p_out = (b_end - t) / block_fade_t
+                                        factor = factor * p_out
+                                        
                             return float(peak_vol_val * factor)
 
                     # --- APPLY TO LOCAL MUSIC (BLOCKS) ---
@@ -2012,7 +2043,7 @@ def generate_video_avgl(project):
 
             final_video.write_videofile(
                 output_path, 
-                ffmpeg_params=["-pix_fmt", "yuv420p"], 
+                ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"], 
                 logger=cache_logger, # v13.0: Real-time Item visibility
                 **render_params
             )

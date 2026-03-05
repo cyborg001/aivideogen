@@ -1562,3 +1562,32 @@ def upload_carousel_images(request):
             return JsonResponse({'status': 'error', 'message': 'No se guardaron imágenes válidas.'})
             
     return JsonResponse({'status': 'error', 'message': 'Solo peticiones POST.'}, status=405)
+
+def serve_video(request, video_path):
+    """
+    Custom view to serve media videos with Range Request support.
+    """
+    from django.http import Http404, HttpResponse
+    from .range_response import get_range_response
+    
+    # Try multiple common paths within media
+    # 1. Path relative to media root (covers 'videos/...' and 'uploads/...')
+    full_path = os.path.join(settings.MEDIA_ROOT, video_path)
+    
+    # 2. If it's just the filename, try 'videos' subfolder
+    if not os.path.exists(full_path):
+        full_path = os.path.join(settings.MEDIA_ROOT, 'videos', video_path)
+    
+    # 3. Try 'uploads' subfolder
+    if not os.path.exists(full_path):
+        full_path = os.path.join(settings.MEDIA_ROOT, 'uploads', video_path)
+
+    if not os.path.exists(full_path):
+        raise Http404(f"Video not found: {video_path}")
+
+    range_header = request.META.get('HTTP_RANGE', None)
+    if not range_header:
+        from django.views.static import serve
+        return serve(request, os.path.basename(full_path), os.path.dirname(full_path))
+    
+    return get_range_response(full_path, range_header)
