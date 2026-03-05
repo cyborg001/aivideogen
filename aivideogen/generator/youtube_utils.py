@@ -232,8 +232,9 @@ def trigger_auto_upload(project):
         logger.error(f"[YouTube] Error obteniendo cliente para subida automática: {e}")
         return False
 
-    if not youtube:
-        project.log_output += "\n[YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización."
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        project.log_output += f"\n[{now}] [YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización."
         project.save(update_fields=['log_output'])
         return False
         
@@ -268,9 +269,10 @@ def trigger_auto_upload(project):
         
         final_tags = list(dict.fromkeys(tags_list))[:20]
  
-        # 4. Upload
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logger.info(f"[YouTube] Iniciando subida para proyecto {project.id}: {title}")
-        project.log_output += f"\n[YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
+        project.log_output += f"\n[{now}] [YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
         project.save(update_fields=['log_output'])
         
         result = upload_video(youtube, project.output_video.path, title, description, tags=final_tags)
@@ -289,18 +291,23 @@ def trigger_auto_upload(project):
              else:
                  project.youtube_video_id = entry
                  
-             project.log_output += f"\n[YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
+             from datetime import datetime
+             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+             project.log_output += f"\n[{now}] [YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
              project.save(update_fields=['youtube_video_id', 'log_output'])
              logger.info(f"[YouTube] Subida exitosa - Video ID: {video_id}")
              return True
         else:
-            project.log_output += "\n[YouTube] [WARNING] La subida terminó sin confirmación de ID."
+            from datetime import datetime
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            project.log_output += f"\n[{now}] [YouTube] [WARNING] La subida terminó sin confirmación de ID."
             project.save(update_fields=['log_output'])
             
     except Exception as e:
-        error_msg = str(e)
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logger.error(f"[YouTube] Error en subida: {error_msg}")
-        project.log_output += f"\n[YouTube] [ERROR] Error en subida: {error_msg}"
+        project.log_output += f"\n[{now}] [YouTube] [ERROR] Error en subida: {error_msg}"
         project.save(update_fields=['log_output'])
         
     return False

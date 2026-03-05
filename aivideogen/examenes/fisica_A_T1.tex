@@ -1,0 +1,89 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+
+\geometry{margin=2cm}
+
+\title{Examen de Física I - Grupo A - Tipo 1 (20 puntos)}
+\author{Estudiante: \underline{\hspace{6cm}} \quad Fecha: \underline{\hspace{3cm}}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Instrucciones}
+Responda los siguientes 5 ítems. El ítem 5 consta de 2 problemas de selección múltiple (2 pts c/u).
+
+\begin{enumerate}[label=\textbf{Item \arabic*:}, leftmargin=*]
+
+    \item \textbf{Falso o Verdadero (FV) (4 pts)} \\
+    Determine si las siguientes afirmaciones son Verdaderas (V) o Falsas (F):
+    \begin{itemize}
+        \item[\underline{\hspace{1cm}}] La palabra ``Física'' proviene del griego \textit{physis}, que significa naturaleza.
+        \item[\underline{\hspace{1cm}}] La Física estudia únicamente los seres vivos y sus funciones.
+        \item[\underline{\hspace{1cm}}] La Mecánica y la Óptica son ramas de la Física Clásica.
+        \item[\underline{\hspace{1cm}}] El tiempo es una magnitud fundamental en el S.I.
+    \end{itemize}
+
+    \item \textbf{Completa (Magnitudes S.I.) (4 pts)} \\
+    Escriba la unidad básica del Sistema Internacional para las siguientes magnitudes:
+    \begin{itemize}
+        \item Masa: \underline{\hspace{4cm}}
+        \item Longitud: \underline{\hspace{4cm}}
+        \item Temperatura: \underline{\hspace{4cm}}
+        \item Intensidad de Corriente: \underline{\hspace{3cm}}
+    \end{itemize}
+
+    \item \textbf{Selección Múltiple (Cifras y Redondeo) (4 pts)} \\
+    Marque la opción correcta (1 pt c/u):
+    \begin{enumerate}[label=\roman*)]
+        \item ¿Cuántas cifras significativas tiene $0.0050$? \textbf{A) 1 \quad B) 2 \quad C) 3 \quad D) 4}
+        \item ¿Cuántas cifras significativas tiene $120.0$? \textbf{A) 2 \quad B) 3 \quad C) 4 \quad D) 5}
+        \item Resultado de $3.95 + 4.198 + 12.17$: \textbf{A) 20.32 \quad B) 20.318 \quad C) 20.3 \quad D) 20}
+        \item Resultado de $18.94 \times 12.713$: \textbf{A) 240.78 \quad B) 240.8 \quad C) 241 \quad D) 240.784}
+    \end{enumerate}
+
+    \item \textbf{Aparea (Equivalencias) (4 pts)} \\
+    Relacione la equivalencia correcta:
+    \begin{center}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        A) 1 km & (\hspace{0.5cm}) & 100 cm \\ \hline
+        B) 1 m & (\hspace{0.5cm}) & 1000 m \\ \hline
+        C) 1 pulgada & (\hspace{0.5cm}) & 12 pulgadas \\ \hline
+        D) 1 pie & (\hspace{0.5cm}) & 2.54 cm \\ \hline
+    \end{tabular}
+    \end{center}
+
+    \item \textbf{Resuelve (Selección Múltiple) (4 pts)} \\
+    Elija la opción correcta para cada problema (2 pts c/u):
+    \begin{enumerate}[label=\Alph*)]
+        \item \textbf{Conversión}: Convierta $6 \text{ km}$ a pies. (Dato: $1 \text{ km} = 1000 \text{ m}$, $1 \text{ m} = 3.28 \text{ pies}$) \\
+        \textbf{A) 19,680 ft \quad B) 1,829 ft \quad C) 6,000 ft \quad D) 3,280 ft}
+        
+        \item \textbf{Vectores (Ángulo no notable)}: Halle el módulo de la resultante de los vectores: $\vec{A}=40u$ (horizontal derecha), $\vec{B}=30u$ (vertical arriba) y $\vec{C}=10u$ a un ángulo de $20^\circ$ con la horizontal izquierda. (Use $\cos 20^\circ = 0.94, \sin 20^\circ = 0.34$)
+        \begin{center}
+        \begin{tikzpicture}[scale=0.1]
+            \draw[dashed, ->] (-15,0) -- (45,0) node[right] {$x$};
+            \draw[dashed, ->] (0,-5) -- (0,35) node[above] {$y$};
+            \draw[ultra thick, ->, blue] (0,0) -- (40,0) node[below] {40u};
+            \draw[ultra thick, ->, red] (0,0) -- (0,30) node[left] {30u};
+            \draw[ultra thick, ->, purple] (0,0) -- ({10*cos(160)},{10*sin(160)}) node[above left] {10u};
+            \draw (-3,0) arc (180:160:3) node[midway, left] {\tiny $20^\circ$};
+        \end{tikzpicture}
+        \end{center}
+        \textbf{A) 45u \quad B) 62u \quad C) 50u \quad D) 80u}
+    \end{enumerate}
+
+\end{enumerate}
+
+\end{document}

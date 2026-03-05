@@ -209,16 +209,17 @@ class ProjectLogger:
         self.log_buffer = []
 
     def log(self, message):
-        # Remove emojis for console compatibility if they cause issues
-        # But we mostly rely on the wrapped sys.stdout now.
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamped_message = f"[{now}] {message}"
+        
         try:
-            print(f"[Project {self.project.id}] {message}", flush=True)
+            print(f"[Project {self.project.id}] {timestamped_message}", flush=True)
         except UnicodeEncodeError:
-            # Fallback for very old/strict consoles
-            clean_msg = message.encode('ascii', 'ignore').decode('ascii')
+            clean_msg = timestamped_message.encode('ascii', 'ignore').decode('ascii')
             print(f"[Project {self.project.id}] {clean_msg}", flush=True)
 
-        self.log_buffer.append(message)
+        self.log_buffer.append(timestamped_message)
         self.project.log_output = "\n".join(self.log_buffer)
         self.project.save(update_fields=['log_output'])
 

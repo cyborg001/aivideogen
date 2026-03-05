@@ -395,8 +395,10 @@ def start_project(request, project_id):
             messages.warning(request, "El proyecto ya se está procesando.")
         else:
             # Reset logs/status
+            from datetime import datetime
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             project.status = 'processing'
-            project.log_output = "🚀 Iniciando generación manual (v3.3)..."
+            project.log_output = f"[{now}] 🚀 Iniciando generación manual (v3.3)..."
             project.save()
             
             # Start Thread
@@ -421,11 +423,13 @@ def reset_project(request, project_id):
             except: pass
             
         # 2. Reset Status/Metadata
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         project.status = 'pending'
         project.output_video = None
         project.thumbnail = None
         project.timestamps = ""
-        project.log_output = "♻️ Proyecto reiniciado para nueva generación."
+        project.log_output = f"[{now}] ♻️ Proyecto reiniciado para nueva generación."
         project.save()
         
         messages.success(request, "Proyecto reiniciado. Puedes volver a generarlo ahora.")

@@ -1,0 +1,90 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+
+\geometry{margin=2cm}
+
+\title{Examen de Física I - Grupo B - Tipo 1 (20 puntos)}
+\author{Estudiante: \underline{\hspace{6cm}} \quad Fecha: \underline{\hspace{3cm}}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Instrucciones}
+Responda los siguientes 5 ítems. El ítem 5 consta de 2 problemas de selección múltiple (2 pts c/u).
+
+\begin{enumerate}[label=\textbf{Item \arabic*:}, leftmargin=*]
+
+    \item \textbf{Falso o Verdadero (FV) (4 pts)} \\
+    Determine si es Verdadero (V) o Falsa (F):
+    \begin{itemize}
+        \item[\underline{\hspace{1cm}}] La Física estudia la materia, la energía y sus relaciones.
+        \item[\underline{\hspace{1cm}}] La palabra Física significa ``movimiento'' en griego.
+        \item[\underline{\hspace{1cm}}] El metro es la unidad de longitud en el Sistema Internacional.
+        \item[\underline{\hspace{1cm}}] La magnitud derivada depende de las magnitudes fundamentales.
+    \end{itemize}
+
+    \item \textbf{Completa (Conceptos / Unidades) (4 pts)} \\
+    Complete los espacios vacíos:
+    \begin{itemize}
+        \item Cantidad de sustancia se mide en: \underline{\hspace{3cm}}
+        \item Intensidad luminosa se mide en: \underline{\hspace{3cm}}
+        \item Símbolo de la unidad de Tiempo: \underline{\hspace{3cm}}
+        \item Símbolo de la unidad de Longitud: \underline{\hspace{3cm}}
+    \end{itemize}
+
+    \item \textbf{Selección Múltiple (Cifras y Notación) (4 pts)} \\
+    Marque la opción correcta (1 pt c/u):
+    \begin{enumerate}[label=\roman*)]
+        \item Cifras sig. en $1.002$: \textbf{A) 1 \quad B) 2 \quad C) 3 \quad D) 4}
+        \item Cifras sig. en $0.00070$: \textbf{A) 1 \quad B) 2 \quad C) 3 \quad D) 4}
+        \item $9,000,000$ en nota. cient.: \textbf{A) $9\times 10^5$ \quad B) $9\times 10^6$ \quad C) $0.9\times 10^7$ \quad D) $90\times 10^5$}
+        \item $4.53 \times 10^{-2}$ en decimal: \textbf{A) 0.453 \quad B) 0.0453 \quad C) 0.00453 \quad D) 453}
+    \end{enumerate}
+
+    \item \textbf{Aparea (Unidades Inglesas) (4 pts)} \\
+    Relacione con su símbolo correcto:
+    \begin{center}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        A) Pie & (\hspace{0.5cm}) & lb \\ \hline
+        B) Libra & (\hspace{0.5cm}) & mi \\ \hline
+        C) Milla & (\hspace{0.5cm}) & gal \\ \hline
+        D) Galón & (\hspace{0.5cm}) & ft \\ \hline
+    \end{tabular}
+    \end{center}
+
+    \item \textbf{Resuelve (Selección Múltiple) (4 pts)} \\
+    Elija la opción correcta (2 pts c/u):
+    \begin{enumerate}[label=\Alph*)]
+        \item \textbf{Conversión}: Convierta $5 \text{ millas}$ a metros. (Dato: $1 \text{ milla} = 1609 \text{ m}$) \\
+        \textbf{A) 8045 m \quad B) 321.8 m \quad C) 5000 m \quad D) 1609 m}
+        
+        \item \textbf{Vectores (Ángulo no notable)}: Determine el módulo de la resultante. Vector $\vec{A}=50u$ a $101^\circ$ (con la vertical $y$ es $11^\circ$), $\vec{B}=50u$ a $350^\circ$ (con el eje $x$ es $10^\circ$) y $\vec{C}=31u$ orientado hacia abajo (eje $-y$). (Use $\cos 79^\circ = 0.19, \sin 79^\circ = 0.98, \cos 10^\circ = 0.98, \sin 10^\circ = 0.17$)
+        \begin{center}
+        \begin{tikzpicture}[scale=0.08]
+            \draw[dashed, ->] (-15,0) -- (60,0) node[right] {$x$};
+            \draw[dashed, ->] (0,-40) -- (0,60) node[above] {$y$};
+            \draw[ultra thick, ->, blue] (0,0) -- ({50*cos(101)},{50*sin(101)}) node[above] {50u};
+            \draw[ultra thick, ->, red] (0,0) -- ({50*cos(350)},{50*sin(350)}) node[right] {50u};
+            \draw[ultra thick, ->, purple] (0,0) -- (0,-31) node[left] {31u};
+            \draw (0,4) arc (90:101:4) node[midway, above] {\tiny $11^\circ$};
+            \draw (4,0) arc (0:-10:4) node[midway, right] {\tiny $10^\circ$};
+        \end{tikzpicture}
+        \end{center}
+        \textbf{A) 50u \quad B) 40u \quad C) 60u \quad D) 100u}
+    \end{enumerate}
+
+\end{enumerate}
+
+\end{document}

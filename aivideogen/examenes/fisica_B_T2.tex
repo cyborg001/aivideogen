@@ -1,0 +1,89 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+
+\geometry{margin=2cm}
+
+\title{Examen de Física I - Grupo B - Tipo 2 (20 puntos)}
+\author{Estudiante: \underline{\hspace{6cm}} \quad Fecha: \underline{\hspace{3cm}}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Instrucciones}
+Responda los siguientes 5 ítems. El ítem 5 consta de 2 problemas de selección múltiple (2 pts c/u).
+
+\begin{enumerate}[label=\textbf{Item \arabic*:}, leftmargin=*]
+
+    \item \textbf{Falso o Verdadero (FV) (4 pts)} \\
+    Determine si es V o F:
+    \begin{itemize}
+        \item[\underline{\hspace{1cm}}] La Geometría es una de las ciencias relacionadas con la Física.
+        \item[\underline{\hspace{1cm}}] Los ceros intermedios SIEMPRE son significativos.
+        \item[\underline{\hspace{1cm}}] La velocidad es una magnitud fundamental.
+        \item[\underline{\hspace{1cm}}] La Física Clásica estudia cuerpos que viajan a la velocidad de la luz.
+    \end{itemize}
+
+    \item \textbf{Completa (Redondeo / División) (4 pts)} \\
+    Responda según las reglas vistas:
+    \begin{itemize}
+        \item En suma/resta se mira el nro de: \underline{\hspace{3cm}}
+        \item En prod/div se mira el nro de: \underline{\hspace{3cm}}
+        \item Ramas Física Clásica (mencione 1): \underline{\hspace{3cm}}
+        \item Significado de la palabra Física: \underline{\hspace{3cm}}
+    \end{itemize}
+
+    \item \textbf{Selección Múltiple (Cifras y Notación) (4 pts)} \\
+    Elija la correcta (1 pt c/u):
+    \begin{enumerate}[label=\roman*)]
+        \item Cifras sig. en $450$: \textbf{A) 2 \quad B) 3 \quad C) 1 \quad D) 4}
+        \item Valor de $1.0 \times 10^{-2}$: \textbf{A) 0.1 \quad B) 0.01 \quad C) 0.001 \quad D) 100}
+        \item Cifras sig. en $12.00$: \textbf{A) 2 \quad B) 3 \quad C) 4 \quad D) 1}
+        \item Resultado de $2.0 \times 3.0$: \textbf{A) 6 \quad B) 6.0 \quad C) 6.00 \quad D) 6.000}
+    \end{enumerate}
+
+    \item \textbf{Aparea (Equivalencias Rápidas) (4 pts)} \\
+    Relacione:
+    \begin{center}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        A) 1 min & (\hspace{0.5cm}) & 1 pulgada \\ \hline
+        B) 1 h & (\hspace{0.5cm}) & 60 s \\ \hline
+        C) 2.54 cm & (\hspace{0.5cm}) & 12 pulgadas \\ \hline
+        D) 1 pie & (\hspace{0.5cm}) & 3600 s \\ \hline
+    \end{tabular}
+    \end{center}
+
+    \item \textbf{Resuelve (Selección Múltiple) (4 pts)} \\
+    Elija la correcta (2 pts c/u):
+    \begin{enumerate}[label=\Alph*)]
+        \item \textbf{Conversión}: Convierta $3.785 \text{ cm}^3$ a galones. (Dato: $1 \text{ gal} = 3785 \text{ cm}^3$) \\
+        \textbf{A) 0.001 gal \quad B) 1.0 gal \quad C) 1000 gal \quad D) 0.1 gal}
+        
+        \item \textbf{Vectores (Ángulo no notable)}: Determine el módulo de la resultante de los vectores: $\vec{A}=100u$ a $0^\circ$, $\vec{B}=80u$ a $90^\circ$ y $\vec{C}=100u$ a $217^\circ$ (con el eje $-x$ es $37^\circ$). (Use $\cos 217^\circ = -0.8, \sin 217^\circ = -0.6$)
+        \begin{center}
+        \begin{tikzpicture}[scale=0.04]
+            \draw[dashed, ->] (-100,0) -- (120,0) node[right] {$x$};
+            \draw[dashed, ->] (0,-80) -- (0,100) node[above] {$y$};
+            \draw[ultra thick, ->, blue] (0,0) -- (100,0) node[below] {100u};
+            \draw[ultra thick, ->, red] (0,0) -- (0,80) node[left] {80u};
+            \draw[ultra thick, ->, orange] (0,0) -- ({100*cos(217)},{100*sin(217)}) node[below left] {100u};
+            \draw (-15,0) arc (180:217:15) node[midway, below left] {\tiny $37^\circ$};
+        \end{tikzpicture}
+        \end{center}
+        \textbf{A) 20u \quad B) 36u \quad C) 28u \quad D) 50u}
+    \end{enumerate}
+
+\end{enumerate}
+
+\end{document}

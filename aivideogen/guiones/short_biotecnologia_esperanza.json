@@ -1,0 +1,107 @@
+{
+    "title": "Short: Venciendo la Vejez",
+    "voice": "es-DO-EmilioNeural",
+    "voice_speed": "+12%",
+    "aspect_ratio": "portrait",
+    "render_mode": "cpu",
+    "engine": "edge",
+    "background_music": "I'm Giving Up - Everet Almond.mp3",
+    "music_volume": 0.2,
+    "music_volume_lock": true,
+    "dynamic_subtitles": false,
+    "sources": "Altos Labs (Reprogramación Celular), Salk Institute (Factores de Yamanaka), Wake Forest Institute for Regenerative Medicine (Bioimpresión de Tejidos).",
+    "blocks": [
+        {
+            "title": "Gancho y Solución",
+            "scenes": [
+                {
+                    "title": "Hook",
+                    "text": "[TITLE]¡Adiós a la vejez![/TITLE] [PAUSA:0.5] Imagina que envejecer ya no significara perder movilidad o vivir con dolor.",
+                    "pause": 0.2,
+                    "assets": [
+                        {
+                            "id": "anciana_joven_espejo.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:0:0",
+                            "rotate": "0:10",
+                            "shake": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Camera_Flash_Impact.m4a",
+                            "volume": 0.15,
+                            "offset": 0
+                        }
+                    ]
+                },
+                {
+                    "title": "Artritis",
+                    "text": "La ciencia está cerca de vencer la artritis. [PAUSA:0.3] Mediante bioimpresión 3D, ya es posible crear 'piezas' nuevas para tus articulaciones que tu cuerpo acepta de inmediato.",
+                    "pause": 0.5,
+                    "assets": [
+                        {
+                            "id": "cartilage_bioprinting.png",
+                            "zoom": "1.2:1.5",
+                            "move": "HOR:0:0",
+                            "overlay": "vignette.mp4"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Power_Tool_Electrical_Buzz.mp3",
+                            "volume": 0.08,
+                            "offset": 5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Rejuvenecer",
+            "scenes": [
+                {
+                    "title": "Reprogramación",
+                    "text": "Y no solo eso. [PAUSA:0.2] Ahora podemos 'resetear' nuestras células. La reprogramación celular permite limpiar el daño acumulado en tu ADN, devolviéndole la juventud a tus órganos.",
+                    "pause": 0.4,
+                    "assets": [
+                        {
+                            "id": "dna_helix_glow.png",
+                            "zoom": "1.4:1.6",
+                            "rotate": "-5:5",
+                            "overlay": "light leaks.mp4",
+                            "move": "VER:0:10"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "cinematic_drone.mp3",
+                            "volume": 0.05,
+                            "offset": 0
+                        }
+                    ]
+                },
+                {
+                    "title": "Conclusión",
+                    "text": "Estamos programando el futuro de una vida sin dolor. [PAUSA:0.5] [TITLE]¿Te gustaría vivir 150 años sano?[/TITLE] Déjame tu opinión abajo y súmate a NotiACI.",
+                    "pause": 1.0,
+                    "assets": [
+                        {
+                            "id": "futuristic_city_sunset.png",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:0:0",
+                            "cinema_mode": true
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Debris_Hits.mp3",
+                            "volume": 0.1,
+                            "offset": 15
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,56 @@
+{
+    "title": "Prueba de Autoducking y Fusión",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+    "music_volume": 0.5,
+    "blocks": [
+        {
+            "title": "Fusión Corta",
+            "scenes": [
+                {
+                    "_uId": "seq1",
+                    "title": "Primera Frase",
+                    "text": "Atención, esta es la primera frase de prueba.",
+                    "pause": 0.5,
+                    "assets": []
+                },
+                {
+                    "_uId": "seq2",
+                    "title": "Segunda Frase",
+                    "text": "Aquí comienza la segunda frase. Dado que la pausa fue solo de medio segundo, la nueva mejora de autoducking ya unió ambos intervalos, por lo que la música no debe hacer pumping ni subir en el espacio que acaba de ocurrir.",
+                    "pause": 3.0,
+                    "assets": []
+                }
+            ],
+            "groups": []
+        },
+        {
+            "title": "Recuperación Larga",
+            "scenes": [
+                {
+                    "_uId": "seq3",
+                    "title": "Tercera Frase",
+                    "text": "Aquí estoy de nuevo. Acabas de escuchar que la música subió de nuevo a la normalidad durante los tres segundos anteriores de silencio absoluto, y ahora acaba de volver a bajar para que no me ahogue. Fin de la prueba acústica.",
+                    "pause": 1.0,
+                    "assets": []
+                }
+            ],
+            "groups": []
+        }
+    ],
+    "voice_speed": "+0%",
+    "aspect_ratio": "landscape",
+    "render_mode": "cpu",
+    "music_volume_lock": false,
+    "auto_upload": false,
+    "engine": "edge",
+    "settings": {
+        "title": "Prueba de Autoducking y Fusión",
+        "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+        "music_volume": 0.5,
+        "voice_id": "es-ES-AlvaroNeural",
+        "aspect_ratio": "landscape",
+        "render_mode": "cpu",
+        "music_volume_lock": false
+    }
+}

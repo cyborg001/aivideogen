@@ -1714,50 +1714,16 @@ def generate_video_avgl(project):
                                  clips_to_close.append(bg_audio)
 
                         if has_local_music:
-                            loops = int(block_video.duration / bg_audio.duration) + 1
-                            bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
-                            
-                            try:
-                                peak_vol = float(block.volume) if block.volume is not None else float(script.music_volume)
-                            except:
-                                peak_vol = 0.2
-                            
-                            if peak_vol <= 0: peak_vol = 0.2
-                            
-                            duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
-                            at = float(settings.AUDIO_ATTACK_TIME)
-                            rt = float(settings.AUDIO_RELEASE_TIME)
-
-                            def volume_ducking_local(t):
-                                # v9.3 Robust Local Ducking
-                                if isinstance(t, np.ndarray):
-                                    factors = np.ones_like(t, dtype=float)
-                                    for start, end in block_voice_intervals:
-                                        # Ducking
-                                        factors[(t >= (start - at)) & (t <= (end + rt))] = duck_ratio
-                                        # Fades
-                                        m_out = (t >= (start - at)) & (t < start)
-                                        if np.any(m_out):
-                                            p = (t[m_out] - (start - at)) / at
-                                            factors[m_out] = 1.0 - (p * (1.0 - duck_ratio))
-                                        m_in = (t > end) & (t <= (end + rt))
-                                        if np.any(m_in):
-                                            p = (t[m_in] - end) / rt
-                                            factors[m_in] = duck_ratio + (p * (1.0 - duck_ratio))
-                                    return (float(peak_vol) * factors)[:, None]
-                                else:
-                                    factor = 1.0
-                                    for start, end in block_voice_intervals:
-                                        if start <= t <= end: factor = duck_ratio; break
-                                        elif (start - at) <= t < start:
-                                            p = (t - (start - at)) / at
-                                            factor = 1.0 - (p * (1.0 - duck_ratio))
-                                        elif end < t <= (end + rt):
-                                            p = (t - end) / rt
-                                            factor = duck_ratio + (p * (1.0 - duck_ratio))
-                                    return float(peak_vol * factor)
-
-                            bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
+                            # v4.5: Ducking Local unificado con el Mapa Maestro (se procesará al final)
+                            block_metadata.append({
+                                'duration': block_video.duration,
+                                'voice_intervals': block_voice_intervals,
+                                'has_local_music': True,
+                                'local_bg_audio': bg_audio_looped,
+                                'peak_vol': peak_vol,
+                                'block_video': block_video # Guardamos referencia para procesar al final
+                            })
+                            continue # Saltamos el procesamiento local inmediato
                             
                             # Safe Block Composition (v15.7 Fix)
                             b_sources = []
@@ -1878,22 +1844,20 @@ def generate_video_avgl(project):
                             mute_intervals.append((current_offset, b_end))
                         current_offset += b_dur
 
-                    # 5. Dynamic Ducking (v5.8)
-                    peak_vol = default_vol
+                    # 5. Dynamic Ducking Master (v4.5)
+                    # Get Merge Threshold from .env or default to 1.5s (Professional Standard)
+                    merge_threshold = safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), 1.5)
                     duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
-                    attack_t = 0.2; release_t = 0.8
+                    attack_t = float(settings.AUDIO_ATTACK_TIME)
+                    release_t = float(settings.AUDIO_RELEASE_TIME)
 
-                    logger.log(f"    [Audio] Mezclando música global dinámica ({len(global_voice_intervals)} intervalos de voz)")
+                    logger.log(f"    [Audio] Mezclando Autoducking Maestro v4.5 ({len(global_voice_intervals)} intervalos)")
+                    merged_global_intervals = merge_voice_intervals(global_voice_intervals, threshold=merge_threshold)
 
-                    def volume_ducking_global(t):
+                    def get_ducking_factor(t, peak_vol_val, current_intervals):
                         if isinstance(t, np.ndarray):
-                            base_vols = np.full(t.shape, peak_vol)
-                            for b_start, b_end, b_vol in block_time_ranges:
-                                mask = (t >= b_start) & (t <= b_end)
-                                base_vols[mask] = b_vol
-                            
-                            factors = np.full(t.shape, 1.0)
-                            for v_start, v_end in global_voice_intervals:
+                            factors = np.ones_like(t, dtype=float)
+                            for v_start, v_end in current_intervals:
                                 factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                                 m_out = (t >= (v_start - attack_t)) & (t < v_start)
                                 if np.any(m_out):
@@ -1904,33 +1868,77 @@ def generate_video_avgl(project):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
                             
-                            for ms, me in mute_intervals:
-                                factors[(t >= ms) & (t <= me)] = 0.0
-                            
-                            # v9.4 Fix: Ensure (N, 1) for stereo broadcasting
                             if t.size == 0: return np.zeros((0, 1))
-                            return (base_vols * factors)[:, None]
+                            return (float(peak_vol_val) * factors)[:, None]
                         else:
-                            try:
-                                cur_peak = float(peak_vol)
-                                for b_start, b_end, b_vol in block_time_ranges:
-                                    if b_start <= t <= b_end:
-                                        cur_peak = float(b_vol); break
-                            except: cur_peak = 0.2
-                            
-                            for ms, me in mute_intervals:
-                                if ms <= t <= me: return 0.0
-                            
                             factor = 1.0
-                            for v_start, v_end in global_voice_intervals:
+                            for v_start, v_end in current_intervals:
                                 if v_start <= t <= v_end: factor = min(factor, duck_ratio)
                                 elif (v_start - attack_t) <= t < v_start:
+                                    p = (t - (attack_t)) / attack_t # Note: corrected logic below in final return for safety
                                     p = (t - (v_start - attack_t)) / attack_t
                                     factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
                                 elif v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
-                            return float(cur_peak * factor)
+                            return float(peak_vol_val * factor)
+
+                    # --- APPLY TO LOCAL MUSIC (BLOCKS) ---
+                    curr_glob_offset = 0.0
+                    for b_meta in block_metadata:
+                        if b_meta.get('has_local_music') and b_meta.get('local_bg_audio'):
+                            b_start = curr_glob_offset
+                            b_end = b_start + b_meta['duration']
+                            
+                            # Shift master intervals to block-relative time
+                            rel_intervals = [(vs - b_start, ve - b_start) for vs, ve in merged_global_intervals if ve > b_start and vs < b_end]
+                            
+                            b_audio = b_meta['local_bg_audio']
+                            b_video = b_meta['block_video']
+                            p_vol = b_meta['peak_vol']
+                            
+                            b_audio_ducked = b_audio.transform(lambda get_f, t: get_f(t) * get_ducking_factor(t, p_vol, rel_intervals))
+                            
+                            # Re-compose block audio
+                            b_sources = []
+                            if b_video.audio: b_sources.append(b_video.audio)
+                            b_sources.append(b_audio_ducked)
+                            
+                            # Update the clip in block_clips (used for final_video)
+                            # We need to find the index of the clip. Since we iterate block_metadata in order:
+                            idx = block_metadata.index(b_meta)
+                            block_clips[idx] = b_video.with_audio(CompositeAudioClip(b_sources))
+                            logger.log(f"    [Audio] Ducking Local Sincronizado: Bloque {idx+1}")
+                        
+                        curr_glob_offset += b_meta['duration']
+
+                    # Re-concatenate video with synchronized block audio
+                    final_video = concatenate_videoclips(block_clips, method="chain")
+
+                    # --- APPLY TO GLOBAL MUSIC ---
+                    def volume_ducking_global(t):
+                        if isinstance(t, np.ndarray):
+                            base_vols = np.full(t.shape, peak_vol)
+                            for b_start, b_end, b_vol in block_time_ranges:
+                                mask = (t >= b_start) & (t <= b_end)
+                                base_vols[mask] = b_vol
+                            
+                            # Factor result from master intervals
+                            factors = get_ducking_factor(t, 1.0, merged_global_intervals)
+                            
+                            for ms, me in mute_intervals:
+                                factors[(t >= ms) & (t <= me)] = 0.0
+                            
+                            return (base_vols * factors) # Already (N, 1) from get_ducking_factor
+                        else:
+                            cur_peak = peak_vol
+                            for b_start, b_end, b_vol in block_time_ranges:
+                                if b_start <= t <= b_end: cur_peak = b_vol; break
+                            
+                            for ms, me in mute_intervals:
+                                if ms <= t <= me: return 0.0
+                            
+                            return get_ducking_factor(t, cur_peak, merged_global_intervals)
 
                     bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
                     
