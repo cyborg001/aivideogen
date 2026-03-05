@@ -1854,7 +1854,7 @@ def generate_video_avgl(project):
                     logger.log(f"    [Audio] Mezclando Autoducking Maestro v4.5 ({len(global_voice_intervals)} intervalos)")
                     merged_global_intervals = merge_voice_intervals(global_voice_intervals, threshold=merge_threshold)
 
-                    def get_ducking_factor(t, peak_vol_val, current_intervals):
+                    def get_ducking_factor(t, peak_vol_val, current_intervals, time_offset=0.0):
                         if isinstance(t, np.ndarray):
                             factors = np.ones_like(t, dtype=float)
                             for v_start, v_end in current_intervals:
@@ -1871,17 +1871,18 @@ def generate_video_avgl(project):
                             # v4.7: Block Fade-out/Fade-in Logic (Vectorized)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
                             if block_fade_t > 0:
+                                t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
                                     # Fade In
-                                    m_fade_in = (t >= b_start) & (t <= (b_start + block_fade_t))
+                                    m_fade_in = (t_abs >= b_start) & (t_abs <= (b_start + block_fade_t))
                                     if np.any(m_fade_in):
-                                        p = (t[m_fade_in] - b_start) / block_fade_t
+                                        p = (t_abs[m_fade_in] - b_start) / block_fade_t
                                         factors[m_fade_in] *= p
                                     
                                     # Fade Out
-                                    m_fade_out = (t >= (b_end - block_fade_t)) & (t <= b_end)
+                                    m_fade_out = (t_abs >= (b_end - block_fade_t)) & (t_abs <= b_end)
                                     if np.any(m_fade_out):
-                                        p = (b_end - t[m_fade_out]) / block_fade_t
+                                        p = (b_end - t_abs[m_fade_out]) / block_fade_t
                                         factors[m_fade_out] *= p
 
                             if t.size == 0: return np.zeros((0, 1))
@@ -1902,14 +1903,15 @@ def generate_video_avgl(project):
                             # Applies a smooth volume curve at the boundaries of each block
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
                             if block_fade_t > 0:
+                                t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
                                     # Fade In at start of block
-                                    if b_start <= t <= (b_start + block_fade_t):
-                                        p_in = (t - b_start) / block_fade_t
+                                    if b_start <= t_abs <= (b_start + block_fade_t):
+                                        p_in = (t_abs - b_start) / block_fade_t
                                         factor = factor * p_in
                                     # Fade Out at end of block
-                                    elif (b_end - block_fade_t) <= t <= b_end:
-                                        p_out = (b_end - t) / block_fade_t
+                                    if (b_end - block_fade_t) <= t_abs <= b_end:
+                                        p_out = (b_end - t_abs) / block_fade_t
                                         factor = factor * p_out
                                         
                             return float(peak_vol_val * factor)
@@ -1928,7 +1930,7 @@ def generate_video_avgl(project):
                             b_video = b_meta['block_video']
                             p_vol = b_meta['peak_vol']
                             
-                            b_audio_ducked = b_audio.transform(lambda get_f, t: get_f(t) * get_ducking_factor(t, p_vol, rel_intervals))
+                            b_audio_ducked = b_audio.transform(lambda get_f, t: get_f(t) * get_ducking_factor(t, p_vol, rel_intervals, time_offset=b_start))
                             
                             # Re-compose block audio
                             b_sources = []

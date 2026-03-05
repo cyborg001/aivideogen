@@ -1307,12 +1307,12 @@
                                 <div x-show="formData.usePanHor" class="grid grid-cols-2 gap-2 pl-6" x-transition>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Inicio (%)</label>
-                                        <input type="number" step="10" x-model="formData.panHorStart"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panHorStart"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Fin (%)</label>
-                                        <input type="number" step="10" x-model="formData.panHorEnd"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panHorEnd"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                 </div>
@@ -1329,12 +1329,12 @@
                                 <div x-show="formData.usePanVer" class="grid grid-cols-2 gap-2 pl-6" x-transition>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Arriba (%)</label>
-                                        <input type="number" step="10" x-model="formData.panVerStart"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panVerStart"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Abajo (%)</label>
-                                        <input type="number" step="10" x-model="formData.panVerEnd"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panVerEnd"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                 </div>
@@ -1565,9 +1565,11 @@
                                     <span class="text-[10px] text-blue-300 font-bold">Horizontal</span>
                                 </label>
                                 <div x-show="groupForm.usePanHor" class="flex gap-1" x-transition>
-                                    <input type="number" step="10" x-model="groupForm.panHorStart" placeholder="0"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panHorStart"
+                                        placeholder="0"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
-                                    <input type="number" step="10" x-model="groupForm.panHorEnd" placeholder="10"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panHorEnd"
+                                        placeholder="10"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
                                 </div>
                             </div>
@@ -1580,9 +1582,11 @@
                                     <span class="text-[10px] text-green-300 font-bold">Vertical</span>
                                 </label>
                                 <div x-show="groupForm.usePanVer" class="flex gap-1" x-transition>
-                                    <input type="number" step="10" x-model="groupForm.panVerStart" placeholder="0"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panVerStart"
+                                        placeholder="0"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
-                                    <input type="number" step="10" x-model="groupForm.panVerEnd" placeholder="10"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panVerEnd"
+                                        placeholder="10"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
                                 </div>
                             </div>
@@ -2461,13 +2465,15 @@
                         // Reconstruct Move String
                         let moveParts = [];
                         if (this.groupForm.usePanHor) {
-                            const hStart = this.groupForm.panHorStart || 0;
-                            const hEnd = (this.groupForm.panHorEnd === null || this.groupForm.panHorEnd === undefined || this.groupForm.panHorEnd === '') ? hStart : this.groupForm.panHorEnd;
+                            const hStart = Math.max(0, Math.min(100, parseFloat(this.groupForm.panHorStart || 0)));
+                            const rawEnd = this.groupForm.panHorEnd;
+                            const hEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? hStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
                             moveParts.push(`HOR:${hStart}:${hEnd}`);
                         }
                         if (this.groupForm.usePanVer) {
-                            const vStart = this.groupForm.panVerStart || 0;
-                            const vEnd = (this.groupForm.panVerEnd === null || this.groupForm.panVerEnd === undefined || this.groupForm.panVerEnd === '') ? vStart : this.groupForm.panVerEnd;
+                            const vStart = Math.max(0, Math.min(100, parseFloat(this.groupForm.panVerStart || 0)));
+                            const rawEnd = this.groupForm.panVerEnd;
+                            const vEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? vStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
                             moveParts.push(`VER:${vStart}:${vEnd}`);
                         }
                         group.move = moveParts.length > 0 ? moveParts.join(' + ') : '';
@@ -2802,13 +2808,15 @@
                     // Build Move String (Combine HOR + VER)
                     let moveParts = [];
                     if (this.formData.usePanHor) {
-                        const hStart = this.formData.panHorStart || 0;
-                        const hEnd = (this.formData.panHorEnd === null || this.formData.panHorEnd === undefined || this.formData.panHorEnd === '') ? hStart : this.formData.panHorEnd;
+                        const hStart = Math.max(0, Math.min(100, parseFloat(this.formData.panHorStart || 0)));
+                        const rawEnd = this.formData.panHorEnd;
+                        const hEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? hStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
                         moveParts.push(`HOR:${hStart}:${hEnd}`);
                     }
                     if (this.formData.usePanVer) {
-                        const vStart = this.formData.panVerStart || 0;
-                        const vEnd = (this.formData.panVerEnd === null || this.formData.panVerEnd === undefined || this.formData.panVerEnd === '') ? vStart : this.formData.panVerEnd;
+                        const vStart = Math.max(0, Math.min(100, parseFloat(this.formData.panVerStart || 0)));
+                        const rawEnd = this.formData.panVerEnd;
+                        const vEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? vStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
                         moveParts.push(`VER:${vStart}:${vEnd}`);
                     }
                     let moveStr = moveParts.length > 0 ? moveParts.join(' + ') : null;
