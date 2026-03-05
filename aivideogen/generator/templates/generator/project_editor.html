@@ -144,6 +144,8 @@
             <input type="file" x-ref="jsonFile" class="hidden" @change="importScript($event)">
             <button @click="$refs.jsonFile.click()"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">📂 Cargar JSON</button>
+            <button @click="exportScript()"
+                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">💾 Exportar JSON</button>
             <button @click="openBulkEditor()"
                 class="text-xs bg-gray-700 hover:bg-indigo-600 px-2 py-1 rounded text-indigo-200 border border-indigo-500/30">📝
                 Editor de Texto</button>
@@ -1882,7 +1884,8 @@
                     if (val === null || val === undefined || val === '') return defaultValue;
                     try {
                         const clean = String(val).replace(/[^0-9+\-*/().]/g, '');
-                        return Function('"use strict";return (' + clean + ')')() || defaultValue;
+                        const res = Function('"use strict";return (' + clean + ')')();
+                        return (res !== undefined && res !== null && !isNaN(res)) ? res : defaultValue;
                     } catch (e) {
                         // Fallback to parseFloat if complex eval fails
                         const f = parseFloat(val);
@@ -3048,6 +3051,28 @@
                     };
                     reader.readAsText(file);
                     event.target.value = '';
+                },
+
+                exportScript() {
+                    const scriptCopy = JSON.parse(JSON.stringify(this.script));
+                    // Aplicar los mismos metadatos que en el guardado para consistencia (v9.1)
+                    scriptCopy.title = this.projectSettings.title;
+                    scriptCopy.voice = this.projectSettings.voice_id;
+                    scriptCopy.voice_speed = this.projectSettings.voice_speed;
+                    scriptCopy.background_music = this.projectSettings.background_music;
+                    scriptCopy.auto_upload = this.projectSettings.auto_upload;
+                    scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
+                    scriptCopy.render_mode = this.projectSettings.render_mode;
+
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scriptCopy, null, 4));
+                    const downloadAnchorNode = document.createElement('a');
+                    const fileName = (this.projectSettings.title || "guion").replace(/[^a-z0-9]/gi, '_').toLowerCase() + ".avgl3.json";
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", fileName);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                    logger.log("    [System] Guion exportado localmente: " + fileName);
                 },
 
                 // Music Browsers
