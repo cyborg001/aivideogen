@@ -255,7 +255,9 @@ def generate_video_process(project):
     # Update model (in memory) to use clean script
     project.script_text = script_text.strip()
     
-    print(f"[Project {project.id}] Using Unified AVGL v4.0 Engine (Single Pipeline)")
+    # Init Logger for start message
+    logger = ProjectLogger(project)
+    logger.log(f"Using Unified AVGL v4.0 Engine (Single Pipeline)")
     
     # Call the Unified Engine
     # Note: parse_avgl_json inside this function handles JSON vs Text conversion
@@ -280,9 +282,8 @@ def generate_video_process(project):
             from .youtube_utils import trigger_auto_upload
             trigger_auto_upload(project)
         except Exception as e:
-            print(f"[YouTube] Error fatal disparando subida automatica: {e}")
-            project.log_output += f"\n[YouTube] [ERROR] Error fatal disparando subida automatica: {e}"
-            project.save(update_fields=['log_output'])
+            logger = ProjectLogger(project)
+            logger.log(f"[YouTube] [ERROR] Error fatal disparando subida automatica: {e}")
 
 def cleanup_garbage(base_dir=None):
     """
