@@ -1752,50 +1752,32 @@ def generate_video_avgl(project):
                                  clips_to_close.append(bg_audio)
 
                         if has_local_music:
-                            # 1. Local Volume Calculation
+                            # v4.8: Local Volume Calculation (Unified)
                             try:
                                 peak_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
                             except:
                                 peak_vol = 0.18
+                        else:
+                            bg_audio = None
+                            peak_vol = 0.0
 
-                            # v4.5: Ducking Local unificado con el Mapa Maestro (se procesará al final)
-                            block_metadata.append({
-                                'duration': block_video.duration,
-                                'voice_intervals': block_voice_intervals,
-                                'has_local_music': True,
-                                'local_bg_audio': bg_audio,
-                                'peak_vol': peak_vol,
-                                'block_video': block_video # Guardamos referencia para procesar al final
-                            })
-                            continue # Saltamos el procesamiento local inmediato
-                            
-                            # Safe Block Composition (v15.7 Fix)
-                            b_sources = []
-                            if block_video.audio: b_sources.append(block_video.audio)
-                            if bg_audio_final: b_sources.append(bg_audio_final)
-                            
-                            if b_sources:
-                                final_audio = CompositeAudioClip(b_sources)
-                                block_video = block_video.with_audio(final_audio)
+                        # v4.8: Universal metadata storage for ALL blocks (Ensures 1:1 sync)
+                        # Metadata carries everything the Global Pass needs to know about this block
+                        block_metadata.append({
+                            'duration': block_video.duration,
+                            'voice_intervals': block_voice_intervals,
+                            'has_local_music': has_local_music,
+                            'local_bg_audio': bg_audio,
+                            'peak_vol': peak_vol,
+                            'volume': block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18),
+                            'block_video': block_video
+                        })
+                        
+                        # IMPORTANT: We always append to block_clips to maintain ordering
+                        block_clips.append(block_video)
+                        video_base_cursor += block_video.duration
                     except Exception as e:
                         logger.log(f"  ⚠️ Error música bloque: {e}")
-
-                # Store metadata for Global Music Pass
-                # v8.7: Music Volume Lock Logic
-                if script.music_volume_lock and not has_local_music:
-                    # If locked and no local music, force project/script global volume
-                    bs_vol = script.music_volume if script.music_volume is not None else (project.music_volume if project.music_volume is not None else 0.18)
-                else:
-                    bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
-                block_metadata.append({
-                    'duration': block_video.duration,
-                    'voice_intervals': block_voice_intervals, # Current Relative
-                    'has_local_music': has_local_music,
-                    'volume': bs_vol
-                })
-                block_clips.append(block_video)
-                # v26.0: Advance global cursor for next block
-                video_base_cursor += block_video.duration
 
         if not block_clips: raise Exception("No block clips generated")
 
@@ -1912,8 +1894,9 @@ def generate_video_avgl(project):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
                             
-                            # v4.7: Block Fade-out/Fade-in Logic (Vectorized)
+                            # v4.8: Block Fade-out/Fade-in Logic (Vectorized with 1s Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
+                            early_finish_t = 1.0
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
@@ -1923,11 +1906,16 @@ def generate_video_avgl(project):
                                         p = (t_abs[m_fade_in] - b_start) / block_fade_t
                                         factors[m_fade_in] *= p
                                     
-                                    # Fade Out
-                                    m_fade_out = (t_abs >= (b_end - block_fade_t)) & (t_abs <= b_end)
+                                    # Finish Early: Silence during the last 1s of the block
+                                    m_silent = (t_abs > (b_end - early_finish_t)) & (t_abs <= b_end)
+                                    if np.any(m_silent):
+                                        factors[m_silent] = 0.0
+                                    
+                                    # Fade Out: Transition to silence before the early finish
+                                    m_fade_out = (t_abs >= (b_end - early_finish_t - block_fade_t)) & (t_abs <= (b_end - early_finish_t))
                                     if np.any(m_fade_out):
-                                        p = (b_end - t_abs[m_fade_out]) / block_fade_t
-                                        factors[m_fade_out] *= p
+                                        p = (b_end - early_finish_t - t_abs[m_fade_out]) / block_fade_t
+                                        factors[m_fade_out] *= np.maximum(0, np.minimum(1, p))
 
                             if t.size == 0: return np.zeros((0, 1))
                             return (float(peak_vol_val) * factors)[:, None]
@@ -1936,27 +1924,30 @@ def generate_video_avgl(project):
                             for v_start, v_end in current_intervals:
                                 if v_start <= t <= v_end: factor = min(factor, duck_ratio)
                                 elif (v_start - attack_t) <= t < v_start:
-                                    p = (t - (attack_t)) / attack_t # Note: corrected logic below in final return for safety
                                     p = (t - (v_start - attack_t)) / attack_t
                                     factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
                                 elif v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
                             
-                            # v4.7: Block Fade-out/Fade-in Logic
-                            # Applies a smooth volume curve at the boundaries of each block
+                            # v4.8: Block Fade-out/Fade-in Logic (with 1s Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
+                            early_finish_t = 1.0
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
                                     # Fade In at start of block
                                     if b_start <= t_abs <= (b_start + block_fade_t):
                                         p_in = (t_abs - b_start) / block_fade_t
-                                        factor = factor * p_in
-                                    # Fade Out at end of block
-                                    if (b_end - block_fade_t) <= t_abs <= b_end:
-                                        p_out = (b_end - t_abs) / block_fade_t
-                                        factor = factor * p_out
+                                        factor *= p_in
+                                    
+                                    # Finish Early Logic: Volume is 0 during the last 1 second of the block
+                                    if t_abs > (b_end - early_finish_t):
+                                        factor = 0.0
+                                    # Fade Out Early: Smooth transition to 0 before the early finish
+                                    elif (b_end - early_finish_t - block_fade_t) <= t_abs <= (b_end - early_finish_t):
+                                        p_out = (b_end - early_finish_t - t_abs) / block_fade_t
+                                        factor *= max(0, min(1, p_out))
                                         
                             return float(peak_vol_val * factor)
 
