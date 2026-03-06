@@ -196,14 +196,7 @@ def generate_youtube_description(project):
     
     description_parts.append("")
     
-    # 6. Promotion
-    description_parts.append("━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    description_parts.append("🤖 Este video ha sido generado automáticamente por aiVideoGen")
-    description_parts.append("📂 Proyecto Open Source: https://github.com/cyborg001/aivideogen")
-    description_parts.append("")
-    description_parts.append("📧 Para más información contáctanos:")
-    description_parts.append("carlosaipro6@gmail.com")
-    
+    # v19.2: Removed aiVideoGen promotional footer (YouTube policy violation risk)
     final_description = "\n".join(description_parts)
     
     # 7. TAG STRIPPING (v8.7)
