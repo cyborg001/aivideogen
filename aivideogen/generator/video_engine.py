@@ -1929,13 +1929,19 @@ def generate_video_avgl(project):
                         else:
                             factor = 1.0
                             for v_start, v_end in current_intervals:
-                                if v_start <= t <= v_end: factor = min(factor, duck_ratio)
-                                elif (v_start - attack_t) <= t < v_start:
+                                # 1. Attack (Fade Down)
+                                if (v_start - attack_t) <= t < v_start:
                                     p = (t - (v_start - attack_t)) / attack_t
                                     factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
-                                elif v_end < t <= (v_end + release_t):
+                                
+                                # 2. Release (Fade Up)
+                                if v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
+                                
+                                # 3. SILENCE PRIORITY (v4.8.6): Absolute drop if voice is active
+                                if v_start <= t <= v_end:
+                                    factor = duck_ratio
                             
                             # v4.8: Block Fade-out/Fade-in Logic (with 1s Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
