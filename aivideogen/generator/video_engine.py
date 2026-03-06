@@ -44,6 +44,44 @@ def safe_float(val, default=0.0):
     except:
         return default
 
+def safe_eval_math(val, default=0.0):
+    """v15.0: Safe math evaluator for JSON parameters."""
+    if val is None: return default
+    try:
+        s = str(val).strip().lower()
+        if not s or s in ('undefined', 'nan', 'none', 'null'): 
+            return default
+        
+        # Remove any non-math characters
+        clean = re.sub(r'[^0-9+\-*/().]', '', s)
+        if not clean: return default
+        
+        # Evaluate safely
+        return float(eval(clean, {"__builtins__": None}, {}))
+    except:
+        try:
+            return float(val)
+        except:
+            return default
+
+def merge_voice_intervals(intervals, threshold=1.5):
+    """v18.0: Merges voice intervals that are within the threshold distance."""
+    if not intervals: return []
+    try:
+        sorted_intervals = sorted(intervals, key=lambda x: x[0])
+        merged = [sorted_intervals[0]]
+        for current in sorted_intervals[1:]:
+            prev_start, prev_end = merged[-1]
+            curr_start, curr_end = current
+            if curr_start <= prev_end + threshold:
+                merged[-1] = (prev_start, max(prev_end, curr_end))
+            else:
+                merged.append(current)
+        return merged
+    except Exception as e:
+        logger.warning(f"Error merging intervals: {e}")
+        return intervals
+
 # ═══════════════════════════════════════════════════════════════════
 # MONKEY PATCH: Absolute Audio Immunity (v15.9)
 # ═══════════════════════════════════════════════════════════════════
@@ -1714,12 +1752,18 @@ def generate_video_avgl(project):
                                  clips_to_close.append(bg_audio)
 
                         if has_local_music:
+                            # 1. Local Volume Calculation
+                            try:
+                                peak_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
+                            except:
+                                peak_vol = 0.18
+
                             # v4.5: Ducking Local unificado con el Mapa Maestro (se procesará al final)
                             block_metadata.append({
                                 'duration': block_video.duration,
                                 'voice_intervals': block_voice_intervals,
                                 'has_local_music': True,
-                                'local_bg_audio': bg_audio_looped,
+                                'local_bg_audio': bg_audio,
                                 'peak_vol': peak_vol,
                                 'block_video': block_video # Guardamos referencia para procesar al final
                             })
