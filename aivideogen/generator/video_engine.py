@@ -645,8 +645,8 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
     stroke_color = '#000000'
     bg_color = 'black' if is_highlight else None 
     
-    # v27.3: Dynamic Wrap Limit based on orientation
-    wrap_limit = 20 if target_size[0] < target_size[1] else 35
+    # v27.3: Dynamic Wrap Limit based on orientation (Optimized v4.8.3)
+    wrap_limit = 15 if target_size[0] < target_size[1] else 25
 
     def wrap_text(t, max_chars=30): 
         words = t.split()
@@ -844,7 +844,7 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
                 font_size=fontsize,
                 color=base_color,
                 stroke_color=stroke_color,
-                stroke_width=3.0,
+                stroke_width=3.5,
                 font=font,
                 method='caption',
                 size=(standard_width, t_height_dynamic), 
@@ -1749,16 +1749,6 @@ def generate_video_avgl(project):
                                  logger.log(f"  [Audio] Musica especifica bloque (media): {os.path.basename(music_to_use)}")
                                  bg_audio = AudioFileClip(potential_path)
                                  clips_to_close.append(bg_audio)
-
-                        if has_local_music:
-                            # v4.8: Local Volume Calculation (Unified)
-                            try:
-                                peak_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
-                            except:
-                                peak_vol = 0.18
-                        else:
-                            bg_audio = None
-                            peak_vol = 0.0
 
                         # v4.8: Universal metadata storage for ALL blocks (Ensures 1:1 sync)
                         # Metadata carries everything the Global Pass needs to know about this block
