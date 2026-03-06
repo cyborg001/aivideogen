@@ -1352,8 +1352,7 @@ def generate_video_avgl(project):
 
                         if is_video:
                             # v14.9: Smart Default - If not specified, we assume user wants sound (Cinema Mode)
-                            raw_v_vol = getattr(asset, 'video_volume', None)
-                            v_vol = float(raw_v_vol) if raw_v_vol is not None else 1.0
+                            v_vol = float(getattr(asset, 'video_volume', 0.0)) if getattr(asset, 'video_volume', None) is not None else 0.0
                             
                             # v15.2: Explicit Cinema mode (Auto-Persistence)
                             is_cinema = getattr(asset, 'cinema_mode', False)
