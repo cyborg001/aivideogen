@@ -1,5 +1,5 @@
 {
-    "title": "Prólogo: El Regalo. - El Velo Gravitacional (Audio-Libro Completo)",
+    "title": "Prólogo: El Regalo. - El Velo Gravitacional (Audio-Libro Completo) (Copia)",
     "voice": "es-ES-AlvaroNeural",
     "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
     "music_volume": 0.2,
@@ -8,7 +8,7 @@
             "title": "Block 1: La Visión y el Despertar",
             "scenes": [
                 {
-                    "_uId": "ssuoxias18",
+                    "_uId": "sg4bzty1lk",
                     "title": "El Sueño del Velo",
                     "text": "[TITLE]Prólogo: El Regalo[/TITLE] [PHO]itan|Ethan[/PHO] Ramírez despertó con el corazón martilleando contra las costillas, una sensación de vértigo que no pertenecía a su pequeña habitación en el Distrito RD. Acababa de salir de *ese* sueño otra vez. Esta vez, la visión había sido más nítida, casi tangible: se veía a sí mismo —o a alguien que usaba sus manos— dentro de una cabina de mando avanzada. A través de la placa frontal de un casco futurista, una red de datos y vectores parpadeaba en una interfaz [PHO:hache u de|HUD:h] que inundaba su campo de visión con luz cian. Frente a él, el espacio-tiempo se retorcía, colapsando en un túnel de geometría imposible, un agujero de gusano que rugía con un silencio absoluto mientras la nave se lanzaba hacia su centro. El latido de la máquina y el suyo propio eran una sola frecuencia. Sacudió la cabeza, tratando de atrapar la lógica de la visión, pero los fragmentos del casco y la cabina se le escapaban entre los dedos, dejando solo un rastro de inquietud fría en la nuca.",
                     "pause": 0.5,
@@ -36,7 +36,7 @@
                     "sfx": [
                         {
                             "id": "rocket.mp3",
-                            "volume": "0.2",
+                            "volume": "0.05",
                             "offset": "5"
                         }
                     ]
@@ -338,7 +338,7 @@
                     "sfx": []
                 },
                 {
-                    "_uId": "sp8wxs2vlq",
+                    "_uId": "svvy4atus5",
                     "title": "Retirando la Lona",
                     "text": "[PHO]itan|Ethan[/PHO] se acercó como si temiera que la visión se desvaneciera. Al retirar la lona, el polvo bailó en la luz mortecina. El chasis estaba rayado y el asiento de cuero sintético tenía parches, pero bajo la carcasa de aleación, [PHO]itan|Ethan[/PHO] podía sentir el pulso de algo poderoso. Era el regalo más valioso que alguien en el Distrito RD podía recibir: un motor operativo, un par de alas de metal que aún no recordaban cómo volar.",
                     "pause": 0.5,
@@ -432,9 +432,9 @@
             "title": "Block 4: El Misterio",
             "scenes": [
                 {
-                    "_uId": "szw8h7r3s5",
+                    "_uId": "s1p6q43cvd",
                     "title": "Anomalía de Datos",
-                    "text": "Carlos suspiró, clavando la vista en un complejo [PHO:h]holograma|holograma[/PHO] que mostraba telemetría astronómica en tiempo real. Sus ojos, antes brillantes, se sombrearon por un instante.  —Que pasa papi? [PHO]itan | Ethan[/PHO] le pregunto. —Miro lo que otros ignoran, mijo. En el año 2100 vi un bamboleo de una estrella que no tenía sentido. Ahora, ese patrón se repite. Algo en estos datos no me cuadra.",
+                    "text": "Carlos suspiró, clavando la vista en un complejo [PHO:h]holograma|holograma[/PHO] que mostraba telemetría astronómica en tiempo real. Sus ojos, antes brillantes, se sombrearon por un instante.  —Que pasa papi? [PHO]itan | Ethan[/PHO] le preguntó. —Miro lo que otros ignoran, mijo. En el año 2100 vi un bamboleo de una estrella que no tenía sentido. Ahora, ese patrón se repite. Algo en estos datos no me cuadra.",
                     "pause": 0.5,
                     "subtitle": "",
                     "voice": null,
@@ -554,7 +554,7 @@
                     "sfx": []
                 },
                 {
-                    "_uId": "snb82rfl3d",
+                    "_uId": "s35qfk6o66",
                     "title": "Ción Papi (Final)",
                     "text": "—Papi... Ción papi.",
                     "pause": 1,
@@ -566,8 +566,8 @@
                         {
                             "id": "/media/assets/ethan_habla_dentro_taller.png",
                             "type": "image",
-                            "zoom": "1.1:1.4",
-                            "move": "HOR:50:50 + VER:80:50",
+                            "zoom": "1.5:1.0",
+                            "move": "HOR:50:50 + VER:80:0",
                             "overlay": null,
                             "fit": false,
                             "video_volume": null,
@@ -638,9 +638,9 @@
                     "sfx": []
                 },
                 {
-                    "_uId": "sq243t0md3",
+                    "_uId": "se6gaagblt",
                     "title": "La Única Verdad",
-                    "text": "—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y nunca lo olvide: el conocimiento es la clave de todo, y en este mundo, la única verdad está en los datos. Aprenda a leerlos y nunca estará perdido.",
+                    "text": "—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y nunca lo olvide: el conocimiento es la clave de todo, y en este mundo, la única verdad está en los datos. Aprende a leerlos y nunca estarás perdido.",
                     "pause": 2,
                     "subtitle": "",
                     "voice": null,
@@ -676,9 +676,9 @@
             "title": "Block 6: El Fénix",
             "scenes": [
                 {
-                    "_uId": "s7niy9gz4u",
+                    "_uId": "sa0ovkvyud",
                     "title": "Bautismo de Metal",
-                    "text": "[PHO]itan|Ethan[/PHO] asintió, sintiendo que su masa corporal ya no era un lastre. Miró la [PHO]motoueiv|motowave[/PHO]. Ya tenía nombre en su mente, un nombre que evocaba el ciclo eterno de la materia. —La llamaré [PHO:h]el fenix | *El Fénix*[/PHO] —sentenció—. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
+                    "text": "[PHO]itan|Ethan[/PHO] asintió, sintiendo que su masa corporal ya no era un lastre. Miró la [PHO]motoueiv|motowave[/PHO]. Ya tenía nombre en su mente, un nombre que evocaba el ciclo eterno de la materia. —La llamaré [PHO:h]el fenix | *El Fénix*[/PHO] —sentenció—. Porque vamos a salir volando de aquí.",
                     "pause": 0.5,
                     "subtitle": "",
                     "voice": null,
@@ -704,7 +704,7 @@
                     "sfx": []
                 },
                 {
-                    "_uId": "s2djmk75e5",
+                    "_uId": "s6oksw9x7x",
                     "title": "Orgullo y Sombra",
                     "text": "Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia que [PHO]itan|Ethan[/PHO] aún no comprendía del todo. Darle la [PHO]motoweiv|motowave[/PHO] era darle un sueño, y en el Distrito RD, los sueños pesaban tanto como el plomo. Pero hoy, mientras [PHO]itan|Ethan[/PHO] sentía el pulso del motor bajo su palma, el universo entero parecía haber disminuido su constante gravitatoria solo para él.",
                     "pause": 2,
@@ -785,14 +785,17 @@
     "auto_upload": false,
     "engine": "edge",
     "settings": {
-        "title": "Prólogo: El Regalo. - El Velo Gravitacional (Audio-Libro Completo)",
+        "title": "Prólogo: El Regalo. - El Velo Gravitacional (Audio-Libro Completo) (Copia)",
         "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
         "music_volume": 0.2,
         "voice_id": "es-ES-AlvaroNeural",
         "aspect_ratio": "landscape",
         "render_mode": "cpu",
         "music_volume_lock": false,
-        "auto_upload": false
+        "auto_upload": false,
+        "voice_speed": "+0%",
+        "dynamic_subtitles": false,
+        "engine": "edge"
     },
-    "dynamic_subtitles": true
+    "dynamic_subtitles": false
 }

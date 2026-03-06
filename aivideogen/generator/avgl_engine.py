@@ -769,6 +769,8 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
             for f in temp_files:
                 try: os.remove(f)
                 except: pass
+            if scene:
+                scene.voice_intervals = voice_intervals
             return True
         return False
     except Exception as e:
