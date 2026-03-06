@@ -38,6 +38,8 @@ __pycache__/
 *.spec
 nuitka_log.txt
 aivideogen/client_secrets.json
+aivideogen/client_cyborg.json
+aivideogen/client_notiaci.json
 client_secrets.json
 
 # SÍ SE SUBEN (Esenciales y UI) ---
