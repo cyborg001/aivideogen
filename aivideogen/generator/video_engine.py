@@ -1722,8 +1722,11 @@ def generate_video_avgl(project):
                 block_video = concatenate_videoclips(block_scene_clips, method="chain")
                 
                 # Apply Block Music (Local Ducking)
+                # v4.8.4: Explicit var initialization to prevent NameError on blocks without music
                 music_to_use = block.music
                 has_local_music = False
+                bg_audio = None
+                peak_vol = 0.0
                 
                 if music_to_use:
                     try:
@@ -1750,23 +1753,31 @@ def generate_video_avgl(project):
                                  bg_audio = AudioFileClip(potential_path)
                                  clips_to_close.append(bg_audio)
 
-                        # v4.8: Universal metadata storage for ALL blocks (Ensures 1:1 sync)
-                        # Metadata carries everything the Global Pass needs to know about this block
-                        block_metadata.append({
-                            'duration': block_video.duration,
-                            'voice_intervals': block_voice_intervals,
-                            'has_local_music': has_local_music,
-                            'local_bg_audio': bg_audio,
-                            'peak_vol': peak_vol,
-                            'volume': block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18),
-                            'block_video': block_video
-                        })
-                        
-                        # IMPORTANT: We always append to block_clips to maintain ordering
-                        block_clips.append(block_video)
-                        video_base_cursor += block_video.duration
+                        if has_local_music:
+                            # v4.8: Local Volume Calculation (Unified)
+                            try:
+                                peak_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
+                            except:
+                                peak_vol = 0.18
+
                     except Exception as e:
                         logger.log(f"  ⚠️ Error música bloque: {e}")
+
+                # v4.8: Universal metadata storage for ALL blocks (Ensures 1:1 sync)
+                # Metadata carries everything the Global Pass needs to know about this block
+                block_metadata.append({
+                    'duration': block_video.duration,
+                    'voice_intervals': block_voice_intervals,
+                    'has_local_music': has_local_music,
+                    'local_bg_audio': bg_audio,
+                    'peak_vol': peak_vol,
+                    'volume': block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18),
+                    'block_video': block_video
+                })
+                
+                # IMPORTANT: We always append to block_clips to maintain ordering
+                block_clips.append(block_video)
+                video_base_cursor += block_video.duration
 
         if not block_clips: raise Exception("No block clips generated")
 
