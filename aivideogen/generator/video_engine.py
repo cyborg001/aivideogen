@@ -1986,7 +1986,7 @@ def generate_video_avgl(project):
                     # --- APPLY TO GLOBAL MUSIC ---
                     def volume_ducking_global(t):
                         if isinstance(t, np.ndarray):
-                            base_vols = np.full(t.shape, peak_vol)
+                            base_vols = np.full(t.shape, float(peak_vol))
                             for b_start, b_end, b_vol in block_time_ranges:
                                 mask = (t >= b_start) & (t <= b_end)
                                 base_vols[mask] = b_vol
@@ -1997,7 +1997,7 @@ def generate_video_avgl(project):
                             for ms, me in mute_intervals:
                                 factors[(t >= ms) & (t <= me)] = 0.0
                             
-                            return (base_vols * factors) # Already (N, 1) from get_ducking_factor
+                            return (base_vols[:, None] * factors) # Form (N, 1) * (N, 1) = (N, 1)
                         else:
                             cur_peak = peak_vol
                             for b_start, b_end, b_vol in block_time_ranges:
