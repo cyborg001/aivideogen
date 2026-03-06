@@ -1872,7 +1872,8 @@ def generate_video_avgl(project):
 
                     # 5. Dynamic Ducking Master (v4.5)
                     # Get Merge Threshold from .env or default to 1.5s (Professional Standard)
-                    merge_threshold = safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), 1.5)
+                    # Get Merge Threshold from .env or default to 0.8s (Finetuned v4.8.5)
+                    merge_threshold = safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), 0.8)
                     duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
                     attack_t = float(settings.AUDIO_ATTACK_TIME)
                     release_t = float(settings.AUDIO_RELEASE_TIME)
@@ -1884,15 +1885,21 @@ def generate_video_avgl(project):
                         if isinstance(t, np.ndarray):
                             factors = np.ones_like(t, dtype=float)
                             for v_start, v_end in current_intervals:
-                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
+                                # 1. Attack (Fade Down)
                                 m_out = (t >= (v_start - attack_t)) & (t < v_start)
                                 if np.any(m_out):
                                     p = (t[m_out] - (v_start - attack_t)) / attack_t
                                     factors[m_out] = np.minimum(factors[m_out], 1.0 - (p * (1.0 - duck_ratio)))
+                                
+                                # 2. Release (Fade Up)
                                 m_in = (t > v_end) & (t <= (v_end + release_t))
                                 if np.any(m_in):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
+
+                                # 3. SILENCE PRIORITY (v4.8.5): Force duck_ratio if voice is active
+                                # This prevents Attack logic from 'lifting' volume during voice
+                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                             
                             # v4.8: Block Fade-out/Fade-in Logic (Vectorized with 1s Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
