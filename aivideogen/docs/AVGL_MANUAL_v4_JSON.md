@@ -418,8 +418,11 @@ Puedes ajustar el comportamiento del audio mediante estas variables:
 - `AUDIO_DUCKING_RATIO`: Nivel al que baja la música (0.10 = 10% del volumen original).
 - `AUDIO_ATTACK_TIME`: Segundos que tarda la música en BAJAR al empezar a hablar.
 - `AUDIO_RELEASE_TIME`: Segundos que tarda la música en SUBIR durante los silencios.
-- `AUDIO_BLOCK_FADE`: Segundos de fundido (in/out) al iniciar y terminar cada bloque.
-- `AUDIO_EARLY_FINISH`: Tiempo de silencio técnico antes de finalizar el clip (v19.5, recomendado 0.1s para evitar cortes).
+- `AUDIO_BLOCK_FADE`: Segundos de fundido (in/out) al iniciar y terminar cada BLOQUE de audio.
+- `AUDIO_EARLY_FINISH`: Tiempo de silencio técnico antes de finalizar cada BLOQUE (v19.5, recomendado 0.1s). 
+
+> [!NOTE]
+> **Compatibilidad**: Este silencio final es independiente de los tiempos de `Attack` y `Release`. Estos últimos responden a la voz, mientras que el `Early Finish` responde estrictamente al final cronológico de la escena para asegurar una transición limpia entre bloques.
 
 ### Perfiles Recomendados
 Dependiendo del tipo de contenido, puedes configurar estos valores en tu `.env`:
