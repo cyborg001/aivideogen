@@ -1799,6 +1799,8 @@ def generate_video_avgl(project):
                         _attack = float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
                         _release = float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
                         _merge_th = float(getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
+                        _block_fade = float(getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                        _early_finish = float(getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
                         
                         # Merge block intervals (relative to block start)
                         local_merged = merge_voice_intervals(block_voice_intervals, threshold=_merge_th)
@@ -1830,12 +1832,17 @@ def generate_video_avgl(project):
                                             p = (t[m] - ve) / rel
                                             factors[m] = np.minimum(factors[m], vol * (dr + p * (1.0 - dr)))
                                     
-                                    # Block fade-in (first 1s) and fade-out (last 2s)
-                                    # Use block_dur (fixed param) NOT t[-1] (which is just chunk end)
-                                    factors[t < 1.0] *= (t[t < 1.0] / 1.0)
-                                    m_out = t > (block_dur - 2.0)
-                                    if np.any(m_out):
-                                        factors[m_out] *= np.maximum(0, (block_dur - t[m_out]) / 2.0)
+                                    # Block fade-in and fade-out based on settings
+                                    if _block_fade > 0:
+                                        factors[t < _block_fade] *= (t[t < _block_fade] / _block_fade)
+                                        m_out = t > (block_dur - _early_finish - _block_fade)
+                                        if np.any(m_out):
+                                            # Smooth transition to 0 at the very end
+                                            p_out = (block_dur - _early_finish - t[m_out]) / _block_fade
+                                            factors[m_out] *= np.maximum(0, np.minimum(1, p_out))
+                                        
+                                        # Force silence during early finish
+                                        factors[t > (block_dur - _early_finish)] = 0.0
                                     
                                     return audio * factors[:, None]
                                 else:
@@ -1850,8 +1857,13 @@ def generate_video_avgl(project):
                                             p = (t - ve) / rel
                                             factor = min(factor, vol * (dr + p * (1.0 - dr)))
                                     # Scalar fade-in/fade-out
-                                    if t < 1.0: factor *= (t / 1.0)
-                                    if t > (block_dur - 2.0): factor *= max(0, (block_dur - t) / 2.0)
+                                    if _block_fade > 0:
+                                        if t < _block_fade: factor *= (t / _block_fade)
+                                        if t > (block_dur - _early_finish - _block_fade):
+                                            p_out = (block_dur - _early_finish - t) / _block_fade
+                                            factor *= max(0, min(1, p_out))
+                                        if t > (block_dur - _early_finish):
+                                            factor = 0.0
                                     return audio * factor
                             return apply_ducking
                         
@@ -2022,9 +2034,9 @@ def generate_video_avgl(project):
                                 # This prevents Attack logic from 'lifting' volume during voice
                                 factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                             
-                            # v4.8: Block Fade-out/Fade-in Logic (Vectorized with 1s Early Finish)
+                            # v4.8: Block Fade-out/Fade-in Logic (Vectorized with dynamic Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
-                            early_finish_t = 1.0
+                            early_finish_t = getattr(settings, 'AUDIO_EARLY_FINISH', 0.1)
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
@@ -2064,9 +2076,9 @@ def generate_video_avgl(project):
                                 if v_start <= t <= v_end:
                                     factor = duck_ratio
                             
-                            # v4.8: Block Fade-out/Fade-in Logic (with 1s Early Finish)
+                            # v4.8: Block Fade-out/Fade-in Logic (with dynamic Early Finish)
                             block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
-                            early_finish_t = 1.0
+                            early_finish_t = getattr(settings, 'AUDIO_EARLY_FINISH', 0.1)
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:

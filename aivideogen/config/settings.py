@@ -151,6 +151,8 @@ AUDIO_RELEASE_TIME = float(os.getenv('AUDIO_RELEASE_TIME', 0.4))
 AUDIO_BLOCK_FADE = float(os.getenv('AUDIO_BLOCK_FADE', 1.0))
 # v4.7: Threshold for merging voice intervals
 AUDIO_MERGE_THRESHOLD = float(os.getenv('AUDIO_MERGE_THRESHOLD', 1.5))
+# v19.5: Early finish time for audio blocks (avoids abrupt cuts)
+AUDIO_EARLY_FINISH = float(os.getenv('AUDIO_EARLY_FINISH', 0.1))
 
 # File upload limits
 DATA_UPLOAD_MAX_NUMBER_FILES = 1000  # Maximum number of files that can be uploaded at once
