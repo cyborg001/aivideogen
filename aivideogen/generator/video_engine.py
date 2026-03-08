@@ -1795,12 +1795,13 @@ def generate_video_avgl(project):
                 # ═══════════════════════════════════════════════════════════════
                 if has_local_music and bg_audio:
                     try:
-                        _duck_ratio = float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.17))
-                        _attack = float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
-                        _release = float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
-                        _merge_th = float(getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
-                        _block_fade = float(getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
-                        _early_finish = float(getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                        # v20.2: Project-specific Audio Master Console Integration
+                        _duck_ratio = safe_float(project.audio_ducking_ratio, getattr(settings, 'AUDIO_DUCKING_RATIO', 0.17))
+                        _attack = safe_float(project.audio_attack_time, getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
+                        _release = safe_float(project.audio_release_time, getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
+                        _merge_th = safe_float(project.audio_merge_threshold, getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
+                        _block_fade = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                        _early_finish = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
                         
                         # Merge block intervals (relative to block start)
                         local_merged = merge_voice_intervals(block_voice_intervals, threshold=_merge_th)
@@ -1991,10 +1992,11 @@ def generate_video_avgl(project):
 
                     # 5. Dynamic Ducking Master (v4.5)
                     # v18.1: Robust threshold from settings (fallback to 1.5s professional standard)
-                    merge_threshold = safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
-                    duck_ratio = float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25))
-                    attack_t = float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
-                    release_t = float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
+                    # v20.2: Global Ducking Master (Master Console Override)
+                    merge_threshold = safe_float(project.audio_merge_threshold, safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5)))
+                    duck_ratio = safe_float(project.audio_ducking_ratio, float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25)))
+                    attack_t = safe_float(project.audio_attack_time, float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15)))
+                    release_t = safe_float(project.audio_release_time, float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4)))
 
                     logger.log(f"    [Audio] Mezclando Autoducking Maestro v18.5 ({len(global_voice_intervals)} intervalos)")
                     logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s")
@@ -2034,9 +2036,9 @@ def generate_video_avgl(project):
                                 # This prevents Attack logic from 'lifting' volume during voice
                                 factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                             
-                            # v4.8: Block Fade-out/Fade-in Logic (Vectorized with dynamic Early Finish)
-                            block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
-                            early_finish_t = getattr(settings, 'AUDIO_EARLY_FINISH', 0.1)
+                            # v20.2: Master Console Fade/Finish Integration (Vectorized)
+                            block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                            early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
@@ -2076,9 +2078,9 @@ def generate_video_avgl(project):
                                 if v_start <= t <= v_end:
                                     factor = duck_ratio
                             
-                            # v4.8: Block Fade-out/Fade-in Logic (with dynamic Early Finish)
-                            block_fade_t = getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)
-                            early_finish_t = getattr(settings, 'AUDIO_EARLY_FINISH', 0.1)
+                            # v20.2: Master Console Fade/Finish Integration (Scalar)
+                            block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                            early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:

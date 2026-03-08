@@ -364,6 +364,36 @@ def project_detail(request, project_id):
         'social_copy': social_copy
     })
 
+def save_social_info(request, project_id):
+    """View to save edited YouTube metadata from the detail page."""
+    import json
+    from django.http import JsonResponse
+    project = get_object_or_404(VideoProject, id=project_id)
+    if request.method == 'POST':
+        try:
+            # Handle both Form and AJAX/JSON
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+                
+            project.social_title = data.get('title')
+            project.social_description = data.get('description')
+            project.social_tags = data.get('tags')
+            project.social_pinned_comment = data.get('pinned_comment')
+            project.save()
+            
+            if request.content_type == 'application/json':
+                return JsonResponse({'status': 'success', 'message': 'Información guardada correctamente.'})
+            
+            messages.success(request, "Información social actualizada.")
+        except Exception as e:
+            if request.content_type == 'application/json':
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            messages.error(request, f"Error al guardar: {e}")
+            
+    return redirect('generator:project_detail', project_id=project.id)
+
 def delete_project(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     if request.method == 'POST':
@@ -452,6 +482,10 @@ def clone_project(request, project_id):
             visual_prompts=original.visual_prompts,
             script_hashtags=original.script_hashtags,
             auto_upload_youtube=original.auto_upload_youtube,
+            social_title=original.social_title,
+            social_description=original.social_description,
+            social_tags=original.social_tags,
+            social_pinned_comment=original.social_pinned_comment,
             status='pending'
         )
         
@@ -845,7 +879,14 @@ def create_project_from_editor(request):
             music_volume=float(settings.get('music_volume', 0.15)),
             auto_upload_youtube=bool(settings.get('auto_upload', False)),
             render_mode=settings.get('render_mode') or script.get('render_mode', 'cpu'),
-            dynamic_subtitles=bool(settings.get('dynamic_subtitles', False))
+            dynamic_subtitles=bool(settings.get('dynamic_subtitles', False)),
+            # v20.2: Audio Master Console
+            audio_ducking_ratio=settings.get('audio_ducking_ratio'),
+            audio_attack_time=settings.get('audio_attack_time'),
+            audio_release_time=settings.get('audio_release_time'),
+            audio_merge_threshold=settings.get('audio_merge_threshold'),
+            audio_block_fade=settings.get('audio_block_fade'),
+            audio_early_finish=settings.get('audio_early_finish')
         )
         
         # Handle Music
@@ -1111,6 +1152,10 @@ def save_project_script_json(request, project_id):
                 if 'voice_speed' in settings_data: script_data['voice_speed'] = settings_data['voice_speed']
                 if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
                 if 'dynamic_subtitles' in settings_data: script_data['dynamic_subtitles'] = settings_data['dynamic_subtitles']
+                
+                # v20.2: Audio Console Sync
+                for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
+                    if key in settings_data: script_data['settings'][key] = settings_data[key]
 
             # Re-serialize with the new merged settings
             project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
@@ -1200,6 +1245,12 @@ def save_project_script_json(request, project_id):
 
             if 'dynamic_subtitles' in settings_data:
                 project.dynamic_subtitles = bool(settings_data['dynamic_subtitles'])
+
+            # v20.2: Audio Master Console Persitence
+            for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
+                if key in settings_data:
+                    try: setattr(project, key, float(settings_data[key]) if settings_data[key] is not None else None)
+                    except: pass
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})

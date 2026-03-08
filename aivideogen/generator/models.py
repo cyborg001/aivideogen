@@ -100,6 +100,19 @@ class VideoProject(models.Model):
     music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
     dynamic_subtitles = models.BooleanField(default=False, help_text="Fuerza el modo karaoke (dinámico) para todo el video")
     
+    # v20.2: Audio Master Console Fields
+    audio_ducking_ratio = models.FloatField(null=True, blank=True, help_text="Ratio de ducking (0.1 a 0.5 típico)")
+    audio_attack_time = models.FloatField(null=True, blank=True, help_text="Tiempo de ataque en segundos")
+    audio_release_time = models.FloatField(null=True, blank=True, help_text="Tiempo de recuperación en segundos")
+    audio_merge_threshold = models.FloatField(null=True, blank=True, help_text="Umbral de unión de bloques de silencio")
+    audio_block_fade = models.FloatField(null=True, blank=True, help_text="Fade entre bloques de audio")
+    audio_early_finish = models.FloatField(null=True, blank=True, help_text="Silencio técnico al final del bloque")
+    
+    social_title = models.CharField(max_length=255, blank=True, null=True, help_text="Título editado para YouTube")
+    social_description = models.TextField(blank=True, null=True, help_text="Descripción editada para YouTube")
+    social_tags = models.TextField(blank=True, null=True, help_text="Tags editados para YouTube")
+    social_pinned_comment = models.TextField(blank=True, null=True, help_text="Comentario fijado editado para YouTube")
+    
     log_output = models.TextField(blank=True)
     duration = models.FloatField(default=0.0, help_text="Duración total del video en segundos")
     progress_total = models.FloatField(default=0.0, help_text="Progreso actual de generación (0-100)")

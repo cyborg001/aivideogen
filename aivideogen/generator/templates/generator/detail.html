@@ -197,6 +197,19 @@
     </p>
 
     <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <!-- v14.5: Social Info Title -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="font-size: 0.75rem; font-weight: bold; color: #cbd5e1; text-transform: uppercase;">🎬
+                    Título para YouTube</label>
+                <button onclick="copyToClipboard('title-text', this)" class="btn"
+                    style="padding: 2px 10px; font-size: 0.7rem; background: #334155; height: auto;">Copiar</button>
+            </div>
+            <input id="title-text" placeholder="Título impactante para YouTube..." value="{{ social_copy.title }}"
+                style="width: 100%; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; font-family: inherit; transition: border-color 0.2s; outline: none;"
+                onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#334155'">
+        </div>
+
         <!-- Description -->
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -241,6 +254,14 @@
             </div>
         </div>
     </div>
+
+    <!-- v14.5: Save Button -->
+    <div style="margin-top: 25px; text-align: right; border-top: 1px solid #334155; padding-top: 15px;">
+        <button onclick="saveSocialInfo()" id="btn-save-social" class="btn"
+            style="background: linear-gradient(135deg, #4f46e5, #6366f1); border: none; padding: 10px 30px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); transition: transform 0.2s, background 0.2s;">
+            💾 Guardar Cambios para YouTube
+        </button>
+    </div>
 </div>
 
 <script>
@@ -259,6 +280,51 @@
                 btn.style.background = "#334155";
             }, 2000);
         });
+    }
+
+    function saveSocialInfo() {
+        const btn = document.getElementById('btn-save-social');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Guardando...";
+        btn.disabled = true;
+
+        const data = {
+            title: document.getElementById('title-text').value,
+            description: document.getElementById('desc-text').value,
+            tags: document.getElementById('tags-text').value,
+            pinned_comment: document.getElementById('comment-text').value
+        };
+
+        fetch("{% url 'generator:save_social_info' project.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    btn.innerText = "✅ Guardado";
+                    btn.style.background = "#059669";
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                        btn.style.background = "linear-gradient(135deg, #4f46e5, #6366f1)";
+                    }, 2000);
+                } else {
+                    alert("Error: " + data.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error de conexión al guardar.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
     }
 </script>
 {% endif %}
