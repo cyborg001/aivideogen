@@ -418,15 +418,17 @@ Puedes ajustar el comportamiento del audio mediante estas variables:
 - `AUDIO_DUCKING_RATIO`: Nivel al que baja la música (0.10 = 10% del volumen original).
 - `AUDIO_ATTACK_TIME`: Segundos que tarda la música en BAJAR al empezar a hablar.
 - `AUDIO_RELEASE_TIME`: Segundos que tarda la música en SUBIR durante los silencios.
+- `AUDIO_BLOCK_FADE`: Segundos de fundido (in/out) al iniciar y terminar cada bloque.
+- `AUDIO_EARLY_FINISH`: Tiempo de silencio técnico antes de finalizar el clip (v19.5, recomendado 0.1s para evitar cortes).
 
 ### Perfiles Recomendados
 Dependiendo del tipo de contenido, puedes configurar estos valores en tu `.env`:
 
-| Perfil | Attack | Release | Ratio | Uso Ideal |
-| :--- | :--- | :--- | :--- | :--- |
-| **Dinámico/Vlog** | 0.15s | 0.4s | 0.12 | Ritmo rápido, pausas cortas (0.5s). |
-| **Documental** | 0.3s | 0.8s | 0.10 | Narración pausada, tono serio. |
-| **Relajado/Zen** | 0.5s | 1.5s | 0.05 | Transiciones lentas y música suave. |
+| Perfil | Attack | Release | Fade | Early Finish | Uso Ideal |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Dinámico/Vlog** | 0.15s | 0.4s | 1.0s | 0.1s | Ritmo rápido, pausas cortas. |
+| **Documental** | 0.3s | 0.8s | 1.5s | 0.1s | Narración pausada, tono serio. |
+| **Relajado/Zen** | 0.5s | 1.5s | 2.0s | 0.1s | Transiciones lentas y música suave. |
 
 > [!IMPORTANT]
 > **Regla de Oro:** Si tus guiones tienen pausas cortas (0.5s) y quieres que la música se note, usa el perfil **Dinámico** con un `Release` de **0.4s**.

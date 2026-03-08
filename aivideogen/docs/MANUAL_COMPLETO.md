@@ -117,5 +117,8 @@ El motor de video es ahora "auto-reparable". Si un asset solicitado no existe:
 2. Si no hay fondos oficiales, usa **el primer archivo de imagen** que encuentre en `media/assets`.
 3. Evita la aparición de ventanas negras en la producción final.
 
+### 5.3 Configuración de Audio (v19.5)
+Para un control total sobre el ducking y los fundidos de música, consulta la sección técnica en `AVGL_MANUAL_v4_JSON.md`. Puedes ajustar tiempos de reacción, fundidos de bloque y silencios finales.
+
 ## 6. SOPORTE
 Para dudas técnicas avanzadas, consulta `AVGL_MANUAL_v4_JSON.md`.
