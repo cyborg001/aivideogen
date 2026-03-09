@@ -1997,9 +1997,11 @@ def generate_video_avgl(project):
                     duck_ratio = safe_float(project.audio_ducking_ratio, float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25)))
                     attack_t = safe_float(project.audio_attack_time, float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15)))
                     release_t = safe_float(project.audio_release_time, float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4)))
+                    block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                    early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
 
-                    logger.log(f"    [Audio] Mezclando Autoducking Maestro v18.5 ({len(global_voice_intervals)} intervalos)")
-                    logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s")
+                    logger.log(f"    [Audio] Mezclando Autoducking Maestro v20.2 ({len(global_voice_intervals)} intervalos)")
+                    logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s, block_fade={block_fade_t}s, early_finish={early_finish_t}s")
                     logger.log(f"    [Audio] Intervalos RAW: {global_voice_intervals[:10]}")
                     merged_global_intervals = merge_voice_intervals(global_voice_intervals, threshold=merge_threshold)
                     logger.log(f"    [Audio] Intervalos MERGED: {merged_global_intervals}")
@@ -2037,8 +2039,7 @@ def generate_video_avgl(project):
                                 factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                             
                             # v20.2: Master Console Fade/Finish Integration (Vectorized)
-                            block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
-                            early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                            # (Values already captured as block_fade_t and early_finish_t)
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
@@ -2079,8 +2080,7 @@ def generate_video_avgl(project):
                                     factor = duck_ratio
                             
                             # v20.2: Master Console Fade/Finish Integration (Scalar)
-                            block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
-                            early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                            # (Values already captured as block_fade_t and early_finish_t)
                             if block_fade_t > 0:
                                 t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
