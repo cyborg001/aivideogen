@@ -18,6 +18,10 @@ Mantiene la compatibilidad con v4.0 pero introduce **Dinámicas de Movimiento Co
 | **Vórtice** | `w_rotate: 360` | Rotación constante por velocidad (grados/segundo). |
 | **Temblor** | `SHAKE:intensidad` | Simula cámara en mano o terremoto. |
 | **Custom Overlays** | `overlay: "mi_archivo.mp4"` | Carga overlays de video desde `media/overlays/`. |
+| **Master Console** | `audio_block_fade: 1.0` | Control profesional de audio por proyecto (Ducking, Fades). |
+| **Social Persistence** | `social_title` | Persistencia de metadatos de YouTube/TikTok en el editor. |
+| **Teleprompter** | `Studio Recorder` | Lectura de guion integrada en el modal de grabación. |
+| **Forzar Duración** | `force_duration: true` | Permite sobreescribir la duración estimada recortando o pausando el clip. |
 | **Robustez** | `undefined` -> `0` | El motor repara automáticamente valores corruptos. |
 
 ---
@@ -28,6 +32,13 @@ Mantiene la compatibilidad con v4.0 pero introduce **Dinámicas de Movimiento Co
 {
   "title": "Título del Video",
   "voice": "es-ES-AlvaroNeural",
+  "settings": {
+    "audio_ducking_ratio": 0.12,
+    "audio_attack_time": 0.1,
+    "audio_block_fade": 1.0,
+    "social_title": "Mi Gran Video",
+    "social_tags": "ia, video, tech"
+  },
   "blocks": [
     {
       "title": "Bloque 1",
@@ -42,18 +53,6 @@ Mantiene la compatibilidad con v4.0 pero introduce **Dinámicas de Movimiento Co
               "move": "HOR:0:100 + SHAKE:10 + ROTATE:-5:5",
               "w_rotate": null, 
               "overlay": "dust"
-            }
-          ]
-        },
-        {
-          "title": "Efecto Vórtice",
-          "text": "Esta galaxia gira indefinidamente.",
-          "assets": [
-            {
-              "type": "galaxy.png",
-              "zoom": "1.5",
-              "w_rotate": 90, 
-              "fit": false
             }
           ]
         }
@@ -100,6 +99,18 @@ Ahora soporta archivos personalizados.
 - **Ahora**: Cualquier archivo `.mp4` en `media/overlays/` (ej: `light leaks`).
     - Ej: `"overlay": "light leaks"`
     - Si el archivo no existe, el sistema lo ignora silenciosamente (sin error).
+
+### 4. `force_duration` y `duration` (Forzado de Tiempo)
+Permite ignorar la duración calculada automáticamente (basada en el audio TTS o MP3) y fijar una duración exacta para la escena o el grupo.
+
+- **Tipo**: `boolean` (`force_duration`) y `float` (`duration`).
+- **Valores**: 
+    - `force_duration`: `true` o `false`.
+    - `duration`: Número de segundos (ej: `5.5`).
+- **Comportamiento**:
+    - **Si el audio es más largo**: El renderizador cortará (clipping) el audio y el video en el momento exacto definido.
+    - **Si el audio es más corto**: Se completará la duración reproduciendo el audio y luego manteniendo el último frame de video en silencio hasta alcanzar el tiempo.
+    - **A nivel de Grupo (Master Shot)**: Si un grupo entero tiene `force_duration`, el motor comprimirá escalarmente la duración de todas las escenas hijas para que su suma no exceda esta duración forzada.
 
 ---
 

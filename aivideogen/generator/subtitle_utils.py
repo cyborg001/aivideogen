@@ -55,16 +55,16 @@ def compile_full_script_ass(all_subtitles, output_path):
             # v26.6: Dynamic Vertical Positioning (Respect y_pos)
             y_pos = sub.get('y_pos', 0.70)
             
-            if y_pos < 0.6:
+            if y_pos < 0.5:
                 event.style = "AlphaTitle"
-                # Top Alignment (an8) -> MarginV = y_pos * Height
-                # e.g. 0.35 * 1920 = 672px from top
+                # Top Alignment (an8) -> MarginV from top
                 event.marginv = int(y_pos * 1920)
             else:
                 event.style = "AlphaMain"
-                # Bottom Alignment (an2) -> Default Style Margin (150px = ~8%)
-                # We stick to the fixed style for main subtitles to ensure consistency/safety
-                # unless a specific override logic is needed later.
+                # Bottom Alignment (an2) -> MarginV from bottom
+                # If y=0.70, margin is 0.30 from bottom (576px)
+                # If y=0.95, margin is 0.05 from bottom (96px)
+                event.marginv = int((1.0 - y_pos) * 1920)
 
             
             text = sub['text']

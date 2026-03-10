@@ -1071,6 +1071,8 @@ def get_project_script_json(request, project_id):
         'aspect_ratio': project.aspect_ratio,
         'render_mode': project.render_mode,
         'music_volume_lock': project.music_volume_lock,
+        'dynamic_subtitles': project.dynamic_subtitles,
+        'subtitles_y_position': getattr(project, 'subtitles_y_position', 0.70),
         'auto_upload': project.auto_upload_youtube
     }
     
@@ -1152,6 +1154,7 @@ def save_project_script_json(request, project_id):
                 if 'voice_speed' in settings_data: script_data['voice_speed'] = settings_data['voice_speed']
                 if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
                 if 'dynamic_subtitles' in settings_data: script_data['dynamic_subtitles'] = settings_data['dynamic_subtitles']
+                if 'subtitles_y_position' in settings_data: script_data['subtitles_y_position'] = float(settings_data['subtitles_y_position'])
                 
                 # v20.2: Audio Console Sync
                 for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
@@ -1245,6 +1248,12 @@ def save_project_script_json(request, project_id):
 
             if 'dynamic_subtitles' in settings_data:
                 project.dynamic_subtitles = bool(settings_data['dynamic_subtitles'])
+
+            if 'subtitles_y_position' in settings_data:
+                try:
+                    project.subtitles_y_position = float(settings_data['subtitles_y_position'])
+                except:
+                    pass
 
             # v20.2: Audio Master Console Persitence
             for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:

@@ -443,7 +443,8 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             if clips_to_close is not None: clips_to_close.append(overlay)
         
         if overlay.duration < duration:
-            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
+            # v30.6: Add safety padding (+0.1s) to avoid MoviePy frame read warnings at exact duration limits
+            overlay = overlay.with_effects([vfx.Loop(duration=duration + 0.1)])
         
         # v15.8: Only resize if needed
         if overlay.size != target_size:
@@ -555,7 +556,8 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
             if clips_to_close is not None: clips_to_close.append(overlay)
             
         if overlay.duration < duration:
-            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
+            # v30.6: Add safety padding (+0.1s) to avoid MoviePy frame read warnings at exact duration limits
+            overlay = overlay.with_effects([vfx.Loop(duration=duration + 0.1)])
         
         if overlay.size != target_size:
             overlay = overlay.resized(target_size)
@@ -1107,9 +1109,12 @@ def generate_video_avgl(project):
                 voice_duration = 0.0
                 if scene in scene_audio_map and scene_audio_map[scene]:
                     audio_path = scene_audio_map[scene]
-                    audio_clip = AudioFileClip(audio_path)
-                    clips_to_close.append(audio_clip)
-                    voice_duration = audio_clip.duration
+                    if os.path.exists(audio_path):
+                        audio_clip = AudioFileClip(audio_path)
+                        clips_to_close.append(audio_clip)
+                        voice_duration = audio_clip.duration
+                    else:
+                        logger.log(f"  ❌ Archivo de audio perdido o no generado: {os.path.basename(audio_path)}. Forzando silencio.")
                 
                 # Fallback for missing audio (ensures sync)
                 if not audio_clip:
@@ -1122,7 +1127,13 @@ def generate_video_avgl(project):
                 
                 try: s_pause = float(scene.pause or 0.0)
                 except: s_pause = 0.0
-                duration = voice_duration + s_pause
+                
+                # v20.4: Professional Duration Override
+                if getattr(scene, 'force_duration', False) and getattr(scene, 'duration', 0.0) > 0:
+                    duration = float(scene.duration)
+                    logger.log(f"  ⏱️ [OVERRIDE] Duración forzada por el Arquitecto: {duration:.2f}s")
+                else:
+                    duration = voice_duration + s_pause
                 
                 if duration <= 0:
                     duration = 1.0 # Minimal failsafe
@@ -1277,7 +1288,13 @@ def generate_video_avgl(project):
                                 try:
                                     # Calculate group timing
                                     group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
-                                    total_group_duration = sum([audio_durations.get(s, 1.0) + s.pause for s in group_scenes])
+                                    # v20.4: Respect Force Duration in Group Calculations
+                                    total_group_duration = 0.0
+                                    for s in group_scenes:
+                                        s_dur = audio_durations.get(s, 1.0) + s.pause
+                                        if getattr(s, 'force_duration', False) and getattr(s, 'duration', 0.0) > 0:
+                                            s_dur = float(s.duration)
+                                        total_group_duration += s_dur
                                     
                                     # Find start time of CURRENT scene relative to group start
                                     start_in_group = 0.0
@@ -1364,6 +1381,8 @@ def generate_video_avgl(project):
                             for s in group_scenes:
                                 if s == scene: break
                                 s_dur = audio_durations.get(s, 1.0) + s.pause
+                                if getattr(s, 'force_duration', False) and getattr(s, 'duration', 0.0) > 0:
+                                    s_dur = float(s.duration)
                                 sync_start_time += s_dur
 
                         if is_video:
@@ -1522,7 +1541,8 @@ def generate_video_avgl(project):
                             s_w_count = sub_data.get('word_count', 4)
                             phonetic_count = sub_data.get('phonetic_count', s_w_count)  # v17.0: Phonetic mapping
                             is_highlight = sub_data.get('is_highlight', False)           # v17.0: Highlight mode
-                            y_pos = sub_data.get('y_position', 0.70)                     # v17.0: Vertical position (v17.2.10: Moved up to 0.70)
+                            global_y_pos = getattr(project, 'subtitles_y_position', 0.70)
+                            y_pos = sub_data.get('y_position', global_y_pos)             # v17.0: Vertical position (v26.6: Dynamic)
                             is_dynamic = sub_data.get('is_dynamic', False)
                             is_movie_mode = sub_data.get('movie_mode', False)
                             
@@ -1650,54 +1670,18 @@ def generate_video_avgl(project):
                             }
                             all_srt_items.append(metadata)
                             
-                            # v17.2.9: TEMPORARY - Disable yellow karaoke highlights for MoviePy (we only use FFmpeg now)
-                            # We keep the DYN timing but render as static white subtitles for visual cleanup
-                            d_txt_clip = render_pro_subtitles(
-                                s_text, s_dur, target_size, 
-                                full_highlight=is_movie_mode,
-                                is_dynamic=False,  # Forced to False to remove yellow highlights
-                                word_timings=relevant_timings,
-                                y_position=y_pos,
-                                is_highlight=is_highlight
-                            )
-                            
-                            if d_txt_clip:
-                                d_txt_clip = d_txt_clip.with_start(s_start)
-                                
-                                # v26.0: Metadata already added to all_srt_items above
-                                pass
-                                
-                                # v17.3.3: Prevención de Solapamiento (Clipping)
-                                # Si hay un subtítulo siguiente en la misma posición vertical, 
-                                # recortamos este clip para que termine justo cuando empieza el otro.
-                                try:
-                                    if idx + 1 < len(scene.subtitles):
-                                        next_sub = scene.subtitles[idx + 1]
-                                        # Solo si están en la misma línea (evita interferir entre SUB y PHO:h)
-                                        if next_sub.get('y_position', 0.70) == y_pos:
-                                            # Calculamos el inicio del siguiente para recortar
-                                            # (asumimos la misma lógica de timing del bucle)
-                                            if is_dynamic and hasattr(scene, 'word_timings') and scene.word_timings:
-                                                next_offset = next_sub.get('offset', 0)
-                                                if next_offset < len(scene.word_timings):
-                                                    next_start = scene.word_timings[next_offset]['start']
-                                                    if next_sub.get('is_highlight', False):
-                                                        next_start = max(0, next_start - 0.20)
-                                                    
-                                                    # Recortar duración si hay solapamiento
-                                                    if s_start + s_dur > next_start:
-                                                        s_dur = max(0.1, next_start - s_start)
-                                                        d_txt_clip = d_txt_clip.with_duration(s_dur)
-                                                        logger.log(f"      [Clip] Solapamiento detectado. Recortando chunk {idx} a {s_dur:.2f}s")
-                                except: pass
-
-                                sub_clips_dynamic.append(d_txt_clip)
-                        
-                        if sub_clips_dynamic:
-                            # v26.0: Bypass MoviePy text rendering for stability/speed (handled by FFmpeg injection)
-                            # clip = CompositeVideoClip([clip] + sub_clips_dynamic)
+                            # v26.12: PERFORMANCE BOOST
+                            # The entire ImageMagick text rendering block (render_pro_subtitles) 
+                            # and clipping logics have been completely removed. 
+                            # The CPU no longer draws subtitle images frame-by-frame. 
+                            # All the necessary metadata (`all_srt_items`) is already collected above 
+                            # and will be perfectly burned into the video by the final FFmpeg ASS Injector.
+                            # Previous code was doing heavy ImageMagick math just to discard the result.
                             pass
-                            logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos PRO v16.5.")
+                            
+                        # Log that subtitles were processed for final injection
+                        if scene.subtitles:
+                            logger.log(f"    [OK] Metadatos de {len(scene.subtitles)} subtítulos encolados para inyección ASS.")
                 except Exception as e:
                     import traceback
                     logger.log(f"    [WARNING] Error renderizando subtitulos PRO: {e}\n{traceback.format_exc()}")
@@ -2152,7 +2136,7 @@ def generate_video_avgl(project):
                 'codec': 'libx264', 
                 'audio_codec': 'aac', 
                 'preset': 'ultrafast', 
-                'threads': 1
+                'threads': 1  # Revertido v26.12: 16 threads causa severa contención de CPU en MoviePy
             }
             
             if use_gpu:
@@ -2164,7 +2148,8 @@ def generate_video_avgl(project):
                     'threads': None  # NVENC handles its own threads better
                 })
             else:
-                logger.log("[HW] MODO RENDER: CPU Standard (libx264)")
+                cpu_threads = render_params.get('threads', 1)
+                logger.log(f"[HW] MODO RENDER: CPU Standard (libx264) - {cpu_threads} Threads")
 
             # v11.1: Progress callback and optimized DB saving
             def set_progress(percent):

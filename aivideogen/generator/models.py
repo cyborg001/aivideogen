@@ -99,6 +99,7 @@ class VideoProject(models.Model):
     auto_upload_youtube = models.BooleanField(default=False, help_text="Subir automáticamente a YouTube al finalizar la generación")
     music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
     dynamic_subtitles = models.BooleanField(default=False, help_text="Fuerza el modo karaoke (dinámico) para todo el video")
+    subtitles_y_position = models.FloatField(default=0.70, help_text="Posición vertical global de los subtítulos (0.0=Arriba, 1.0=Abajo)")
     
     # v20.2: Audio Master Console Fields
     audio_ducking_ratio = models.FloatField(null=True, blank=True, help_text="Ratio de ducking (0.1 a 0.5 típico)")
