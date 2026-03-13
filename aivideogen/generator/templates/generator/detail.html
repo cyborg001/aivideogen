@@ -1,4 +1,4 @@
-﻿{% extends 'generator/base.html' %}
+{% extends 'generator/base.html' %}
 {% block content %}
 <!-- VERSION 4.0 DEFINITIVE FIX -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -91,13 +91,34 @@
         <p style="margin-bottom: 30px; color: #aaa;">El proyecto ha sido creado. Haz clic abajo para comenzar la
             generación del video.</p>
 
-        <form action="{% url 'generator:start_project' project.id %}" method="post">
+        <!-- v4.1: Render Confirmation with YouTube Safeguard -->
+        <form action="{% url 'generator:start_project' project.id %}" method="post" id="render-form">
             {% csrf_token %}
-            <button type="submit" class="btn"
-                style="background-color: #00e676; color: #000; font-size: 1.2rem; padding: 15px 30px; font-weight: bold; border: none;">
-                🚀 Comenzar Generación
+            <div style="margin-bottom: 25px; padding: 15px; background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 0, 0, 0.2); border-radius: 8px; display: inline-block;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="confirm_auto_upload" {% if project.auto_upload_youtube %}checked{% endif %} style="width: 20px; height: 20px;">
+                    <span style="font-size: 1rem; color: #ff4444; font-weight: bold;">🚀 Subir automáticamente a YouTube al terminar</span>
+                </label>
+            </div>
+            <br>
+            <button type="submit" class="btn" onclick="return confirmRender()"
+                style="background-color: #00e676; color: #000; font-size: 1.2rem; padding: 15px 30px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;">
+                🎬 Comenzar Generación
             </button>
         </form>
+
+        <script>
+            function confirmRender() {
+                const autoUpload = document.querySelector('input[name="confirm_auto_upload"]').checked;
+                let msg = "¿Estás listo para comenzar el renderizado?";
+                if (autoUpload) {
+                    msg += "\n\n⚠️ AVISO: El video se subirá AUTOMÁTICAMENTE a YouTube.";
+                } else {
+                    msg += "\n\n(No se subirá a YouTube, solo se generará el archivo local)";
+                }
+                return confirm(msg);
+            }
+        </script>
     </div>
     {% elif project.status == 'processing' %}
     <div id="progress-container"

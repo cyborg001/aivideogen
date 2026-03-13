@@ -8,6 +8,7 @@ import time
 import re
 import numpy as np
 import logging
+import uuid
 import proglog
 from django.conf import settings
 from .subtitle_utils import compile_full_script_ass
@@ -1237,7 +1238,7 @@ def generate_video_avgl(project):
                     
                     if not clip and os.path.isfile(asset_path):
                         # Determine Asset Type (Image vs Video)
-                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm'))
+                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm', '.gif'))
                         
                         # ═══════════════════════════════════════════════════════════════════
                         # MASTER SHOT / GROUP INTERPOLATION & V5.0 EFFECTS
@@ -1506,17 +1507,27 @@ def generate_video_avgl(project):
                                     # Count words in scene text
                                     clean_text = re.sub(r'\[.*?\]', '', scene.text)
                                     words = clean_text.split()
-                                    if words:
-                                        delay = (audio_clip.duration / len(words)) * sfx_item.offset
-                                
-                                scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, duration - delay)))
-                                logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {vol_safe}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
+                                # FIX: Prevent negative or zero duration crashes
+                                valid_duration = duration - delay
+                                if valid_duration > 0:
+                                    scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, valid_duration)))
+                                    logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {vol_safe}, offset: {sfx_item.offset} words -> {delay:.2f}s, dur: {valid_duration:.2f}s)")
+                                else:
+                                    logger.log(f"    ⚠️ SFX {sfx_item.type} ignorado: el offset supera la duración de la escena.")
                             except Exception as e:
                                 logger.log(f"    ⚠️ Error SFX {sfx_item.type}: {e}")
 
                 # Mix Scene Audio (Voice + SFX)
-                if scene_sfx_clips:
-                    final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
+                pure_voice_duration = audio_clip.duration if audio_clip else 0.0
+                
+                # Filter out any None or 0 duration clips before CompositeAudioClip
+                valid_sfx = [c for c in scene_sfx_clips if getattr(c, 'duration', 0) > 0]
+                
+                if valid_sfx:
+                    if audio_clip:
+                        final_scene_audio = CompositeAudioClip([audio_clip] + valid_sfx)
+                    else:
+                        final_scene_audio = CompositeAudioClip(valid_sfx)
                     audio_clip = final_scene_audio
 
                 # SUBTITLE RENDERING (Modular v16.0)
@@ -1542,7 +1553,11 @@ def generate_video_avgl(project):
                             phonetic_count = sub_data.get('phonetic_count', s_w_count)  # v17.0: Phonetic mapping
                             is_highlight = sub_data.get('is_highlight', False)           # v17.0: Highlight mode
                             global_y_pos = getattr(project, 'subtitles_y_position', 0.70)
-                            y_pos = sub_data.get('y_position', global_y_pos)             # v17.0: Vertical position (v26.6: Dynamic)
+                            raw_y_pos = sub_data.get('y_position', global_y_pos)
+                            try:
+                                y_pos = float(raw_y_pos)
+                            except (TypeError, ValueError):
+                                y_pos = 0.70
                             is_dynamic = sub_data.get('is_dynamic', False)
                             is_movie_mode = sub_data.get('movie_mode', False)
                             
@@ -1716,7 +1731,9 @@ def generate_video_avgl(project):
                         for vs, ve in scene.voice_intervals: 
                             scene_intervals.append((block_cursor + vs, block_cursor + ve))
                     else: 
-                        scene_intervals.append((block_cursor, block_cursor + voice_duration))
+                        # Usar pure_voice_duration para ducking real (excluyendo la cola de SFX)
+                        v_dur = pure_voice_duration if 'pure_voice_duration' in locals() else voice_duration
+                        scene_intervals.append((block_cursor, block_cursor + v_dur))
                     
                     # Store in block local
                     block_voice_intervals.extend(scene_intervals)
@@ -2173,9 +2190,16 @@ def generate_video_avgl(project):
             # v13.0: Custom Cache Logger (Terminology Sync)
             cache_logger = CacheProgressBarLogger(project.id)
 
+            # v4.1: Implementation of "Hash Jitter" (Uniqueness Safeguard)
+            jitter_id = f"aj-{uuid.uuid4().hex[:8]}"
+            
             final_video.write_videofile(
                 output_path, 
-                ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"], 
+                ffmpeg_params=[
+                    "-pix_fmt", "yuv420p", 
+                    "-movflags", "+faststart",
+                    "-metadata", f"comment={jitter_id}"
+                ], 
                 logger=cache_logger, # v13.0: Real-time Item visibility
                 **render_params
             )
@@ -2229,6 +2253,7 @@ def generate_video_avgl(project):
                             '-vf', f"ass=filename='{rel_ass_path}'",
                             *video_codec_params,
                             '-c:a', 'copy',
+                            '-metadata', f"comment=aj-{uuid.uuid4().hex[:8]}", # Double Jitter for maximum safety
                             final_output_path
                         ]
                         

@@ -424,11 +424,19 @@ def start_project(request, project_id):
         if project.status == 'processing':
             messages.warning(request, "El proyecto ya se está procesando.")
         else:
+            # v4.1: Sync YouTube auto-upload status from confirmation checkbox
+            confirm_upload = request.POST.get('confirm_auto_upload') == 'on'
+            project.auto_upload_youtube = confirm_upload
+            
             # Reset logs/status
             from datetime import datetime
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             project.status = 'processing'
             project.log_output = f"[{now}] 🚀 Iniciando generación manual (v3.3)..."
+            if confirm_upload:
+                project.log_output += "\n[System] 🚩 Subida automática a YouTube ACTIVADA."
+            else:
+                project.log_output += "\n[System] ⚪ Subida automática a YouTube DESACTIVADA por el usuario."
             project.save()
             
             # Start Thread
@@ -1027,10 +1035,18 @@ def get_project_script_json(request, project_id):
                 new_assets.append(asset)
             scene['assets'] = new_assets
 
+    scene_counter = 0
     for block in data.get('blocks', []):
         # 1. Repair scenes at block level
         for scene in block.get('scenes', []):
             repair_scene_assets(scene)
+            
+            # v16.1: Sync Voice Paths for Editor Preview (Corrected Pattern)
+            voice_file = f"project_{project.id}_scene_{scene_counter:03d}.mp3"
+            voice_rel = f"temp_audio/{voice_file}"
+            if os.path.exists(os.path.join(settings.MEDIA_ROOT, voice_rel)):
+                scene['voice_path'] = f"{settings.MEDIA_URL}{voice_rel}"
+            scene_counter += 1
             
         # 2. Repair groups and their nested scenes
         for group in block.get('groups', []):
@@ -1053,6 +1069,13 @@ def get_project_script_json(request, project_id):
             # Repair scenes inside group
             for scene in group.get('scenes', []):
                 repair_scene_assets(scene)
+                
+                # v16.1: Sync Voice Paths for Editor Preview (Corrected Pattern)
+                voice_file = f"project_{project.id}_scene_{scene_counter:03d}.mp3"
+                voice_rel = f"temp_audio/{voice_file}"
+                if os.path.exists(os.path.join(settings.MEDIA_ROOT, voice_rel)):
+                    scene['voice_path'] = f"{settings.MEDIA_URL}{voice_rel}"
+                scene_counter += 1
     
     # --- SYNC PROJECT SETTINGS ---
     # Inject current project settings into the JSON so the editor starts with the "Truth"
