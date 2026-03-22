@@ -31,6 +31,32 @@
 ```
 *Debe existir en `media/overlays/light leaks.mp4`*
 
+### 4. Audio Master Console (Settings)
+```json
+{
+  "settings": {
+    "audio_ducking_ratio": 0.15,
+    "audio_attack_time": 0.1,
+    "audio_release_time": 0.4,
+    "audio_merge_threshold": 1.5,
+    "audio_block_fade": 1.0,
+    "audio_early_finish": 0.1
+  }
+}
+```
+
+### 5. Social Meta (YouTube/TT)
+```json
+{
+  "settings": {
+    "social_title": "Título Gancho",
+    "social_desc": "Descripción SEO...",
+    "social_tags": "tag1, tag2",
+    "social_pinned_comment": "Comentario fijado obligatorio"
+  }
+}
+```
+
 ---
 
 ## 🏗️ Estructura Completa v5.0

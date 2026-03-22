@@ -1,0 +1,26 @@
+Bloque 3
+[2026-03-09 22:08:36] 🔎 Buscando Música Global: Epic_Battle_Speech_-_Wayne_Jones.mp3
+[2026-03-09 22:08:36] 🎵 Aplicando Música Global Continua: Epic Battle Speech - Wayne Jones.mp3 (File: music/Epic_Battle_Speech_-_Wayne_Jones.mp3)
+[2026-03-09 22:08:36]     [Audio] Mezclando Autoducking Maestro v20.2 (7 intervalos)
+[2026-03-09 22:08:36]     [Audio] Params: duck_ratio=0.17, attack=0.15s, release=0.4s, merge_threshold=1.5s, block_fade=1.0s, early_finish=0.1s
+[2026-03-09 22:08:36]     [Audio] Intervalos RAW: [(0.0, 11.0364225), (11.58, 19.9943783), (np.float64(20.54), np.float64(30.7421358)), (np.float64(31.28), np.float64(40.123440099999996)), (np.float64(40.66), np.float64(53.067036599999994)), (np.float64(53.589999999999996), np.float64(64.9839741)), (np.float64(65.53), np.float64(76.2922997))]
+[2026-03-09 22:08:36]     [Audio] Intervalos MERGED: [(0.0, np.float64(76.2922997))]
+[2026-03-09 22:08:36]     [Audio] Block Time Ranges: [(0.0, np.float64(20.54), 0.3), (np.float64(20.54), np.float64(40.66), 0.3), (np.float64(40.66), np.float64(71.53), 0.35)]
+[2026-03-09 22:08:36]     [Audio] Mute Intervals: [(0.0, np.float64(20.54)), (np.float64(20.54), np.float64(40.66)), (np.float64(40.66), np.float64(71.53))]
+[2026-03-09 22:08:36]     [Audio] Default Vol: 0.2
+[2026-03-09 22:08:36]     [Audio] PROBE t=5.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:36]     [Audio] PROBE t=10.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37]     [Audio] PROBE t=20.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37]     [Audio] PROBE t=30.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37]     [Audio] PROBE t=40.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37]     [Audio] PROBE t=50.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37]     [Audio] PROBE t=60.0s -> factor=0.170 (ducked=True)
+[2026-03-09 22:08:37] 🎬 Iniciando renderizado final (1080x1920)...
+[2026-03-09 22:08:37] [HW] MODO RENDER: CPU Standard (libx264) - 16 Threads
+[2026-03-09 22:19:59] ✅ ¡Video base generado! (C:\Users\hp\aivideogen\aivideogen\media\videos\video_128_1773108517.mp4)
+[2026-03-09 22:19:59] ⏱️ FASE 1 (Video Base) Duración: 717.14s
+[2026-03-09 22:19:59] 🎬 Iniciando Inyección Final de Subtítulos v26.1 (Format: ASS)...
+[2026-03-09 22:19:59] 🎬 Ejecutando FFmpeg (CWD: C:\Users\hp\aivideogen\aivideogen): ['C:\\Users\\hp\\aivideogen\\venv\\Lib\\site-packages\\imageio_ffmpeg\\binaries\\ffmpeg-win-x86_64-v7.1.exe', '-y', '-i', 'C:\\Users\\hp\\aivideogen\\aivideogen\\media\\videos\\video_128_1773108517.mp4', '-vf', "ass=filename='media/videos/video_128_1773108517.ass'", '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', 'C:\\Users\\hp\\aivideogen\\aivideogen\\media\\videos\\video_128_1773108517_final.mp4']
+[2026-03-09 22:20:07] ✅ Fusión exitosa. Video final reemplazó al original: C:\Users\hp\aivideogen\aivideogen\media\videos\video_128_1773108517.mp4
+[2026-03-09 22:20:07] ⏱️ FASE 2 (Subtítulos) Duración: 7.98s
+[2026-03-09 22:20:07] [Done] Exito en 725.1 segundos!

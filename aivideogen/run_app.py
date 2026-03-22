@@ -142,7 +142,11 @@ if __name__ == "__main__":
         
     db_path = base_path / 'db.sqlite3'
     os.environ['DATABASE_PATH'] = str(db_path)
-    
+
+    # v13.8: Fix for path resolution when launched from external folders
+    if str(base_path) not in sys.path:
+        sys.path.append(str(base_path))
+        
     django.setup()
     
     # Start browser in a separate thread

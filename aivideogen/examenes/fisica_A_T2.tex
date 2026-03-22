@@ -1,0 +1,90 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+
+\geometry{margin=2cm}
+
+\title{Examen de Física I - Grupo A - Tipo 2 (20 puntos)}
+\author{Estudiante: \underline{\hspace{6cm}} \quad Fecha: \underline{\hspace{3cm}}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Instrucciones}
+Responda los siguientes 5 ítems. El ítem 5 consta de 2 problemas de selección múltiple (2 pts c/u).
+
+\begin{enumerate}[label=\textbf{Item \arabic*:}, leftmargin=*]
+
+    \item \textbf{Falso o Verdadero (FV) (4 pts)} \\
+    Determine si las siguientes afirmaciones son Verdaderas (V) o Falsas (F):
+    \begin{itemize}
+        \item[\underline{\hspace{1cm}}] La Física Moderna estudia fenómenos a bajas velocidades (clásicas).
+        \item[\underline{\hspace{1cm}}] La Biología es una ciencia con la que la Física tiene relación directa.
+        \item[\underline{\hspace{1cm}}] Los ceros a la izquierda en un decimal NO son significativos.
+        \item[\underline{\hspace{1cm}}] Newton es la unidad de fuerza en el Sistema Internacional.
+    \end{itemize}
+
+    \item \textbf{Completa (Símbolos S.I.) (4 pts)} \\
+    Escriba el símbolo correcto para las siguientes unidades del S.I.:
+    \begin{itemize}
+        \item Segundo: \underline{\hspace{4cm}}
+        \item Kilogramo: \underline{\hspace{4cm}}
+        \item Kelvin: \underline{\hspace{4cm}}
+        \item Amperio: \underline{\hspace{4cm}}
+    \end{itemize}
+
+    \item \textbf{Selección Múltiple (Redondeo y Operaciones) (4 pts)} \\
+    Marque la opción correcta (1 pt c/u):
+    \begin{enumerate}[label=\roman*)]
+        \item ¿Resultado de $12.5 + 3.12$? \textbf{A) 15.62 \quad B) 15.6 \quad C) 15.7 \quad D) 16}
+        \item ¿Cifras sig. en $0.070$? \textbf{A) 1 \quad B) 2 \quad C) 3 \quad D) 4}
+        \item Resultado de $36.72 / 4.5$: \textbf{A) 8.16 \quad B) 8.2 \quad C) 8.1 \quad D) 8}
+        \item $0.000085$ en nota. cient.: \textbf{A) $8.5\times 10^{-4}$ \quad B) $8.5\times 10^{-5}$ \quad C) $85\times 10^{-6}$ \quad D) $0.85\times 10^{-4}$}
+    \end{enumerate}
+
+    \item \textbf{Aparea (Prefijos S.I.) (4 pts)} \\
+    Relacione el prefijo con su factor:
+    \begin{center}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        A) Kilo (k) & (\hspace{0.5cm}) & $10^{-3}$ \\ \hline
+        B) Centi (c) & (\hspace{0.5cm}) & $10^{3}$ \\ \hline
+        C) Mili (m) & (\hspace{0.5cm}) & $10^{6}$ \\ \hline
+        D) Mega (M) & (\hspace{0.5cm}) & $10^{-2}$ \\ \hline
+    \end{tabular}
+    \end{center}
+
+    \item \textbf{Resuelve (Selección Múltiple) (4 pts)} \\
+    Elija la opción correcta para cada problema (2 pts c/u):
+    \begin{enumerate}[label=\Alph*)]
+        \item \textbf{Notación Científica}: Realice la operación $\frac{(4.0 \times 10^9)}{(2.0 \times 10^5)}$ \\
+        \textbf{A) $2.0 \times 10^4$ \quad B) $2.0 \times 10^{14}$ \quad C) $8.0 \times 10^4$ \quad D) $2.0 \times 10^{45}$}
+        
+        \item \textbf{Vectores (Ángulo corregido/No notable)}: Halle el módulo de la resultante de los tres vectores del gráfico: $20.4$u orientado un ángulo de $165^\circ$, $10$u orientado un ángulo de $233^\circ$ (con el eje $-x$ es $53^\circ$) y $20$u a la derecha. (Use $\cos 165^\circ = -0.96, \sin 165^\circ = 0.26, \cos 233^\circ = -0.6, \sin 233^\circ = -0.8$)
+        \begin{center}
+        \begin{tikzpicture}[scale=0.3]
+            \draw[dashed, ->] (-22,0) -- (22,0) node[right] {$x$};
+            \draw[dashed, ->] (0,-10) -- (0,10) node[above] {$y$};
+            \draw[ultra thick, ->, blue] (0,0) -- ({20.4*cos(165)},{20.4*sin(165)}) node[above left] {20.4u};
+            \draw[ultra thick, ->, orange] (0,0) -- ({10*cos(233)},{10*sin(233)}) node[below left] {10u};
+            \draw[ultra thick, ->, red] (0,0) -- (20,0) node[below] {20u};
+            \draw (1.5,0) arc (0:165:1.5) node[midway, above left] {\tiny $165^\circ$};
+            \draw (-1.5,0) arc (180:233:1.5) node[midway, below left] {\tiny $53^\circ$};
+        \end{tikzpicture}
+        \end{center}
+        \textbf{A) 12u \quad B) 20u \quad C) 6u \quad D) 30u}
+    \end{enumerate}
+
+\end{enumerate}
+
+\end{document}

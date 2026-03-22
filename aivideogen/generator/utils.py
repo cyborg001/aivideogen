@@ -9,6 +9,50 @@ from django.conf import settings
 # from elevenlabs.client import ElevenLabs (Moved to function level)
 # from elevenlabs import save (Moved to function level)
 from django.utils.text import slugify
+import time
+import whisper
+import subprocess
+import re
+import shutil
+
+# v5.14: Global FFmpeg Robust Initialization
+# Ensure FFmpeg is available for Whisper and other subprocesses globally
+try:
+    import imageio_ffmpeg
+    ffmpeg_original = imageio_ffmpeg.get_ffmpeg_exe()
+    # Use a localized bin dir for the project
+    local_bin = os.path.join(os.getcwd(), 'aivideogen', 'media', 'bin')
+    os.makedirs(local_bin, exist_ok=True)
+    
+    ffmpeg_target = os.path.join(local_bin, "ffmpeg.exe")
+    if not os.path.exists(ffmpeg_target):
+        try:
+            shutil.copy2(ffmpeg_original, ffmpeg_target)
+        except:
+            pass
+            
+    if local_bin not in os.environ["PATH"]:
+        os.environ["PATH"] = local_bin + os.pathsep + os.environ["PATH"]
+except Exception as e:
+    pass
+
+# Global model instance to avoid re-loading for every scene
+_WHISPER_MODEL = None
+def get_whisper_model():
+    global _WHISPER_MODEL
+    if _WHISPER_MODEL is None:
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(f"[HW] Cargando Whisper en dispositivo: {device.upper()}")
+            _WHISPER_MODEL = whisper.load_model("small", device=device)
+        except Exception as e:
+            print(f"[-] Error cargando Whisper global: {e}")
+            try:
+                _WHISPER_MODEL = whisper.load_model("small")
+            except:
+                pass
+    return _WHISPER_MODEL
 
 def generate_script_ai(news_item):
     """
@@ -77,6 +121,209 @@ Responde ÚNICAMENTE el JSON.
             return None, f"Error de API Gemini: {response.status_code} - {response.text}", None, None
     except Exception as e:
         return None, f"Error durante la generación con IA: {str(e)}", None, None
+
+def translate_script_ai(script_data, target_lang="es"):
+    """
+    Translates an AVGL script JSON into the target language using Gemini.
+    Translates 'text' and 'subtitle' fields of each scene.
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None, "Error: No se encontró GEMINI_API_KEY."
+
+    lang_name = "Español" if target_lang == "es" else "Inglés"
+    
+    prompt = f"""
+    Eres un traductor experto en doblaje cinematográfico y discursos políticos.
+    Tu tarea es traducir el siguiente guion de video al {lang_name}.
+    
+    REGLAS:
+    1. Mantén la estructura de bloques y escenas exacta.
+    2. Traduce ÚNICAMENTE los campos "text" y "subtitle" de cada escena.
+    3. NO modifiques nombres de archivos, IDs, tiempos ni configuraciones.
+    4. El tono debe ser épico, profesional y adaptado al contexto político.
+    5. Devuelve ÚNICAMENTE el JSON resultante.
+    
+    GUION A TRADUCIR:
+    {json.dumps(script_data, ensure_ascii=False)}
+    """
+
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-flash-latest")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"response_mime_type": "application/json"}
+    }
+
+    try:
+        response = requests.post(url, json=payload, timeout=60)
+        if response.status_code == 200:
+            result = response.json()
+            content = result['candidates'][0]['content']['parts'][0]['text']
+            return json.loads(content), None
+        else:
+            return None, f"Error Gemini: {response.status_code}"
+    except Exception as e:
+        return None, str(e)
+
+def translate_text_ai(text, target_lang="es"):
+    """
+    Translates a single string into the target language using Gemini.
+    """
+    if not text or not text.strip():
+        return text, None
+        
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return text, "Error: No se encontró GEMINI_API_KEY."
+
+    langs = {
+        'es': 'Español', 'en': 'Inglés', 'fr': 'Francés', 'it': 'Italiano', 
+        'pt': 'Portugués', 'de': 'Alemán', 'ja': 'Japonés', 'zh': 'Chino'
+    }
+    lang_name = langs.get(target_lang.lower(), "Español")
+    
+    prompt = f"""
+    Eres un traductor experto en doblaje y localización cinematográfica.
+    Tu misión es traducir el siguiente texto de entrada al {lang_name}.
+    
+    INSTRUCCIONES CRÍTICAS:
+    1. El resultado debe estar ÚNICAMENTE en {lang_name}. NO incluyas notas ni el texto original.
+    2. Mantén el estilo, la emoción y las pausas del locutor original.
+    3. Responde exclusivamente en formato JSON con la clave "translated_text".
+    
+    TEXTO A TRADUCIR:
+    {text}
+    """
+
+    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-flash-latest")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"response_mime_type": "application/json"}
+    }
+
+    MAX_RETRIES = 3
+    for attempt in range(MAX_RETRIES):
+        try:
+            import requests, json
+            response = requests.post(url, json=payload, timeout=120)
+            if response.status_code == 200:
+                result = response.json()
+                raw_content = result['candidates'][0]['content']['parts'][0]['text']
+                
+                # Parse JSON for safety
+                try:
+                    data = json.loads(raw_content)
+                    translated = data.get("translated_text", "").strip()
+                except:
+                    # Fallback to legacy string clean if JSON fails
+                    translated = raw_content.replace("```json", "").replace("```", "").strip()
+                
+                if not translated:
+                     return text, "Gemini devolvió una traducción vacía."
+                return translated, None
+            elif response.status_code == 429:
+                if attempt < MAX_RETRIES - 1:
+                    # Exponential backoff
+                    wait_time = (attempt + 1) * 10 
+                    time.sleep(wait_time)
+                    continue
+                return text, f"Error Gemini (Rate Limit): 429 tras {MAX_RETRIES} intentos"
+            else:
+                return text, f"Error Gemini: {response.status_code}"
+        except Exception as e:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(5)
+                continue
+            return text, f"Error de conexión Gemini: {str(e)}"
+
+def auto_transcribe_and_translate_asset(video_path, target_lang="es", logger=None, start_time=0.0, duration=None):
+    """
+    v5.3: Autonomous Dubbing Chain with temporal clipping.
+    """
+    if not os.path.exists(video_path):
+        return None, f"Archivo no encontrado: {video_path}"
+
+    try:
+        # 1. FFmpeg setup (v5.13: Robust Injection)
+        import imageio_ffmpeg, shutil
+        ffmpeg_original = imageio_ffmpeg.get_ffmpeg_exe()
+        bin_dir = os.path.join(settings.MEDIA_ROOT, 'bin')
+        os.makedirs(bin_dir, exist_ok=True)
+        
+        ffmpeg_target = os.path.join(bin_dir, "ffmpeg.exe")
+        if not os.path.exists(ffmpeg_target):
+            try:
+                shutil.copy2(ffmpeg_original, ffmpeg_target)
+            except Exception as e:
+                # Fallback to dir injection if copy fails
+                bin_dir = os.path.dirname(ffmpeg_original)
+        
+        # Priority PATH injection
+        if bin_dir not in os.environ["PATH"]:
+            os.environ["PATH"] = bin_dir + os.pathsep + os.environ["PATH"]
+
+        import time
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_audio')
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_audio = os.path.join(temp_dir, f"dub_temp_{int(time.time())}_{os.getpid()}.wav")
+        
+        if logger: logger.log(f"      [Dubbing] Extrayendo segmento ({start_time}s, {duration}s) para transcripción...")
+        
+        # v5.19: Reference Fix
+        ffmpeg_bin = ffmpeg_target if os.path.exists(ffmpeg_target) else ffmpeg_original
+        
+        # v5.3: Optimized command
+        cmd = [
+            ffmpeg_bin, "-y", 
+            "-ss", str(start_time),
+            "-i", video_path
+        ]
+        if duration:
+            cmd.extend(["-t", str(duration)])
+            
+        cmd.extend([
+            "-af", "volume=2.5,highpass=f=100,lowpass=f=8000",
+            "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le",
+            temp_audio
+        ])
+        subprocess.run(cmd, check=True, capture_output=True)
+
+        # 2. Transcription
+        if logger: logger.log(f"      [Dubbing] Iniciando Whisper (Modelo: small)...")
+        model = get_whisper_model()
+        if not model:
+            return None, "No se pudo cargar el modelo Whisper."
+            
+        # Ensure audio path is absolute for Windows stability
+        temp_audio_abs = os.path.abspath(temp_audio)
+        if not os.path.exists(temp_audio_abs):
+             return None, f"Archivo temporal de audio no encontrado: {temp_audio_abs}"
+             
+        result = model.transcribe(temp_audio_abs)
+        original_text = result.get("text", "").strip()
+        
+        # Cleanup temp audio
+        if os.path.exists(temp_audio): os.remove(temp_audio)
+
+        if not original_text:
+            return None, "No se detectó habla en el video."
+
+        if logger: logger.log(f"      [Dubbing] Transcripción exitosa: {original_text[:50]}...")
+
+        # 3. Translation
+        if logger: logger.log(f"      [Dubbing] Traduciendo al {target_lang}...")
+        translated, err = translate_text_ai(original_text, target_lang)
+        
+        if err:
+            if logger: logger.log(f"        ⚠️ Transcrito pero no traducido: {err}. Usando texto original como fallback.")
+            return original_text, None # Retornamos éxito con el texto original
+            
+        return translated, None
+
+    except Exception as e:
+        return None, f"Error en Auto-Dubbing: {str(e)}"
 
 def extract_sources_from_script(script_text):
     """
@@ -209,16 +456,17 @@ class ProjectLogger:
         self.log_buffer = []
 
     def log(self, message):
-        # Remove emojis for console compatibility if they cause issues
-        # But we mostly rely on the wrapped sys.stdout now.
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamped_message = f"[{now}] {message}"
+        
         try:
-            print(f"[Project {self.project.id}] {message}", flush=True)
+            print(f"[Project {self.project.id}] {timestamped_message}", flush=True)
         except UnicodeEncodeError:
-            # Fallback for very old/strict consoles
-            clean_msg = message.encode('ascii', 'ignore').decode('ascii')
+            clean_msg = timestamped_message.encode('ascii', 'ignore').decode('ascii')
             print(f"[Project {self.project.id}] {clean_msg}", flush=True)
 
-        self.log_buffer.append(message)
+        self.log_buffer.append(timestamped_message)
         self.project.log_output = "\n".join(self.log_buffer)
         self.project.save(update_fields=['log_output'])
 
@@ -254,7 +502,9 @@ def generate_video_process(project):
     # Update model (in memory) to use clean script
     project.script_text = script_text.strip()
     
-    print(f"[Project {project.id}] Using Unified AVGL v4.0 Engine (Single Pipeline)")
+    # Init Logger for start message
+    logger = ProjectLogger(project)
+    logger.log(f"Using Unified AVGL v4.0 Engine (Single Pipeline)")
     
     # Call the Unified Engine
     # Note: parse_avgl_json inside this function handles JSON vs Text conversion
@@ -279,9 +529,8 @@ def generate_video_process(project):
             from .youtube_utils import trigger_auto_upload
             trigger_auto_upload(project)
         except Exception as e:
-            print(f"[YouTube] Error fatal disparando subida automatica: {e}")
-            project.log_output += f"\n[YouTube] [ERROR] Error fatal disparando subida automatica: {e}"
-            project.save(update_fields=['log_output'])
+            logger = ProjectLogger(project)
+            logger.log(f"[YouTube] [ERROR] Error fatal disparando subida automatica: {e}")
 
 def cleanup_garbage(base_dir=None):
     """

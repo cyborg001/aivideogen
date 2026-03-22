@@ -1,0 +1,57 @@
+{
+    "title": "Sabías Que? - El Sastre Volador",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "orchestral_suspense.mp3",
+    "blocks": [
+        {
+            "title": "El Gancho",
+            "scenes": [
+                {
+                    "title": "Hook",
+                    "text": "¿Sabías que un hombre saltó de la Torre Eiffel confiando únicamente en su propia costura... y perdió?",
+                    "assets": [
+                        { "id": "sastre_reichelt_eiffel_salto.png", "zoom": "1.0:1.2", "move": "HOR:50:50" }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "La Historia",
+            "scenes": [
+                {
+                    "title": "El Inventor",
+                    "text": "Franz Reichelt era un sastre de éxito en el París de mil novecientos doce. Su obsesión: un traje paracaídas que salvaría a los aviadores.",
+                    "assets": [
+                        { "id": "sastre_reichelt_retrato.png", "zoom": "1.1:1.0", "move": "VER:0:20" }
+                    ]
+                },
+                {
+                    "title": "La Advertencia",
+                    "text": "A pesar de que todos sus maniquíes fallaron en las pruebas, él estaba convencido de que solo necesitaba más altura.",
+                    "assets": [
+                        { "id": "paracaidas_diseno_antiguo.png", "zoom": "1.0:1.3", "move": "HOR:0:100" }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "El Final",
+            "scenes": [
+                {
+                    "title": "El Salto",
+                    "text": "El cuatro de febrero de mil novecientos doce, ante una multitud atónita, saltó al vacío. El traje nunca se desplegó.",
+                    "assets": [
+                        { "id": "eiffel_altura_vista.png", "zoom": "1.0:1.5", "move": "VER:50:50" }
+                    ]
+                },
+                {
+                    "title": "Lección Histórica",
+                    "text": "Su tragedia no mejoró los paracaídas, pero dejó una lección vital: en la innovación, saltar etapas éticas o técnicas puede ser fatal. La precaución es la base del genio.",
+                    "assets": [
+                        { "id": "multitud_historica_paris.png", "zoom": "1.2:1.0", "move": "HOR:100:0" }
+                    ]
+                }
+            ]
+        }
+    ]
+}

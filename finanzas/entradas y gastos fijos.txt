@@ -1,0 +1,29 @@
+***gastos fijos***
+|concepto    |      monto|
+|---         |      ---  |
+|vivienda    |      11500|
+|comida      |      15000|
+|servicios   |       6000|
+|transporte  |      10000|
+|ethan       |      15000|
+|mami        |       6000|
+|total       |      63500|
+
+***entradas netas***
+|concepto     |      monto|
+|---          |      ---  |
+|uasd         |  75,578.81|
+|tecnico itsc |  35,032.31|
+|docente itsc |  32,436.05|
+|docente unade|  10,000.00|
+|total        | 153,047.17|
+
+***prestamos***
+|concepto     |      monto|
+|---          |      ---  |
+|banreservas - tc | 155,922.65|
+|banreservas - qik | 157,824.59|
+|banreservas - prestamo | 568,061.88|
+|scotiabank - prestamo | 59,848.25|
+|banreservas - prestamo | 1,294,052.00|
+|total        | 2,235,709.37|   

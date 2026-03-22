@@ -8,6 +8,13 @@ from django.conf import settings
 from moviepy import AudioFileClip, concatenate_audioclips, AudioClip
 import numpy as np
 
+def safe_float(val, default=0.0):
+    try:
+        if val is None or str(val).strip() == "": return default
+        return float(val)
+    except:
+        return default
+
 # ═══════════════════════════════════════════════════════════════════
 # AVGL v4.0 - Global Voice Configurations
 # ═══════════════════════════════════════════════════════════════════
@@ -31,7 +38,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -44,6 +51,8 @@ class AVGLAsset:
         self.video_volume = video_volume
         self.fast_assembly = fast_assembly
         self.cinema_mode = cinema_mode
+        self.start_time = start_time
+        self.end_time = end_time
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -68,6 +77,13 @@ class AVGLScene:
         self.word_timings = []    # v16.5: Word-level timestamps for Dynamic Subtitles
         self.group_id = None
         self.group_settings = None
+        # v20.4: Manual Override Support
+        self.duration = 0.0
+        self.force_duration = False
+        self.lipsync = False # v9.0: Local Lip-Sync support
+        self.language = None # v5.1: Per-scene language
+        self.dubbing_mode = None # v5.1: Per-scene dubbing mode
+        self.silent = False # v28.0: Mute mode (Subtitles without TTS)
 
 class AVGLBlock:
     def __init__(self, title, music=None, volume=0.2):
@@ -249,7 +265,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
     fonetica_offset = 0 
     
     # helper for sub-chunking
-    def _add_sub(text, f_part, is_dyn, offset, is_highlight=False):
+    def _add_sub(text, f_part, is_dyn, offset, is_highlight=False, y_position=None):
         p_words = f_part.split()
         d_words = text.split()
         
@@ -273,7 +289,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
                     "word_count": len(chunk_d),
                     "phonetic_count": len(chunk_p),
                     "is_dynamic": is_dyn,
-                    "is_highlight": is_highlight
+                    "is_highlight": is_highlight,
+                    "y_position": y_position # v27.8: Chunk inheritance
                 })
         else:
             raw_subs_unfiltered.append({
@@ -282,7 +299,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
                 "word_count": len(d_words),
                 "phonetic_count": len(p_words),
                 "is_dynamic": is_dyn,
-                "is_highlight": is_highlight
+                "is_highlight": is_highlight,
+                "y_position": y_position # v27.8: Legacy inheritance
             })
 
     for tag in tags:
@@ -292,12 +310,9 @@ def extract_subtitles_v35(text, force_dynamic=False):
             f_part, d_part, h_list = parse_escena(before_raw)
             clean_text = _cleanup(d_part.strip())
 
-            f_part, d_part, h_list = parse_escena(before_raw)
-            clean_text = _cleanup(d_part.strip())
-
             # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
             if force_dynamic and clean_text:
-                _add_sub(clean_text, f_part, force_dynamic, fonetica_offset)
+                _add_sub(clean_text, f_part, force_dynamic, fonetica_offset, y_position=None)
             
             # Add highlights
             for h in h_list:
@@ -331,7 +346,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
         else:
             # SUB or DYN
             is_highlight_tag = True if tag['type'] == 'simple' else False
-            y_pos_override = 0.45 if tag['type'] == 'simple' else 0.70
+            # v27.8: Unified SUB/DYN height (None forces Project Default)
+            y_pos_override = None 
         display_text = content_raw
         
         if '|' in content_raw and tag['type'] == 'simple':
@@ -365,7 +381,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
         }
         
         # helper handles the raw_subs_unfiltered append
-        _add_sub(sub_info["text"], sub_info["f_part"], sub_info["is_dyn"], sub_info["offset"], is_highlight=is_highlight_tag)
+        _add_sub(sub_info["text"], sub_info["f_part"], sub_info["is_dyn"], sub_info["offset"], is_highlight=is_highlight_tag, y_position=y_pos_override)
         
         # Propagate custom Y position to the last added sub
         if raw_subs_unfiltered:
@@ -380,8 +396,13 @@ def extract_subtitles_v35(text, force_dynamic=False):
             scene_highlights.append(h)
             
         # v17.3: Clean f_part before counting words to match TTS output
-        # v18.1 FIX: Simple tags [SUB: Header] should NOT be narrated (Arquitecto's Request)
-        if tag['type'] != 'simple':
+        # v18.1 FIX: Simple tags [SUB: Header] or Wrapped [TITLE] tags should NOT be narrated
+        # v27.6: Silencing BOTH simple and wrapped TITLE tags from TTS
+        should_narrate = True
+        if tag['type'] == 'simple' or tag.get('tag_name') == 'TITLE':
+            should_narrate = False
+            
+        if should_narrate:
             f_part_clean = re.sub(r'\[.*?\]', '', f_part)
             f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
             fonetica_offset += len(f_part_clean.split())
@@ -397,7 +418,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
 
         # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
         if force_dynamic and clean_text:
-            _add_sub(clean_text, f_part, force_dynamic, fonetica_offset)
+            _add_sub(clean_text, f_part, force_dynamic, fonetica_offset, y_position=None)
         
         for h in h_list:
             h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
@@ -465,8 +486,18 @@ def parse_avgl_json(json_text):
             scene.pitch = s_data.get("pitch")
             try: scene.pause = float(s_data.get("pause", 0.0))
             except: scene.pause = 0.0
+            
+            # v20.4: Manual Duration Override
+            try: scene.duration = float(s_data.get("duration", 0.0))
+            except: scene.duration = 0.0
+            scene.force_duration = s_data.get("force_duration", False)
+            
             scene.subtitle = s_data.get("subtitle", "")
             scene.audio = s_data.get("audio") # v5.3: Custom Audio Support
+            scene.lipsync = s_data.get("lipsync", False) # v9.0
+            scene.language = s_data.get("language") # v5.1
+            scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
+            scene.silent = s_data.get("silent", False) # v28.0
             
             force_dynamic = data.get("dynamic_subtitles", False)
             clean_txt, extracted_subs = extract_subtitles_v35(scene.text, force_dynamic=force_dynamic)
@@ -493,7 +524,9 @@ def parse_avgl_json(json_text):
                         w_rotate=a_data.get("w_rotate"),
                         video_volume=a_data.get("video_volume"),
                         fast_assembly=a_data.get("fast_assembly", False),
-                        cinema_mode=a_data.get("cinema_mode", False)
+                        cinema_mode=a_data.get("cinema_mode", False),
+                        start_time=safe_float(a_data.get("start_time"), 0.0),
+                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None
                     ))
             
             for sfx_data in s_data.get("sfx", []):
@@ -518,8 +551,16 @@ def parse_avgl_json(json_text):
                 scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed
                 scene.pitch = s_data.get("pitch")
                 scene.pause = s_data.get("pause", 0.0)
+                
+                # v20.4: Manual Duration Override (Groups)
+                try: scene.duration = float(s_data.get("duration", 0.0))
+                except: scene.duration = 0.0
+                scene.force_duration = s_data.get("force_duration", False)
+                
                 scene.subtitle = s_data.get("subtitle", "")
                 scene.audio = s_data.get("audio")
+                scene.language = s_data.get("language") # v5.1
+                scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
                 
                 clean_txt, extracted_subs = extract_subtitles_v35(scene.text)
                 scene.text = clean_txt
@@ -550,7 +591,9 @@ def parse_avgl_json(json_text):
                             shake_intensity=a_data.get("shake_intensity", 5),
                             w_rotate=a_data.get("w_rotate"),
                             video_volume=a_data.get("video_volume"),
-                            fast_assembly=a_data.get("fast_assembly", False)
+                            fast_assembly=a_data.get("fast_assembly", False),
+                            start_time=safe_float(a_data.get("start_time"), 0.0),
+                            end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None
                         ))
 
                 for sfx_data in s_data.get("sfx", []):
@@ -764,6 +807,8 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
             for f in temp_files:
                 try: os.remove(f)
                 except: pass
+            if scene:
+                scene.voice_intervals = voice_intervals
             return True
         return False
     except Exception as e:
@@ -866,6 +911,19 @@ def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
                 try: scene["pause"] = float(parts[4])
                 except: pass
             
+            # v27.7: Parse SFX from text [SFX:file:vol:off]
+            sfx_matches = re.findall(r'\[SFX:(.*?)\]', scene["text"])
+            if sfx_matches:
+                if "sfx" not in scene: scene["sfx"] = []
+                for match in sfx_matches:
+                    sfx_parts = match.split(':')
+                    s_type = sfx_parts[0]
+                    s_vol = float(sfx_parts[1]) if len(sfx_parts) > 1 else 0.5
+                    s_off = int(sfx_parts[2]) if len(sfx_parts) > 2 else 0
+                    scene["sfx"].append({"type": s_type, "volume": s_vol, "offset": s_off})
+                # Clean text from SFX tags
+                scene["text"] = re.sub(r'\[SFX:.*?\]', '', scene["text"]).strip()
+            
             if current_group is not None:
                 current_group["scenes"].append(scene)
             else:
@@ -962,6 +1020,14 @@ def convert_scene_to_line(scene):
     
     pause = scene.get("pause", 0.0)
     
+    # v27.7: Include SFX in text format [SFX:file:vol:off]
+    sfx_tags = ""
+    for s_item in scene.get("sfx", []):
+        s_type = s_item.get("type") or s_item.get("id") or ""
+        s_vol = s_item.get("volume", 0.5)
+        s_off = s_item.get("offset", 0)
+        sfx_tags += f" [SFX:{s_type}:{s_vol}:{s_off}]"
+
     # Format: TITLE | asset.png | instructions | pause | text
     # Instructions can be empty now
-    return f"{title} | {asset_name} | {asset_instr} | {pause} | {text}"
+    return f"{title} | {asset_name} | {asset_instr} | {pause} | {text}{sfx_tags}"

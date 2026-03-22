@@ -1,0 +1,34 @@
+{
+  "title": "Casa Blanca: Cumbre EEUU-Japón 2026",
+  "background_music": "orchestral_diplomacy.mp3",
+  "music_volume": 0.15,
+  "language": "es",
+  "dubbing_mode": "hq",
+  "blocks": [
+    {
+      "title": "Introducción y Cumbre",
+      "scenes": [
+        {
+          "text": "La Casa Blanca se viste de gala. El Presidente Trump recibe a la PM de Japón, Sanae Takaichi, en una cumbre donde no solo se sellaron acuerdos de 40 mil millones de dólares, ¡sino que también se celebró el cumpleaños número 20 de Barron Trump! [pause] Diplomacia y celebración se unieron en el Salón de Cenas de Estado.",
+          "asset_type": "white_house_gala_march2026_1774068252219.png",
+          "zoom": "1.0:1.3",
+          "panHorStart": 0,
+          "panHorEnd": 100,
+          "pause": 1.5
+        },
+        {
+          "text": "Escuchemos ahora los momentos clave del discurso del Presidente Trump, ahora traducidos al español por nuestra inteligencia artificial.",
+          "asset_type": "white_house_dinner_japan.mp4",
+          "start_time": 0,
+          "language": "es",
+          "dubbing_mode": "hq",
+          "asset_audio_bool": true,
+          "asset_audio_vol": 0.4,
+          "force_duration": true,
+          "duration": 45.0,
+          "subtitle": "DISCURSO PRESIDENCIAL - MARZO 2026"
+        }
+      ]
+    }
+  ]
+}

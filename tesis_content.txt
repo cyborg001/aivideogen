@@ -1,0 +1,466 @@
+Modelado y Calibración de la Magnitud de
+Momento (Mw) a partir de Registros de
+Magnitud Local (ML) en la República
+Dominicana
+Carlos G. Ramirez Santos
+Noviembre, 2025
+Universidad Autónoma de Santo Domingo (UASD)
+Facultad de Ciencias
+Instituto Sismológico Universitario
+Asesor: Jottin Leonel
+1Índice
+1. Introducción 3
+2. Planteamiento del Problema 4
+3. Justificación 5
+3.1. Relevancia Científica . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+3.2. Relevancia Social e Impacto Nacional . . . . . . . . . . . . . . . . . . . . 5
+3.3. Relevancia Institucional . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+4. Hipótesis 6
+5. Objetivos 6
+5.1. Objetivo General . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+5.2. Objetivos Específicos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+6. Marco Teórico 8
+6.1. Fundamentos de las Magnitudes Sísmicas . . . . . . . . . . . . . . . . . . 8
+6.2. Magnitud Local (ML) . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+6.3. Momento Sísmico y Magnitud de Momento (Mw) . . . . . . . . . . . . . 8
+6.4. Relaciones de Escalamiento entre Magnitudes . . . . . . . . . . . . . . . 9
+7. Estado del Arte 9
+7.1. El Problema de la Homogeneización de Catálogos Sísmicos . . . . . . . . 9
+7.2. Metodología de Referencia: Calibración Zonal en Colombia . . . . . . . . 9
+7.3. Sismicidad y Tectónica de La Española . . . . . . . . . . . . . . . . . . . 10
+7.4. Estudios Previos en el Caribe y Otras Regiones . . . . . . . . . . . . . . 10
+8. Metodología Propuesta 10
+8.1. Fase 1: Compilación y Depuración del Catálogo de Datos . . . . . . . . . 10
+8.2. Fase 2: Caracterización y Zonificación Sismotectónica . . . . . . . . . . . 11
+8.3. Fase 3: Análisis de Regresión y Calibración . . . . . . . . . . . . . . . . . 11
+8.4. Fase 4: Validación del Modelo . . . . . . . . . . . . . . . . . . . . . . . . 12
+9. Cronograma de Actividades 12
+10.Presupuesto Estimado 13
+11.Bibliografía 13
+21. Introducción
+La República Dominicana se encuentra en una de las regiones sísmicamente más ac-
+tivas del mundo: el límite de placas entre la placa de Norteamérica y la placa del Caribe.
+Esta interacción tectónica ha generado una compleja red de fallas geológicas que atravie-
+san la isla de La Española, causando una actividad sísmica constante y representando un
+riesgo significativo para la población y la infraestructura del país. Terremotos históricos
+devastadores, como el de 1946 (Mw 8.0) en el noreste del país, y eventos más recientes,
+subrayan la urgencia de caracterizar con la mayor precisión posible el potencial sísmico
+de estas fuentes.
+El Centro Nacional de Sismología (CNS) de la Universidad Autónoma de Santo Do-
+mingo (UASD) es la entidad encargada del monitoreo sísmico en el país. Diariamente,
+registra decenas de sismos y calcula sus parámetros fundamentales, como la localización
+y la magnitud. La magnitud reportada de manera rutinaria y más rápida es la Magnitud
+Local (ML), basada en la amplitud máxima registrada en sismógrafos de periodo corto,
+siguiendo la concepción original de Richter. Si bien la ML es fundamental para la respues-
+ta inmediata ante un sismo, presenta limitaciones importantes: es una escala empírica,
+depende de la atenuación de las ondas en la región (que puede ser muy variable) y, cru-
+cialmente, tiende a "saturarse"para sismos de gran tamaño (típicamente por encima de
+M ~6.5), subestimando su verdadero potencial destructivo.
+Para la evaluación del peligro sísmico y el diseño de infraestructura resiliente, la
+comunidad científica internacional ha adoptado la Magnitud de Momento (Mw) como el
+estándar de oro. La Mw se deriva directamente del momento sísmico (M0), una medida
+física del tamaño total del terremoto relacionada con el área de ruptura de la falla y el
+deslizamiento ocurrido. A diferencia de la ML, la Mw no se satura y proporciona una
+medida consistente y comparable a nivel global.
+Sin embargo, el cálculo de Mw es un proceso complejo que requiere datos de alta
+calidad de múltiples estaciones y un análisis más detallado, por lo que no siempre está
+disponible de manera inmediata, especialmente para sismos pequeños o históricos. Esto
+crea una heterogeneidad en los catálogos sísmicos, donde conviven sismos medidos con
+ML, Mw y otras escalas. Para realizar análisis estadísticos robustos del peligro sísmico,
+es indispensable contar con un catálogo homogéneo, idealmente expresado en Mw.
+Este anteproyecto propone abordar este problema fundamental mediante el desarrollo
+de un modelo de calibración que permita convertir de manera fiable los valores de ML
+a Mw para la República Dominicana. Inspirado en trabajos exitosos realizados en otras
+regiones de alta sismicidad con contextos tectónicos complejos, como Colombia, este es-
+tudio no asumirá una relación única para todo el país. En su lugar, se investigará la
+hipótesis de que las relaciones de escalamiento entre ML y Mw varían en función de los
+diferentes regímenes tectónicos de la isla.
+El resultado de esta investigación será un conjunto de ecuaciones de conversión ro-
+bustas y específicas para las principales zonas sismogénicas del país, lo que permitirá
+homogeneizar el catálogo sísmico nacional. Esto no solo representará un avance científico
+significativo para la sismología en la República Dominicana, sino que también proveerá
+una herramienta de valor incalculable para la mitigación del riesgo sísmico, la planifica-
+ción territorial y la protección de la vida y los bienes de sus ciudadanos.
+32. Planteamiento del Problema
+La evaluación cuantitativa del peligro sísmico (PSHA, por sus siglas en inglés) depen-
+de fundamentalmente de la calidad y homogeneidad del catálogo sísmico utilizado. Los
+análisis de recurrencia, como la ley de Gutenberg-Richter, requieren que todos los eventos
+en el catálogo estén expresados en una escala de magnitud unificada para evitar sesgos en
+el cálculo de las tasas de excedencia de movimiento del suelo. La Magnitud de Momento
+(Mw) es la escala preferida para estos estudios.
+El catálogo sísmico de la República Dominicana, gestionado por el CNS-UASD, al
+igual que muchos otros catálogos regionales, es inherentemente heterogéneo. Contiene
+una mezcla de:
+1.Sismos pequeños y moderados recientes:Generalmente reportados solo con
+Magnitud Local (ML).
+2.Sismos grandes recientes e históricos:Para los cuales se ha podido calcular o
+estimar la Magnitud de Momento (Mw) a partir de datos de banda ancha nacionales
+o de agencias internacionales (GCMT, USGS, ISC).
+3.Sismos históricos antiguos:Cuyas magnitudes son a menudo estimaciones ba-
+sadas en intensidades macrosísmicas.
+La falta de una relación de conversión estandarizada y localmente calibrada entre ML
+y Mw para la República Dominicana introduce una incertidumbre significativa. El uso
+de relaciones genéricas, desarrolladas para otras regiones tectónicas como California o
+Japón, es problemático porque las características de atenuación de las ondas sísmicas y
+las propiedades de la fuente varían considerablemente de una región a otra. Aplicar una
+conversión incorrecta puede llevar a la sobreestimación o subestimación sistemática del
+tamaño de los sismos, lo que distorsiona los cálculos de peligro sísmico y puede resultar
+en códigos de construcción inadecuados, ya sea por ser insuficientemente seguros o por
+ser excesivamente costosos.
+El problema se agrava por la compleja tectónica de La Española, que se divide en
+varios dominios sismotectónicos distintos: la zona de subducción en la costa norte, el
+sistema de fallas transcurrentes de la Falla Septentrional, el sistema similar de la Falla
+Enriquillo-Plantain Garden en el sur, y la sismicidad asociada a la Cordillera Central.
+Es muy probable que cada una de estas zonas posea características de atenuación y
+de escalamiento de la fuente diferentes, lo que implicaría que una única ecuación de
+conversión para todo el país sería subóptima.
+Pregunta de Investigación Principal
+¿Cuál es la relación empírica y estadísticamente robusta entre la Magnitud Local
+(ML), tal como la calcula el CNS-UASD, y la Magnitud de Momento (Mw) para la
+República Dominicana, y cómo varía esta relación en las diferentes zonas sismotectónicas
+de la isla?
+Preguntas Secundarias
+¿Qué modelo de regresión (e.g., Mínimos Cuadrados Ordinarios vs. Regresión Or-
+togonal General) es más apropiado para modelar la relación, considerando las in-
+certidumbres inherentes en ambas mediciones de magnitud?
+4¿La relación entre ML y Mw es lineal en todo el rango de magnitudes, o existe un
+comportamiento bilineal que indique cambios en el escalamiento de la fuente?
+¿Son las diferencias en las relaciones de conversión entre las distintas zonas sismo-
+tectónicas estadísticamente significativas?
+3. Justificación
+3.1. Relevancia Científica
+Este estudio representa el primer esfuerzo sistemático y basado en datos locales para
+calibrar la escala de Magnitud Local en la República Dominicana frente al estándar global
+de Magnitud de Momento. Científicamente, los resultados permitirán:
+Mejorar la comprensión de la física de la fuente sísmica:Las relaciones de
+escalamiento entre diferentes tipos de magnitud están directamente relacionadas
+con parámetros de la fuente como la caída de esfuerzos (stress drop). Las variacio-
+nes zonales en estas relaciones pueden reflejar diferencias reales en las propiedades
+reológicas y el estado de esfuerzos de la corteza en distintas partes del país.
+Crear un catálogo sísmico homogéneo:Un catálogo unificado en Mw es un
+producto científico de alto valor, que servirá de base para futuras investigaciones
+en sismotectónica, atenuación de ondas sísmicas, y pronóstico de terremotos.
+Contribuir al conocimiento regional:Los resultados de este estudio podrán ser
+comparadosconlosdeotrasregionesdealtasismicidad(e.g.,Colombia,Venezuelao
+México), ayudando a construir una imagen más completa de los procesos tectónicos
+en el borde de la placa del Caribe.
+3.2. Relevancia Social e Impacto Nacional
+La principal contribución de este proyecto a la sociedad dominicana es la mejora
+directaenlaestimacióndelpeligrosísmico.Uncatálogohomogéneoycalibradopermitirá:
+Actualizarlosmapasdeamenazasísmica:Estosmapassonlabaseparaloscó-
+digos de diseño sismorresistente. Una calibración precisa de Mw asegura que el nivel
+de movimiento del suelo esperado no sea ni subestimado (lo que pondría en riesgo
+vidas e infraestructura) ni sobrestimado (lo que implicaría costos de construcción
+innecesariamente altos).
+Informar la planificación territorial:Las agencias gubernamentales y munici-
+pales podrán tomar decisiones más informadas sobre el uso del suelo, especialmente
+en zonas de alta peligrosidad cercanas a fallas activas.
+Mejorar los sistemas de alerta temprana y respuesta a emergencias:Al
+tener una estimación más precisa del tamaño real de un sismo (Mw) a partir de
+la ML calculada rápidamente, las agencias de protección civil pueden movilizar
+recursos de manera más efectiva.
+53.3. Relevancia Institucional
+ParaelCentroNacionaldeSismología(CNS)ylaUniversidadAutónomadeSantoDo-
+mingo (UASD), este proyecto representa una oportunidad para fortalecer sus capacidades
+y su posición como la institución líder en ciencias de la Tierra en el país. Específicamente,
+permitirá:
+Aumentar el valor del catálogo sísmico nacional:El catálogo del CNS se
+volverá más compatible con los estándares internacionales y más útil para la comu-
+nidad científica global.
+Desarrollar capital humano especializado:La ejecución de este proyecto for-
+mará a un investigador en técnicas avanzadas de análisis de datos sismológicos.
+Fortalecer lazos de colaboración:Fomentará la colaboración entre el CNS y
+otras instituciones nacionales (e.g., Servicio Geológico Nacional) e internacionales
+dedicadas al estudio del riesgo sísmico.
+4. Hipótesis
+Con base en el planteamiento del problema y el conocimiento actual de la sismotec-
+tónica regional, se formulan las siguientes hipótesis de trabajo:
+H1:Existe una relación empírica funcional y estadísticamente significativa entre la Mag-
+nitud Local (ML) reportada por el CNS-UASD y la Magnitud de Momento (Mw)
+para los sismos de la República Dominicana. Esta relación puede ser modelada
+matemáticamente, predominantemente de forma lineal (Mw=a·ML+b).
+H2:Dicha relación de escalamiento no es uniforme en todo el territorio nacional. Se
+encontrarán diferencias estadísticamente significativas en los parámetros de la rela-
+ción (ayb) al analizar subconjuntos de datos pertenecientes a las principales zonas
+sismotectónicas de La Española (e.g., la zona de la Falla Septentrional, la zona de
+la Falla Enriquillo-Plantain Garden, y la zona de subducción central).
+H3:La aplicación de un modelo de Regresión Ortogonal General (GOR), que considera
+errores en ambas variables (ML y Mw), proporcionará un ajuste más robusto y físi-
+camente más realista que los métodos de regresión de mínimos cuadrados estándar.
+H4:Es posible que para ciertos rangos de magnitud, la relación muestre un comporta-
+miento bilineal, con un cambio en la pendiente que podría reflejar diferencias en el
+escalamiento de la fuente entre sismos pequeños y grandes.
+5. Objetivos
+5.1. Objetivo General
+Modelar y calibrar la Magnitud de Momento (Mw) a partir de registros de Magnitud
+Local (ML) para las principales zonas sismotectónicas de la República Dominicana, con
+el fin de desarrollar un procedimiento estándar para la homogeneización del catálogo
+sísmico nacional.
+65.2. Objetivos Específicos
+1.Recopilar y unificar un catálogo de datos sísmicos:
+Obtener el catálogo histórico de sismos registrados por el CNS-UASD, inclu-
+yendo parámetros de fase y amplitudes para el cálculo de ML.
+Recolectar datos de Mw para sismos en la región de estudio a partir de catá-
+logos globales (GCMT, ISC, USGS).
+Crear un catálogo maestro unificado que contenga pares de datos (ML, Mw)
+para el mayor número posible de eventos comunes.
+2.Delimitar las zonas sismotectónicas de La Española:
+Realizar una revisión bibliográfica exhaustiva para definir las fronteras de los
+principales dominios tectónicos.
+Clasificar cada sismo del catálogo maestro según su pertenencia a una de las
+zonas definidas.
+3.Aplicar modelos de regresión para la calibración:
+Implementar y aplicar el método de Regresión Ortogonal General (GOR) a los
+pares de datos (ML, Mw) para el conjunto total de datos y para cada zona
+sismotectónica por separado.
+Evaluar tanto modelos de regresión lineal simple como modelos bilineales para
+determinar el ajuste más apropiado.
+Determinar los coeficientes de conversión (ayb) y sus respectivas incertidum-
+bres para cada zona.
+4.Validar y analizar los resultados:
+Realizar pruebas de significancia estadística para confirmar si las relaciones
+zonales son estadísticamente distintas entre sí.
+Analizar los residuos del modelo para evaluar su bondad de ajuste y detectar
+posibles sesgos.
+Comparar las conversiones obtenidas con las relaciones de escalamiento gené-
+ricas utilizadas internacionalmente para cuantificar la mejora.
+5.Proponer un procedimiento estándar de conversión:
+Documentar el conjunto final de ecuaciones de conversión recomendadas para
+cada zona.
+Desarrollar una guía metodológica para la aplicación de estas ecuaciones en la
+homogeneización del catálogo del CNS-UASD.
+76. Marco Teórico
+6.1. Fundamentos de las Magnitudes Sísmicas
+Una magnitud sísmica es una medida logarítmica del tamaño de un terremoto. El
+logaritmo se utiliza para comprimir un rango de tamaños que abarca muchos órdenes de
+magnitud de energía liberada. Todas las escalas de magnitud modernas son herederas de
+la idea original de Charles Richter.
+6.2. Magnitud Local (ML)
+La Magnitud Local, o magnitud de Richter, fue la primera escala de magnitud desa-
+rrollada (Richter, 1935). Se define como:
+ML= log10(A)−log10(A0(∆))
+donde:
+Aes la amplitud máxima (en milímetros) registrada en un sismógrafo estándar
+Wood-Anderson.
+A0(∆)es una función de atenuación empírica que depende de la distancia epicentral
+∆. Esta función fue originalmente calibrada para el sur de California y representa
+cómo decae la amplitud con la distancia en esa región específica.
+La principal limitación de la ML es su dependencia de un instrumento específico y de
+una calibración regional. Además, se mide en un rango de frecuencias relativamente alto
+(alrededor de 1 Hz), lo que causa el fenómeno desaturación: para terremotos muy
+grandes, el espectro de la fuente en estas frecuencias deja de crecer con el tamaño total
+delevento,ylaMLalcanzaunvalormáximo,subestimandolaverdaderaenergíaliberada.
+6.3. Momento Sísmico y Magnitud de Momento (Mw)
+Para superar las limitaciones de las escalas tradicionales, Kanamori (1977) y Hanks &
+Kanamori (1979) introdujeron la Magnitud de Momento (Mw), basada en una propiedad
+física de la fuente: elmomento sísmico (M 0). El momento sísmico es la medida más
+fundamental del tamaño de un sismo y se define como:
+M0=µ·S·D
+donde:
+µes el módulo de rigidez de la roca en la zona de la falla (típicamente ~30 GPa).
+Ses el área de la falla que se rompió durante el sismo.
+Des el deslizamiento promedio a lo largo del área de ruptura.
+M0tiene unidades de fuerza por distancia (e.g., Newton-metro). La Magnitud de Mo-
+mento (Mw) se deriva deM 0a través de la siguiente relación:
+Mw= (2/3)·log10(M0)−6,0 (conM 0en N-m)
+La gran ventaja de Mw es que, al estar directamente ligada a las dimensiones físicas de
+la ruptura,no se satura. Representa la energía total de baja frecuencia liberada por el
+sismo y se ha convertido en el estándar para la sismología moderna.
+86.4. Relaciones de Escalamiento entre Magnitudes
+Dado que ML y Mw miden diferentes aspectos del proceso sísmico (amplitudes de
+alta frecuencia vs. energía total de baja frecuencia), no son directamente iguales, pero
+sí están correlacionadas. La relación entre ellas, conocida como relación de escalamiento,
+depende de cómo la energía sísmica se reparte en diferentes frecuencias, lo cual a su vez
+depende de las propiedades de la fuente y del medio de propagación. Empíricamente,
+estas relaciones a menudo se buscan en forma lineal:
+Mw=a·ML+b
+El coeficientea(pendiente) yb(intercepto) dependen de la región tectónica. Un problema
+común al determinar estos coeficientes es que tanto ML como Mw tienen incertidumbres
+de medición. Una regresión de mínimos cuadrados simple asume que la variable inde-
+pendiente (ML) no tiene error, lo cual es falso. Por ello, métodos como laRegresión
+Ortogonal General (GOR), que minimiza la distancia perpendicular de los puntos a
+la línea de ajuste, son teóricamente más apropiados (Amorèse, 2007).
+7. Estado del Arte
+7.1. El Problema de la Homogeneización de Catálogos Sísmicos
+La necesidad de crear catálogos sísmicos homogéneos es un tema recurrente y funda-
+mental en la sismología. Numerosos estudios a nivel mundial han abordado el problema
+de convertir diferentes tipos de magnitudes a la escala Mw. Por ejemplo, Scordilis (2006)
+presentó un conjunto de relaciones empíricas globales para convertir diversas escalas (mb,
+Ms, ML) a Mw, las cuales son ampliamente utilizadas pero se reconoce que las relaciones
+locales calibradas son siempre superiores.
+7.2. Metodología de Referencia: Calibración Zonal en Colombia
+El trabajo deMancini et al. (2019), "Zonal Calibration of Colombia’s Local
+Magnitude Scale", publicado en elBulletin of the Seismological Society of America,
+sirve como la principal guía metodológica para este anteproyecto. En su estudio, los
+autores enfrentaron un problema similar al de la República Dominicana: un catálogo
+nacional heterogéneo en un país con una tectónica muy compleja. Los puntos clave de su
+metodología son:
+Utilización de un gran conjunto de datos:Compilaron un catálogo de más
+de 3000 sismos de la Red Sismológica Nacional de Colombia, para los cuales tenían
+ML, y los cruzaron con datos de Mw del catálogo Global CMT.
+Regresión Ortogonal General (GOR):En lugar de una regresión de mínimos
+cuadrados simple, utilizaron GOR para tener en cuenta los errores tanto en ML
+como en Mw, obteniendo una relación más robusta.
+Calibración Zonal:La contribución más importante fue la división de Colom-
+bia en cinco zonas sismotectónicas distintas (e.g., Zona de Subducción, Nido de
+Bucaramanga, Falla de Romeral). Demostraron que las relaciones de escalamiento
+ML-Mw eran estadísticamente diferentes en cada zona, lo que justifica plenamente
+este enfoque.
+9Modelos Lineales y Bilineales:Probaron tanto relaciones lineales simples como
+relaciones bilineales (con un cambio de pendiente en un punto de quiebre), encon-
+trando que para algunas zonas el modelo bilineal se ajustaba mejor a los datos.
+La adopción de este enfoque zonal y el uso de GOR son directamente transferibles y
+altamente pertinentes para el contexto de La Española.
+7.3. Sismicidad y Tectónica de La Española
+La investigación sobre la tectónica de la República Dominicana ha sido extensa. Tra-
+bajos como los de Calais et al. (2002) y Mann et al. (2002) han definido los principales
+sistemas de fallas y las velocidades de deformación en la isla. La isla se encuentra en
+un límite de placa transpresivo, donde la placa de Norteamérica se mueve hacia el oes-
+te con respecto a la placa del Caribe. Esta deformación es acomodada principalmente
+por dos grandes sistemas de fallas de rumbo: laFalla Septentrionalen el norte y la
+Falla Enriquillo-Plantain Gardenen el sur. Además, existe sismicidad asociada a la
+subducción de la corteza oceánica bajo la isla, especialmente en la porción central. Esta
+clara compartimentalización tectónica apoya fuertemente la hipótesis de que se requieren
+relaciones de escalamiento zonales.
+7.4. Estudios Previos en el Caribe y Otras Regiones
+En el Caribe, estudios como el de Convertito & Pino (2014) han trabajado en rela-
+ciones de atenuación y escalamiento para la región, aunque a menudo a una escala más
+amplia. La disponibilidad de datos de alta calidad del CNS-UASD permite un estudio
+enfocado y de mayor resolución para La Española. La comparación de los resultados con
+los obtenidos en otras regiones de fallas de rumbo (e.g., California - Hutton & Boore,
+1987) y zonas de subducción (e.g., Japón) permitirá contextualizar las particularidades
+de la sismicidad local.
+8. Metodología Propuesta
+La metodología de este proyecto se basará en gran medida en el enfoque exitoso
+de Mancini et al. (2019), adaptado a los datos y al contexto tectónico de la República
+Dominicana. Se dividirá en cuatro fases principales.
+8.1. Fase 1: Compilación y Depuración del Catálogo de Datos
+El primer paso es construir el conjunto de datos fundamental para el análisis.
+1.Obtención del catálogo del CNS-UASD:Se solicitará al Centro Nacional de
+Sismologíaelcatálogocompletodeeventosregistradosdesdesumodernización.Para
+cada evento, se requerirá: ID del evento, fecha, hora, latitud, longitud, profundidad
+y, crucialmente, la Magnitud Local (ML) reportada.
+2.Obtención de datos de Mw:Se consultarán las bases de datos de agencias
+internacionales (Global Centroid Moment Tensor Project - GCMT, U.S. Geological
+Survey - USGS, International Seismological Centre - ISC) para obtener soluciones
+de Mw para sismos ocurridos en la ventana espacial y temporal de interés.
+103.Creación del catálogo maestro:Se realizará un cruce (matching) de los catálo-
+gos. Un evento se considerará común si su tiempo de origen y su localización son
+consistentes entre el catálogo del CNS y el catálogo global. El resultado será una
+tabla de eventos para los cuales se dispone de un par de magnitudes (ML, Mw).
+4.Depuración:Se realizará un análisis de calidad de los datos, eliminando eventos
+con altas incertidumbres en su su localización o magnitud, o eventos claramente
+espurios (e.g., explosiones de minas).
+8.2. Fase 2: Caracterización y Zonificación Sismotectónica
+Esta fase se centra en clasificar los sismos según su origen tectónico.
+1.Definición de polígonos zonales:Basado en la literatura geológica y sismotec-
+tónica (Mann et al., 2002; Calais et al., 2002), y en la distribución de la sismicidad,
+se digitalizarán polígonos que encierren las principales estructuras tectónicas. Se
+propone una división inicial de al menos tres zonas:
+Zona Norte (ZN):Asociada a la Falla Septentrional y la Fosa de Puerto
+Rico.
+Zona Sur (ZS):Asociada a la Falla Enriquillo-Plantain Garden y la Fosa de
+los Muertos.
+ZonaCentral(ZC):AbarcandolasismicidaddelaCordilleraCentralyfallas
+internas.
+2.Asignación de sismos:Cada evento del catálogo maestro será asignado a una de
+estas zonas en función de la localización de su epicentro. Los eventos que no caigan
+claramente en una zona podrán ser tratados como un grupo separado o excluidos
+si son pocos.
+8.3. Fase 3: Análisis de Regresión y Calibración
+Este es el núcleo del análisis cuantitativo.
+1.Implementación de la Regresión Ortogonal General (GOR):Se utilizará
+software estadístico (como Python con las libreríasSciPy.odro R) para implemen-
+tar el modelo GOR. A diferencia de la regresión de mínimos cuadrados, este método
+requiere una estimación de la razón de las varianzas de error (error_variance_ratio
+= Var(err extsubscriptMw) / Var(err extsubscriptML)). Este valor se estimará a
+partir de las incertidumbres reportadas en los catálogos o de la literatura.
+2.Cálculo de las relaciones de escalamiento:Se aplicará la regresión GOR a los
+siguientes conjuntos de datos:
+El conjunto de datos completo (todos los sismos) para obtener una relación de
+referencia para todo el país.
+Los subconjuntos de datos para cada una de las zonas (ZN, ZS, ZC).
+3.Evaluación de modelos:Para cada conjunto de datos, se probarán dos modelos:
+11Lineal:Mw=a·ML+b
+Bilineal:Un modelo con dos segmentos lineales y un punto de quiebre (break-
+point) en la magnitud. Esto se hace para verificar si el escalamiento cambia
+para sismos más grandes.
+Se utilizarán criterios de información (AIC, BIC) para decidir qué modelo (lineal o
+bilineal) describe mejor los datos sin sobreajustar.
+4.Obtención de parámetros:Para el modelo óptimo de cada zona, se registrarán
+los coeficientesayb(y el punto de quiebre si aplica) junto con sus incertidumbres
+estándar.
+8.4. Fase 4: Validación del Modelo
+El último paso es verificar la calidad y utilidad de las relaciones encontradas.
+1.Análisis de residuos:Para cada modelo, se calcularán los residuos (residuo =
+Mw extsubscriptobservada - Mw extsubscriptpredicha). Se analizará la distribución
+de los residuos para confirmar que tienen media cero y no muestran tendencias con
+la magnitud o la distancia, lo que indicaría un buen ajuste.
+2.Pruebas de significancia:Se utilizarán pruebas F o métodos similares para de-
+terminar si los parámetros de regresión obtenidos para las diferentes zonas son
+estadísticamente distintos entre sí. Esto validará la hipótesis H2.
+3.Cuantificación de la mejora:Se calculará la reducción de la varianza del error al
+usar las ecuaciones zonales en comparación con usar la ecuación general del país o
+una ecuación genérica internacional. Esto demostrará el valor añadido del enfoque
+zonal.
+9. Cronograma de Actividades
+Acontinuación,sepresentaelcronogramadeactividadespropuestoparalarealización
+de esta tesis.
+12Cuadro 1: Cronograma de Actividades
+Actividad Mes 1-3 Mes 4-6 Mes 7-9 Mes 10-12 Mes 13-15
+Fase 1: Datos
+Revisión Bibliográfica Inicial XX X
+Recopilación de Catálogos XX
+Creación y Depuración Catálogo X XX
+Fase 2: Zonificación
+Definición de Zonas X XX
+Asignación de Sismos X
+Fase 3: Calibración
+Implementación de Algoritmos XX X
+Ejecución de Regresiones XX X
+Análisis de Modelos XX
+Fase 4: Validación
+Análisis de Residuos y Pruebas XX X
+Redacción del Borrador X XX
+Revisión y Entrega Final X
+10. Presupuesto Estimado
+En la siguiente tabla se detalla el presupuesto estimado para el desarrollo del proyecto.
+Cuadro 2: Presupuesto Estimado
+Rubro Justificación Costo (RD)
+Materiales Impresiones, almacena-
+miento externo, etc.300.00
+Publicación Costo de publicación en re-
+vista indexada1,500.00
+Conferencias Presentación de resultados
+en congreso1,000.00
+Visitas Visitas al CNS para coordi-
+nación400.00
+Total Estimado 5,500.00
+Nota: Gran parte del trabajo se realizará con software de código abierto (Python, R,
+QGIS), lo que minimiza los costos de licencia.
+11. Bibliografía
+Referencias
+[1] Amorèse, D. (2007). Applying a general orthogonal regression to seismic data.Bu-
+lletin of the Seismological Society of America, 97(5), 1759-1763.
+13[2] Calais, E., Mazabraud, Y., de Lépinay, B. M., Mann, P., Mattioli, G., & Jansma, P.
+(2002).StrainpartitioninginthesouthernCaribbean-NorthAmericaplateboundary
+zone in Hispaniola.Journal of Geophysical Research: Solid Earth, 107(B9).
+[3] Convertito, V., & Pino, N. A. (2014). A common ground-motion prediction equation
+for ML and MW for the Italian territory.Bulletin of the Seismological Society of
+America, 104(1), 499-511.
+[4] Hanks, T. C., & Kanamori, H. (1979). A moment magnitude scale.Journal of
+Geophysical Research: Solid Earth, 84(B5), 2348-2350.
+[5] Hutton, L. K., & Boore, D. M. (1987). The ML scale in Southern California.Bulletin
+of the Seismological Society of America, 77(6), 2074-2094.
+[6] Kanamori,H.(1977).Theenergyreleaseingreatearthquakes.Journal of Geophysical
+Research, 82(20), 2981-2987.
+[7] Mancini, F., D’Amico, M., & Priolo, E. (2019). Zonal calibration of Colombia’s local
+magnitude scale.Bulletin of the Seismological Society of America, 109(4), 1435-1448.
+[8] Mann,P.,Calais,E.,deLépinay,B.M.,&Prépetit,C.(2002).Strike-slipfaultingand
+kitchen-style tectonics of the northern Caribbean plate boundary zone: An overview.
+Geological Society, London, Special Publications, 195(1), 1-21.
+[9] Richter, C. F. (1935). An instrumental earthquake magnitude scale.Bulletin of the
+Seismological Society of America, 25(1), 1-32.
+[10] Scordilis, E. M. (2006). Empirical global relations converting mb and Ms to moment
+magnitude.Journal of Seismology, 10(2), 225-236.
+14

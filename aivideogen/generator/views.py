@@ -1,17 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from .models import Asset, VideoProject, YouTubeToken, Music, SFX
-from .utils import generate_video_process
+from .utils import generate_video_process, translate_script_ai
 from .youtube_utils import get_flow, get_youtube_client, upload_video, get_project_social_copy
 import threading
 import os
 import logging
 import time
+import re
+import mimetypes
 
 # Heartbeat tracking for auto-shutdown
 LAST_ACTIVITY_FILE = os.path.join(settings.BASE_DIR, 'last_activity.txt')
@@ -24,6 +26,64 @@ def update_last_activity():
         logger.warning(f"Failed to update heartbeat file: {e}")
 
 logger = logging.getLogger(__name__)
+
+def serve_video(request, *args, **kwargs):
+    """
+    Serves media files with support for HTTP Range requests (Streaming/Scrubbing).
+    v1.1 - Bill's Flexi-Streaming
+    """
+    path = kwargs.get('path')
+    if not path and args:
+        path = args[0]
+        
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    if not os.path.exists(file_path):
+        return HttpResponse(status=404)
+
+    size = os.path.getsize(file_path)
+    content_type, encoding = mimetypes.guess_type(file_path)
+    content_type = content_type or 'video/mp4'
+
+    range_header = request.META.get('HTTP_RANGE', '').strip()
+    range_re = re.compile(r'bytes=(\d+)-(\d*)')
+
+    if range_header:
+        match = range_re.match(range_header)
+        if match:
+            first_byte, last_byte = match.groups()
+            first_byte = int(first_byte) if first_byte else 0
+            last_byte = int(last_byte) if last_byte else size - 1
+            if last_byte >= size:
+                last_byte = size - 1
+            length = last_byte - first_byte + 1
+
+            def file_iterator(file_name, chunk_size=32768, offset=0, length=None):
+                with open(file_name, 'rb') as f:
+                    f.seek(offset, os.SEEK_SET)
+                    remaining = length
+                    while remaining > 0:
+                        bytes_to_read = min(remaining, chunk_size)
+                        content = f.read(bytes_to_read)
+                        if not content:
+                            break
+                        remaining -= len(content)
+                        yield content
+
+            response = StreamingHttpResponse(
+                file_iterator(file_path, offset=first_byte, length=length),
+                status=206,
+                content_type=content_type
+            )
+            response['Content-Range'] = f'bytes {first_byte}-{last_byte}/{size}'
+            response['Accept-Ranges'] = 'bytes'
+            response['Content-Length'] = str(length)
+            return response
+
+    # Full response if no range header
+    response = StreamingHttpResponse(open(file_path, 'rb'), content_type=content_type)
+    response['Accept-Ranges'] = 'bytes'
+    response['Content-Length'] = str(size)
+    return response
 
 def browse_script(request):
     try:
@@ -364,6 +424,36 @@ def project_detail(request, project_id):
         'social_copy': social_copy
     })
 
+def save_social_info(request, project_id):
+    """View to save edited YouTube metadata from the detail page."""
+    import json
+    from django.http import JsonResponse
+    project = get_object_or_404(VideoProject, id=project_id)
+    if request.method == 'POST':
+        try:
+            # Handle both Form and AJAX/JSON
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+                
+            project.social_title = data.get('title')
+            project.social_description = data.get('description')
+            project.social_tags = data.get('tags')
+            project.social_pinned_comment = data.get('pinned_comment')
+            project.save()
+            
+            if request.content_type == 'application/json':
+                return JsonResponse({'status': 'success', 'message': 'Información guardada correctamente.'})
+            
+            messages.success(request, "Información social actualizada.")
+        except Exception as e:
+            if request.content_type == 'application/json':
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            messages.error(request, f"Error al guardar: {e}")
+            
+    return redirect('generator:project_detail', project_id=project.id)
+
 def delete_project(request, project_id):
     project = get_object_or_404(VideoProject, id=project_id)
     if request.method == 'POST':
@@ -394,9 +484,19 @@ def start_project(request, project_id):
         if project.status == 'processing':
             messages.warning(request, "El proyecto ya se está procesando.")
         else:
+            # v4.1: Sync YouTube auto-upload status from confirmation checkbox
+            confirm_upload = request.POST.get('confirm_auto_upload') == 'on'
+            project.auto_upload_youtube = confirm_upload
+            
             # Reset logs/status
+            from datetime import datetime
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             project.status = 'processing'
-            project.log_output = "🚀 Iniciando generación manual (v3.3)..."
+            project.log_output = f"[{now}] 🚀 Iniciando generación manual (v3.3)..."
+            if confirm_upload:
+                project.log_output += "\n[System] 🚩 Subida automática a YouTube ACTIVADA."
+            else:
+                project.log_output += "\n[System] ⚪ Subida automática a YouTube DESACTIVADA por el usuario."
             project.save()
             
             # Start Thread
@@ -421,11 +521,13 @@ def reset_project(request, project_id):
             except: pass
             
         # 2. Reset Status/Metadata
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         project.status = 'pending'
         project.output_video = None
         project.thumbnail = None
         project.timestamps = ""
-        project.log_output = "♻️ Proyecto reiniciado para nueva generación."
+        project.log_output = f"[{now}] ♻️ Proyecto reiniciado para nueva generación."
         project.save()
         
         messages.success(request, "Proyecto reiniciado. Puedes volver a generarlo ahora.")
@@ -448,6 +550,10 @@ def clone_project(request, project_id):
             visual_prompts=original.visual_prompts,
             script_hashtags=original.script_hashtags,
             auto_upload_youtube=original.auto_upload_youtube,
+            social_title=original.social_title,
+            social_description=original.social_description,
+            social_tags=original.social_tags,
+            social_pinned_comment=original.social_pinned_comment,
             status='pending'
         )
         
@@ -731,9 +837,9 @@ def get_overlays_api(request):
         if not os.path.exists(overlays_dir):
             logger.warning(f"[Overlays API] Directory does not exist: {overlays_dir}")
         else:
-            # Scan for mp4, mov (common overlay formats)
+            # Scan for mp4, mov (common overlay formats) and static images (v30.5)
             for f in os.listdir(overlays_dir):
-                if f.lower().endswith(('.mp4', '.mov', '.webm')):
+                if f.lower().endswith(('.mp4', '.mov', '.webm', '.png', '.jpg', '.jpeg')):
                     name_no_ext = os.path.splitext(f)[0]
                     # Map to preset if exists, otherwise title case
                     display_name = presets.get(name_no_ext.lower(), name_no_ext.replace('_', ' ').title())
@@ -841,7 +947,14 @@ def create_project_from_editor(request):
             music_volume=float(settings.get('music_volume', 0.15)),
             auto_upload_youtube=bool(settings.get('auto_upload', False)),
             render_mode=settings.get('render_mode') or script.get('render_mode', 'cpu'),
-            dynamic_subtitles=bool(settings.get('dynamic_subtitles', False))
+            dynamic_subtitles=bool(settings.get('dynamic_subtitles', False)),
+            # v20.2: Audio Master Console
+            audio_ducking_ratio=settings.get('audio_ducking_ratio'),
+            audio_attack_time=settings.get('audio_attack_time'),
+            audio_release_time=settings.get('audio_release_time'),
+            audio_merge_threshold=settings.get('audio_merge_threshold'),
+            audio_block_fade=settings.get('audio_block_fade'),
+            audio_early_finish=settings.get('audio_early_finish')
         )
         
         # Handle Music
@@ -909,6 +1022,24 @@ def text_to_json_api(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
+def normalize_asset_path(path):
+    if not path or not isinstance(path, str) or path.startswith('http'):
+        return path
+    
+    # Lowercase for robust detection of 'media/'
+    p_low = path.replace('\\', '/').lower()
+    media_idx = p_low.find('media/')
+    
+    if media_idx != -1:
+        # Extract relative part starting from /media/
+        return '/' + path.replace('\\', '/')[media_idx:]
+        
+    # If it starts with 'assets/', assume it's in media
+    if p_low.startswith('assets/'):
+        return '/media/' + path.replace('\\', '/')
+        
+    return path.replace('\\', '/')
+
 def get_project_script_json(request, project_id):
     """API: Returns the project script as JSON. Auto-validates/initializes."""
     project = get_object_or_404(VideoProject, id=project_id)
@@ -930,15 +1061,6 @@ def get_project_script_json(request, project_id):
     # --- AUTO-REPAIR & NORMALIZE ASSETS ---
     repaired = False
     
-    def normalize_asset_path(path):
-        if not path or not isinstance(path, str) or path.startswith('http'):
-            return path
-        # Normalize slashes
-        p = path.replace('\\', '/')
-        # If absolute path containing 'media', extract relative part
-        if 'media/' in p:
-            return '/' + p[p.find('media/'):]
-        return p
 
     def repair_scene_assets(scene):
         nonlocal repaired
@@ -973,10 +1095,18 @@ def get_project_script_json(request, project_id):
                 new_assets.append(asset)
             scene['assets'] = new_assets
 
+    scene_counter = 0
     for block in data.get('blocks', []):
         # 1. Repair scenes at block level
         for scene in block.get('scenes', []):
             repair_scene_assets(scene)
+            
+            # v16.1: Sync Voice Paths for Editor Preview (Corrected Pattern)
+            voice_file = f"project_{project.id}_scene_{scene_counter:03d}.mp3"
+            voice_rel = f"temp_audio/{voice_file}"
+            if os.path.exists(os.path.join(settings.MEDIA_ROOT, voice_rel)):
+                scene['voice_path'] = f"{settings.MEDIA_URL}{voice_rel}"
+            scene_counter += 1
             
         # 2. Repair groups and their nested scenes
         for group in block.get('groups', []):
@@ -999,6 +1129,13 @@ def get_project_script_json(request, project_id):
             # Repair scenes inside group
             for scene in group.get('scenes', []):
                 repair_scene_assets(scene)
+                
+                # v16.1: Sync Voice Paths for Editor Preview (Corrected Pattern)
+                voice_file = f"project_{project.id}_scene_{scene_counter:03d}.mp3"
+                voice_rel = f"temp_audio/{voice_file}"
+                if os.path.exists(os.path.join(settings.MEDIA_ROOT, voice_rel)):
+                    scene['voice_path'] = f"{settings.MEDIA_URL}{voice_rel}"
+                scene_counter += 1
     
     # --- SYNC PROJECT SETTINGS ---
     # Inject current project settings into the JSON so the editor starts with the "Truth"
@@ -1017,7 +1154,11 @@ def get_project_script_json(request, project_id):
         'aspect_ratio': project.aspect_ratio,
         'render_mode': project.render_mode,
         'music_volume_lock': project.music_volume_lock,
-        'auto_upload': project.auto_upload_youtube
+        'dynamic_subtitles': project.dynamic_subtitles,
+        'subtitles_y_position': getattr(project, 'subtitles_y_position', 0.70),
+        'auto_upload': project.auto_upload_youtube,
+        'language': getattr(project, 'language', 'es'),
+        'dubbing_mode': getattr(project, 'dubbing_mode', 'hq')
     }
     
     # Also sync root-level if missing (redundancy)
@@ -1047,42 +1188,36 @@ def save_project_script_json(request, project_id):
         if 'script' in data:
             script_data = data['script']
             
-            # SANITIZATION: Clean Asset URLs to Basenames (v11.8 Persistence Fix)
-            # This ensures DB always stores filename, not full URL from frontend
+            # SANITIZATION: Clean Asset URLs and Paths to Relative format (v11.8 Persistence Fix)
+            # This ensures DB always stores relative paths or basenames, never drive letters (C:)
             try:
-                if isinstance(script_data, dict) and 'blocks' in script_data:
-                    for block in script_data['blocks']:
-                        # Block Scenes
-                        if 'scenes' in block:
-                            for scene in block['scenes']:
-                                if 'assets' in scene:
-                                            for asset in scene['assets']:
-                                                if isinstance(asset, dict):
-                                                    for key in ['id', 'type']:
-                                                        if key in asset:
-                                                            val = str(asset[key])
-                                                            if ('://' in val or ':\\' in val or '/media/' in val):
-                                                                # v11.9 Fix: Preserve Absolute Paths if they exist locally
-                                                                is_valid_abs = False
-                                                                try:
-                                                                    if os.path.isabs(val) and os.path.exists(val):
-                                                                        is_valid_abs = True
-                                                                except: pass
+                def clean_script_assets(obj):
+                    if isinstance(obj, list):
+                        for item in obj: clean_script_assets(item)
+                    elif isinstance(obj, dict):
+                        # 1. Handle actual assets in 'assets' array
+                        if 'assets' in obj and isinstance(obj['assets'], list):
+                            for asset in obj['assets']:
+                                if isinstance(asset, dict):
+                                    for key in ['id', 'type', 'path']:
+                                        if key in asset and isinstance(asset[key], str):
+                                            asset[key] = normalize_asset_path(asset[key])
+                        # 2. Handle group/block master_assets
+                        if 'master_asset' in obj:
+                            if isinstance(obj['master_asset'], str):
+                                obj['master_asset'] = normalize_asset_path(obj['master_asset'])
+                            elif isinstance(obj['master_asset'], dict) and 'id' in obj['master_asset']:
+                                obj['master_asset']['id'] = normalize_asset_path(obj['master_asset']['id'])
+                        
+                        # Recursive call for nested blocks/groups
+                        for k, v in obj.items():
+                            if k in ['blocks', 'scenes', 'groups']:
+                                clean_script_assets(v)
 
-                                                                if not is_valid_abs:
-                                                                    asset[key] = os.path.basename(val)
-                        # Groups
-                        if 'groups' in block:
-                            for group in block['groups']:
-                                if 'scenes' in group:
-                                    for scene in group['scenes']:
-                                        if 'assets' in scene:
-                                            for asset in scene['assets']:
-                                                 if isinstance(asset, dict) and 'type' in asset:
-                                                     if '://' in asset['type'] or '/media/' in asset['type']:
-                                                         asset['type'] = os.path.basename(asset['type'])
+                if isinstance(script_data, dict):
+                    clean_script_assets(script_data)
             except Exception as e:
-                pass # Don't break save if structure is weird
+                logger.warning(f"[Persistence Fix] Error sanitizing assets: {e}")
         
         project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
         
@@ -1096,6 +1231,10 @@ def save_project_script_json(request, project_id):
                 if 'settings' not in script_data: script_data['settings'] = {}
                 script_data['settings'].update(settings_data)
                 
+                # v7.0: Sync DB Title with Script Content (Humanization)
+                if 'title' in settings_data:
+                    project.title = settings_data['title']
+                
                 # Also root-level redundancy for legacy compatibility
                 if 'title' in settings_data: script_data['title'] = settings_data['title']
                 if 'voice_id' in settings_data: script_data['voice'] = settings_data['voice_id']
@@ -1104,9 +1243,15 @@ def save_project_script_json(request, project_id):
                 if 'voice_speed' in settings_data: script_data['voice_speed'] = settings_data['voice_speed']
                 if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
                 if 'dynamic_subtitles' in settings_data: script_data['dynamic_subtitles'] = settings_data['dynamic_subtitles']
+                if 'subtitles_y_position' in settings_data: script_data['subtitles_y_position'] = float(settings_data['subtitles_y_position'])
+                
+                # v20.2: Audio Console Sync
+                for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
+                    if key in settings_data: script_data['settings'][key] = settings_data[key]
 
             # Re-serialize with the new merged settings
             project.script_text = json.dumps(script_data, indent=4, ensure_ascii=False)
+            project.save(update_fields=['title', 'script_text']) # Explicit save
 
             if 'title' in settings_data:
                 project.title = settings_data['title']
@@ -1194,8 +1339,53 @@ def save_project_script_json(request, project_id):
             if 'dynamic_subtitles' in settings_data:
                 project.dynamic_subtitles = bool(settings_data['dynamic_subtitles'])
 
+            if 'subtitles_y_position' in settings_data:
+                try:
+                    project.subtitles_y_position = float(settings_data['subtitles_y_position'])
+                except:
+                    pass
+
+            if 'language' in settings_data:
+                project.language = settings_data['language']
+            
+            if 'dubbing_mode' in settings_data:
+                project.dubbing_mode = settings_data['dubbing_mode']
+
+            # v20.2: Audio Master Console Persitence
+            for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
+                if key in settings_data:
+                    try: setattr(project, key, float(settings_data[key]) if settings_data[key] is not None else None)
+                    except: pass
+
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+def translate_project_script_api(request, project_id):
+    """API: Translates the project script using AI."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    project = get_object_or_404(VideoProject, id=project_id)
+    try:
+        import json
+        payload = json.loads(request.body)
+        target_lang = payload.get('target_lang', 'es')
+        
+        # We can translate current script_text or provided JSON
+        script_data = payload.get('script')
+        if not script_data:
+            script_data = json.loads(project.script_text)
+            
+        translated_json, error = translate_script_ai(script_data, target_lang)
+        
+        if error:
+            return JsonResponse({'error': error}, status=500)
+            
+        return JsonResponse({'status': 'success', 'script': translated_json})
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
@@ -1555,3 +1745,5 @@ def upload_carousel_images(request):
             return JsonResponse({'status': 'error', 'message': 'No se guardaron imágenes válidas.'})
             
     return JsonResponse({'status': 'error', 'message': 'Solo peticiones POST.'}, status=405)
+
+

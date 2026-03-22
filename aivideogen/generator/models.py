@@ -99,6 +99,22 @@ class VideoProject(models.Model):
     auto_upload_youtube = models.BooleanField(default=False, help_text="Subir automáticamente a YouTube al finalizar la generación")
     music_volume_lock = models.BooleanField(default=False, help_text="Bloquea el volumen global, los bloques no lo modifican a menos que tengan música propia")
     dynamic_subtitles = models.BooleanField(default=False, help_text="Fuerza el modo karaoke (dinámico) para todo el video")
+    subtitles_y_position = models.FloatField(default=0.70, help_text="Posición vertical global de los subtítulos (0.0=Arriba, 1.0=Abajo)")
+    language = models.CharField(max_length=10, default='', blank=True, help_text="Idioma base del guion (es/en)")
+    dubbing_mode = models.CharField(max_length=20, default='', blank=True, help_text="Modo de doblaje (lipsync/hq)")
+    
+    # v20.2: Audio Master Console Fields
+    audio_ducking_ratio = models.FloatField(null=True, blank=True, help_text="Ratio de ducking (0.1 a 0.5 típico)")
+    audio_attack_time = models.FloatField(null=True, blank=True, help_text="Tiempo de ataque en segundos")
+    audio_release_time = models.FloatField(null=True, blank=True, help_text="Tiempo de recuperación en segundos")
+    audio_merge_threshold = models.FloatField(null=True, blank=True, help_text="Umbral de unión de bloques de silencio")
+    audio_block_fade = models.FloatField(null=True, blank=True, help_text="Fade entre bloques de audio")
+    audio_early_finish = models.FloatField(null=True, blank=True, help_text="Silencio técnico al final del bloque")
+    
+    social_title = models.CharField(max_length=255, blank=True, null=True, help_text="Título editado para YouTube")
+    social_description = models.TextField(blank=True, null=True, help_text="Descripción editada para YouTube")
+    social_tags = models.TextField(blank=True, null=True, help_text="Tags editados para YouTube")
+    social_pinned_comment = models.TextField(blank=True, null=True, help_text="Comentario fijado editado para YouTube")
     
     log_output = models.TextField(blank=True)
     duration = models.FloatField(default=0.0, help_text="Duración total del video en segundos")

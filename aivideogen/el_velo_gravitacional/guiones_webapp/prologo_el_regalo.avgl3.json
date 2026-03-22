@@ -1,0 +1,807 @@
+{
+    "title": "Prólogo: El Regalo - El Velo Gravitacional (Audio-Libro Completo)",
+    "voice": "es-ES-AlvaroNeural",
+    "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+    "music_volume": 0.15,
+    "blocks": [
+        {
+            "title": "Block 1: La Visión y el Despertar",
+            "scenes": [
+                {
+                    "_uId": "sul0fkzjen",
+                    "title": "El Sueño del Velo",
+                    "text": "[TITLE]Prólogo: El Regalo[/TITLE] [PHO]itan|Ethan[/PHO] Ramírez despertó con el corazón martilleando contra las costillas, una sensación de vértigo que no pertenecía a su pequeña habitación en el Distrito RD. Acababa de salir de *ese* sueño otra vez. Esta vez, la visión había sido más nítida, casi tangible: se veía a sí mismo —o a alguien que usaba sus manos— dentro de una cabina de mando avanzada. A través de la placa frontal de un casco futurista, una red de datos y vectores parpadeaba en una interfaz [PHO:hache u de|HUD:h] que inundaba su campo de visión con luz cian. Frente a él, el espacio-tiempo se retorcía, colapsando en un túnel de geometría imposible, un agujero de gusano que rugía con un silencio absoluto mientras la nave se lanzaba hacia su centro. El latido de la máquina y el suyo propio eran una sola frecuencia. Sacudió la cabeza, tratando de atrapar la lógica de la visión, pero los fragmentos del casco y la cabina se le escapaban entre los dedos, dejando solo un rastro de inquietud fría en la nuca.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/agujero_gusano_cuadrado.png",
+                            "type": "image",
+                            "zoom": "1.6",
+                            "move": "HOR:50:50 + VER:50:50",
+                            "overlay": "cockpit_overlay_transparent",
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": true,
+                            "shake_intensity": 1,
+                            "rotate": "0:8*360",
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "rocket.mp3",
+                            "volume": "0.05",
+                            "offset": "2000"
+                        }
+                    ]
+                },
+                {
+                    "_uId": "s021beci6m",
+                    "title": "Sabor a Calima",
+                    "text": "[PHO]itan|Ethan[/PHO] se levantó con el sabor amargo y seco de la calima industrial pegado a la lengua. El aire del Distrito RD no era solo aire; era una suspensión pesada cargada de residuos de procesado y humedad ácida, donde la dispersión de Rayleigh se rendía ante una bruma permanente que convertía el sol en un disco amarillento, una pupila enferma que observaba desde el otro lado de la polución. Diecisiete años. Hoy cumplía diecisiete años, una cifra que en la periferia no se medía en pasteles ni deseos, sino en la capacidad de los pulmones para seguir filtrando el óxido de la existencia cotidiana.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_despierta.png",
+                            "type": "image",
+                            "zoom": "1.1:1.5",
+                            "move": "VER:100:0",
+                            "overlay": "viento_polvo_de_estepa",
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sgaceed2zq",
+                    "title": "El Domo de Goglee City",
+                    "text": "Se incorporó en su pequeño catre, que chirrió con una frecuencia metálica y cansada. A través de la ventana rota, sellada con cinta de polímero que vibraba con un zumbido de baja frecuencia, el domo de [PHO]Gogle siti|Goglee City[/PHO] brillaba a lo lejos con una pureza insultante. Era una semiesfera de cristal reforzado y campos de fuerza, una luna artificial que albergaba un mundo de presión atmosférica controlada y cielos de un azul espectral al que [PHO]itan|Ethan[/PHO], por nacimiento y genética, nunca tendría invitación.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/distrito_rd_haze_png_1772310841360.png",
+                            "type": "image",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:0:30 + VER:100:0",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": []
+        },
+        {
+            "title": "Block 2: El Taller",
+            "scenes": [
+                {
+                    "_uId": "svbb2fjkib",
+                    "title": "El Llamado de Carlos",
+                    "text": "[EPICO]—¡[PHO]itan|Ethan[/PHO]! —La voz de Carlos, profunda y con la rugosidad de quien ha inhalado demasiado ozono de soldadura, retumbó desde el taller—. ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte![/EPICO]",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_despierta.png",
+                            "type": "image",
+                            "zoom": "1.6:1.0",
+                            "move": "HOR:60:100 + VER:0:30",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sv2leh5fsx",
+                    "title": "Bajando al Taller",
+                    "text": "[PHO]itan|Ethan[/PHO] se vistió con la eficiencia del hábito: la camiseta de tirantes gastada y los pantalones de carga manchados con lubricante sintético. Al bajar la escalera de metal, el calor del taller lo envolvió como un abrazo físico, trayendo consigo el aroma reconfortante del aceite de motor y el olor a tormenta de los sistemas de inducción.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_carlos_regalo_escaleras.png",
+                            "type": "image",
+                            "zoom": "1.3:1.0",
+                            "move": "VER:100:0",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sifaavw1cu",
+                    "title": "Oasis de Entropía",
+                    "text": "El taller de Carlos era un oasis de entropía organizada. Encajado entre estructuras condenadas del viejo mundo, era el único lugar donde [PHO]itan|Ethan[/PHO] sentía que la realidad se podía doblar si tenías las herramientas adecuadas. Su padre siempre lo decía: 'Una pieza de metal no está muerta mientras su resonancia sea pura'. Para Carlos Ramírez, los motores hablaban una lengua de vibraciones que [PHO]itan|Ethan[/PHO] empezaba a descifrar.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_carlos_regalo_escaleras.png",
+                            "type": "image",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:0:100 + VER:0:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "s61ucn3q1r",
+                    "title": "Descripción de Carlos",
+                    "text": "Carlos lo esperaba junto al banco de trabajo. A sus cincuenta y seis años, sus manos eran un catálogo de la historia del Distrito: quemaduras por plasma, cicatrices de engranajes y piel curtida por el trabajo. Carlos era un hombre de lógica férrea y pragmatismo absoluto; para él, el universo no era más que una máquina vasta cuya única religión era el mantenimiento preventivo. Aunque repartía bendiciones por puro sedimento cultural caribeño, su verdadera fe residía en la precisión de un tornillo bien apretado. El taller estaba ahora vivo con el brillo azul de interfaces holográficas avanzadas que flotaban sobre las mesas de metal.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/carlos_hablando.png",
+                            "type": "image",
+                            "zoom": "1.1:1.3",
+                            "move": "HOR:20:0 + VER:0:25",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3",
+            "volume": 0.2,
+            "voice": null,
+            "voice_speed": null
+        },
+        {
+            "title": "Block 3: La Moto",
+            "scenes": [
+                {
+                    "_uId": "sbh6vn1fu8",
+                    "title": "La Silueta bajo la Lona",
+                    "text": "Detrás de él, bajo una lona de polímero que ocultaba su forma, se erguía una silueta aerodinámica, una promesa de movimiento. Algo que [PHO]itan|Ethan[/PHO] conocía bien por los rugidos de las carreras clandestinas del Distrito RD, pero que nunca había soñado con tocar.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "ethan_looking_at_gift.png",
+                            "type": "image",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:0:10 + VER:0:40",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "soq1v06pzl",
+                    "title": "Cion Papi",
+                    "text": "—Cion papi. Papi!...[PHO]itan|Ethan[/PHO] se detuvo, sintiendo una fluctuación extraña en su ritmo cardíaco—. ¿Es lo que creo que es?",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "ethan_looking_at_gift.png",
+                            "type": "image",
+                            "zoom": "1.2:1.4",
+                            "move": "HOR:50:50 + VER:90:10",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sus3fu6k9c",
+                    "title": "Risa de Carlos",
+                    "text": "[RISA]Carlos sonrió. —¡Jajaja! Dios te bendiga, mijo.[/RISA] —Por un segundo, el peso de la gravedad pareció aliviarse en sus hombros.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/carlos_habla_taller_moto_detras.png",
+                            "type": "image",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50 + VER:0:30",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sq6uyc95oa",
+                    "title": "El Núcleo Clase 3",
+                    "text": "—Feliz cumple, mijo. No es una de esas máquinas de lujo con estabilizadores de neuronas que pilotan en la ciudad alta, pero tiene un núcleo de inducción Clase 3 que rescaté de los restos de un carguero. Es puro hierro, [PHO]itan|Ethan[/PHO]. Latido puro.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "carlos_hablando.png",
+                            "type": "image",
+                            "zoom": "1.3:1.1",
+                            "move": "HOR:30:50 + VER:30:15",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sqvjy12br1",
+                    "title": "Retirando la Lona",
+                    "text": "[PHO]itan|Ethan[/PHO] se acercó como si temiera que la visión se desvaneciera. Al retirar la lona, el polvo bailó en la luz mortecina. El chasis estaba rayado y el asiento de cuero sintético tenía parches, pero bajo la carcasa de aleación, [PHO]itan|Ethan[/PHO] podía sentir el pulso de algo poderoso. Era el regalo más valioso que alguien en el Distrito RD podía recibir: un motor operativo, un par de alas de metal que aún no recordaban cómo volar.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_quitando_lona.png",
+                            "type": "image",
+                            "zoom": "1.0:1.2",
+                            "move": "HOR:50:60 + VER:0:10",
+                            "overlay": "dust",
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "id": "Power_Tool_Electrical_Buzz.mp3",
+                            "volume": 0.4,
+                            "offset": 0
+                        }
+                    ]
+                },
+                {
+                    "_uId": "s532wryl65",
+                    "title": "Es Increíble",
+                    "text": "—Es... es increíble, papi —susurró [PHO]itan|Ethan[/PHO], pasando los dedos por el manillar. Notó la resistencia familiar de los controles, la firmeza de la horquilla—. El núcleo vibra... está viva.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "ethan_enciende_motowave.png",
+                            "type": "image",
+                            "zoom": "1.2:1.4",
+                            "move": "HOR:50:50 + VER:100:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "siegglowqa",
+                    "title": "Es tu Proyecto",
+                    "text": "—Está viva, mijo. La he estado armando por piezas estas últimas noches. El motor de combustión y el sistema de tracción por cadena están al cien; puedes rodarla por el asfalto del Distrito ahora mismo si quieres. Pero no levita todavía, [PHO]itan|Ethan[/PHO]. El sistema de fase está muerto y los propulsores gravitacionales son puro peso muerto por ahora. El resto... el resto lo vas a poner tú. Es tu proyecto ahora.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "ethan_enciende_motowave.png",
+                            "type": "image",
+                            "zoom": "1.4:1.2",
+                            "move": "HOR:50:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3",
+            "volume": 0.2,
+            "voice": null,
+            "voice_speed": null
+        },
+        {
+            "title": "Block 4: El Misterio",
+            "scenes": [
+                {
+                    "_uId": "smd7zm26il",
+                    "title": "Anomalía de Datos",
+                    "text": "Carlos suspiró, clavando la vista en un complejo [PHO:h]holograma|holograma[/PHO] que mostraba telemetría astronómica en tiempo real. Sus ojos, antes brillantes, se sombrearon por un instante.  —Que pasa papi? [PHO]itan | Ethan[/PHO] le pregunto. —Miro lo que otros ignoran, mijo. En el año 2100 vi un bamboleo de una estrella que no tenía sentido. Ahora, ese patrón se repite. Algo en estos datos no me cuadra.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "carlos_viendo_telemetria_preocupado.png",
+                            "type": "image",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50 + VER:50:20",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "s6lacugsf6",
+                    "title": "Consejo de Piloto",
+                    "text": "—Aprende a leer los vectores de escape si tanto te gustan las [PHO:h]motoweivs|motowaves[/PHO]. Los números no mienten, [PHO]itan|Ethan[/PHO]. En un vuelo crítico, lo único real es lo que marca el panel. No lo olvides.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "carlos_viendo_telemetria_preocupado.png",
+                            "type": "image",
+                            "zoom": "1.3:1.1",
+                            "move": "HOR:30:50 + VER:20:0",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sw7ji2dvel",
+                    "title": "Memorias de Quisqueya",
+                    "text": "[PHO]itan|Ethan[/PHO] cerró los ojos y, por un momento, las historias de Carlos cobraron vida. Historias de Quisqueya, la isla que el mar se tragó en 2065. Vio mares que no eran de petróleo, sino de un azul tan profundo que desafía la descripción, y cielos donde el sol no quemaba, sino que acariciaba. Ese legado era su única ancla en un mundo que quería hundirlo.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/quisquella_la_bella.mp4",
+                            "type": "video",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50 + VER:0:100",
+                            "overlay": "rain",
+                            "fit": false,
+                            "video_volume": 0.2,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Misdirection_-_The_Grey_Room___Density__Time.mp3",
+            "volume": 0.2,
+            "voice": null,
+            "voice_speed": null
+        },
+        {
+            "title": "Block 5: La Bendición",
+            "scenes": [
+                {
+                    "_uId": "sd43hkzoeg",
+                    "title": "Hacia el Ritual",
+                    "text": "Se giró hacia su padre, buscando el ritual que mantenía viva esa memoria.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_habla_dentro_taller.png",
+                            "type": "image",
+                            "zoom": "1.0:1.5",
+                            "move": "HOR:50:50 + VER:70:80",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "ssfdsig2pl",
+                    "title": "Ción Papi (Final)",
+                    "text": "—Papi... Ción papi.",
+                    "pause": 1,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_habla_dentro_taller.png",
+                            "type": "image",
+                            "zoom": "1.1:1.4",
+                            "move": "HOR:50:50 + VER:80:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sxo7pduoi0",
+                    "title": "Respeto Espiritual",
+                    "text": "[PHO]itan|Ethan[/PHO] inclinó la cabeza con respeto. No era una simple costumbre; era una transferencia de momento espiritual, el reconocimiento de que su historia no empezaba con él, sino con los que cruzaron el mar cuando el mundo se rompió.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_pide_bendicion.png",
+                            "type": "image",
+                            "zoom": "1.2:1.4",
+                            "move": "HOR:50:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "s63ug9wd8f",
+                    "title": "Mano en el Hombro",
+                    "text": "Carlos puso su mano callosa sobre el hombro de su hijo. El contacto fue cálido, una bendición grabada en el [PHO:adené|ADN:h] de su gente.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_pide_bendicion.png",
+                            "type": "image",
+                            "zoom": "1.4:1.2",
+                            "move": "HOR:50:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "sikbw79d4s",
+                    "title": "La Única Verdad",
+                    "text": "—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y nunca lo olvide: el conocimiento es la clave de todo, y en este mundo, la única verdad está en los datos. Aprenda a leerlos y nunca estará perdido.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/carlos_habla_taller_moto_detras.png",
+                            "type": "image",
+                            "zoom": "1.4:1.1",
+                            "move": "HOR:50:50 + VER:20:20",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Misdirection_-_The_Grey_Room___Density__Time.mp3",
+            "volume": 0.2,
+            "voice": null,
+            "voice_speed": null
+        },
+        {
+            "title": "Block 6: El Fénix",
+            "scenes": [
+                {
+                    "_uId": "se92se1jh1",
+                    "title": "Bautismo de Metal",
+                    "text": "[PHO]itan|Ethan[/PHO] asintió, sintiendo que su masa corporal ya no era un lastre. Miró la [PHO]motoweiv|motowave[/PHO]. Ya tenía nombre en su mente, un nombre que evocaba el ciclo eterno de la materia. —La llamaré [PHO:h]el fenix | *El Fénix*[/PHO] —sentenció—. Porque vamos a quemar el aire del Distrito para salir volando de aquí.",
+                    "pause": 0.5,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_toca_moto.png",
+                            "type": "image",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:40:40 + VER:0:100",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                },
+                {
+                    "_uId": "s2djmk75e5",
+                    "title": "Orgullo y Sombra",
+                    "text": "Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia que [PHO]itan|Ethan[/PHO] aún no comprendía del todo. Darle la [PHO]motoweiv|motowave[/PHO] era darle un sueño, y en el Distrito RD, los sueños pesaban tanto como el plomo. Pero hoy, mientras [PHO]itan|Ethan[/PHO] sentía el pulso del motor bajo su palma, el universo entero parecía haber disminuido su constante gravitatoria solo para él.",
+                    "pause": 2,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/ethan_fenix_domo.mp4",
+                            "type": "video",
+                            "zoom": "1.5:1.0",
+                            "move": "HOR:50:50",
+                            "overlay": null,
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Epic_Battle_Speech_-_Wayne_Jones.mp3",
+            "volume": 0.2,
+            "voice": null,
+            "voice_speed": null
+        },
+        {
+            "_uId": "bpx6v2ruxe",
+            "title": "CTA",
+            "scenes": [
+                {
+                    "_uId": "sndl8j8mop",
+                    "title": "CTA",
+                    "text": "Hola! si crees que te ha gustado esta historia y quieres ver la siguiente parte, dale a me gusta, suscribete y toca la campanita, de esta forma youtube te avisara cuando salga la siguiente historia. Ah y recuerda, el futuro es hoy!",
+                    "pause": 60,
+                    "subtitle": "",
+                    "voice": null,
+                    "audio": null,
+                    "pitch": null,
+                    "assets": [
+                        {
+                            "id": "/media/assets/carusel_prologo_el_velo.mp4",
+                            "type": "video",
+                            "zoom": "1.0",
+                            "move": null,
+                            "overlay": "grain",
+                            "fit": false,
+                            "video_volume": null,
+                            "shake": false,
+                            "shake_intensity": 5,
+                            "rotate": null,
+                            "w_rotate": null,
+                            "fast_assembly": false,
+                            "cinema_mode": false
+                        }
+                    ],
+                    "sfx": []
+                }
+            ],
+            "groups": [],
+            "music": "C:/Users/hp/aivideogen/aivideogen/media/music/Im_Giving_Up_-_Everet_Almond.mp3",
+            "volume": 0.4,
+            "voice": null,
+            "voice_speed": null
+        }
+    ],
+    "voice_speed": "+0%",
+    "aspect_ratio": "landscape",
+    "render_mode": "cpu",
+    "music_volume_lock": false,
+    "auto_upload": false,
+    "engine": "edge",
+    "settings": {
+        "title": "Prólogo: El Regalo - El Velo Gravitacional (Audio-Libro Completo)",
+        "background_music": "music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3",
+        "music_volume": 0.15,
+        "voice_id": "es-ES-AlvaroNeural",
+        "aspect_ratio": "landscape",
+        "render_mode": "cpu",
+        "music_volume_lock": false,
+        "auto_upload": false,
+        "voice_speed": "+0%",
+        "dynamic_subtitles": true,
+        "engine": "edge"
+    },
+    "dynamic_subtitles": true
+}

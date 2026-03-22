@@ -1,0 +1,81 @@
+{
+    "practica_fisica": {
+        "teoria": [
+            {
+                "id": 1,
+                "pregunta": "¿De qué vocablo griego proviene la palabra 'Física', qué significa y qué estudia esta ciencia?",
+                "respuesta": "Proviene de 'phisis' que significa realidad o naturaleza. Estudia la materia, energía, tiempo, espacio y sus interacciones."
+            },
+            {
+                "id": 2,
+                "pregunta": "Mencioné las dos grandes divisiones de la física y dé tres ejemplos de ramas pertenecientes a la 'Física Clásica'.",
+                "respuesta": "Divisiones: Física Clásica y Física Moderna. Ejemplos Clásica: Mecánica, Óptica, Termodinámica."
+            },
+            {
+                "id": 3,
+                "pregunta": "Enumere cinco (5) magnitudes fundamentales del Sistema Internacional (SI) junto con sus unidades básicas.",
+                "respuesta": "Longitud (m), Masa (kg), Tiempo (s), Temperatura (K), Intensidad de corriente (A)."
+            },
+            {
+                "id": 4,
+                "pregunta": "Explique qué son las magnitudes derivadas y proporcione dos ejemplos.",
+                "respuesta": "Son aquellas definidas en términos de las fundamentales. Ej: Velocidad (m/s), Fuerza (N)."
+            }
+        ],
+        "practica": [
+            {
+                "seccion": "Cifras Significativas",
+                "ejercicios": [
+                    {
+                        "enunciado": "Contar c.s. en 0.0035",
+                        "respuesta": "2 c.s."
+                    },
+                    {
+                        "enunciado": "3.95 + 4.198 + 12.17",
+                        "respuesta": "20.32"
+                    }
+                ]
+            },
+            {
+                "seccion": "Conversiones Avanzadas",
+                "ejercicios": [
+                    {
+                        "id": 18,
+                        "enunciado": "Convierta 6 km a pies",
+                        "respuesta": "19,685.04 pies",
+                        "calculo": "6 * 1000 * 3.28084"
+                    },
+                    {
+                        "id": 19,
+                        "enunciado": "Convierta 5 millas/h a m/s",
+                        "respuesta": "2.235 m/s",
+                        "calculo": "(5 * 1609.34) / 3600"
+                    },
+                    {
+                        "id": 20,
+                        "enunciado": "Convierta 96,500 cm3/min a gal/s",
+                        "respuesta": "0.4249 gal/s",
+                        "calculo": "(96500 / 1000 / 3.7854) / 60"
+                    }
+                ]
+            },
+            {
+                "seccion": "Vectores y Estática",
+                "ejercicios": [
+                    {
+                        "id": "V8",
+                        "enunciado": "Halla la dirección del vector resultante (Opción B: 37°)",
+                        "respuesta": "36.2°",
+                        "metodo": "Suma de componentes Rx y Ry"
+                    },
+                    {
+                        "id": "V14",
+                        "enunciado": "Halla 'F' si la resultante es horizontal",
+                        "respuesta": "30 N",
+                        "opcion": "C"
+                    }
+                ]
+            }
+        ]
+    }
+}

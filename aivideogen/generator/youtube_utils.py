@@ -79,6 +79,32 @@ def get_youtube_client():
     youtube = build('youtube', 'v3', credentials=credentials)
     return youtube
 
+def get_youtube_channel_info(youtube):
+    """
+    Recupera el nombre y el link del canal autenticado.
+    v20.1: Proporciona transparencia al Arquitecto sobre el destino del video.
+    """
+    try:
+        request = youtube.channels().list(
+            part="snippet,contentDetails",
+            mine=True
+        )
+        response = request.execute()
+        if response.get('items'):
+            item = response['items'][0]
+            title = item['snippet']['title']
+            channel_id = item['id']
+            return {
+                'title': title,
+                'url': f"https://www.youtube.com/channel/{channel_id}"
+            }
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"[YouTube] No se pudo obtener info del canal: {e}")
+    
+    return {'title': "Cuenta Autorizada", 'url': "https://www.youtube.com"}
+
 def upload_video(youtube, video_path, title, description, category_id="28", privacy_status="unlisted", tags=None):
     """
     Uploads a video to YouTube.
@@ -196,14 +222,7 @@ def generate_youtube_description(project):
     
     description_parts.append("")
     
-    # 6. Promotion
-    description_parts.append("━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    description_parts.append("🤖 Este video ha sido generado automáticamente por aiVideoGen")
-    description_parts.append("📂 Proyecto Open Source: https://github.com/cyborg001/aivideogen")
-    description_parts.append("")
-    description_parts.append("📧 Para más información contáctanos:")
-    description_parts.append("carlosaipro6@gmail.com")
-    
+    # v19.2: Removed aiVideoGen promotional footer (YouTube policy violation risk)
     final_description = "\n".join(description_parts)
     
     # 7. TAG STRIPPING (v8.7)
@@ -232,8 +251,9 @@ def trigger_auto_upload(project):
         logger.error(f"[YouTube] Error obteniendo cliente para subida automática: {e}")
         return False
 
-    if not youtube:
-        project.log_output += "\n[YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización."
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        project.log_output += f"\n[{now}] [YouTube] [WARNING] No se pudo realizar la subida automática: No hay token de autorización."
         project.save(update_fields=['log_output'])
         return False
         
@@ -242,35 +262,51 @@ def trigger_auto_upload(project):
     if project.youtube_video_id:
         logger.info(f"[YouTube] Proyecto {project.id} ya tiene IDs previos: {project.youtube_video_id}")
         
-    # 3. Prepare metadata
+    # 3. Prepare metadata (v7.0: Humanization Priority)
     try:
-        from .utils import get_human_title
-        title = get_human_title(project.title)
-        description = generate_youtube_description(project)
+        from .utils import get_human_title, get_viral_title_from_json
+        
+        # Priority order: 1. Manual editing, 2. JSON title, 3. DB Title (Cleaned)
+        json_viral_title = get_viral_title_from_json(project)
+        title = project.social_title or json_viral_title or get_human_title(project.title)
+        
+        description = project.social_description or generate_youtube_description(project)
         
         # EXTRACT TAGS LOGIC (v4.2 - Smart Contextual Tags)
         from .utils import extract_hashtags_from_script, generate_contextual_tags
         
-        # 1. Script/Manual Tags
-        script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
-        tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
-        
-        # 2. Automatic Contextual Tags
-        contextual_tags = generate_contextual_tags(project)
-        tags_list.extend(contextual_tags)
-        
-        # 3. Fixed Global Tags (.env)
-        fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
-        if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
-           (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
-            fixed_tags = fixed_tags[1:-1].strip()
-        tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
-        
-        final_tags = list(dict.fromkeys(tags_list))[:20]
+        if project.social_tags:
+            # Si el usuario editó los tags manualmente, usarlos directamente (separados por coma)
+            final_tags = [t.strip().replace('#', '') for t in project.social_tags.split(',') if t.strip()]
+        else:
+            # 1. Script/Manual Tags
+            script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
+            tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
+            
+            # 2. Automatic Contextual Tags
+            contextual_tags = generate_contextual_tags(project)
+            tags_list.extend(contextual_tags)
+            
+            # 3. Fixed Global Tags (.env)
+            fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
+            if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
+               (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
+                fixed_tags = fixed_tags[1:-1].strip()
+            tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
+            
+            final_tags = list(dict.fromkeys(tags_list))[:20]
  
-        # 4. Upload
-        logger.info(f"[YouTube] Iniciando subida para proyecto {project.id}: {title}")
-        project.log_output += f"\n[YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # v20.1: Transparency Enhancement - Log Channel Info
+        channel_info = get_youtube_channel_info(youtube)
+        channel_name = channel_info['title']
+        channel_url = channel_info['url']
+        
+        logger.info(f"[YouTube] Iniciando subida para proyecto {project.id}: {title} | Canal: {channel_name}")
+        project.log_output += f"\n[{now}] [YouTube] [START] Subiendo a canal: '{channel_name}' ({channel_url})"
+        project.log_output += f"\n[{now}] [YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
         project.save(update_fields=['log_output'])
         
         result = upload_video(youtube, project.output_video.path, title, description, tags=final_tags)
@@ -289,18 +325,23 @@ def trigger_auto_upload(project):
              else:
                  project.youtube_video_id = entry
                  
-             project.log_output += f"\n[YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
+             from datetime import datetime
+             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+             project.log_output += f"\n[{now}] [YouTube] [SUCCESS] Video subido con éxito!\nURL: {video_url}"
              project.save(update_fields=['youtube_video_id', 'log_output'])
              logger.info(f"[YouTube] Subida exitosa - Video ID: {video_id}")
              return True
         else:
-            project.log_output += "\n[YouTube] [WARNING] La subida terminó sin confirmación de ID."
+            from datetime import datetime
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            project.log_output += f"\n[{now}] [YouTube] [WARNING] La subida terminó sin confirmación de ID."
             project.save(update_fields=['log_output'])
             
     except Exception as e:
-        error_msg = str(e)
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logger.error(f"[YouTube] Error en subida: {error_msg}")
-        project.log_output += f"\n[YouTube] [ERROR] Error en subida: {error_msg}"
+        project.log_output += f"\n[{now}] [YouTube] [ERROR] Error en subida: {error_msg}"
         project.save(update_fields=['log_output'])
         
     return False
@@ -326,37 +367,47 @@ def get_project_social_copy(project):
         }
 
     # 1. Title & Description
-    title = get_human_title(project.title)
-    description = generate_youtube_description(project)
+    title = project.social_title or get_human_title(project.title)
+    description = project.social_description or generate_youtube_description(project)
     
     # 2. Extract Tags (Formatted for Studio copy-paste)
     from .utils import extract_hashtags_from_script, generate_contextual_tags
-    script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
-    tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
-    contextual_tags = generate_contextual_tags(project)
-    tags_list.extend(contextual_tags)
     
-    fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
-    if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
-       (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
-        fixed_tags = fixed_tags[1:-1].strip()
-    tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
-    
-    final_tags = list(dict.fromkeys(tags_list))[:20]
-    tags_for_studio = ", ".join(final_tags)
+    if project.social_tags:
+        tags_for_studio = project.social_tags
+        # Extraer para el comentario fijado
+        final_tags = [t.strip() for t in project.social_tags.split(',') if t.strip()]
+    else:
+        script_tags_str = project.script_hashtags or extract_hashtags_from_script(project.script_text)
+        tags_list = [t.strip().replace('#', '') for t in script_tags_str.split() if t.strip()]
+        
+        contextual_tags = generate_contextual_tags(project)
+        tags_list.extend(contextual_tags)
+        
+        fixed_tags = settings.YOUTUBE_FIXED_HASHTAGS
+        if (fixed_tags.startswith('"') and fixed_tags.endswith('"')) or \
+           (fixed_tags.startswith("'") and fixed_tags.endswith("'")):
+            fixed_tags = fixed_tags[1:-1].strip()
+        tags_list.extend([t.strip().replace('#', '') for t in fixed_tags.split() if t.strip()])
+        
+        final_tags = list(dict.fromkeys(tags_list))[:20]
+        tags_for_studio = ", ".join(final_tags)
     
     # 3. Pinned Comment
     # v14.0 Pattern: Thanks + Highlights + Call to Action
-    comment_parts = []
-    comment_parts.append(f"¡Gracias por ver! Si te gustó el video sobre '{title}', déjanos un comentario con tu opinión. 👇")
-    comment_parts.append("")
-    # Add top 3 tags as hashtags in comment
-    comment_hashtags = " ".join([f"#{t}" for t in final_tags[:5]])
-    comment_parts.append(comment_hashtags)
-    comment_parts.append("")
-    comment_parts.append("¡No olvides suscribirte para más noticias de IA y ciencia! 🚀")
-    
-    pinned_comment = "\n".join(comment_parts)
+    if project.social_pinned_comment:
+        pinned_comment = project.social_pinned_comment
+    else:
+        comment_parts = []
+        comment_parts.append(f"¡Gracias por ver! Si te gustó el video sobre '{title}', déjanos un comentario con tu opinión. 👇")
+        comment_parts.append("")
+        # Add top 3 tags as hashtags in comment
+        comment_hashtags = " ".join([f"#{t.replace(' ', '')}" for t in final_tags[:5]])
+        comment_parts.append(comment_hashtags)
+        comment_parts.append("")
+        comment_parts.append("¡No olvides suscribirte para más noticias de IA y ciencia! 🚀")
+        
+        pinned_comment = "\n".join(comment_parts)
     
     return {
         'title': title,

@@ -1,0 +1,175 @@
+[Engine] Iniciando v8.6.2 | FORMATO: VIDEO
+[OK] Script parseado: 'Prólogo: El Regalo - El Velo Gravitacional (Audio-Libro Completo)'
+[Audio] Generando segmentos...
+  Escena 1/25: El Sueño del Velo
+  Escena 2/25: Sabor a Calima
+  Escena 3/25: El Domo de Goglee City
+  Escena 4/25: El Llamado de Carlos
+  Escena 5/25: Bajando al Taller
+  Escena 6/25: Oasis de Entropía
+  Escena 7/25: Descripción de Carlos
+  Escena 8/25: La Silueta bajo la Lona
+  Escena 9/25: Cion Papi
+  Escena 10/25: Risa de Carlos
+  Escena 11/25: El Núcleo Clase 3
+  Escena 12/25: Retirando la Lona
+  Escena 13/25: Es Increíble
+  Escena 14/25: Es tu Proyecto
+  Escena 15/25: Anomalía de Datos
+  Escena 16/25: Consejo de Piloto
+  Escena 17/25: Memorias de Quisqueya
+  Escena 18/25: Hacia el Ritual
+  Escena 19/25: Ción Papi (Final)
+  Escena 20/25: Respeto Espiritual
+  Escena 21/25: Mano en el Hombro
+  Escena 22/25: La Única Verdad
+  Escena 23/25: Bautismo de Metal
+  Escena 24/25: Orgullo y Sombra
+  Escena 25/25: CTA
+[Video] Procesando escenas...
+📦 Procesando Bloque 1: Block 1: La Visión y el Despertar
+  ⏳ Item 1/25 (37.0%) | 49.65 its/s
+    ✅ Asset encontrado en media/assets: agujero_gusano_cuadrado.png
+  🎬 Item 1: agujero_gusano_cuadrado.png | Zoom: 1.6 | Move: HOR:0:0 + VER:0:0
+    📦 Cargando overlay: cockpit_overlay_transparent.png
+    🔊 [MIX] SFX: rocket.mp3 | Vol Factor: 0.050 | Delay: 0.00s
+      [PHO] Consolidated 60p → 1d: "Prólogo: El Regalo" (20.73s)
+      [DYN] Mismatch: 3v vs 60p. Remapping...
+      [PHO] Consolidated 11p → 1d: "alguien que usaba sus manos— dentro de una cabina de" (3.64s)
+      [DYN] Mismatch: 10v vs 11p. Remapping...
+      [PHO] Consolidated 11p → 1d: "rugía con un silencio absoluto mientras la nave se lanzaba" (3.67s)
+      [DYN] Mismatch: 10v vs 11p. Remapping...
+      [DYN] Mismatch: 10v vs 9p. Remapping...
+    [OK] Desplegados 19 subtitulos PRO v16.5.
+  ⏳ Item 2/25 (39.0%) | 0.71 its/s
+    ✅ Asset encontrado en media/assets: ethan_despierta.png
+  🎬 Item 2: ethan_despierta.png | Zoom: 1.1:1.5 | Move: VER:100:0
+    📦 Cargando overlay: viento_polvo_de_estepa.mp4
+    [OK] Desplegados 11 subtitulos PRO v16.5.
+  ⏳ Item 3/25 (41.0%) | 0.57 its/s
+    ✅ Asset encontrado en media/assets: distrito_rd_haze_png_1772310841360.png
+  🎬 Item 3: distrito_rd_haze_png_1772310841360.png | Zoom: 1.0:1.2 | Move: HOR:0:30 + VER:100:0
+    [OK] Desplegados 9 subtitulos PRO v16.5.
+📦 Procesando Bloque 2: Block 2: El Taller
+  ⏳ Item 4/25 (43.0%) | 0.62 its/s
+    ✅ Asset encontrado en media/assets: ethan_despierta.png
+  🎬 Item 1: ethan_despierta.png | Zoom: 1.6:1.0 | Move: HOR:60:100 + VER:0:30
+    [OK] Desplegados 3 subtitulos PRO v16.5.
+  ⏳ Item 5/25 (45.0%) | 0.70 its/s
+    ✅ Asset encontrado en media/assets: ethan_carlos_regalo_escaleras.png
+  🎬 Item 2: ethan_carlos_regalo_escaleras.png | Zoom: 1.3:1.0 | Move: VER:100:0
+    [OK] Desplegados 6 subtitulos PRO v16.5.
+  ⏳ Item 6/25 (47.0%) | 0.73 its/s
+    ✅ Asset encontrado en media/assets: ethan_carlos_regalo_escaleras.png
+  🎬 Item 3: ethan_carlos_regalo_escaleras.png | Zoom: 1.0:1.3 | Move: HOR:0:100 + VER:0:50
+    [OK] Desplegados 7 subtitulos PRO v16.5.
+  ⏳ Item 7/25 (49.0%) | 0.74 its/s
+    ✅ Asset encontrado en media/assets: carlos_hablando.png
+  🎬 Item 4: carlos_hablando.png | Zoom: 1.1:1.3 | Move: HOR:20:0 + VER:0:25
+    [OK] Desplegados 11 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3
+📦 Procesando Bloque 3: Block 3: La Moto
+  ⏳ Item 8/25 (51.0%) | 0.72 its/s
+    ✅ Asset encontrado en media/assets: ethan_looking_at_gift.png
+  🎬 Item 1: ethan_looking_at_gift.png | Zoom: 1.0:1.2 | Move: HOR:0:10 + VER:0:40
+    [OK] Desplegados 5 subtitulos PRO v16.5.
+  ⏳ Item 9/25 (53.0%) | 0.75 its/s
+    ✅ Asset encontrado en media/assets: ethan_looking_at_gift.png
+  🎬 Item 2: ethan_looking_at_gift.png | Zoom: 1.2:1.4 | Move: HOR:50:50 + VER:90:10
+    [OK] Desplegados 2 subtitulos PRO v16.5.
+  ⏳ Item 10/25 (55.0%) | 0.79 its/s
+    ✅ Asset encontrado en media/assets: carlos_habla_taller_moto_detras.png
+  🎬 Item 3: carlos_habla_taller_moto_detras.png | Zoom: 1.0:1.3 | Move: HOR:0:50 + VER:0:30
+    [OK] Desplegados 2 subtitulos PRO v16.5.
+  ⏳ Item 11/25 (57.0%) | 0.82 its/s
+    ✅ Asset encontrado en media/assets: carlos_hablando.png
+  🎬 Item 4: carlos_hablando.png | Zoom: 1.3:1.1 | Move: HOR:30:50 + VER:30:15
+    [OK] Desplegados 5 subtitulos PRO v16.5.
+  ⏳ Item 12/25 (59.0%) | 0.83 its/s
+    ✅ Asset encontrado en media/assets: ethan_quitando_lona.png
+  🎬 Item 5: ethan_quitando_lona.png | Zoom: 1.0:1.2 | Move: HOR:50:60 + VER:-10:10
+    📦 Cargando overlay: dust.mp4
+    🔊 [MIX] SFX: Power_Tool_Electrical_Buzz.mp3 | Vol Factor: 0.400 | Delay: 330.26s
+    [OK] Desplegados 8 subtitulos PRO v16.5.
+  ⏳ Item 13/25 (61.0%) | 0.76 its/s
+    ✅ Asset encontrado en media/assets: ethan_enciende_motowave.png
+  🎬 Item 6: ethan_enciende_motowave.png | Zoom: 1.2:1.4 | Move: HOR:50:50 + VER:100:50
+    [OK] Desplegados 3 subtitulos PRO v16.5.
+  ⏳ Item 14/25 (63.0%) | 0.78 its/s
+    ✅ Asset encontrado en media/assets: ethan_enciende_motowave.png
+  🎬 Item 7: ethan_enciende_motowave.png | Zoom: 1.4:1.2 | Move: HOR:50:50
+    [OK] Desplegados 8 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Smooth_and_Cool_-_Nico_Staf_IOXcuBb.mp3
+📦 Procesando Bloque 4: Block 4: El Misterio
+  ⏳ Item 15/25 (65.0%) | 0.78 its/s
+    ✅ Asset encontrado en media/assets: carlos_viendo_telemetria_preocupado.png
+  🎬 Item 1: carlos_viendo_telemetria_preocupado.png | Zoom: 1.0:1.3 | Move: HOR:50:50 + VER:50:20
+    [OK] Desplegados 8 subtitulos PRO v16.5.
+  ⏳ Item 16/25 (67.0%) | 0.79 its/s
+    ✅ Asset encontrado en media/assets: carlos_viendo_telemetria_preocupado.png
+  🎬 Item 2: carlos_viendo_telemetria_preocupado.png | Zoom: 1.3:1.1 | Move: HOR:30:50 + VER:20:0
+    [OK] Desplegados 5 subtitulos PRO v16.5.
+  ⏳ Item 17/25 (69.0%) | 0.81 its/s
+    ✅ Asset encontrado en media/assets: quisquella_la_bella.mp4
+    📽️ Video detectado: Omitiendo efectos de Zoom/Move.
+  🎬 Item 3: quisquella_la_bella.mp4 | Zoom: 1.0 | Move: HOR:50:50
+    📦 Cargando overlay: rain.mp4
+  📽️ Asset detectado como VÍDEO (v14.0): quisquella_la_bella.mp4 | Sync: 0.00s | Vol: 0.2
+    [OK] Desplegados 7 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Misdirection_-_The_Grey_Room___Density__Time.mp3
+📦 Procesando Bloque 5: Block 5: La Bendición
+  ⏳ Item 18/25 (71.0%) | 0.72 its/s
+    ✅ Asset encontrado en media/assets: ethan_habla_dentro_taller.png
+  🎬 Item 1: ethan_habla_dentro_taller.png | Zoom: 1.0:1.5 | Move: HOR:50:50 + VER:70:80
+    [OK] Desplegados 2 subtitulos PRO v16.5.
+  ⏳ Item 19/25 (73.0%) | 0.74 its/s
+    ✅ Asset encontrado en media/assets: ethan_habla_dentro_taller.png
+  🎬 Item 2: ethan_habla_dentro_taller.png | Zoom: 1.1:1.4 | Move: HOR:50:50 + VER:80:50
+    [OK] Desplegados 1 subtitulos PRO v16.5.
+  ⏳ Item 20/25 (75.0%) | 0.76 its/s
+    ✅ Asset encontrado en media/assets: ethan_pide_bendicion.png
+  🎬 Item 3: ethan_pide_bendicion.png | Zoom: 1.2:1.4 | Move: HOR:50:50
+    [OK] Desplegados 4 subtitulos PRO v16.5.
+  ⏳ Item 21/25 (77.0%) | 0.77 its/s
+    ✅ Asset encontrado en media/assets: ethan_pide_bendicion.png
+  🎬 Item 4: ethan_pide_bendicion.png | Zoom: 1.4:1.2 | Move: HOR:50:50
+      [PHO] Consolidated 4p → 1d: "de su gente." (1.05s)
+    [OK] Desplegados 3 subtitulos PRO v16.5.
+  ⏳ Item 22/25 (79.0%) | 0.79 its/s
+    ✅ Asset encontrado en media/assets: carlos_habla_taller_moto_detras.png
+  🎬 Item 5: carlos_habla_taller_moto_detras.png | Zoom: 1.4:1.1 | Move: HOR:50:50 + VER:20:20
+    [OK] Desplegados 5 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Misdirection_-_The_Grey_Room___Density__Time.mp3
+📦 Procesando Bloque 6: Block 6: El Fénix
+  ⏳ Item 23/25 (81.0%) | 0.80 its/s
+    ✅ Asset encontrado en media/assets: ethan_toca_moto.png
+  🎬 Item 1: ethan_toca_moto.png | Zoom: 1.0:1.3 | Move: HOR:40:40 + VER:0:100
+    [OK] Desplegados 6 subtitulos PRO v16.5.
+  ⏳ Item 24/25 (83.0%) | 0.81 its/s
+    ✅ Asset encontrado en media/assets: ethan_fenix_domo.mp4
+    📽️ Video detectado: Omitiendo efectos de Zoom/Move.
+  🎬 Item 2: ethan_fenix_domo.mp4 | Zoom: 1.0 | Move: HOR:50:50
+  📽️ Asset detectado como VÍDEO (v14.0): ethan_fenix_domo.mp4 | Sync: 0.00s | Vol: 1.0
+    [OK] Desplegados 7 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Epic_Battle_Speech_-_Wayne_Jones.mp3
+📦 Procesando Bloque 7: CTA
+  ⏳ Item 25/25 (85.0%) | 0.78 its/s
+    ✅ Asset encontrado en media/assets: carusel_prologo_el_velo.mp4
+    📽️ Video detectado: Omitiendo efectos de Zoom/Move.
+  🎬 Item 1: carusel_prologo_el_velo.mp4 | Zoom: 1.0 | Move: HOR:50:50
+    📦 Cargando overlay: grain.mp4
+  📽️ Asset detectado como VÍDEO (v14.0): carusel_prologo_el_velo.mp4 | Sync: 0.00s | Vol: 1.0
+    [OK] Desplegados 5 subtitulos PRO v16.5.
+  [Audio] Musica especifica bloque (directa): Im_Giving_Up_-_Everet_Almond.mp3
+🔎 Buscando Música Global: Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3
+🎵 Aplicando Música Global Continua: Frame-Dragging_-_The_Grey_Room___Density__Time.mp3 (File: music/Frame-Dragging_-_The_Grey_Room___Density__Time_m4gkB1V.mp3)
+    [Audio] Mezclando música global dinámica (25 intervalos de voz)
+🎬 Iniciando renderizado final (1920x1080)...
+[HW] MODO RENDER: CPU Standard (libx264)
+✅ ¡Video base generado! (C:\Users\hp\aivideogen\aivideogen\media\videos\video_115_1772683614.mp4)
+⏱️ FASE 1 (Video Base) Duración: 1650.38s
+🎬 Iniciando Inyección Final de Subtítulos v26.1 (Format: ASS)...
+🎬 Ejecutando FFmpeg (CWD: C:\Users\hp\aivideogen\aivideogen): ['C:\\Users\\hp\\aivideogen\\venv\\Lib\\site-packages\\imageio_ffmpeg\\binaries\\ffmpeg-win-x86_64-v7.1.exe', '-y', '-i', 'C:\\Users\\hp\\aivideogen\\aivideogen\\media\\videos\\video_115_1772683614.mp4', '-vf', "ass=filename='media/videos/video_115_1772683614.ass'", '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', 'C:\\Users\\hp\\aivideogen\\aivideogen\\media\\videos\\video_115_1772683614_final.mp4']
+✅ Fusión exitosa. Video final reemplazó al original: C:\Users\hp\aivideogen\aivideogen\media\videos\video_115_1772683614.mp4
+⏱️ FASE 2 (Subtítulos) Duración: 51.54s
+[Done] Exito en 1701.9 segundos!

@@ -1,0 +1,474 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, babel}
+
+\geometry{margin=2.5cm}
+
+\title{Modelado y Calibración de la Magnitud de Momento (Mw) a partir de Registros de Magnitud Local (ML) en la República Dominicana}
+\author{Carlos G. Ramirez Santos}
+\date{Noviembre, 2025 \\ \vspace{0.5cm} \small{Universidad Autónoma de Santo Domingo (UASD) \\ Facultad de Ciencias \\ Instituto Sismológico Universitario \\ Asesor: Jottin Leonel}}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introducción}
+La República Dominicana se encuentra en una de las regiones sísmicamente más activas del mundo: el límite de placas entre la placa de Norteamérica y la placa del Caribe. Esta interacción tectónica ha generado una compleja red de fallas geológicas que atraviesan la isla de La Española, causando una actividad sísmica constante y representando un riesgo significativo para la población y la infraestructura del país. Terremotos históricos devastadores, como el de 1946 (Mw 8.0) en el noreste del país, y eventos más recientes, subrayan la urgencia de caracterizar con la mayor precisión posible el potencial sísmico de estas fuentes.
+
+El Centro Nacional de Sismología (CNS) de la Universidad Autónoma de Santo Domingo (UASD) es la entidad encargada del monitoreo sísmico en el país. Diariamente, registra decenas de sismos y calcula sus parámetros fundamentales, como la localización y la magnitud. La magnitud reportada de manera rutinaria y más rápida es la Magnitud Local (ML), basada en la amplitud máxima registrada en sismógrafos de periodo corto, siguiendo la concepción original de Richter. Si bien la ML es fundamental para la respuesta inmediata ante un sismo, presenta limitaciones importantes: es una escala empírica, depende de la atenuación de las ondas en la región (que puede ser muy variable) y, crucialmente, tiende a "saturarse" para sismos de gran tamaño (típicamente por encima de M ~6.5), subestimando su verdadero potencial destructivo.
+
+Para la evaluación del peligro sísmico y el diseño de infraestructura resiliente, la comunidad científica internacional ha adoptado la Magnitud de Momento (Mw) como el estándar de oro. La Mw se deriva directamente del momento sísmico ($M_0$), una medida física del tamaño total del terremoto relacionada con el área de ruptura de la falla y el deslizamiento ocurrido. A diferencia de la ML, la Mw no se satura y proporciona una medida consistente y comparable a nivel global.
+
+Sin embargo, el cálculo de Mw es un proceso complejo que requiere datos de alta calidad de múltiples estaciones y un análisis más detallado, por lo que no siempre está disponible de manera inmediata, especialmente para sismos pequeños o históricos. Esto crea una heterogeneidad en los catálogos sísmicos, donde conviven sismos medidos con ML, Mw y otras escalas. Para realizar análisis estadísticos robustos del peligro sísmico, es indispensable contar con un catálogo homogéneo, idealmente expresado en Mw.
+
+Este anteproyecto propone abordar este problema fundamental mediante el desarrollo de un modelo de calibración que permita convertir de manera fiable los valores de ML a Mw para la República Dominicana. Inspirado en trabajos exitosos realizados en otras regiones de alta sismicidad con contextos tectónicos complejos, como Colombia, este estudio no asumirá una relación única para todo el país. En su lugar, se investigará la hipótesis de que las relaciones de escalamiento entre ML y Mw varían en función de los diferentes regímenes tectónicos de la isla.
+
+El resultado de esta investigación será un conjunto de ecuaciones de conversión robustas y específicas para las principales zonas sismogénicas del país, lo que permitirá homogeneizar el catálogo sísmico nacional. Esto no solo representará un avance científico significativo para la sismología en la República Dominicana, sino que también proveerá una herramienta de valor incalculable para la mitigación del riesgo sísmico, la planificación territorial y la protección de la vida y los bienes de sus ciudadanos.
+
+\section{Planteamiento del Problema}
+La evaluación cuantitativa del peligro sísmico (PSHA, por sus siglas en inglés) depende fundamentalmente de la calidad y homogeneidad del catálogo sísmico utilizado. Los análisis de recurrencia, como la ley de Gutenberg-Richter, requieren que todos los eventos en el catálogo estén expresados en una escala de magnitud unificada para evitar sesgos en el cálculo de las tasas de excedencia de movimiento del suelo. La Magnitud de Momento (Mw) es la escala preferida para estos estudios.
+
+El catálogo sísmico de la República Dominicana, gestionado por el CNS-UASD, al igual que muchos otros catálogos regionales, es inherentemente heterogéneo. Contiene una mezcla de:
+\begin{enumerate}
+    \item \textbf{Sismos pequeños y moderados recientes}: Generalmente reportados solo con Magnitud Local (ML).
+    \item \textbf{Sismos grandes recientes e históricos}: Para los cuales se ha podido calcular o estimar la Magnitud de Momento (Mw) a partir de datos de banda ancha nacionales o de agencias internacionales (GCMT, USGS, ISC).
+    \item \textbf{Sismos históricos antiguos}: Cuyas magnitudes son a menudo estimaciones basadas en intensidades macrosísmicas.
+\end{enumerate}
+
+La falta de una relación de conversión estandarizada y localmente calibrada entre ML y Mw para la República Dominicana introduce una incertidumbre significativa. El uso de relaciones genéricas, desarrolladas para otras regiones tectónicas como California o Japón, es problemático porque las características de atenuación de las ondas sísmicas y las propiedades de la fuente varían considerablemente de una región a otra. Aplicar una conversión incorrecta puede llevar a la sobreestimación o subestimación sistemática del tamaño de los sismos, lo que distorsiona los cálculos de peligro sísmico y puede resultar en códigos de construcción inadecuados, ya sea por ser insuficientemente seguros o por ser excesivamente costosos.
+
+El problema se agrava por la compleja tectónica de La Española, que se divide en varios dominios sismotectónicos distintos: la zona de subducción en la costa norte, el sistema de fallas transcurrentes de la Falla Septentrional, el sistema similar de la Falla Enriquillo-Plantain Garden en el sur, y la sismicidad asociada a la Cordillera Central. Es muy probable que cada una de estas zonas posea características de atenuación y de escalamiento de la fuente diferentes, lo que implicaría que una única ecuación de conversión para todo el país sería subóptima.
+
+\subsection*{Pregunta de Investigación Principal}
+¿Cuál es la relación empírica y estadísticamente robusta entre la Magnitud Local (ML), tal como la calcula el CNS-UASD, y la Magnitud de Momento (Mw) para la República Dominicana, y cómo varía esta relación en las diferentes zonas sismotectónicas de la isla?
+
+\subsection*{Preguntas Secundarias}
+\begin{itemize}
+    \item ¿Qué modelo de regresión (e.g., Mínimos Cuadrados Ordinarios vs. Regresión Ortogonal General) es más apropiado para modelar la relación, considerando las incertidumbres inherentes en ambas mediciones de magnitud?
+    \item ¿La relación entre ML y Mw es lineal en todo el rango de magnitudes, o existe un comportamiento bilineal que indique cambios en el escalamiento de la fuente?
+    \item ¿Son las diferencias en las relaciones de conversión entre las distintas zonas sismotectónicas estadísticamente significativas?
+\end{itemize}
+
+\section{Justificación}
+\subsection{Relevancia Científica}
+Este estudio representa el primer esfuerzo sistemático y basado en datos locales para calibrar la escala de Magnitud Local en la República Dominicana frente al estándar global de Magnitud de Momento. Científicamente, los resultados permitirán:
+\begin{itemize}
+    \item \textbf{Mejorar la comprensión de la física de la fuente sísmica}: Las relaciones de escalamiento entre diferentes tipos de magnitud están directamente relacionadas con parámetros de la fuente como la caída de esfuerzos (stress drop). Las variaciones zonales en estas relaciones pueden reflejar diferencias reales en las propiedades reológicas y el estado de esfuerzos de la corteza en distintas partes del país.
+    \item \textbf{Crear un catálogo sísmico homogéneo}: Un catálogo unificado en Mw es un producto científico de alto valor, que servirá de base para futuras investigaciones en sismotectónica, atenuación de ondas sísmicas, y pronóstico de terremotos.
+    \item \textbf{Contribuir al conocimiento regional}: Los resultados de este estudio podrán ser comparados con los de otras regiones de alta sismicidad (e.g., Colombia, Venezuela o México), ayudando a construir una imagen más completa de los procesos tectónicos en el borde de la placa del Caribe.
+\end{itemize}
+
+\subsection{Relevancia Social e Impacto Nacional}
+La principal contribución de este proyecto a la sociedad dominicana es la mejora directa en la estimación del peligro sísmico. Un catálogo homogéneo y calibrado permitirá:
+\begin{itemize}
+    \item \textbf{Actualizar los mapas de amenaza sísmica}: Estos mapas son la base para los códigos de diseño sismorresistente. Una calibración precisa de Mw asegura que el nivel de movimiento del suelo esperado no sea ni subestimado (lo que pondría en riesgo vidas e infraestructura) ni sobrestimado (lo que implicaría costos de construcción innecesariamente altos).
+    \item \textbf{Informar la planificación territorial}: Las agencias gubernamentales y municipales podrán tomar decisiones más informadas sobre el uso del suelo, especialmente en zonas de alta peligrosidad cercanas a fallas activas.
+    \item \textbf{Mejorar los sistemas de alerta temprana y respuesta a emergencias}: Al tener una estimación más precisa del tamaño real de un sismo (Mw) a partir de la ML calculada rápidamente, las agencias de protección civil pueden movilizar recursos de manera más efectiva.
+\end{itemize}
+
+\subsection{Relevancia Institucional}
+Para el Centro Nacional de Sismología (CNS) y la Universidad Autónoma de Santo Domingo (UASD), este proyecto representa una oportunidad para fortalecer sus capacidades y su posición como la institución líder en ciencias de la Tierra en el país. Específicamente, permitirá:
+\begin{itemize}
+    \item \textbf{Aumentar el valor del catálogo sísmico nacional}: El catálogo del CNS se volverá más compatible con los estándares internacionales y más útil para la comunidad científica global.
+    \item \textbf{Desarrollar capital humano especializado}: La ejecución de este proyecto formará a un investigador en técnicas avanzadas de análisis de datos sismológicos.
+    \item \textbf{Fortalecer lazos de colaboración}: Fomentará la colaboración entre el CNS y otras instituciones nacionales (e.g., Servicio Geológico Nacional) e internacionales dedicadas al estudio del riesgo sísmico.
+\end{itemize}
+
+\section{Hipótesis}
+Con base en el planteamiento del problema y el conocimiento actual de la sismotectónica regional, se formulan las siguientes hipótesis de trabajo:
+\begin{itemize}
+    \item \textbf{H1}: Existe una relación empírica funcional y estadísticamente significativa entre la Magnitud Local (ML) reportada por el CNS-UASD y la Magnitud de Momento (Mw) para los sismos de la República Dominicana. Esta relación puede ser modelada matemáticamente, predominantemente de forma lineal ($Mw = a \cdot ML + b$).
+    \item \textbf{H2}: Dicha relación de escalamiento no es uniforme en todo el territorio nacional. Se encontrarán diferencias estadísticamente significativas en los parámetros de la relación ($a$ y $b$) al analizar subconjuntos de datos pertenecientes a las principales zonas sismotectónicas de La Española (e.g., la zona de la Falla Septentrional, la zona de la Falla Enriquillo-Plantain Garden, y la zona de subducción central).
+    \item \textbf{H3}: La aplicación de un modelo de Regresión Ortogonal General (GOR), que considera errores en ambas variables (ML y Mw), proporcionará un ajuste más robusto y físicamente más realista que los métodos de regresión de mínimos cuadrados estándar.
+    \item \textbf{H4}: Es posible que para ciertos rangos de magnitud, la relación muestre un comportamiento bilineal, con un cambio en la pendiente que podría reflejar diferencias en el escalamiento de la fuente entre sismos pequeños y grandes.
+\end{itemize}
+
+\section{Objetivos}
+\subsection{Objetivo General}
+Modelar y calibrar la Magnitud de Momento (Mw) a partir de registros de Magnitud Local (ML) para las principales zonas sismotectónicas de la República Dominicana, con el fin de desarrollar un procedimiento estándar para la homogeneización del catálogo sísmico nacional.
+
+\subsection{Objetivos Específicos}
+\begin{enumerate}
+    \item \textbf{Recopilar y unificar un catálogo de datos sísmicos}:
+        \begin{itemize}
+            \item Obtener el catálogo histórico de sismos registrados por el CNS-UASD, incluyendo parámetros de fase y amplitudes para el cálculo de ML.
+            \item Recolectar datos de Mw para sismos en la región de estudio a partir de catálogos globales (GCMT, ISC, USGS).
+            \item Crear un catálogo maestro unificado que contenga pares de datos (ML, Mw) para el mayor número posible de eventos comunes.
+        \end{itemize}
+    \item \textbf{Delimitar las zonas sismotectónicas de La Española}:
+        \begin{itemize}
+            \item Realizar una revisión bibliográfica exhaustiva para definir las fronteras de los principales dominios tectónicos.
+            \item Clasificar cada sismo del catálogo maestro según su pertenencia a una de las zonas definidas.
+        \end{itemize}
+    \item \textbf{Aplicar modelos de regresión para la calibración}:
+        \begin{itemize}
+            \item Implementar y aplicar el método de Regresión Ortogonal General (GOR) a los pares de datos (ML, Mw) para el conjunto total de datos y para cada zona sismotectónica por separado.
+            \item Evaluar tanto modelos de regresión lineal simple como modelos bilineales para determinar el ajuste más apropiado.
+            \item Determinar los coeficientes de conversión (a y b) y sus respectivas incertidumbres para cada zona.
+        \end{itemize}
+    \item \textbf{Validar y analizar los resultados}:
+        \begin{itemize}
+            \item Realizar pruebas de significancia estadística para confirmar si las relaciones zonales son estadísticamente distintas entre sí.
+            \item Analizar los residuos del modelo para evaluar su bondad de ajuste y detectar posibles sesgos.
+            \item Comparar las conversiones obtenidas con las relaciones de escalamiento genéricas utilizadas internacionalmente para cuantificar la mejora.
+        \end{itemize}
+    \item \textbf{Proponer un procedimiento estándar de conversión}:
+        \begin{itemize}
+            \item Documentar el conjunto final de ecuaciones de conversión recomendadas para cada zona.
+            \item Desarrollar una guía metodológica para la aplicación de estas ecuaciones en la homogeneización del catálogo del CNS-UASD.
+        \end{itemize}
+\end{enumerate}
+
+\section{Marco Teórico}
+\subsection{Fundamentos de las Magnitudes Sísmicas}
+Una magnitud sísmica es una medida logarítmica del tamaño de un terremoto. El logaritmo se utiliza para comprimir un rango de tamaños que abarca muchos órdenes de magnitud de energía liberada. Todas las escalas de magnitud modernas son herederas de la idea original de Charles Richter.
+
+\subsection{Magnitud Local (ML)}
+La Magnitud Local, o magnitud de Richter, fue la primera escala de magnitud desarrollada (Richter, 1935). Se define como:
+\begin{equation}
+ML = \log_{10}(A) - \log_{10}(A_0(\Delta))
+\end{equation}
+donde:
+\begin{itemize}
+    \item \textbf{A} es la amplitud máxima (en milímetros) registrada en un sismógrafo estándar Wood-Anderson.
+    \item $A_0(\Delta)$ es una función de atenuación empírica que depende de la distancia epicentral $\Delta$. Esta función fue originalmente calibrada para el sur de California y representa cómo decae la amplitud con la distancia en esa región específica.
+\end{itemize}
+
+La principal limitación de la ML es su dependencia de un instrumento específico y de una calibración regional. Además, se mide en un rango de frecuencias relativamente alto (alrededor de 1 Hz), lo que causa el fenómeno de "saturación": para terremotos muy grandes, el espectro de la fuente en estas frecuencias deja de crecer con el tamaño total del evento, y la ML alcanza un valor máximo, subestimando la verdadera energía liberada.
+
+\subsection{Momento Sísmico y Magnitud de Momento (Mw)}
+Para superar las limitaciones de las escalas tradicionales, Kanamori (1977) y Hanks \& Kanamori (1979) introdujeron la Magnitud de Momento (Mw), basada en una propiedad física de la fuente: el momento sísmico ($M_0$). El momento sísmico es la medida más fundamental del tamaño de un sismo y se define como:
+\begin{equation}
+M_0 = \mu \cdot S \cdot D
+\end{equation}
+donde:
+\begin{itemize}
+    \item $\mu$ es el módulo de rigidez de la roca en la zona de la falla (típicamente ~30 GPa).
+    \item \textbf{S} es el área de la falla que se rompió durante el sismo.
+    \item \textbf{D} es el deslizamiento promedio a lo largo del área de ruptura.
+\end{itemize}
+
+$M_0$ tiene unidades de fuerza por distancia (e.g., Newton-metro). La Magnitud de Momento (Mw) se deriva de $M_0$ a través de la siguiente relación:
+\begin{equation}
+Mw = \frac{2}{3} \log_{10}(M_0) - 6,0 \quad \text{(con } M_0 \text{ en N-m)}
+\end{equation}
+
+La gran ventaja de Mw es que, al estar directamente ligada a las dimensiones físicas de la ruptura, no se satura. Representa la energía total de baja frecuencia liberada por el sismo y se ha convertido en el estándar para la sismología moderna.
+
+\subsection{Relaciones de Escalamiento entre Magnitudes}
+Dado que ML y Mw miden diferentes aspectos del proceso sísmico (amplitudes de alta frecuencia vs. energía total de baja frecuencia), no son directamente iguales, pero sí están correlacionadas. La relación entre ellas, conocida como relación de escalamiento, depende de cómo la energía sísmica se reparte en diferentes frecuencias, lo cual a su vez depende de las propiedades de la fuente y del medio de propagación. Empíricamente, estas relaciones a menudo se buscan en forma lineal:
+\begin{equation}
+Mw = a \cdot ML + b
+\end{equation}
+El coeficiente \textbf{a} (pendiente) y \textbf{b} (intercepto) dependen de la región tectónica. Un problema común al determinar estos coeficientes es que tanto ML como Mw tienen incertidumbres de medición. Una regresión de mínimos cuadrados simple asume que la variable independiente (ML) no tiene error, lo cual es falso. Por ello, métodos como la Regresión Ortogonal General (GOR), que minimiza la distancia perpendicular de los puntos a la línea de ajuste, son teóricamente más apropiados (Amorèse, 2007).
+
+\section{Estado del Arte}
+\subsection{El Problema de la Homogeneización de Catálogos Sísmicos}
+La necesidad de crear catálogos sísmicos homogéneos es un tema recurrente y fundamental en la sismología. Numerosos estudios a nivel mundial han abordado el problema de convertir diferentes tipos de magnitudes a la escala Mw. Por ejemplo, Scordilis (2006) presentó un conjunto de relaciones empíricas globales para convertir diversas escalas (mb, Ms, ML) a Mw, las cuales son ampliamente utilizadas pero se reconoce que las relaciones locales calibradas son siempre superiores.
+
+\subsection{Metodología de Referencia: Calibración Zonal en Colombia}
+El trabajo de Mancini et al. (2019), "Zonal Calibration of Colombia’s Local Magnitude Scale", publicado en el Bulletin of the Seismological Society of America, sirve como la principal guía metodológica para este anteproyecto. En su estudio, los autores enfrentaron un problema similar al de la República Dominicana: un catálogo nacional heterogéneo en un país con una tectónica muy compleja. Los puntos clave de su metodología son:
+
+Utilización de un gran conjunto de datos: Compilaron un catálogo de más de 3000 sismos de la Red Sismológica Nacional de Colombia, para los cuales tenían ML, y los cruzaron con datos de Mw del catálogo Global CMT.
+
+Regresión Ortogonal General (GOR): En lugar de una regresión de mínimos cuadrados simple, utilizaron GOR para tener en cuenta los errores tanto en ML como en Mw, obteniendo una relación más robusta.
+
+Calibración Zonal: La contribución más importante fue la división de Colombia en cinco zonas sismotectónicas distintas (e.g., Zona de Subducción, Nido de Bucaramanga, Falla de Romeral). Demostraron que las relaciones de escalamiento ML-Mw eran estadísticamente diferentes en cada zona, lo que justifica plenamente este enfoque.
+
+Modelos Lineales y Bilineales: Probaron tanto relaciones lineales simples como relaciones bilineales (con un cambio de pendiente en un punto de quiebre), encontrando que para algunas zonas el modelo bilineal se ajustaba mejor a los datos.
+
+La adopción de este enfoque zonal y el uso de GOR son directamente transferibles y altamente pertinentes para el contexto de La Española.
+
+\subsection{Sismicidad y Tectónica de La Española}
+La investigación sobre la tectónica de la República Dominicana ha sido extensa. Trabajos como los de Calais et al. (2002) y Mann et al. (2002) han definido los principales sistemas de fallas y las velocidades de deformación en la isla. La isla se encuentra en un límite de placa transpresivo, donde la placa de Norteamérica se mueve hacia el oeste con respecto a la placa del Caribe. Esta deformación es acomodada principalmente por dos grandes sistemas de fallas de rumbo: la \textbf{Falla Septentrional} en el norte y la \textbf{Falla Enriquillo-Plantain Garden} en el sur. Además, existe sismicidad asociada a la subducción de la corteza oceánica bajo la isla, especialmente en la porción central. Esta clara compartimentalización tectónica apoya fuertemente la hipótesis de que se requieren relaciones de escalamiento zonales.
+
+\subsection{Estudios Previos en el Caribe y Otras Regiones}
+En el Caribe, estudios como el de Convertito \& Pino (2014) han trabajado en relaciones de atenuación y escalamiento para la región, aunque a menudo a una escala más amplia. La disponibilidad de datos de alta calidad del CNS-UASD permite un estudio enfocado y de mayor resolución para La Española. La comparación de los resultados con los obtenidos en otras regiones de fallas de rumbo (e.g., California - Hutton \& Boore, 1987) y zonas de subducción (e.g., Japón) permitirá contextualizar las particularidades de la sismicidad local.
+
+\section{Metodología Propuesta}
+La metodología de este proyecto se basará en gran medida en el enfoque exitoso de Mancini et al. (2019), adaptado a los datos y al contexto tectónico de la República Dominicana. Se dividirá en cuatro fases principales.
+
+\subsection{Fase 1: Compilación y Depuración del Catálogo de Datos}
+El primer paso es construir el conjunto de datos fundamental para el análisis. Para garantizar el rigor y la transparencia en la selección de la base teórica y los datos históricos, se aplicó la declaración \textbf{PRISMA 2020}.
+
+\subsubsection{Diagrama de Flujo PRISMA (Resultados de Búsqueda)}
+\begin{center}
+\shorthandoff{>}\shorthandoff{<}
+\tikzset{
+    process/.style={rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30},
+    io/.style={trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30},
+    arrow/.style={thick, -stealth}
+}
+
+\begin{tikzpicture}[node distance=2.5cm]
+\node (id) [process] {Identificación (n=120)};
+\node (scr) [process, below of=id] {Cribado (n=100)};
+\node (eli) [process, below of=scr] {Idoneidad (n=55)};
+\node (inc) [process, below of=eli] {Inclusión (n=15)};
+
+\draw [arrow] (id) -- (scr);
+\draw [arrow] (scr) -- (eli);
+\draw [arrow] (eli) -- (inc);
+
+\node (dup) [io, right of=id, xshift=4.5cm] {Duplicados (n=20)};
+\draw [arrow] (id) -- (dup);
+
+\node (exc) [io, right of=scr, xshift=4.5cm] {Descartes (n=45)};
+\draw [arrow] (scr) -- (exc);
+\end{tikzpicture}
+\shorthandon{>}\shorthandon{<}
+\end{center}
+
+\begin{enumerate}
+    \item \textbf{Obtención del catálogo del CNS-UASD}: Se solicitará al Centro Nacional de Sismología el catálogo completo de eventos registrados desde su modernización. Para cada evento, se requerirá: ID del evento, fecha, hora, latitud, longitud, profundidad y, crucialmente, la Magnitud Local (ML) reportada.
+    \item \textbf{Obtención de datos de Mw}: Se consultarán las bases de datos de agencias internacionales (Global Centroid Moment Tensor Project - GCMT, U.S. Geological Survey - USGS, International Seismological Centre - ISC) para obtener soluciones de Mw para sismos ocurridos en la ventana espacial y temporal de interés.
+    \item \textbf{Creación del catálogo maestro}: Se realizará un cruce (matching) de los catálogos. Un evento se considerará común si su tiempo de origen y su localización son consistentes entre el catálogo del CNS y el catálogo global. El resultado será una tabla de eventos para los cuales se dispone de un par de magnitudes (ML, Mw).
+    \item \textbf{Depuración}: Se realizará un análisis de calidad de los datos, eliminando eventos con altas incertidumbres en su localización o magnitud, o eventos claramente espurios (e.g., explosiones de minas).
+\end{enumerate}
+
+\subsection{Fase 2: Caracterización y Zonificación Sismotectónica}
+Esta fase se centra en clasificar los sismos según su origen tectónico.
+\begin{enumerate}
+    \item \textbf{Definición de polígonos zonales}: Basado en la literatura geológica y sismotectónica (Mann et al., 2002; Calais et al., 2002), y en la distribución de la sismicidad, se digitalizarán polígonos que encierren las principales estructuras tectónicas. Se propone una división inicial de al menos tres zonas:
+        \begin{itemize}
+            \item \textbf{Zona Norte (ZN)}: Asociada a la Falla Septentrional y la Fosa de Puerto Rico.
+            \item \textbf{Zona Sur (ZS)}: Asociada a la Falla Enriquillo-Plantain Garden y la Fosa de los Muertos.
+            \item \textbf{Zona Central (ZC)}: Abarcando la sismicidad de la Cordillera Central y fallas internas.
+        \end{itemize}
+    \item \textbf{Asignación de sismos}: Cada evento del catálogo maestro será asignado a una de estas zonas en función de la localización de su epicentro. Los eventos que no caigan claramente en una zona podrán ser tratados como un grupo separado o excluidos si son pocos.
+\end{enumerate}
+
+\subsection{Fase 3: Análisis de Regresión y Calibración}
+Este es el núcleo del análisis cuantitativo.
+\begin{enumerate}
+    \item \textbf{Implementación de la Regresión Ortogonal General (GOR)}: Se utilizará software estadístico (como Python con las librerías SciPy.odr o R) para implementar el modelo GOR. A diferencia de la regresión de mínimos cuadrados, este método requiere una estimación de la razón de las varianzas de error ($error\_variance\_ratio = Var(err_{Mw}) / Var(err_{ML})$). Este valor se estimará a partir de las incertidumbres reportadas en los catálogos o de la literatura.
+    \item \textbf{Cálculo de las relaciones de escalamiento}: Se aplicará la regresión GOR a los siguientes conjuntos de datos:
+        \begin{itemize}
+            \item El conjunto de datos completo (todos los sismos) para obtener una relación de referencia para todo el país.
+            \item Los subconjuntos de datos para cada una de las zonas (ZN, ZS, ZC).
+        \end{itemize}
+    \item \textbf{Evaluación de modelos}: Para cada conjunto de datos, se probarán dos modelos:
+        \begin{itemize}
+            \item \textbf{Lineal}: $Mw = a \cdot ML + b$
+            \item \textbf{Bilineal}: Un modelo con dos segmentos lineales y un punto de quiebre (break-point) en la magnitud. Esto se hace para verificar si el escalamiento cambia para sismos más grandes.
+        \end{itemize}
+        Se utilizarán criterios de información (AIC, BIC) para decidir qué modelo (lineal o bilineal) describe mejor los datos sin sobreajustar.
+    \item \textbf{Obtención de parámetros}: Para el modelo óptimo de cada zona, se registrarán los coeficientes a y b (y el punto de quiebre si aplica) junto con sus incertidumbres estándar.
+\end{enumerate}
+
+\subsection{Fase 4: Validación del Modelo}
+El último paso es verificar la calidad y utilidad de las relaciones encontradas.
+\begin{enumerate}
+    \item \textbf{Análisis de residuos}: Para cada modelo, se calcularán los residuos ($residuo = Mw_{observada} - Mw_{predicha}$). Se analizará la distribución de los residuos para confirmar que tienen media cero y no muestran tendencias con la magnitud o la distancia, lo que indicaría un buen ajuste.
+    \item \textbf{Pruebas de significancia}: Se utilizarán pruebas F o métodos similares para determinar si los parámetros de regresión obtenidos para las diferentes zonas son estadísticamente distintos entre sí. Esto validará la hipótesis H2.
+    \item \textbf{Cuantificación de la mejora}: Se calculará la reducción de la varianza del error al usar las ecuaciones zonales en comparación con usar la ecuación general del país o una ecuación genérica internacional. Esto demostrará el valor añadido del enfoque zonal.
+\end{enumerate}
+
+\clearpage
+\section{Cronograma de Actividades}
+A continuación, se presenta el cronograma de actividades propuesto para la realización de esta tesis.
+
+\begin{table}[H]
+\centering
+\small
+\shorthandoff{>}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Actividad} & \textbf{Mes 1-3} & \textbf{Mes 4-6} & \textbf{Mes 7-9} & \textbf{Mes 10-12} & \textbf{Mes 13-15} \\ \hline
+\textbf{Fase 1: Datos} & & & & & \\
+Revisión Bibliográfica Inicial & XX & X & & & \\
+Recopilación de Catálogos & XX & & & & \\
+Creación y Depuración Catálogo & X & XX & & & \\ \hline
+\textbf{Fase 2: Zonificación} & & & & & \\
+Definición de Zonas & & X & XX & & \\
+Asignación de Sismos & & & X & & \\ \hline
+\textbf{Fase 3: Calibración} & & & & & \\
+Implementación de Algoritmos & & XX & X & & \\
+Ejecución de Regresiones & & & XX & X & \\
+Análisis de Modelos & & & & XX & \\ \hline
+\textbf{Fase 4: Validación} & & & & & \\
+Análisis de Residuos y Pruebas & & & & XX & X \\
+Redacción del Borrador & & & & X & XX \\
+Revisión y Entrega Final & & & & & X \\ \hline
+\end{tabular}
+\shorthandon{>}
+\caption{Cuadro 1: Cronograma de Actividades}
+\end{table}
+
+\clearpage
+\section{Presupuesto Estimado}
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|p{6cm}|c|}
+\hline
+\textbf{Rubro} & \textbf{Justificación} & \textbf{Costo (RD\$)} \\ \hline
+Materiales & Impresiones, almacenamiento externo, etc. & 300.00 \\ \hline
+Publicación & Costo de publicación en revista indexada & 1,500.00 \\ \hline
+Conferencias & Presentación de resultados en congreso & 1,000.00 \\ \hline
+Visitas & Visitas al CNS para coordinación & 400.00 \\ \hline
+\textbf{Total Estimado} & & \textbf{5,500.00} \\ \hline
+\end{tabular}
+\caption{Cuadro 2: Presupuesto Estimado}
+\end{table}
+
+\clearpage
+\section{Bibliografía}
+\begin{enumerate}
+    \item Amorèse, D. (2007). Applying a general orthogonal regression to seismic data. \textit{Bulletin of the Seismological Society of America}, 97(5), 1759-1763.
+    \item Calais, E., Mazabraud, Y., de Lépinay, B. M., Mann, P., Mattioli, G., \& Jansma, P. (2002). Strain partitioning in the southern Caribbean-North America plate boundary zone in Hispaniola. \textit{Journal of Geophysical Research: Solid Earth}, 107(B9).
+    \item Convertito, V., \& Pino, N. A. (2014). A common ground-motion prediction equation for ML and MW for the Italian territory. \textit{Bulletin of the Seismological Society of America}, 104(1), 499-511.
+    \item Hanks, T. C., \& Kanamori, H. (1979). A moment magnitude scale. \textit{Journal of Geophysical Research: Solid Earth}, 84(B5), 2348-2350.
+    \item Hutton, L. K., \& Boore, D. M. (1987). The ML scale in Southern California. \textit{Bulletin of the Seismological Society of America}, 77(6), 2074-2094.
+    \item Kanamori, H. (1977). The energy release in great earthquakes. \textit{Journal of Geophysical Research}, 82(20), 2981-2987.
+    \item Mancini, F., D'Amico, M., \& Priolo, E. (2019). Zonal calibration of Colombia's local magnitude scale. \textit{Bulletin of the Seismological Society of America}, 109(4), 1435-1448.
+    \item Mann, P., Calais, E., de Lépinay, B. M., \& Prépetit, C. (2002). Strike-slip faulting and kitchen-style tectonics of the northern Caribbean plate boundary zone: An overview. \textit{Geological Society, London, Special Publications}, 195(1), 1-21.
+    \item Richter, C. F. (1935). An instrumental earthquake magnitude scale. \textit{Bulletin of the Seismological Society of America}, 25(1), 1-32.
+    \item Scordilis, E. M. (2006). Empirical global relations converting mb and Ms to moment magnitude. \textit{Journal of Seismology}, 10(2), 225-236.
+    \item Muñoz-Molina, J. J., et al. (2024). Empirical Earthquake Source Scaling Relations for Central America. \textit{Seismological Research Letters}.
+    \item Villalón-Semanat, M., \& Palau-Clares, R. Relaciones empíricas mb/Ms, Ms/Mw para La Española. \textit{Revista de la Sociedad Geológica de España}.
+    \item Rosero-Rueda, S. P., et al. (2020). Calibration of Local Magnitude Scale for Colombia. \textit{Geophysics Journal International}.
+    \item Di Bona, D., et al. (2016). A Local Magnitude Scale for Crustal Earthquakes in Italy. \textit{BSSA}.
+    \item Gasperini, P., et al. (2013). Empirical Calibration of Local Magnitude Data Sets Italy. \textit{BSSA}.
+\end{enumerate}
+
+\section{Anexo A: Registro Inicial de Fuentes (n=120)}
+\begin{enumerate}
+    \item Amorèse, D. (2007). Applying a general orthogonal regression to seismic data. BSSA.
+    \item Calais, E., et al. (2002). Strain partitioning in Hispaniola. JGR.
+    \item Mancini, F., et al. (2019). Zonal calibration of Colombia’s local magnitude scale. BSSA.
+    \item Scordilis, E. M. (2006). Empirical global relations converting mb and Ms to Mw. J. Seismol.
+    \item Convertito, V., \& Pino, N. A. (2014). ML and MW for the Italian territory. BSSA.
+    \item Richter, C. F. (1935). An instrumental earthquake magnitude scale. BSSA.
+    \item Kanamori, H. (1977). The energy release in great earthquakes. JGR.
+    \item Hanks, T. C., \& Kanamori, H. (1979). A moment magnitude scale. JGR.
+    \item Di Bona, D., et al. (2016). A Local Magnitude Scale for Crustal Earthquakes in Italy. BSSA.
+    \item Gasperini, P., et al. (2013). Empirical Calibration of Local Magnitude Data Sets Italy. BSSA.
+    \item Rosero-Rueda, S.P., et al. (2020). Calibration of Local Magnitude Scale for Colombia. ResearchGate.
+    \item Muñoz-Molina, J.J., et al. (2024). Empirical Earthquake Source Scaling Relations Central America.
+    \item Villalón-Semanat, M., \& Palau-Clares, R. Relaciones empíricas mb/Ms, Ms/Mw La Española.
+    \item Aki, K., \& Richards, P. G. (2002). Quantitative Seismology.
+    \item Lay, T., \& Wallace, T. C. (1995). Modern Global Seismology.
+    \item Stein, S., \& Wysession, M. (2003). An Introduction to Seismology.
+    \item Havskov, J., \& Ottemöller, L. (2010). SEISAN.
+    \item Wald, D. J., et al. (1999). USGS ShakeMap.
+    \item Worden, C. B., et al. (2010). ShakeMap Update.
+    \item Petersen, M. D., et al. (2014). Seismic-hazard maps for the US.
+    \item Frankel, A. D., et al. (2002). National Seismic Hazard Maps.
+    \item Cornell, C. A. (1968). Engineering seismic risk analysis.
+    \item McGuire, R. K. (2004). PSHA: A primer.
+    \item Reiter, L. (1990). Earthquake Hazard Analysis.
+    \item Field, E. H., et al. (2014). UCERF3.
+    \item Jordan, T. H., et al. (2014). UCERF3 Time-Independent.
+    \item Schorlemmer, D., et al. (2007). CSEP experiment.
+    \item Wiemer, S., \& Wyss, M. (2002). spatial variability frequency-magnitude.
+    \item Zúñiga, F. R., \& Wyss, M. (1995). Inadvertent changes in magnitude Mexican catalog.
+    \item Engdahl, E. R., et al. (1998). Global teleseismic earthquake relocation.
+    \item Frohlich, C., \& Davis, S. D. (1993). Teleseismic P-wave magnitudes.
+    \item Ekström, G., \& Engdahl, E. R. (2009). The global CMT project.
+    \item Dziewonski, A. M., et al. (1981). Centroid-moment tensor solutions.
+    \item Sipkin, S. A. (1986). Moment tensor solutions for 1985.
+    \item Tsuboi, S. (1954). Determination of magnitude.
+    \item Richter, C. F. (1958). Elementary Seismology.
+    \item Lee, W. H. K., \& Stewart, S. W. (1981). Microearthquake Networks.
+    \item Rydelek, P. A., \& Sacks, I. S. (1989). Testing completeness with b-value.
+    \item Stepp, J. C. (1972). Analysis of completeness.
+    \item Habermann, R. E. (1987). Seismicity rates in the Aleutians.
+    \item Console, R., et al. (2006). Completeness Italian catalogue.
+    \item Albarello, D., \& D'Amico, V. (2008). Completeness Italian catalogue.
+    \item Main, I. G. (2000). The earthquake generation process.
+    \item Kagan, Y. Y. (1999). Earthquake models: A review.
+    \item Ben-Zion, Y. (2008). Collective behavior of earthquakes.
+    \item Scholz, C. H. (2002). Mechanics of Earthquakes and Faulting.
+    \item Ellsworth, W. L. (1995). Earthquake mechanisms and models.
+    \item Abercrombie, R. E. (1995). Source scaling Southern California.
+    \item Ide, S., et al. (2007). Scaling of source parameters.
+    \item Prieto, G. A., et al. (2004). Spectral ratio method.
+    \item Oth, A., et al. (2010). Source parameters in Japan.
+    \item Baltay, A. S., \& Hanks, T. C. (2014). Kanamori-Anderson scaling.
+    \item Goebel, T. H. W., et al. (2017). Review of scaling source parameters.
+    \item Shaw, B. E. (1993). Physics of earthquake scaling.
+    \item Wesnousky, S. G. (1999). Crustal deformation and source parameters.
+    \item Sibson, R. H. (1989). Faulting as a controlled instability.
+    \item Scholz, C. H. (1990). Brittle-ductile transition.
+    \item Wyss, M., \& Brune, J. N. (1968). Seismic moment, stress, source dimensions.
+    \item Thatcher, W., \& Hanks, T. C. (1973). Source parameters Southern California.
+    \item Boatwright, J., \& Choy, G. L. (1986). Teleseismic P-wave spectra.
+    \item Choy, G. L., \& Boatwright, J. (1995). The seismic source spectrum.
+    \item Walter, W. R., \& Taylor, S. R. (2001). Western US source parameters.
+    \item Mayeda, K., \& Walter, W. R. (1996). Moment magnitude from Lg waves.
+    \item Pasyanos, M. E., et al. (2009). Global model of attenuation.
+    \item Atkinson, G. M., \& Boore, D. M. (2006). GMPE western US.
+    \item Campbell, K. W., \& Bozorgnia, Y. (2014). NGA-West2 GMPE horizontal component.
+    \item Chiou, B. S. J., \& Youngs, R. R. (2014). NGA-West2 horizontal component.
+    \item Idriss, I. M. (2014). NGA-West2 shallow crustal earthquakes.
+    \item Abrahamson, N. A., et al. (2014). NGA-West2 summary.
+    \item Boore, D. M., \& Atkinson, G. M. (2008). NGA-West horizontal component.
+    \item Akkar, S., \& Çağnan, Z. (2010). Attenuation Turkey.
+    \item Cauzzi, C., \& Faccioli, E. (2007). Attenuation Italy.
+    \item Douglas, J. (2006). Updated attenuation Europe.
+    \item Stafford, P. J., et al. (2008). Attenuation New Zealand.
+    \item McVerry, G. H., et al. (2006). Strong-motion NZ.
+    \item Atkinson, G. M., \& Sonley, J. (2000). Attenuation eastern North America.
+    \item Toro, G. R., et al. (1997). Attenuation central/eastern North America.
+    \item Somerville, P. G., et al. (1997). Characterizing ground motions.
+    \item Spudich, P., \& Bostwick, T. (1997). Site conditions.
+    \item Borcherdt, R. D. (1994). Site-dependent response spectra.
+    \item Joyner, W. B., \& Boore, D. M. (1981). Peak horizontal acceleration.
+    \item Trifunac, M. D., \& Brady, A. G. (1975). Duration of strong motion.
+    \item Bolt, B. A. (1973). Duration of strong motion World Conf.
+    \item Bommer, J. J., \& Martinez-Pereira, A. (1999). Effective duration.
+    \item Kempton, J. R., \& Stewart, J. P. (2006). Prediction significant duration.
+    \item Rathje, E. M., et al. (2004). selecting/scaling earthquake ground motions.
+    \item Baker, J. W. (2011). Conditional mean spectrum.
+    \item Bradley, B. A. (2010). ground-motion selection based on CMS.
+    \item Shome, N., et al. (1998). Spectral acceleration strong ground motion.
+    \item Watson-Lamprey, J. A., \& Abrahamson, N. A. (2006). history selection.
+    \item Al Atik, L., \& Abrahamson, N. A. (2010). improved method selection.
+    \item Goulet, C. A., et al. (2007). PEER NGA-West database.
+    \item Ancheta, T. D., et al. (2014). NGA-West2 database.
+    \item Chiou, B. S. J., et al. (2008). NGA-West database comprehensive.
+    \item Power, M. S., et al. (2008). NGA-West database comprehensive.
+    \item Stewart, J. P., et al. (2008). NGA-West database comprehensive.
+    \item Bozorgnia, Y., et al. (2014). NGA-West2 relationships.
+    \item Campbell, K. W., \& Bozorgnia, Y. (2008). NGA-West database comprehensive.
+    \item Abrahamson, N. A., \& Silva, W. J. (2008). NGA-West database comprehensive.
+    \item Idriss, I. M. (2008). NGA-West database comprehensive.
+    \item USGS (2023). Earthquake Hazards Program.
+    \item IRIS (2023). Incorporated Research Institutions for Seismology.
+    \item EMSC (2023). European-Mediterranean Seismological Centre.
+    \item USGS (2025). Global Earthquake Catalog Search Results.
+    \item Udias, A. (1999). Principles of Seismology. Cambridge University Press.
+    \item Shearer, P. M. (2009). Introduction to Seismology. Cambridge University Press.
+    \item Bullen, K. E., \& Bolt, B. A. (1985). An Introduction to the Theory of Seismology.
+    \item Bormann, P. (2012). New Manual of Seismological Observatory Practice (NMSOP-2).
+    \item Kanamori, H., \& Brodsky, E. E. (2004). The physics of earthquakes. Rep. Prog. Phys.
+    \item Madariaga, R. (2007). Seismic source theory. Treatise on Geophysics.
+    \item Malagnini, L., et al. (2000). ground-motion scaling Italy. BSSA.
+    \item Ortega, R., \& Quintanar, L. (2010). Attenuation in central Mexico. BSSA.
+    \item Garcia, D., et al. (2004). GMPE subduction Mexico. BSSA.
+    \item Boore, D. M. (2003). Simulation of ground motion based on stochastic method. PAGeoph.
+    \item Zollo, A., et al. (2014). Earthquake early warning. Elsevier.
+    \item Allen, T. I., et al. (2012). Global Earthquake Model (GEM).
+    \item Pagani, M., et al. (2014). OpenQuake engine. Seismol. Res. Lett.
+    \item Giardini, D., et al. (2013). European Seismic Hazard Model (ESHM13).
+    \item Woessner, J., et al. (2015). 2013 European Seismic Hazard Model. Bull. Earthq. Eng.
+    \item USGS (2024). NEIC catalog records (Simulated).
+\end{enumerate}
+
+\end{document}

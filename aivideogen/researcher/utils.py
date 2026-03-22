@@ -241,10 +241,10 @@ def fetch_latest_ai_news():
             seen_urls.add(url)
             
             if not NewsItem.objects.filter(url=url).exists():
-                # Translation for non-Spanish sources (Arxiv, etc)
+                # Translation for non-Spanish sources (Arxiv, etc) - ONLY if auto-translate is enabled
                 is_english = any(domain in source.url.lower() for domain in ["arxiv", "openai", "google", "mit.edu"])
                 
-                if is_english:
+                if is_english and source.translate_auto:
                     print(f"DEBUG: Traduciendo noticia: {data['title'][:50]}...")
                     data['title'] = translate_text(data['title'])
                     data['summary'] = translate_text(data['summary'])

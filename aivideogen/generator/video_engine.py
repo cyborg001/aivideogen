@@ -8,9 +8,11 @@ import time
 import re
 import numpy as np
 import logging
+import uuid
 import proglog
 from django.conf import settings
 from .subtitle_utils import compile_full_script_ass
+from scripts.local_lipsync import LipSyncEngine
 
 # v8.5 Notification Support
 if os.name == 'nt':
@@ -44,6 +46,44 @@ def safe_float(val, default=0.0):
     except:
         return default
 
+def safe_eval_math(val, default=0.0):
+    """v15.0: Safe math evaluator for JSON parameters."""
+    if val is None: return default
+    try:
+        s = str(val).strip().lower()
+        if not s or s in ('undefined', 'nan', 'none', 'null'): 
+            return default
+        
+        # Remove any non-math characters
+        clean = re.sub(r'[^0-9+\-*/().]', '', s)
+        if not clean: return default
+        
+        # Evaluate safely
+        return float(eval(clean, {"__builtins__": None}, {}))
+    except:
+        try:
+            return float(val)
+        except:
+            return default
+
+def merge_voice_intervals(intervals, threshold=1.5):
+    """v18.0: Merges voice intervals that are within the threshold distance."""
+    if not intervals: return []
+    try:
+        sorted_intervals = sorted(intervals, key=lambda x: x[0])
+        merged = [sorted_intervals[0]]
+        for current in sorted_intervals[1:]:
+            prev_start, prev_end = merged[-1]
+            curr_start, curr_end = current
+            if curr_start <= prev_end + threshold:
+                merged[-1] = (prev_start, max(prev_end, curr_end))
+            else:
+                merged.append(current)
+        return merged
+    except Exception as e:
+        logger.warning(f"Error merging intervals: {e}")
+        return intervals
+
 # ═══════════════════════════════════════════════════════════════════
 # MONKEY PATCH: Absolute Audio Immunity (v15.9)
 # ═══════════════════════════════════════════════════════════════════
@@ -75,7 +115,7 @@ try:
 except Exception as e:
     logger.warning(f"⚠️ [SYSTEM] Could not apply Audio Immunity: {e}")
 
-def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0):
+def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0, start_time=0.0, end_time=None):
     """
     v15.0: Direct FFmpeg Muxing (Stream Copy)
     Combines video and audio without re-encoding pixels.
@@ -86,23 +126,32 @@ def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0):
     # v15.4: Clean Replacement (No amix)
     # The new audio_path TOTALLY replaces the video's original audio.
     # This prevents tone/speed alterations and keeps the process simple.
-    cmd = [
-        'ffmpeg', '-i', video_path, '-i', audio_path,
-        '-c:v', 'copy', 
-        '-c:a', 'aac', 
-        '-map', '0:v:0', '-map', '1:a:0',
-        '-shortest', '-y', output_path
-    ]
+    # v23.0: Absolute Seek Support (Fast Trim)
+    trim_args = []
+    if start_time > 0:
+        trim_args += ['-ss', str(start_time)]
+    if end_time is not None and end_time > start_time:
+        trim_args += ['-to', str(end_time)]
 
-    # Apply volume to the NEW audio if specified (rare in fast mode but supported)
+    # Use filter_complex for volume, otherwise direct copy
     if video_volume != 1.0 and video_volume > 0:
         cmd = [
-            'ffmpeg', '-i', video_path, '-i', audio_path,
-            '-c:v', 'copy',
+            'ffmpeg', '-y'
+        ] + trim_args + [
+            '-i', video_path, '-i', audio_path,
             '-filter_complex', f'[1:a]volume={video_volume}[a]',
             '-map', '0:v:0', '-map', '[a]',
-            '-c:a', 'aac',
-            '-shortest', '-y', output_path
+            '-c:v', 'copy', '-c:a', 'aac',
+            '-shortest', output_path
+        ]
+    else:
+        cmd = [
+            'ffmpeg', '-y'
+        ] + trim_args + [
+            '-i', video_path, '-i', audio_path,
+            '-map', '0:v:0', '-map', '1:a:0',
+            '-c:v', 'copy', '-c:a', 'aac',
+            '-shortest', output_path
         ]
 
     logger.info(f"🚀 [FastAssembly] Ejecutando Muxing de Reemplazo: {' '.join(cmd)}")
@@ -115,7 +164,7 @@ def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0):
         return False
 # ═══════════════════════════════════════════════════════════════════
 
-def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None):
+def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None, clips_to_close=None, overlay_clip=None):
     """
     Applies optimized Ken Burns effect with robust sizing and movement.
     Supports diagonal movement: "HOR:start:end + VER:start:end"
@@ -143,37 +192,57 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         return ColorClip(size=target_size, color=(0,0,0), duration=duration)
 
     h_orig, w_orig = img_bgr.shape[:2]
-    target_w, target_h = target_size
+    target_w, target_h = target_size # (width, height)
+    
+    # v30.8.1: Debug Coordinate Integrity
+    # logger.info(f"    📏 [Engine] Asset: {w_orig}x{h_orig} | Target: {target_w}x{target_h}")
+
+    def safe_eval_math(val, default=0.0):
+        """v30.6: Safely evaluates simple math expressions (e.g., '8*360')."""
+        if val is None: return default
+        # v31.3: Robust filtering of JS junk and nulls
+        s = str(val).lower().replace(' ', '').replace(',', '.')
+        if not s or s in ('undefined', 'nan', 'none', 'null'): 
+            return default
+            
+        # Only allow numbers and basic operators
+        if not re.match(r'^[\d\.\+\-\*\/\(\)]+$', s):
+            try: return float(s)
+            except: return default
+        try:
+            # Using eval with empty globals/locals for safety
+            return float(eval(s, {"__builtins__": None}, {}))
+        except:
+            return default
 
     # Parse Zoom
     z_start, z_end = 1.0, 1.0
     if zoom:
         if isinstance(zoom, str) and ':' in zoom:
             parts = zoom.split(':')
-            z_start = float(parts[0])
-            z_end = float(parts[1])
+            z_start = safe_eval_math(parts[0], 1.0)
+            z_end = safe_eval_math(parts[1], z_start)
         else:
-            try:
-                z_start = float(zoom)
-                z_end = z_start
-            except: pass
+            z_start = safe_eval_math(zoom, 1.0)
+            z_end = z_start
 
     # Parse Move
     # Supports "HOR:0:100 + VER:50:50" or simple "HOR:0:100"
     move_configs = []
     move_str = move if move else "HOR:50:50"
     
-    # Check for Portrait Auto-Scan hack
-    is_portrait = h_orig / w_orig > 1.2
-    if is_portrait and not move:
-        move_str = "VER:100:0"
+    # v30.6: REMOVED Portrait Auto-Scan hack
+    # This was causing discrepancies with the editor's viewfinder.
+    # If no move is defined, we stick to the provided string (defaults to 50:50).
     
     sub_moves = move_str.split('+')
     for sm in sub_moves:
-        parts = sm.strip().split(':')
+        parts = [p.strip() for p in sm.strip().split(':') if p.strip()]
+        if not parts: continue
         mdir = parts[0].upper()
-        mstart = float(parts[1]) if len(parts) > 1 else 50.0
-        mend = float(parts[2]) if len(parts) > 2 else mstart
+        mstart = safe_eval_math(parts[1] if len(parts) > 1 else "50.0", 50.0)
+        mend = safe_eval_math(parts[2] if len(parts) > 2 else str(mstart), mstart)
+            
         move_configs.append({'dir': mdir, 'start': mstart, 'end': mend})
 
     # ═══════════════════════════════════════════════════════════════════
@@ -256,24 +325,26 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         has_hor = False
         has_ver = False
         
+        # v30.10: Unificado con Frontend (Slack-based Panning)
         for cfg in move_configs:
+            # Porcentaje de paneo (0 a 100, donde 50 es el centro)
             m_prog = cfg['start'] + (cfg['end'] - cfg['start']) * progress
-            # Map 0..100 to -0.5..0.5 (relative to slack)
-            # Actually, let's map directly to pixels relative to center
-            # 50% = 0 offset. 0% = -slack/2. 100% = +slack/2.
-            factor = (m_prog - 50.0) / 100.0 # -0.5 to 0.5
+            
+            # El Frontend mueve el div desde left:0 hasta left: (100 - zoom_width)
+            # En OpenCV, movemos el centro de la cámara.
+            # Rango de movimiento válido del centro = desde (w_orig/2 - slack_w/2) hasta (w_orig/2 + slack_w/2)
+            # Por lo tanto, el offset desde el centro oscila entre -slack_w/2 y +slack_w/2
+            
+            # Mapeo: 0% -> -slack/2 | 50% -> 0 | 100% -> +slack/2
+            factor = (m_prog - 50.0) / 50.0 # Rango de -1.0 a 1.0
             
             if cfg['dir'] == 'HOR':
-                off_x += factor * slack_w
-                has_hor = True
+                off_x = factor * (slack_w / 2.0)
+                # Clamp de seguridad estricto (no se puede ver negro)
+                off_x = max(-slack_w/2.0, min(slack_w/2.0, off_x))
             elif cfg['dir'] == 'VER':
-                # Inverted Y? usually 0 is top.
-                # If we want 0% to be Top, then moving center UP means y decreases.
-                # slack is positive. 
-                # If we are at 0 (Top), center should be at h_orig/2 - slack/2 = min_y + h/2?
-                # Let's stick to: 0 -> Top Edge, 100 -> Bottom Edge.
-                off_y += factor * slack_h 
-                has_ver = True
+                off_y = factor * (slack_h / 2.0)
+                off_y = max(-slack_h/2.0, min(slack_h/2.0, off_y))
 
         # Apply default center-lock if no move defined for axis
         # (Already handled by 50% default in logic above effectively)
@@ -281,7 +352,7 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         # Shake Effect
         if shake:
             freq = 12.0
-            intensity = float(shake_intensity if shake_intensity else 5)
+            intensity = safe_eval_math(shake_intensity, 5.0)
             amp = intensity * 2.0 # Pixels
             off_x += np.sin(t * freq * 2 * np.pi) * amp
             off_y += np.cos(t * freq * 1.5 * np.pi) * amp
@@ -296,11 +367,37 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         
         # Source Points (The crop rectangle in original image)
         # Top-Left, Top-Right, Bottom-Left
-        src_pts = np.float32([
-            [cx - curr_w / 2, cy - curr_h / 2],
-            [cx + curr_w / 2, cy - curr_h / 2],
-            [cx - curr_w / 2, cy + curr_h / 2]
-        ])
+        # v11.8+: ROTATE & W_ROTATE Support
+        angle = 0.0
+        if rotate:
+            r_start, r_end = 0.0, 0.0
+            if isinstance(rotate, str) and ':' in rotate:
+                r_parts = rotate.split(':')
+                r_start = safe_eval_math(r_parts[0], 0.0)
+                r_end = safe_eval_math(r_parts[1], r_start)
+            else:
+                r_start = safe_eval_math(rotate, 0.0)
+                r_end = r_start
+            angle += r_start + (r_end - r_start) * progress
+
+        if w_rotate:
+            angle += safe_eval_math(w_rotate, 0.0) * t
+
+        # v30.9: Rotated Source Points (Matches Editor Viewfinder)
+        pivot = np.array([cx, cy])
+        p1 = np.array([cx - curr_w / 2, cy - curr_h / 2])
+        p2 = np.array([cx + curr_w / 2, cy - curr_h / 2])
+        p3 = np.array([cx - curr_w / 2, cy + curr_h / 2])
+        
+        if angle != 0:
+            rad = np.radians(-angle) # CSS CW -> OpenCV CCW
+            c, s = np.cos(rad), np.sin(rad)
+            R_mat = np.array([[c, -s], [s, c]])
+            p1 = pivot + R_mat @ (p1 - pivot)
+            p2 = pivot + R_mat @ (p2 - pivot)
+            p3 = pivot + R_mat @ (p3 - pivot)
+
+        src_pts = np.array([p1, p2, p3], dtype=np.float32)
         
         # Destination Points (The full target frame)
         dst_pts = np.float32([
@@ -309,31 +406,21 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             [0, target_h]
         ])
         
+        # Compute Final Affine Transform Matrix
+        # v30.9 FIX: By rotating src_pts, M already contains the rotation.
+        M = cv2.getAffineTransform(src_pts, dst_pts)
+
         try:
-            # Compute Affine Transform Matrix
-            M = cv2.getAffineTransform(src_pts, dst_pts)
-            
-            # Apply Warp (Crop + Resize + Subpixel Interpolation)
-            # BORDER_CONSTANT ensures black bars if we are in FIT mode or go out of bounds
+            # Apply Warp (Crop + Resize + Rotation + Subpixel Interpolation)
+            # Sampling directly from img_bgr ensures we don't see black if zoom is sufficient
             resized = cv2.warpAffine(img_bgr, M, (target_w, target_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
         except Exception as e:
             # Fallback (Safety net)
-            print(f"Error in warpAffine: {e}")
+            print(f"Error in warpAffine/rotate: {e}")
             return np.zeros((target_h, target_w, 3), dtype=np.uint8)
 
         # Convert BGR to RGB
-        return cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        
-        # Resize to Target
-        # INTER_LINEAR is fast and good for video. INTER_AREA better for downscaling static.
-        # INTER_CUBIC is slower.
-        # Given we want SPEED: Linear is standard.
-        if crop.size == 0: return np.zeros((target_h, target_w, 3), dtype=np.uint8)
-        
-        resized = cv2.resize(crop, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
-        
-        # 4. Color Convert (BGR -> RGB)
-        # MoviePy expects RGB
         return cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
 
     clip = VideoClip(make_frame, duration=duration)
@@ -352,31 +439,113 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         except: pass
 
     # 3. OVERLAY PROCESSING (Only if needed)
-    if overlay_path and os.path.exists(overlay_path):
-        overlay = VideoFileClip(overlay_path, has_mask=True)
+    if (overlay_path and os.path.exists(overlay_path)) or overlay_clip:
+        if overlay_clip:
+            overlay = overlay_clip
+        else:
+            # v30.5: Support static image overlays (PNG/JPG)
+            is_static = overlay_path.lower().endswith(('.png', '.jpg', '.jpeg'))
+            if is_static:
+                from moviepy import ImageClip
+                overlay = ImageClip(overlay_path).with_duration(duration)
+            else:
+                overlay = VideoFileClip(overlay_path, has_mask=True)
+            
+            if clips_to_close is not None: clips_to_close.append(overlay)
+        
         if overlay.duration < duration:
-            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
-        overlay = overlay.resized(target_size).subclipped(0, duration)
-        overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
+            # v30.6: Add safety padding (+0.1s) to avoid MoviePy frame read warnings at exact duration limits
+            overlay = overlay.with_effects([vfx.Loop(duration=duration + 0.1)])
+        
+        # v15.8: Only resize if needed
+        if overlay.size != target_size:
+            overlay = overlay.resized(target_size)
+            
+        overlay = overlay.subclipped(0, duration)
+        
+        # v30.7: Apply opacity ONLY if it's NOT a UI overlay (PNG/WebP with Alpha)
+        is_ui_overlay = overlay_path and overlay_path.lower().endswith(('.png', '.webp'))
+        if not is_ui_overlay:
+             # Traditional video overlays (dust, flares) default to 0.4 opacity
+             overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+        else:
+             # v31.1: Respect native PNG alpha mask. to_mask() calculates luma!
+             pass
+             
+        overlay = overlay.without_audio()
         return CompositeVideoClip([clip, overlay], size=target_size, bg_color=(0,0,0)).with_duration(duration)
     
     return clip.with_duration(duration)
 
 
-def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, video_volume=0.0):
+def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, end_time=None, video_volume=0.0, overlay_clip=None):
     """
     v14.0: Processes video with group-sync (start_time) and audio mixing (video_volume).
     """
     from moviepy import VideoFileClip, CompositeVideoClip, vfx, afx
     
-    # Load video
-    v_clip = VideoFileClip(video_path)
+    # ═══════════════════════════════════════════════════════════════════
+    # 1. SPECIAL GIF HANDLING (v21.0 - The "Timelapse" Fix)
+    # ═══════════════════════════════════════════════════════════════════
+    if video_path.lower().endswith('.gif'):
+        try:
+            import imageio.v3 as iio
+            from moviepy import ImageSequenceClip
+            
+            logger.info(f"    🎞️ [GIF] Cargando secuencia de cuadros con imageio: {os.path.basename(video_path)}")
+            frames = list(iio.imread(video_path))
+            
+            if len(frames) > 1:
+                # Calculate FPS based on duration or explicit 3s per frame for timelapses
+                # If duration is 30s and 10 frames -> 0.33 fps (3s per frame)
+                # v21.1: Standardize to 0.3333 fps if it looks like a 10-frame timelapse
+                gif_fps = len(frames) / 30.0 if len(frames) == 10 else (len(frames) / 10.0 if len(frames) > 1 else 1.0)
+                
+                # Check for "timelapse" in filename to force 3s per frame
+                if "timelapse" in video_path.lower():
+                    gif_fps = 1 / 3.0 # Exactly 3 seconds per image
+                    logger.info(f"    📊 [GIF] Timelapse detectado. Forzando 1 cuadro cada 3.0s.")
+                
+                v_clip = ImageSequenceClip(frames, fps=gif_fps)
+                logger.info(f"    ✅ [GIF] Secuencia creada: {len(frames)} cuadros | FPS: {gif_fps:.4f} | Dur: {v_clip.duration:.2f}s")
+            else:
+                # Static GIF
+                v_clip = VideoFileClip(video_path)
+        except Exception as ge:
+            logger.info(f"    ⚠️ [GIF Error] Fallo carga avanzada: {ge}. Revirtiendo a VideoFileClip.")
+            v_clip = VideoFileClip(video_path)
+    else:
+        # Standard Video loading
+        v_clip = VideoFileClip(video_path)
+    
     if clips_to_close is not None: clips_to_close.append(v_clip)
     
-    # Handle duration & sync: Loop if needed to cover the requested range
+    # v22.0: Unified Clip Range [start_time, end_time]
+    if end_time is not None:
+        if end_time > start_time:
+            # Clip to specific range first
+            if v_clip.duration > end_time:
+                v_clip = v_clip.subclipped(start_time, end_time)
+            elif v_clip.duration > start_time:
+                v_clip = v_clip.subclipped(start_time)
+            
+            # Reset start_time to 0 since we've already clipped the source
+            # But wait, original engine uses start_time for group-sync later.
+            # Best is to keep v_clip as just [start_time, end_time] and adjust start_time.
+            # Let's see how it's used below.
+            v_clip_orig_duration = v_clip.duration
+            if v_clip.duration < duration:
+                v_clip = v_clip.with_effects([vfx.Loop(duration=duration + 1.0)])
+            
+            # For the engine below, we'll act as if start_time is 0 because we already trimmed.
+            start_time = 0.0
+        else:
+            # Fallback if end_time <= start_time
+            pass
+
+    # Standard loop logic (v14.0)
     required_end = start_time + duration
     if v_clip.duration < required_end:
-        # Loop to ensure we can reach start_time + duration
         v_clip = v_clip.with_effects([vfx.Loop(duration=required_end + 1.0)])
     
     # Trim from start_time
@@ -419,7 +588,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         else:
             logger.info(f"    ⚠️  El clip de video NO tiene pista de audio: {os.path.basename(video_path)}")
 
-        video_volume = float(video_volume or 0.0)
+        video_volume = safe_eval_math(video_volume, 0.0)
         if video_volume > 0 and v_clip.audio:
              # v14.9: Force audio track retention before effects
              v_audio = v_clip.audio
@@ -437,13 +606,38 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
     layers = [v_clip]
     
     # Overlay support
-    if overlay_path and os.path.exists(overlay_path):
-        overlay = VideoFileClip(overlay_path, has_mask=True)
-        if clips_to_close is not None: clips_to_close.append(overlay)
+    if (overlay_path and os.path.exists(overlay_path)) or overlay_clip:
+        if overlay_clip:
+            overlay = overlay_clip
+        else:
+            # v30.5: Support static image overlays (PNG/JPG)
+            is_static = overlay_path.lower().endswith(('.png', '.jpg', '.jpeg'))
+            if is_static:
+                from moviepy import ImageClip
+                overlay = ImageClip(overlay_path).with_duration(duration)
+            else:
+                overlay = VideoFileClip(overlay_path, has_mask=True)
+            
+            if clips_to_close is not None: clips_to_close.append(overlay)
+            
         if overlay.duration < duration:
-            overlay = overlay.with_effects([vfx.Loop(duration=duration)])
-        overlay = overlay.resized(target_size).subclipped(0, duration)
-        overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4).without_audio()
+            # v30.6: Add safety padding (+0.1s) to avoid MoviePy frame read warnings at exact duration limits
+            overlay = overlay.with_effects([vfx.Loop(duration=duration + 0.1)])
+        
+        if overlay.size != target_size:
+            overlay = overlay.resized(target_size)
+            
+        overlay = overlay.subclipped(0, duration)
+        
+        # v30.7: Apply opacity ONLY if it's NOT a UI overlay (PNG/WebP with Alpha)
+        is_ui_overlay = overlay_path and overlay_path.lower().endswith(('.png', '.webp'))
+        if not is_ui_overlay:
+             overlay = overlay.with_mask(overlay.to_mask()).with_opacity(0.4)
+        else:
+             # v31.1: Respect native PNG alpha mask.
+             pass
+             
+        overlay = overlay.without_audio()
         layers.append(overlay)
         
     final_clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
@@ -476,13 +670,33 @@ class CacheProgressBarLogger(proglog.ProgressBarLogger):
             if now - self.last_update > 0.5: # 2Hz refresh
                 self.last_update = now
                 total = self.bars.get(bar, {}).get('total', 1)
-                # Map rendering (the final phase) to 90-100% range
-                p_val = 90 + (value / total * 10) if total > 0 else 90
+                # v19.2: Map rendering to 20-95% range (reflects real time distribution)
+                render_pct = (value / total) if total > 0 else 0
+                p_val = 20 + (render_pct * 75)  # 20% → 95%
                 
                 elapsed = now - self.start_time
                 speed = value / elapsed if elapsed > 0 else 0
+                remaining = (total - value) / speed if speed > 0 else 0
                 
-                status_text = f"Item {value}/{total} ({p_val:.1f}%) | {speed:.2f} its/s"
+                # Formatting (tqdm-like, same as old engine)
+                e_min, e_sec = divmod(int(elapsed), 60)
+                r_min, r_sec = divmod(int(remaining), 60)
+                pct_int = int(render_pct * 100)
+                bar_len = 20
+                filled = int(bar_len * render_pct)
+                bar_str = '█' * filled + '░' * (bar_len - filled)
+                
+                # v9.1: Robust Terminal Output (ASCII Fallback for Win1252)
+                try:
+                    terminal_text = f"\rframe_index: {pct_int:3d}%|{bar_str}| {value}/{total} [{e_min:02d}:{e_sec:02d}<{r_min:02d}:{r_sec:02d}, {speed:.2f}it/s]"
+                    print(terminal_text, end='', flush=True)
+                except UnicodeEncodeError:
+                    ascii_bar = '#' * filled + '-' * (bar_len - filled)
+                    terminal_text = f"\rframe_index: {pct_int:3d}%|{ascii_bar}| {value}/{total} [{e_min:02d}:{e_sec:02d}<{r_min:02d}:{r_sec:02d}, {speed:.2f}it/s]"
+                    print(terminal_text, end='', flush=True)
+                
+                # Cache for UI polling
+                status_text = f"Renderizando {value}/{total} ({p_val:.1f}%) | {speed:.0f} fps | ETA: {r_min}m {r_sec}s"
                 self.cache.set(f"project_{self.project_id}_progress", p_val, timeout=60)
                 self.cache.set(f"project_{self.project_id}_status_text", status_text, timeout=60)
 
@@ -518,8 +732,8 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
     stroke_color = '#000000'
     bg_color = 'black' if is_highlight else None 
     
-    # v27.3: Dynamic Wrap Limit based on orientation
-    wrap_limit = 20 if target_size[0] < target_size[1] else 35
+    # v27.3: Dynamic Wrap Limit based on orientation (Optimized v4.8.3)
+    wrap_limit = 15 if target_size[0] < target_size[1] else 25
 
     def wrap_text(t, max_chars=30): 
         words = t.split()
@@ -717,7 +931,7 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
                 font_size=fontsize,
                 color=base_color,
                 stroke_color=stroke_color,
-                stroke_width=3.0,
+                stroke_width=3.5,
                 font=font,
                 method='caption',
                 size=(standard_width, t_height_dynamic), 
@@ -736,7 +950,7 @@ def generate_video_avgl(project):
     """
     from moviepy import ImageClip, AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip, CompositeVideoClip, vfx
     from .avgl_engine import parse_avgl_json, translate_emotions, wrap_ssml, generate_audio_edge, generate_audio_elevenlabs
-    from .utils import ProjectLogger
+    from .utils import ProjectLogger, translate_text_ai, auto_transcribe_and_translate_asset
     import asyncio
     import numpy as np
     from moviepy import AudioClip, ColorClip, afx, TextClip
@@ -753,6 +967,9 @@ def generate_video_avgl(project):
     # Init Progress
     project.progress = 5
     project.save(update_fields=['progress'])
+    
+    # v15.8: Asset Cache to prevent memory leaks and redundant FFmpeg processes
+    overlay_cache = {}
     
     try:
         audio_files = []
@@ -813,6 +1030,64 @@ def generate_video_avgl(project):
             # v13.5.5: Professional Audio Normalization (Stereo Force & Validation)
             base_audio_name = f"project_{project.id}_scene_{i:03d}"
             audio_path = os.path.join(temp_audio_dir, f"{base_audio_name}.mp3")
+
+            # v5.2 Hook: Auto-Dubbing (Direct Transcription/Translation Pre-check)
+            scene_dubbing = getattr(scene, 'dubbing_mode', None)
+            if not scene_dubbing or scene_dubbing == 'default':
+                scene_dubbing = getattr(project, 'dubbing_mode', 'hq')
+
+            # v22.6: Bidirectional Adaptive Translation (v5.1.1)
+            s_lang = getattr(scene, 'language', None)
+            p_lang = project.language
+            target_lang = s_lang if (s_lang and s_lang.strip()) else p_lang
+            if not target_lang: target_lang = 'es'
+
+            # Pre-resolve asset if needed for auto-dubbing
+            asset_path = None
+            is_video = False
+            valid_assets = [a for a in scene.assets if (getattr(a, 'id', '') or getattr(a, 'type', '')).strip() not in ['', 'video', 'image', 'none', 'null']]
+            if valid_assets:
+                asset = valid_assets[0]
+                raw_path = str(getattr(asset, 'id', '') or getattr(asset, 'type', '') or "").strip()
+                fname = os.path.basename(raw_path) if ('/' in raw_path or '\\' in raw_path) else raw_path
+                for s_dir in [assets_dir, os.path.join(settings.MEDIA_ROOT, 'videos'), os.path.join(settings.MEDIA_ROOT, 'uploads')]:
+                    test_p = os.path.join(s_dir, fname)
+                    if os.path.isfile(test_p): asset_path = test_p; break
+                    for ext in ['.mp4', '.mov', '.avi', '.mkv']:
+                        if os.path.isfile(test_p + ext): asset_path = test_p + ext; break
+                    if asset_path: break
+                is_video = asset_path and asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv'))
+
+            # v5.12: Smart Language Detection
+            # If text is empty OR contains English keywords (and target is Spanish), trigger Auto-Dubbing
+            current_text = str(scene.text).strip()
+            is_english = any(w in current_text.lower() for w in ["the", "this", "thanks", "people", "would", "japan", "united states"]) if current_text else False
+            
+            if (not current_text or (is_english and target_lang == 'es')) and scene_dubbing in ['hq', 'lipsync'] and is_video:
+                logger.log(f"    📢 [Auto-Dubbing] Iniciando recuperación para: {os.path.basename(asset_path)}")
+                s_start = safe_float(getattr(asset, 'start_time', 0.0), 0.0)
+                s_end = safe_float(getattr(asset, 'end_time', 0.0), 0.0)
+                # v5.5: Smart duration discovery for Whisper
+                if s_end > s_start:
+                    s_dur = s_end - s_start
+                else:
+                    s_dur = audio_durations.get(scene, 1.0)
+                
+                # v5.4: Ensure at least 2s for Whisper reliability
+                translated_text, err = auto_transcribe_and_translate_asset(asset_path, target_lang=target_lang, logger=logger, start_time=s_start, duration=max(s_dur, 2.0))
+                if not err and translated_text:
+                    scene.text = translated_text
+                    logger.log(f"       ✅ [ÉXITO TRADUCCIÓN] Texto listo en '{target_lang}':")
+                    logger.log(f"       📝 '{scene.text[:120]}...'")
+                else:
+                    # v5.6: Auto-Dubbing Fix: Force duration to match selected clip if no speech detected
+                    # to prevent the "1 second duration" bug.
+                    scene.duration = s_dur
+                    setattr(scene, 'force_duration', True)
+                    if err:
+                        logger.log(f"       ⚠️ Fallo crítico en Auto-Dubbing: {err}. Manteniendo clip visual de {s_dur:.1f}s.")
+                    else:
+                        logger.log(f"       ❓ Whisper no detectó habla en este segmento. Manteniendo clip visual de {s_dur:.1f}s.")
             
             # Custom Audio Priority
             if scene.audio:
@@ -866,8 +1141,18 @@ def generate_video_avgl(project):
                         audio_durations[scene] = 1.0
                         continue
 
-            if not scene.text:
-                audio_files.append((scene, None)); audio_durations[scene] = 1.0; continue
+            if getattr(scene, 'silent', False) or not str(scene.text).strip():
+                audio_files.append((scene, None))
+                if getattr(scene, 'force_duration', False) and getattr(scene, 'duration', 0.0) > 0:
+                    audio_durations[scene] = float(scene.duration)
+                elif scene.text:
+                    # v28.0: Estimated duration for mute subtitles (approx 2.5 words/sec)
+                    clean_text = re.sub(r'\[.*?\]', '', str(scene.text))
+                    words = len(clean_text.split())
+                    audio_durations[scene] = max(1.5, words / 2.5) + getattr(scene, 'pause', 0.0)
+                else:
+                    audio_durations[scene] = 1.0 + getattr(scene, 'pause', 0.0)
+                continue
                 
             use_ssml = (project.engine == 'eleven')
             curr_text = re.sub(r'\(.*?\)', '', scene.text).strip()
@@ -876,14 +1161,38 @@ def generate_video_avgl(project):
 
             text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
             
+            # REGLA MAESTRA: Traducimos si hay un idioma de escena explícito O si el global no es español
+            should_translate = (s_lang and s_lang.strip()) or (p_lang != 'es' and p_lang)
+            
+            if should_translate and text_with_emotions:
+                 logger.log(f"    🌎 [Traducción] Enviando a Gemini para idioma: {target_lang}")
+                 translated, err = translate_text_ai(text_with_emotions, target_lang)
+                 if not err:
+                     logger.log(f"       ✅ Traducción exitosa: {translated[:50]}...")
+                     text_with_emotions = translated
+                 else:
+                     logger.log(f"       ⚠️ Error en traducción: {err}")
+            
             success = False
             if project.engine == 'edge':
                 env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
                 speed_rate = f"+{int((scene.speed - 1.0) * 100)}%" if scene.speed != 1.0 else env_rate
+                
+                # v22.5: Smart Voice Switch (Edge TTS ONLY)
+                # If target is English but voice is Spanish, switch to a native English voice
+                eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
+                if target_lang == 'en' and eff_voice.startswith('es-'):
+                    eff_voice = "en-US-GuyNeural"
+                    logger.log(f"    🎙️ [VoiceSwitch] Cambiando a voz nativa en-US para coherencia lingüística.")
+                elif target_lang == 'es' and eff_voice.startswith('en-'):
+                    eff_voice = "es-MX-JorgeNeural"
+                    logger.log(f"    🎙️ [VoiceSwitch] Cambiando a voz nativa es-MX para coherencia lingüística.")
+
                 loop = asyncio.new_event_loop(); asyncio.set_event_loop(loop)
-                success = loop.run_until_complete(generate_audio_edge(text_with_emotions, audio_path, scene.voice, speed_rate, pitch=scene.pitch or "+0Hz", scene=scene))
+                success = loop.run_until_complete(generate_audio_edge(text_with_emotions, audio_path, eff_voice, speed_rate, pitch=scene.pitch or "+0Hz", scene=scene))
                 loop.close()
             else:
+                # ElevenLabs (usually multilingual v2 handled by API)
                 api_key = os.getenv('ELEVENLABS_API_KEY')
                 voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL')
                 success = asyncio.run(generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key))
@@ -912,6 +1221,7 @@ def generate_video_avgl(project):
         # 3. Main Clip Generation Loop
         logger.log("[Video] Procesando escenas...")
         block_metadata = []
+        global_voice_intervals = [] # v18.0: Centralized absolute intervals
         current_time = 0.0
         timestamps_list = []
         
@@ -929,6 +1239,15 @@ def generate_video_avgl(project):
         cache.set("active_rendering_project_id", project.id, timeout=3600)
 
         for b_idx, block in enumerate(script.blocks):
+            # v20.8: Emergency Stop - Check if project was cancelled between blocks
+            project.refresh_from_db()
+            if project.status == 'cancelled':
+                logger.log(f"🛑 [Engine] Renderizado cancelado por el Arquitecto (Bloque {b_idx+1}). Abortando.")
+                for c in clips_to_close: 
+                    try: c.close()
+                    except: pass
+                return
+
             # Legacy Block-based progress removed in favor of granular scene progress
             # kept only for debug log
             logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
@@ -937,6 +1256,15 @@ def generate_video_avgl(project):
             block_cursor = 0.0
             
             for s_idx, scene in enumerate(block.scenes):
+                # v20.8: Emergency Stop - Check if project was cancelled between scenes
+                project.refresh_from_db()
+                if project.status == 'cancelled':
+                    logger.log(f"🛑 [Engine] Renderizado cancelado por el Arquitecto (Escena {global_scene_cnt+1}). Abortando.")
+                    for c in clips_to_close: 
+                        try: c.close()
+                        except: pass
+                    return
+
                 # Granular Progress Update
                 global_scene_cnt += 1
                 
@@ -961,9 +1289,12 @@ def generate_video_avgl(project):
                 voice_duration = 0.0
                 if scene in scene_audio_map and scene_audio_map[scene]:
                     audio_path = scene_audio_map[scene]
-                    audio_clip = AudioFileClip(audio_path)
-                    clips_to_close.append(audio_clip)
-                    voice_duration = audio_clip.duration
+                    if os.path.exists(audio_path):
+                        audio_clip = AudioFileClip(audio_path)
+                        clips_to_close.append(audio_clip)
+                        voice_duration = audio_clip.duration
+                    else:
+                        logger.log(f"  ❌ Archivo de audio perdido o no generado: {os.path.basename(audio_path)}. Forzando silencio.")
                 
                 # Fallback for missing audio (ensures sync)
                 if not audio_clip:
@@ -972,11 +1303,29 @@ def generate_video_avgl(project):
                     audio_clip = None 
                 
                 # v14.3: Duration is voice + pause. If no voice, it's just pause.
-                voice_duration = audio_clip.duration if audio_clip else 0.0
+                # v20.5: Force skip audio if it's a 60s Outro block
+                if "[60_SEGUNDOS_OUTRO]" in str(scene.text).upper() or "[OUTRO]" in str(scene.text).upper():
+                    audio_clip = None
+                    voice_duration = 0.0
+                    logger.log(f"  🔇 [OUTRO] Silenciando narración para bloque de cierre.")
+                else:
+                    voice_duration = audio_clip.duration if audio_clip else 0.0
                 
                 try: s_pause = float(scene.pause or 0.0)
                 except: s_pause = 0.0
-                duration = voice_duration + s_pause
+                
+                # v20.4: Professional Duration Override
+                is_outro_60 = "[60_SEGUNDOS_OUTRO]" in str(scene.text).upper() or "[OUTRO]" in str(scene.text).upper()
+                
+                if is_outro_60:
+                    duration = 60.0
+                    voice_duration = 0.0 # Force music-only feel
+                    logger.log(f"  🎬 [OUTRO] Etiqueta de cierre detectada. Forzando 60.0s de montage visual.")
+                elif getattr(scene, 'force_duration', False) and getattr(scene, 'duration', 0.0) > 0:
+                    duration = float(scene.duration)
+                    logger.log(f"  ⏱️ [OVERRIDE] Duración forzada por el Arquitecto: {duration:.2f}s")
+                else:
+                    duration = voice_duration + s_pause
                 
                 if duration <= 0:
                     duration = 1.0 # Minimal failsafe
@@ -1029,11 +1378,26 @@ def generate_video_avgl(project):
                                 found_path = test_path
                                 break
                             # Try extensions
-                            for ext in ['.png', '.jpg', '.jpeg', '.mp4']:
+                            for ext in ['.png', '.jpg', '.jpeg', '.mp4', '.gif']:
                                 if os.path.isfile(test_path + ext):
                                     found_path = test_path + ext
                                     break
                             if found_path: break
+                        
+                        # 3. Recursive Deep Search (v20.7)
+                        if not found_path:
+                            logger.log(f"    🔍 Escaneo profundo exigido: Buscando '{fname}' en subcarpetas...")
+                            for root, dirs, files in os.walk(assets_dir):
+                                if fname in files:
+                                    found_path = os.path.join(root, fname)
+                                    break
+                                # Case insensitive / extension check
+                                for f in files:
+                                    name_no_ext, _ = os.path.splitext(f)
+                                    if f.lower() == fname.lower() or name_no_ext.lower() == fname.lower():
+                                        found_path = os.path.join(root, f)
+                                        break
+                                if found_path: break
                         
                         asset_path = found_path if found_path else os.path.join(assets_dir, fname)
                     
@@ -1080,7 +1444,8 @@ def generate_video_avgl(project):
                     
                     if not clip and os.path.isfile(asset_path):
                         # Determine Asset Type (Image vs Video)
-                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm'))
+                        is_video = asset_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm', '.gif'))
+                        is_image = asset_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
                         
                         # ═══════════════════════════════════════════════════════════════════
                         # MASTER SHOT / GROUP INTERPOLATION & V5.0 EFFECTS
@@ -1131,7 +1496,13 @@ def generate_video_avgl(project):
                                 try:
                                     # Calculate group timing
                                     group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
-                                    total_group_duration = sum([audio_durations.get(s, 1.0) + s.pause for s in group_scenes])
+                                    # v20.4: Respect Force Duration in Group Calculations
+                                    total_group_duration = 0.0
+                                    for s in group_scenes:
+                                        s_dur = audio_durations.get(s, 1.0) + s.pause
+                                        if getattr(s, 'force_duration', False) and getattr(s, 'duration', 0.0) > 0:
+                                            s_dur = float(s.duration)
+                                        total_group_duration += s_dur
                                     
                                     # Find start time of CURRENT scene relative to group start
                                     start_in_group = 0.0
@@ -1172,11 +1543,75 @@ def generate_video_avgl(project):
 
                         logger.log(f"  🎬 Item {s_idx+1}: {os.path.basename(asset_path)} | Zoom: {eff_zoom} | Move: {eff_move}")
                         
-                        # Overlay
+                        # v15.8: Overlay Cache Logic (Prevents RAM exhaustion)
+                        current_overlay_clip = None
+
+                        # v9.0: Lip-Sync Hook (Arquitecto's Request)
+                        # v5.1 Update: Per-Scene Dubbing Mode support
+                        scene_dubbing = getattr(scene, 'dubbing_mode', None)
+                        if not scene_dubbing or scene_dubbing == 'default':
+                            scene_dubbing = getattr(project, 'dubbing_mode', 'hq')
+                        
+                        logger.log(f"    🔍 [Modo Doblaje] Escena {s_idx+1}: {scene_dubbing}")
+
+                        if scene_dubbing == 'lipsync' and (is_video or is_image) and audio_clip:
+                            logger.log(f"    👄 [Lip-Sync] Iniciando sincronización facial local (Modo: {'Video' if is_video else 'Talking Head'})...")
+                            try:
+                                ls_output = os.path.join(settings.MEDIA_ROOT, 'outputs', f"ls_{project.id}_{s_idx}.mp4")
+                                # v2.2: Absolute Paths for Models
+                                model_path = os.path.join(settings.BASE_DIR, "models", "lipsync", "wav2lip_gan.onnx")
+                                detector_path = os.path.join(settings.BASE_DIR, "models", "lipsync", "face_detector.onnx")
+                                
+                                ls_engine = LipSyncEngine(model_path, detector_path)
+                                ls_start_time = safe_float(getattr(asset, 'start_time', 0.0), 0.0)
+                                ls_engine.process_video(asset_path, audio_path, ls_output, start_time=ls_start_time, duration=duration)
+                                
+                                if os.path.exists(ls_output):
+                                    asset_path = ls_output
+                                    is_video = True
+                                    logger.log(f"    ✅ [Lip-Sync] Éxito. Usando video sincronizado.")
+                                    # v5.8: Force volume to 1.0 so the "baked" translation is audible
+                                    setattr(asset, 'video_volume', 1.0)
+                            except Exception as lse:
+                                logger.log(f"    ⚠️ [Lip-Sync] Fallo: {lse}. Continuando con asset original.")
+
+                        # ═══════════════════════════════════════════════════════════════════
+                        
+                        # ═══════════════════════════════════════════════════════════════════
                         overlay_path = None
                         if asset.overlay:
-                            overlay_path = os.path.join(overlay_dir, f"{asset.overlay}.mp4")
-                            if not os.path.exists(overlay_path): overlay_path = None
+                            # v31.0: Multi-Format Overlay Resolution (Video & Images)
+                            raw_overlay = asset.overlay
+                            overlay_path = None
+                            
+                            # Check popular extensions
+                            for ext in ['', '.mp4', '.png', '.jpg', '.jpeg', '.webp', '.mov']:
+                                test_path = os.path.join(overlay_dir, f"{raw_overlay}{ext}")
+                                if os.path.exists(test_path) and os.path.isfile(test_path):
+                                    overlay_path = test_path
+                                    break
+                            
+                            if overlay_path:
+                                if overlay_path not in overlay_cache:
+                                    try:
+                                        logger.log(f"    📦 Cargando overlay: {os.path.basename(overlay_path)}")
+                                        # Use ImageClip for static, VideoFileClip for dynamic
+                                        if overlay_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                                            from moviepy import ImageClip
+                                            oc = ImageClip(overlay_path).with_duration(duration)
+                                        else:
+                                            oc = VideoFileClip(overlay_path, has_mask=True)
+                                        
+                                        overlay_cache[overlay_path] = oc
+                                        clips_to_close.append(oc)
+                                    except Exception as oe:
+                                        logger.log(f"    ⚠️ Error cargando overlay: {oe}")
+                                        overlay_path = None
+                                
+                                current_overlay_clip = overlay_cache.get(overlay_path)
+                            else:
+                                logger.log(f"    ❌ Overlay NO encontrado: {raw_overlay}")
+                                overlay_path = None
                         
                         # v14.0 Sync Logic: Identify timing for groups
                         sync_start_time = 0.0
@@ -1187,12 +1622,20 @@ def generate_video_avgl(project):
                             for s in group_scenes:
                                 if s == scene: break
                                 s_dur = audio_durations.get(s, 1.0) + s.pause
+                                if getattr(s, 'force_duration', False) and getattr(s, 'duration', 0.0) > 0:
+                                    s_dur = float(s.duration)
                                 sync_start_time += s_dur
 
                         if is_video:
                             # v14.9: Smart Default - If not specified, we assume user wants sound (Cinema Mode)
-                            raw_v_vol = getattr(asset, 'video_volume', None)
-                            v_vol = float(raw_v_vol) if raw_v_vol is not None else 1.0
+                            v_vol = float(getattr(asset, 'video_volume', 0.0)) if getattr(asset, 'video_volume', None) is not None else 0.0
+                            
+                            # v5.7: Intelligent Audio Fallback for Dubbing failures
+                            # If no translated voice is available, MUST NOT silence the scene.
+                            if scene_dubbing in ['lipsync', 'hq'] and not audio_clip:
+                                if v_vol < 0.1: # Auto-mute protection
+                                    v_vol = 1.0
+                                    logger.log(f"    🔊 [AudioFallback] Doblaje ausente. Recuperando audio original (Vol: {v_vol})")
                             
                             # v15.2: Explicit Cinema mode (Auto-Persistence)
                             is_cinema = getattr(asset, 'cinema_mode', False)
@@ -1238,7 +1681,12 @@ def generate_video_avgl(project):
                                     
                                     # 2. Mux
                                     temp_scene_video = os.path.join(temp_audio_dir, f"fast_scene_{s_idx}.mp4")
-                                    success = fast_mux_audio_video(asset_path, temp_scene_audio, temp_scene_video, video_volume=v_vol if audio_clip else 0.0)
+                                    success = fast_mux_audio_video(
+                                        asset_path, temp_scene_audio, temp_scene_video, 
+                                        video_volume=v_vol if audio_clip else 0.0,
+                                        start_time=safe_float(getattr(asset, 'start_time', 0.0), 0.0),
+                                        end_time=getattr(asset, 'end_time', None)
+                                    )
                                     
                                     if success:
                                         from moviepy import VideoFileClip
@@ -1257,9 +1705,11 @@ def generate_video_avgl(project):
                                 clip = process_video_asset(
                                     asset_path, duration, target_size,
                                     overlay_path=overlay_path,
+                                    overlay_clip=current_overlay_clip,
                                     fit=asset.fit,
                                     clips_to_close=clips_to_close,
-                                    start_time=sync_start_time,
+                                    start_time=sync_start_time + safe_float(getattr(asset, 'start_time', 0.0), 0.0),
+                                    end_time=getattr(asset, 'end_time', None),
                                     video_volume=v_vol
                                 )
                         else:
@@ -1268,12 +1718,14 @@ def generate_video_avgl(project):
                                 asset_path, duration, target_size,
                                 zoom=eff_zoom,
                                 move=eff_move,
-                                overlay_path=overlay_path, 
+                                overlay_path=overlay_path,
+                                overlay_clip=current_overlay_clip, 
                                 fit=asset.fit,
                                 shake=eff_shake,
                                 shake_intensity=eff_shake_intensity,
                                 rotate=eff_rotate,
-                                w_rotate=getattr(asset, 'w_rotate', None)
+                                w_rotate=getattr(asset, 'w_rotate', None),
+                                clips_to_close=clips_to_close
                             )
                 else:
                     # v8.6: FAST AUDIO TEST MODE
@@ -1309,16 +1761,30 @@ def generate_video_avgl(project):
                                     clean_text = re.sub(r'\[.*?\]', '', scene.text)
                                     words = clean_text.split()
                                     if words:
-                                        delay = (audio_clip.duration / len(words)) * sfx_item.offset
-                                
-                                scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, duration - delay)))
-                                logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {vol_safe}, offset: {sfx_item.offset} words -> {delay:.2f}s)")
+                                        # AVGL v4 Logic: Distribute total duration across words
+                                        word_dur = audio_clip.duration / len(words)
+                                        delay = min(audio_clip.duration, word_dur * sfx_offset)
+                                # FIX: Prevent negative or zero duration crashes
+                                valid_duration = duration - delay
+                                if valid_duration > 0:
+                                    scene_sfx_clips.append(s_clip.with_start(delay).with_duration(min(s_clip.duration, valid_duration)))
+                                    logger.log(f"    🔊 SFX: {os.path.basename(sfx_path)} (vol: {vol_safe}, offset: {sfx_item.offset} words -> {delay:.2f}s, dur: {valid_duration:.2f}s)")
+                                else:
+                                    logger.log(f"    ⚠️ SFX {sfx_item.type} ignorado: el offset supera la duración de la escena.")
                             except Exception as e:
                                 logger.log(f"    ⚠️ Error SFX {sfx_item.type}: {e}")
 
                 # Mix Scene Audio (Voice + SFX)
-                if scene_sfx_clips:
-                    final_scene_audio = CompositeAudioClip([audio_clip] + scene_sfx_clips)
+                pure_voice_duration = audio_clip.duration if audio_clip else 0.0
+                
+                # Filter out any None or 0 duration clips before CompositeAudioClip
+                valid_sfx = [c for c in scene_sfx_clips if getattr(c, 'duration', 0) > 0]
+                
+                if valid_sfx:
+                    if audio_clip:
+                        final_scene_audio = CompositeAudioClip([audio_clip] + valid_sfx)
+                    else:
+                        final_scene_audio = CompositeAudioClip(valid_sfx)
                     audio_clip = final_scene_audio
 
                 # SUBTITLE RENDERING (Modular v16.0)
@@ -1343,7 +1809,12 @@ def generate_video_avgl(project):
                             s_w_count = sub_data.get('word_count', 4)
                             phonetic_count = sub_data.get('phonetic_count', s_w_count)  # v17.0: Phonetic mapping
                             is_highlight = sub_data.get('is_highlight', False)           # v17.0: Highlight mode
-                            y_pos = sub_data.get('y_position', 0.70)                     # v17.0: Vertical position (v17.2.10: Moved up to 0.70)
+                            global_y_pos = getattr(project, 'subtitles_y_position', 0.70)
+                            raw_y_pos = sub_data.get('y_position', global_y_pos)
+                            try:
+                                y_pos = float(raw_y_pos)
+                            except (TypeError, ValueError):
+                                y_pos = 0.70
                             is_dynamic = sub_data.get('is_dynamic', False)
                             is_movie_mode = sub_data.get('movie_mode', False)
                             
@@ -1471,54 +1942,18 @@ def generate_video_avgl(project):
                             }
                             all_srt_items.append(metadata)
                             
-                            # v17.2.9: TEMPORARY - Disable yellow karaoke highlights for MoviePy (we only use FFmpeg now)
-                            # We keep the DYN timing but render as static white subtitles for visual cleanup
-                            d_txt_clip = render_pro_subtitles(
-                                s_text, s_dur, target_size, 
-                                full_highlight=is_movie_mode,
-                                is_dynamic=False,  # Forced to False to remove yellow highlights
-                                word_timings=relevant_timings,
-                                y_position=y_pos,
-                                is_highlight=is_highlight
-                            )
-                            
-                            if d_txt_clip:
-                                d_txt_clip = d_txt_clip.with_start(s_start)
-                                
-                                # v26.0: Metadata already added to all_srt_items above
-                                pass
-                                
-                                # v17.3.3: Prevención de Solapamiento (Clipping)
-                                # Si hay un subtítulo siguiente en la misma posición vertical, 
-                                # recortamos este clip para que termine justo cuando empieza el otro.
-                                try:
-                                    if idx + 1 < len(scene.subtitles):
-                                        next_sub = scene.subtitles[idx + 1]
-                                        # Solo si están en la misma línea (evita interferir entre SUB y PHO:h)
-                                        if next_sub.get('y_position', 0.70) == y_pos:
-                                            # Calculamos el inicio del siguiente para recortar
-                                            # (asumimos la misma lógica de timing del bucle)
-                                            if is_dynamic and hasattr(scene, 'word_timings') and scene.word_timings:
-                                                next_offset = next_sub.get('offset', 0)
-                                                if next_offset < len(scene.word_timings):
-                                                    next_start = scene.word_timings[next_offset]['start']
-                                                    if next_sub.get('is_highlight', False):
-                                                        next_start = max(0, next_start - 0.20)
-                                                    
-                                                    # Recortar duración si hay solapamiento
-                                                    if s_start + s_dur > next_start:
-                                                        s_dur = max(0.1, next_start - s_start)
-                                                        d_txt_clip = d_txt_clip.with_duration(s_dur)
-                                                        logger.log(f"      [Clip] Solapamiento detectado. Recortando chunk {idx} a {s_dur:.2f}s")
-                                except: pass
-
-                                sub_clips_dynamic.append(d_txt_clip)
-                        
-                        if sub_clips_dynamic:
-                            # v26.0: Bypass MoviePy text rendering for stability/speed (handled by FFmpeg injection)
-                            # clip = CompositeVideoClip([clip] + sub_clips_dynamic)
+                            # v26.12: PERFORMANCE BOOST
+                            # The entire ImageMagick text rendering block (render_pro_subtitles) 
+                            # and clipping logics have been completely removed. 
+                            # The CPU no longer draws subtitle images frame-by-frame. 
+                            # All the necessary metadata (`all_srt_items`) is already collected above 
+                            # and will be perfectly burned into the video by the final FFmpeg ASS Injector.
+                            # Previous code was doing heavy ImageMagick math just to discard the result.
                             pass
-                            logger.log(f"    [OK] Desplegados {len(sub_clips_dynamic)} subtitulos PRO v16.5.")
+                            
+                        # Log that subtitles were processed for final injection
+                        if scene.subtitles:
+                            logger.log(f"    [OK] Metadatos de {len(scene.subtitles)} subtítulos encolados para inyección ASS.")
                 except Exception as e:
                     import traceback
                     logger.log(f"    [WARNING] Error renderizando subtitulos PRO: {e}\n{traceback.format_exc()}")
@@ -1548,10 +1983,20 @@ def generate_video_avgl(project):
                 # Ducking Intervals
                 # v14.3 Smart Ducking: Only registr intervals if there is real text/voice
                 if audio_clip:
+                    scene_intervals = []
                     if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
-                        for vs, ve in scene.voice_intervals: block_voice_intervals.append((block_cursor + vs, block_cursor + ve))
+                        for vs, ve in scene.voice_intervals: 
+                            scene_intervals.append((block_cursor + vs, block_cursor + ve))
                     else: 
-                        block_voice_intervals.append((block_cursor, block_cursor + voice_duration))
+                        # Usar pure_voice_duration para ducking real (excluyendo la cola de SFX)
+                        v_dur = pure_voice_duration if 'pure_voice_duration' in locals() else voice_duration
+                        scene_intervals.append((block_cursor, block_cursor + v_dur))
+                    
+                    # Store in block local
+                    block_voice_intervals.extend(scene_intervals)
+                    # Store in global absolute
+                    for s_start_rel, s_end_rel in scene_intervals:
+                        global_voice_intervals.append((video_base_cursor + s_start_rel, video_base_cursor + s_end_rel))
                 
                 current_time += duration; block_cursor += duration
 
@@ -1559,8 +2004,11 @@ def generate_video_avgl(project):
                 block_video = concatenate_videoclips(block_scene_clips, method="chain")
                 
                 # Apply Block Music (Local Ducking)
+                # v4.8.4: Explicit var initialization to prevent NameError on blocks without music
                 music_to_use = block.music
                 has_local_music = False
+                bg_audio = None
+                peak_vol = 0.0
                 
                 if music_to_use:
                     try:
@@ -1588,77 +2036,119 @@ def generate_video_avgl(project):
                                  clips_to_close.append(bg_audio)
 
                         if has_local_music:
-                            loops = int(block_video.duration / bg_audio.duration) + 1
-                            bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(block_video.duration)
-                            
+                            # v4.8: Local Volume Calculation (Unified)
                             try:
-                                peak_vol = float(block.volume) if block.volume is not None else float(script.music_volume)
+                                peak_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
                             except:
-                                peak_vol = 0.2
-                            
-                            if peak_vol <= 0: peak_vol = 0.2
-                            
-                            duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
-                            at = float(settings.AUDIO_ATTACK_TIME)
-                            rt = float(settings.AUDIO_RELEASE_TIME)
+                                peak_vol = 0.18
 
-                            def volume_ducking_local(t):
-                                # v9.3 Robust Local Ducking
-                                if isinstance(t, np.ndarray):
-                                    factors = np.ones_like(t, dtype=float)
-                                    for start, end in block_voice_intervals:
-                                        # Ducking
-                                        factors[(t >= (start - at)) & (t <= (end + rt))] = duck_ratio
-                                        # Fades
-                                        m_out = (t >= (start - at)) & (t < start)
-                                        if np.any(m_out):
-                                            p = (t[m_out] - (start - at)) / at
-                                            factors[m_out] = 1.0 - (p * (1.0 - duck_ratio))
-                                        m_in = (t > end) & (t <= (end + rt))
-                                        if np.any(m_in):
-                                            p = (t[m_in] - end) / rt
-                                            factors[m_in] = duck_ratio + (p * (1.0 - duck_ratio))
-                                    return (float(peak_vol) * factors)[:, None]
-                                else:
-                                    factor = 1.0
-                                    for start, end in block_voice_intervals:
-                                        if start <= t <= end: factor = duck_ratio; break
-                                        elif (start - at) <= t < start:
-                                            p = (t - (start - at)) / at
-                                            factor = 1.0 - (p * (1.0 - duck_ratio))
-                                        elif end < t <= (end + rt):
-                                            p = (t - end) / rt
-                                            factor = duck_ratio + (p * (1.0 - duck_ratio))
-                                    return float(peak_vol * factor)
-
-                            bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_local(t))
-                            
-                            # Safe Block Composition (v15.7 Fix)
-                            b_sources = []
-                            if block_video.audio: b_sources.append(block_video.audio)
-                            if bg_audio_final: b_sources.append(bg_audio_final)
-                            
-                            if b_sources:
-                                final_audio = CompositeAudioClip(b_sources)
-                                block_video = block_video.with_audio(final_audio)
                     except Exception as e:
                         logger.log(f"  ⚠️ Error música bloque: {e}")
 
-                # Store metadata for Global Music Pass
-                # v8.7: Music Volume Lock Logic
-                if script.music_volume_lock and not has_local_music:
-                    # If locked and no local music, force project/script global volume
-                    bs_vol = script.music_volume if script.music_volume is not None else (project.music_volume if project.music_volume is not None else 0.18)
-                else:
-                    bs_vol = block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18)
+                # ═══════════════════════════════════════════════════════════════
+                # v19.0: INLINE BLOCK DUCKING (Simple & Self-Contained)
+                # Apply ducking IMMEDIATELY during block construction.
+                # Uses block_voice_intervals (relative to block start) directly.
+                # No closures, no global offsets, no cross-block interference.
+                # ═══════════════════════════════════════════════════════════════
+                if has_local_music and bg_audio:
+                    try:
+                        # v20.2: Project-specific Audio Master Console Integration
+                        _duck_ratio = safe_float(project.audio_ducking_ratio, getattr(settings, 'AUDIO_DUCKING_RATIO', 0.17))
+                        _attack = safe_float(project.audio_attack_time, getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
+                        _release = safe_float(project.audio_release_time, getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
+                        _merge_th = safe_float(project.audio_merge_threshold, getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
+                        _block_fade = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                        _early_finish = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                        
+                        # Merge block intervals (relative to block start)
+                        local_merged = merge_voice_intervals(block_voice_intervals, threshold=_merge_th)
+                        
+                        # Loop music to block duration
+                        loops_needed = int(block_video.duration / bg_audio.duration) + 1
+                        bg_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops_needed)]).with_duration(block_video.duration)
+                        
+                        logger.log(f"  [Audio] Ducking Inline Bloque {b_idx+1}: {len(local_merged)} intervalos, vol={peak_vol}, ratio={_duck_ratio}")
+                        
+                        # Simple ducking function (block-local, no external references)
+                        def make_block_ducking(intervals, vol, dr, att, rel, block_dur):
+                            """Factory function to avoid closure issues."""
+                            def apply_ducking(get_frame, t):
+                                audio = get_frame(t)
+                                if isinstance(t, np.ndarray):
+                                    factors = np.full(t.shape, float(vol))
+                                    for vs, ve in intervals:
+                                        # Attack
+                                        m = (t >= (vs - att)) & (t < vs)
+                                        if np.any(m):
+                                            p = (t[m] - (vs - att)) / att
+                                            factors[m] = np.minimum(factors[m], vol * (1.0 - p * (1.0 - dr)))
+                                        # Ducked
+                                        factors[(t >= vs) & (t <= ve)] = vol * dr
+                                        # Release
+                                        m = (t > ve) & (t <= (ve + rel))
+                                        if np.any(m):
+                                            p = (t[m] - ve) / rel
+                                            factors[m] = np.minimum(factors[m], vol * (dr + p * (1.0 - dr)))
+                                    
+                                    # Block fade-in and fade-out based on settings
+                                    if _block_fade > 0:
+                                        factors[t < _block_fade] *= (t[t < _block_fade] / _block_fade)
+                                        m_out = t > (block_dur - _early_finish - _block_fade)
+                                        if np.any(m_out):
+                                            # Smooth transition to 0 at the very end
+                                            p_out = (block_dur - _early_finish - t[m_out]) / _block_fade
+                                            factors[m_out] *= np.maximum(0, np.minimum(1, p_out))
+                                        
+                                        # Force silence during early finish
+                                        factors[t > (block_dur - _early_finish)] = 0.0
+                                    
+                                    return audio * factors[:, None]
+                                else:
+                                    factor = float(vol)
+                                    for vs, ve in intervals:
+                                        if vs <= t <= ve:
+                                            factor = vol * dr; break
+                                        elif (vs - att) <= t < vs:
+                                            p = (t - (vs - att)) / att
+                                            factor = min(factor, vol * (1.0 - p * (1.0 - dr)))
+                                        elif ve < t <= (ve + rel):
+                                            p = (t - ve) / rel
+                                            factor = min(factor, vol * (dr + p * (1.0 - dr)))
+                                    # Scalar fade-in/fade-out
+                                    if _block_fade > 0:
+                                        if t < _block_fade: factor *= (t / _block_fade)
+                                        if t > (block_dur - _early_finish - _block_fade):
+                                            p_out = (block_dur - _early_finish - t) / _block_fade
+                                            factor *= max(0, min(1, p_out))
+                                        if t > (block_dur - _early_finish):
+                                            factor = 0.0
+                                    return audio * factor
+                            return apply_ducking
+                        
+                        ducking_fn = make_block_ducking(local_merged, peak_vol, _duck_ratio, _attack, _release, block_video.duration)
+                        bg_ducked = bg_looped.transform(ducking_fn)
+                        
+                        # v19.2: Direct mix (same approach as original engine - fast)
+                        block_video = block_video.with_audio(CompositeAudioClip([block_video.audio, bg_ducked]))
+                        
+                        logger.log(f"  [Audio] ✅ Ducking Inline Aplicado: Bloque {b_idx+1}")
+                    except Exception as e:
+                        logger.log(f"  ⚠️ Error ducking inline bloque {b_idx+1}: {e}")
+
+                # v4.8: Universal metadata storage for ALL blocks (Ensures 1:1 sync)
                 block_metadata.append({
                     'duration': block_video.duration,
-                    'voice_intervals': block_voice_intervals, # Current Relative
+                    'voice_intervals': block_voice_intervals,
                     'has_local_music': has_local_music,
-                    'volume': bs_vol
+                    'local_bg_audio': None,  # v19.0: No longer needed in global phase
+                    'peak_vol': peak_vol,
+                    'volume': block.volume if block.volume is not None else (script.music_volume if script.music_volume is not None else 0.18),
+                    'block_video': block_video
                 })
+                
+                # IMPORTANT: We always append to block_clips to maintain ordering
                 block_clips.append(block_video)
-                # v26.0: Advance global cursor for next block
                 video_base_cursor += block_video.duration
 
         if not block_clips: raise Exception("No block clips generated")
@@ -1722,10 +2212,15 @@ def generate_video_avgl(project):
                     logger.log(f"⚠️ No se pudo encontrar el archivo de música: {global_music_name}")
                     bg_audio = None
                 
-                if bg_audio:
+            # ═══════════════════════════════════════════════════════════════════
+            # 3. Dynamic Ducking Master v18.5 (UNIFIED)
+            # ═══════════════════════════════════════════════════════════════════
+            if True: # Always process volume mapping
                     # 2. Loop to full duration
-                    loops = int(final_video.duration / bg_audio.duration) + 1
-                    bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
+                    bg_audio_looped = None
+                    if bg_audio:
+                        loops = int(final_video.duration / bg_audio.duration) + 1
+                        bg_audio_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops)]).with_duration(final_video.duration)
                     
                     # 3. Global Volume Defaults
                     try:
@@ -1735,8 +2230,8 @@ def generate_video_avgl(project):
                     
                     if default_vol <= 0: default_vol = 0.20
                     
-                    # 4. Build Global Intervals & Volume Map
-                    global_voice_intervals = []
+                    # 4. Build Global Intervals & Volume Map (v18.2: intervals are preserved from main loop)
+                    # global_voice_intervals = [] # REMOVED: Preventing accidental wipe
                     mute_intervals = []
                     block_time_ranges = []
                     
@@ -1746,75 +2241,150 @@ def generate_video_avgl(project):
                         b_end = current_offset + b_dur
                         b_vol = b_meta.get('volume', default_vol)
                         block_time_ranges.append((current_offset, b_end, b_vol))
-                        for v_start, v_end in b_meta['voice_intervals']:
-                            global_voice_intervals.append((v_start + current_offset, v_end + current_offset))
                         if b_meta['has_local_music']:
                             mute_intervals.append((current_offset, b_end))
                         current_offset += b_dur
+                    
+                    # v18.0: global_voice_intervals is already populated with absolute times! 
+                    # No need to rebuild it from block_metadata here.
 
-                    # 5. Dynamic Ducking (v5.8)
-                    peak_vol = default_vol
-                    duck_ratio = float(settings.AUDIO_DUCKING_RATIO)
-                    attack_t = 0.2; release_t = 0.8
+                    # 5. Dynamic Ducking Master (v4.5)
+                    # v18.1: Robust threshold from settings (fallback to 1.5s professional standard)
+                    # v20.2: Global Ducking Master (Master Console Override)
+                    merge_threshold = safe_float(project.audio_merge_threshold, safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5)))
+                    duck_ratio = safe_float(project.audio_ducking_ratio, float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25)))
+                    attack_t = safe_float(project.audio_attack_time, float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15)))
+                    release_t = safe_float(project.audio_release_time, float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4)))
+                    block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
+                    early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
 
-                    logger.log(f"    [Audio] Mezclando música global dinámica ({len(global_voice_intervals)} intervalos de voz)")
+                    logger.log(f"    [Audio] Mezclando Autoducking Maestro v20.2 ({len(global_voice_intervals)} intervalos)")
+                    logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s, block_fade={block_fade_t}s, early_finish={early_finish_t}s")
+                    logger.log(f"    [Audio] Intervalos RAW: {global_voice_intervals[:10]}")
+                    merged_global_intervals = merge_voice_intervals(global_voice_intervals, threshold=merge_threshold)
+                    logger.log(f"    [Audio] Intervalos MERGED: {merged_global_intervals}")
+                    logger.log(f"    [Audio] Block Time Ranges: {block_time_ranges}")
+                    logger.log(f"    [Audio] Mute Intervals: {mute_intervals}")
+                    logger.log(f"    [Audio] Default Vol: {default_vol}")
+                    # Probe: Check ducking factor at a few key points
+                    test_times = [5.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
+                    for tt in test_times:
+                        if tt < final_video.duration:
+                            # Simple scalar test
+                            factor = 1.0
+                            for v_start, v_end in merged_global_intervals:
+                                if v_start <= tt <= v_end: factor = duck_ratio; break
+                            logger.log(f"    [Audio] PROBE t={tt:.1f}s -> factor={factor:.3f} (ducked={factor < 1.0})")
 
-                    def volume_ducking_global(t):
+                    def get_ducking_factor(t, peak_vol_val, current_intervals, time_offset=0.0):
                         if isinstance(t, np.ndarray):
-                            base_vols = np.full(t.shape, peak_vol)
-                            for b_start, b_end, b_vol in block_time_ranges:
-                                mask = (t >= b_start) & (t <= b_end)
-                                base_vols[mask] = b_vol
-                            
-                            factors = np.full(t.shape, 1.0)
-                            for v_start, v_end in global_voice_intervals:
-                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
+                            factors = np.ones_like(t, dtype=float)
+                            for v_start, v_end in current_intervals:
+                                # 1. Attack (Fade Down)
                                 m_out = (t >= (v_start - attack_t)) & (t < v_start)
                                 if np.any(m_out):
                                     p = (t[m_out] - (v_start - attack_t)) / attack_t
                                     factors[m_out] = np.minimum(factors[m_out], 1.0 - (p * (1.0 - duck_ratio)))
+                                
+                                # 2. Release (Fade Up)
                                 m_in = (t > v_end) & (t <= (v_end + release_t))
                                 if np.any(m_in):
                                     p = (t[m_in] - v_end) / release_t
                                     factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
+
+                                # 3. SILENCE PRIORITY (v4.8.5): Force duck_ratio if voice is active
+                                # This prevents Attack logic from 'lifting' volume during voice
+                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
                             
-                            for ms, me in mute_intervals:
-                                factors[(t >= ms) & (t <= me)] = 0.0
-                            
-                            # v9.4 Fix: Ensure (N, 1) for stereo broadcasting
-                            if t.size == 0: return np.zeros((0, 1))
-                            return (base_vols * factors)[:, None]
-                        else:
-                            try:
-                                cur_peak = float(peak_vol)
+                            # v20.2: Master Console Fade/Finish Integration (Vectorized)
+                            # (Values already captured as block_fade_t and early_finish_t)
+                            if block_fade_t > 0:
+                                t_abs = t + time_offset
                                 for b_start, b_end, b_vol in block_time_ranges:
-                                    if b_start <= t <= b_end:
-                                        cur_peak = float(b_vol); break
-                            except: cur_peak = 0.2
-                            
-                            for ms, me in mute_intervals:
-                                if ms <= t <= me: return 0.0
-                            
+                                    # Fade In
+                                    m_fade_in = (t_abs >= b_start) & (t_abs <= (b_start + block_fade_t))
+                                    if np.any(m_fade_in):
+                                        p = (t_abs[m_fade_in] - b_start) / block_fade_t
+                                        factors[m_fade_in] *= p
+                                    
+                                    # Finish Early: Silence during the last 1s of the block
+                                    m_silent = (t_abs > (b_end - early_finish_t)) & (t_abs <= b_end)
+                                    if np.any(m_silent):
+                                        factors[m_silent] = 0.0
+                                    
+                                    # Fade Out: Transition to silence before the early finish
+                                    m_fade_out = (t_abs >= (b_end - early_finish_t - block_fade_t)) & (t_abs <= (b_end - early_finish_t))
+                                    if np.any(m_fade_out):
+                                        p = (b_end - early_finish_t - t_abs[m_fade_out]) / block_fade_t
+                                        factors[m_fade_out] *= np.maximum(0, np.minimum(1, p))
+
+                            if t.size == 0: return np.zeros((0, 1))
+                            return (float(peak_vol_val) * factors)[:, None]
+                        else:
                             factor = 1.0
-                            for v_start, v_end in global_voice_intervals:
-                                if v_start <= t <= v_end: factor = min(factor, duck_ratio)
-                                elif (v_start - attack_t) <= t < v_start:
+                            for v_start, v_end in current_intervals:
+                                # 1. Attack (Fade Down)
+                                if (v_start - attack_t) <= t < v_start:
                                     p = (t - (v_start - attack_t)) / attack_t
                                     factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
-                                elif v_end < t <= (v_end + release_t):
+                                
+                                # 2. Release (Fade Up)
+                                if v_end < t <= (v_end + release_t):
                                     p = (t - v_end) / release_t
                                     factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
-                            return float(cur_peak * factor)
+                                
+                                # 3. SILENCE PRIORITY (v4.8.6): Absolute drop if voice is active
+                                if v_start <= t <= v_end:
+                                    factor = duck_ratio
+                            
+                            # v20.2: Master Console Fade/Finish Integration (Scalar)
+                            # (Values already captured as block_fade_t and early_finish_t)
+                            if block_fade_t > 0:
+                                t_abs = t + time_offset
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    # Fade In at start of block
+                                    if b_start <= t_abs <= (b_start + block_fade_t):
+                                        p_in = (t_abs - b_start) / block_fade_t
+                                        factor *= p_in
+                                    
+                                    # Finish Early Logic: Volume is 0 during the last 1 second of the block
+                                    if t_abs > (b_end - early_finish_t):
+                                        factor = 0.0
+                                    # Fade Out Early: Smooth transition to 0 before the early finish
+                                    elif (b_end - early_finish_t - block_fade_t) <= t_abs <= (b_end - early_finish_t):
+                                        p_out = (b_end - early_finish_t - t_abs) / block_fade_t
+                                        factor *= max(0, min(1, p_out))
+                                        
+                            return float(peak_vol_val * factor)
 
-                    bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
-                    
-                    # Safe Audio Composition (v15.7 Fix for IndexError)
-                    audio_sources = []
-                    if final_video.audio: audio_sources.append(final_video.audio)
-                    if bg_audio_final: audio_sources.append(bg_audio_final)
-                    
-                    if audio_sources:
-                        final_video = final_video.with_audio(CompositeAudioClip(audio_sources))
+                    # --- LOCAL MUSIC DUCKING ---
+                    # v19.0: Moved to inline block construction (see "INLINE BLOCK DUCKING" above)
+                    # Local music is now ducked immediately when each block is built.
+
+                    # --- APPLY TO GLOBAL MUSIC ---
+                    if bg_audio_looped:
+                        def volume_ducking_global(t):
+                            if isinstance(t, np.ndarray):
+                                base_vols = np.full(t.shape, float(default_vol))
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    mask = (t >= b_start) & (t <= b_end)
+                                    base_vols[mask] = b_vol
+                                factors = get_ducking_factor(t, 1.0, merged_global_intervals)
+                                for ms, me in mute_intervals: factors[(t >= ms) & (t <= me)] = 0.0
+                                return (base_vols[:, None] * factors)
+                            else:
+                                cur_peak = default_vol
+                                for b_start, b_end, b_vol in block_time_ranges:
+                                    if b_start <= t <= b_end: cur_peak = b_vol; break
+                                for ms, me in mute_intervals:
+                                    if ms <= t <= me: return 0.0
+                                return get_ducking_factor(t, cur_peak, merged_global_intervals)
+
+                        bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
+                        audio_sources = [final_video.audio] if final_video.audio else []
+                        if bg_audio_final: audio_sources.append(bg_audio_final)
+                        if audio_sources:
+                            final_video = final_video.with_audio(CompositeAudioClip(audio_sources))
                     
         except Exception as e:
             logger.log(f"[Error] Error procesando música global: {e}")
@@ -1831,7 +2401,8 @@ def generate_video_avgl(project):
             output_path = os.path.join(settings.MEDIA_ROOT, 'videos', output_filename)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             
-            # v5.9 GPU Preset Fix
+            # v5.18: Reverted Auto-GPU - Reverting as per Architect's preference.
+            # Respect the manual selector (CPU is sometimes faster on specific hardware).
             use_gpu = (project.render_mode == 'gpu')
             
             # v11.8: Stable rendering (Single Thread)
@@ -1840,7 +2411,7 @@ def generate_video_avgl(project):
                 'codec': 'libx264', 
                 'audio_codec': 'aac', 
                 'preset': 'ultrafast', 
-                'threads': 1
+                'threads': 1  # Revertido v26.12: 16 threads causa severa contención de CPU en MoviePy
             }
             
             if use_gpu:
@@ -1852,7 +2423,8 @@ def generate_video_avgl(project):
                     'threads': None  # NVENC handles its own threads better
                 })
             else:
-                logger.log("[HW] MODO RENDER: CPU Standard (libx264)")
+                cpu_threads = render_params.get('threads', 1)
+                logger.log(f"[HW] MODO RENDER: CPU Standard (libx264) - {cpu_threads} Threads")
 
             # v11.1: Progress callback and optimized DB saving
             def set_progress(percent):
@@ -1871,14 +2443,30 @@ def generate_video_avgl(project):
             # v11.7: SILENT MODE (Maximum Stability)
             # Using None solves the 0.05s truncation bug and 0:00 duration error on Windows.
             # Progression will jump from 90% to 100% upon completion.
-            set_progress(92) 
+            set_progress(20)  # v19.2: Render starts at 20% (prep = 0-20%, render = 20-95%)
 
             # v13.0: Custom Cache Logger (Terminology Sync)
             cache_logger = CacheProgressBarLogger(project.id)
 
+            # v20.8: Final Cancellation Check before Rendering
+            project.refresh_from_db()
+            if project.status == 'cancelled':
+                logger.log("🛑 [Engine] Renderizado cancelado ANTES de iniciar escritura de archivo. Abortando.")
+                for c in clips_to_close: 
+                    try: c.close()
+                    except: pass
+                return
+
+            # v4.1: Implementation of "Hash Jitter" (Uniqueness Safeguard)
+            jitter_id = f"aj-{uuid.uuid4().hex[:8]}"
+
             final_video.write_videofile(
                 output_path, 
-                ffmpeg_params=["-pix_fmt", "yuv420p"], 
+                ffmpeg_params=[
+                    "-pix_fmt", "yuv420p", 
+                    "-movflags", "+faststart",
+                    "-metadata", f"comment={jitter_id}"
+                ], 
                 logger=cache_logger, # v13.0: Real-time Item visibility
                 **render_params
             )
@@ -1898,6 +2486,19 @@ def generate_video_avgl(project):
             # v26.0 POST-INJECTION PHASE (THE YOUTUBE WAY)
             # ═══════════════════════════════════════════════════════════════════
             if all_srt_items:
+                # v20.8: Check cancellation before FFmpeg Subtitle Injection
+                project.refresh_from_db()
+                if project.status == 'cancelled':
+                    logger.log("🛑 [Engine] Renderizado cancelado antes de inyección de subtítulos. Abortando.")
+                    for c in clips_to_close: 
+                        try: c.close()
+                        except: pass
+                    return
+
+                # v4.1 cleanup: ensure jitter_id exists for double jitter
+                if 'jitter_id' not in locals():
+                    jitter_id = f"aj-{uuid.uuid4().hex[:8]}"
+
                 logger.log("🎬 Iniciando Inyección Final de Subtítulos v26.1 (Format: ASS)...")
                 # v26.1: Use .ass instead of .srt for professional styling and position control
                 ass_path = output_path.replace('.mp4', '.ass')
@@ -1932,6 +2533,7 @@ def generate_video_avgl(project):
                             '-vf', f"ass=filename='{rel_ass_path}'",
                             *video_codec_params,
                             '-c:a', 'copy',
+                            '-metadata', f"comment=aj-{uuid.uuid4().hex[:8]}", # Double Jitter for maximum safety
                             final_output_path
                         ]
                         
@@ -2005,9 +2607,13 @@ def generate_video_avgl(project):
         # v12.5.3: Clear active project from global cache
         from django.core.cache import cache
         cache.delete("active_rendering_project_id")
+        
         try:
-            if 'final_video' in locals() and final_video: final_video.close()
-            # v9.6: Explicit closure of all tracked clips before deletion
+            # v15.8: Explicit closure of all tracked resources
+            if 'final_video' in locals() and final_video: 
+                try: final_video.close()
+                except: pass
+                
             for c in clips_to_close:
                 try: c.close()
                 except: pass
@@ -2016,12 +2622,29 @@ def generate_video_avgl(project):
                 try: c.close()
                 except: pass
                 
-            for _, p in audio_files: 
-                if p and os.path.exists(p): 
-                    try: os.remove(p)
-                    except Exception as e:
-                        logger.log(f"[Cleanup] No se pudo borrar {os.path.basename(p)}: {e}")
+            # v15.8: Close Cached Overlays
+            if 'overlay_cache' in locals():
+                for oc in overlay_cache.values():
+                    try: oc.close()
+                    except: pass
+                
         except Exception as e:
-            logger.log(f"[Cleanup] Error fatal en limpieza: {e}")
+            logger.log(f"[Cleanup] Error fatal en cierre de clips: {e}")
+            
+        # v15.8: Retry loop for file deletion (Windows WinError 32 fix)
+        if 'audio_files' in locals():
+            for name, p in audio_files:
+                if p and os.path.exists(p):
+                    success = False
+                    for attempt in range(3):
+                        try:
+                            os.remove(p)
+                            success = True
+                            break
+                        except:
+                            time.sleep(0.3 * (attempt + 1))
+                    
+                    if not success:
+                        logger.log(f"[Cleanup] No se pudo borrar {os.path.basename(p)} tras 3 intentos (posible bloqueo).")
         
     return output_path

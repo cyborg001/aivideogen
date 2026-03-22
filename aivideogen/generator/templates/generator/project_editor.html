@@ -76,6 +76,16 @@
             background-size: 10% 10%, 10% 10%, 1% 1%, 1% 1%;
         }
 
+        /* v30.2: PRECISION VIEWFINDER */
+        .viewfinder {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+            pointer-events: none;
+            transition: all 0.15s ease-out;
+        }
+
         /* Highlight Axis */
         .grid-overlay::before {
             content: '';
@@ -114,8 +124,8 @@
     </style>
 </head>
 
-<body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }}, '{{ engine|default:'edge'|escapejs }}')">
+    <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }}, '{{ engine|default:'edge'|escapejs }}', {{ project.audio_ducking_ratio|default:0.17 }}, {{ project.audio_attack_time|default:0.15 }}, {{ project.audio_release_time|default:0.4 }}, {{ project.audio_merge_threshold|default:1.5 }}, {{ project.audio_block_fade|default:1.0 }}, {{ project.audio_early_finish|default:0.1 }}, {{ project.subtitles_y_position|default:0.7|stringformat:'.2f' }}, '{{ project.language|default:'' }}', '{{ project.dubbing_mode|default:'' }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -134,11 +144,23 @@
             <input type="file" x-ref="jsonFile" class="hidden" @change="importScript($event)">
             <button @click="$refs.jsonFile.click()"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">📂 Cargar JSON</button>
+            <button @click="exportScript()"
+                class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">💾 Exportar JSON</button>
+            <button @click="translateScript()" 
+                class="text-xs bg-purple-900/50 hover:bg-purple-600 px-3 py-1 rounded text-purple-100 border border-purple-500/30 flex items-center gap-1 transition-all"
+                :disabled="isSaving" :class="{'opacity-50 cursor-not-allowed': isSaving}">
+                <span x-show="!isSaving">🌐 Auto-Translate (AI)</span>
+                <span x-show="isSaving">⌛ Traduciendo...</span>
+            </button>
             <button @click="openBulkEditor()"
                 class="text-xs bg-gray-700 hover:bg-indigo-600 px-2 py-1 rounded text-indigo-200 border border-indigo-500/30">📝
-                Editor de Texto</button>
+                Editor Masivo</button>
             <button @click="showSettingsModal = true"
                 class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300">⚙️ Configuración</button>
+            <button @click="showAudioMasterModal = true"
+                class="text-xs bg-indigo-900/40 hover:bg-indigo-700 px-2 py-1 rounded text-indigo-300 border border-indigo-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                <span>🎚️</span> Audio Master
+            </button>
 
             <!-- Aspect Ratio Toggle -->
             <div class="flex bg-gray-700 p-0.5 rounded-lg border border-gray-600">
@@ -340,6 +362,21 @@
                                                 <!-- Actions -->
                                                 <div
                                                     class="flex flex-col justify-center gap-1 border-l border-gray-700 pl-3 opacity-0 group-hover/scene:opacity-100 transition">
+                                                    
+                                                    <!-- v16.1: Play Voice Button -->
+                                                    <button x-show="scene.voice_path" @click.stop="playVoice(scene.voice_path)"
+                                                        class="p-1 rounded transition hover:scale-110"
+                                                        :class="playingVoicePath === scene.voice_path ? 'text-green-500 bg-green-500/10' : 'text-blue-400 hover:text-white'"
+                                                        :title="playingVoicePath === scene.voice_path ? 'Detener' : 'Escuchar Voz'">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="playingVoicePath !== scene.voice_path">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                        </svg>
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="playingVoicePath === scene.voice_path">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                                        </svg>
+                                                    </button>
+
                                                     <button @click.stop="openModal(bIndex, sIndex)"
                                                         class="text-gray-500 hover:text-white" title="Editar">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor"
@@ -591,6 +628,21 @@
 
                                                             <div
                                                                 class="flex flex-col justify-center gap-1 border-l border-gray-700 pl-3 opacity-0 group-hover/scene:opacity-100 transition">
+                                                                
+                                                                <!-- v16.1: Play Voice Button -->
+                                                                <button x-show="scene.voice_path" @click.stop="playVoice(scene.voice_path)"
+                                                                    class="p-1 rounded transition hover:scale-110"
+                                                                    :class="playingVoicePath === scene.voice_path ? 'text-green-500 bg-green-500/10' : 'text-blue-400 hover:text-white'"
+                                                                    :title="playingVoicePath === scene.voice_path ? 'Detener' : 'Escuchar Voz'">
+                                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="playingVoicePath !== scene.voice_path">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                                    </svg>
+                                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="playingVoicePath === scene.voice_path">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                                                    </svg>
+                                                                </button>
+
                                                                 <button @click.stop="openModal(bIndex, sIndex, gIndex)"
                                                                     class="text-gray-500 hover:text-white"
                                                                     title="Editar">
@@ -829,6 +881,39 @@
                         automáticamente.</p>
                 </div>
 
+                <!-- Global Subtitles Y Position (v26.6) -->
+                <div class="bg-gray-800 p-2 rounded border border-gray-600 mt-2">
+                    <label class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-cyan-300 font-bold">Posición Y de Subtítulos</span>
+                        <span class="text-xs font-mono font-bold bg-black px-2 py-0.5 rounded text-cyan-400"
+                            x-text="projectSettings.subtitles_y_position"></span>
+                    </label>
+                    <input type="range" min="0.0" max="1.0" step="0.01" x-model="projectSettings.subtitles_y_position"
+                        class="w-full mt-2 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                    <p class="text-[10px] text-gray-500 mt-1">Control de altura global (0.0 = Borde Superior, 1.0 =
+                        Borde Inferior).</p>
+                </div>
+
+                <!-- Language & Dubbing (v5.0 Integration) -->
+                <div class="grid grid-cols-2 gap-4 bg-gray-800 p-3 rounded border border-blue-500/30">
+                    <div>
+                        <label class="block text-[10px] uppercase text-blue-400 font-bold mb-2">Idioma Base</label>
+                        <select x-model="projectSettings.language" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-blue-500 outline-none">
+                            <option value="">🚫 Sin Traducción (Auto)</option>
+                            <option value="es">🇪🇸 Español (Original)</option>
+                            <option value="en">🇺🇸 Inglés (Internacional)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase text-green-400 font-bold mb-2">Modo de Doblaje</label>
+                        <select x-model="projectSettings.dubbing_mode" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-green-500 outline-none">
+                            <option value="">🚫 Desactivado</option>
+                            <option value="hq">🚀 Doblaje HQ (Fast Ducking)</option>
+                            <option value="lipsync">👄 Lip-Sync Pro (AI Logic)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Hardware Acceleration (v18.0) - Restored by request -->
                 <div class="bg-gray-800 p-3 rounded border border-indigo-500/30 shadow-inner">
                     <label class="block text-xs uppercase text-indigo-400 font-bold mb-2">Aceleración de
@@ -959,6 +1044,50 @@
                         </div>
                     </div>
 
+                    <!-- Mute Mode (v28.0) -->
+                    <div class="bg-red-900/10 p-3 rounded border border-red-500/20 mt-2">
+                        <label class="flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🔇</span>
+                                <span class="text-xs text-red-400 font-bold uppercase tracking-wider">Sin Voz (Mute Mode)</span>
+                            </div>
+                            <div
+                                class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="formData.silent"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-red-400 border-2 appearance-none cursor-pointer transition-transform duration-200"
+                                    style="top: 2px; left: 2px;" />
+                                <label
+                                    class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
+                            </div>
+                        </label>
+                        <p class="text-[9px] text-gray-500 mt-2 leading-relaxed italic">Desactiva la voz IA pero conserva los subtítulos. La duración se ajustará al volumen del texto para asegurar su lectura.</p>
+                    </div>
+
+                    <!-- Force Duration -->
+                    <div class="bg-gray-800 p-3 rounded border border-gray-700/50 mt-2">
+                        <label class="flex items-center justify-between cursor-pointer">
+                            <span class="text-xs text-orange-400 font-bold uppercase">Forzar Duración Total</span>
+                            <div
+                                class="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="formData.force_duration"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer transition-transform duration-200"
+                                    style="top: 2px; left: 2px;" />
+                                <label
+                                    class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
+                            </div>
+                        </label>
+                        <div x-show="formData.force_duration" class="mt-3 pt-3 border-t border-gray-700" x-transition>
+                            <div class="flex items-center gap-3">
+                                <label class="text-[10px] font-bold uppercase text-gray-400">Segundos Exactos:</label>
+                                <input type="number" step="0.1" min="0" x-model="formData.duration"
+                                    class="w-24 bg-gray-900 border border-gray-600 rounded p-1 text-sm text-yellow-300 font-bold text-center font-mono">
+                            </div>
+                            <p class="text-[9px] text-gray-500 mt-2 leading-relaxed">Ignora la duración real del audio
+                                (TTS o archivo). Si el audio es más largo, se cortará. Si es más corto, la escena se
+                                congelará en el último frame.</p>
+                        </div>
+                    </div>
+
                     <!-- Audio Overrides -->
                     <div class="grid grid-cols-2 gap-4 bg-gray-800 p-2 rounded">
                         <div>
@@ -972,6 +1101,26 @@
                                 (Pitch)</label>
                             <input type="text" x-model="formData.pitch" placeholder="+0Hz"
                                 class="w-full bg-gray-700 border border-gray-600 rounded p-1 text-xs text-white">
+                        </div>
+                    </div>
+
+                    <!-- Dubbing Overrides (v5.1) -->
+                    <div class="grid grid-cols-2 gap-4 bg-gray-900/40 p-3 rounded border border-purple-500/20 mt-2">
+                        <div>
+                            <label class="block text-[10px] uppercase text-purple-400 font-bold mb-1">Idioma de Escena</label>
+                            <select x-model="formData.language" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-purple-500 outline-none">
+                                <option value="">🌐 Predeterminado (Global)</option>
+                                <option value="es">🇪🇸 Español</option>
+                                <option value="en">🇺🇸 Inglés</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-purple-400 font-bold mb-1">Técnica de Doblaje</label>
+                            <select x-model="formData.dubbing_mode" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-purple-500 outline-none">
+                                <option value="">⚙️ Predeterminado (Global)</option>
+                                <option value="hq">🚀 Doblaje HQ</option>
+                                <option value="lipsync">👄 Lip-Sync Pro</option>
+                            </select>
                         </div>
                     </div>
 
@@ -1042,7 +1191,7 @@
                     <div class="mt-4 bg-gray-800 p-2 rounded border border-gray-700/50">
                         <label class="block text-xs uppercase text-green-400 font-bold mb-1 flex justify-between">
                             <span>Audio Personalizado (Voz Real)</span>
-                            <button @click="showRecordModal = true"
+                            <button @click="openRecordModal()"
                                 class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
                                 <span>🎙️</span> Grabar
                             </button>
@@ -1140,16 +1289,18 @@
                         <template x-if="formData.asset_type">
                             <div class="w-full h-full flex items-center justify-center bg-gray-950">
                                 <!-- Elastic Container (Snaps to Image Aspect Ratio) -->
-                                <div class="grid-asset-container">
+                                <div class="grid-asset-container"
+                                    :style="assetWidth > 0 ? `aspect-ratio: ${assetWidth}/${assetHeight}` : ''">
                                     <template x-if="isVideo">
                                         <video :src="getAssetPath(formData.asset_type) + '#t=1.0'"
-                                            class="block max-w-full max-h-full" controls muted></video>
+                                            class="block max-w-full max-h-full" controls muted
+                                            @loadedmetadata="onAssetLoad($event)"></video>
                                     </template>
                                     <template x-if="!isVideo">
                                         <div class="relative w-full h-full flex items-center justify-center">
                                             <img :src="getAssetPath(formData.asset_type)"
                                                 class="block max-w-full max-h-full object-contain shadow-2xl"
-                                                @load="imageError = false"
+                                                @load="onAssetLoad($event)"
                                                 @error="imageError = true; console.error('[Editor] Error cargando:', $el.src)">
 
                                             <!-- Error Overlay -->
@@ -1167,6 +1318,14 @@
 
                                     <!-- Coordinate Grid Overlay -->
                                     <div x-show="showGrid" class="grid-overlay" x-transition.opacity></div>
+
+                                    <!-- Precision Viewfinder (v30.2) -->
+                                    <div x-show="showGrid" class="viewfinder" :style="viewfinderStyle"
+                                        x-transition.opacity>
+                                        <div
+                                            class="absolute top-0 left-0 bg-blue-600 text-white text-[8px] px-1 font-bold">
+                                            FRAME</div>
+                                    </div>
                                 </div>
 
                                 <div
@@ -1180,8 +1339,6 @@
                             <div
                                 class="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-gray-900/50">
                                 <span class="text-4xl mb-2">🎞️</span>
-                                <span class="text-[10px] uppercase font-bold tracking-widest">Sin Asset</span>
-                            </div>
                         </template>
                     </div>
 
@@ -1192,7 +1349,7 @@
                             <input type="text" x-model="formData.asset_type" :title="formData.asset_type"
                                 class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-xs font-mono text-yellow-300 placeholder-gray-600"
                                 placeholder="imagen.png / video.mp4">
-
+                            
                             <!-- BROWSE BUTTON -->
                             <button @click="browseAsset()"
                                 class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white p-2 rounded"
@@ -1203,6 +1360,28 @@
                                     </path>
                                 </svg>
                             </button>
+                        </div>
+
+                        <!-- v22.0: Video Clipping Controls (OUTSIDE flex for proper layout) -->
+                        <div x-show="isVideo" class="flex flex-col gap-2 mt-2 p-3 bg-gray-900/100 rounded border border-cyan-900/50 w-full shadow-2xl">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">✂️ Control Temporal Quirúrgico</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[9px] uppercase text-gray-500 mb-1">Inicio (seg)</label>
+                                    <input type="number" step="0.1" x-model="formData.start_time" 
+                                        class="w-full bg-black border border-gray-800 text-cyan-300 rounded px-2 py-1 text-xs focus:border-cyan-500 outline-none"
+                                        placeholder="0.0">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] uppercase text-gray-500 mb-1">Fin (seg)</label>
+                                    <input type="number" step="0.1" x-model="formData.end_time"
+                                        class="w-full bg-black border border-gray-800 text-pink-300 rounded px-2 py-1 text-xs focus:border-pink-500 outline-none"
+                                        placeholder="Auto">
+                                </div>
+                            </div>
+                            <p class="text-[9px] text-gray-600 italic">Define el fragmento exacto del video que quieres usar.</p>
                         </div>
 
 
@@ -1287,12 +1466,12 @@
                                 <div x-show="formData.usePanHor" class="grid grid-cols-2 gap-2 pl-6" x-transition>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Inicio (%)</label>
-                                        <input type="number" step="10" x-model="formData.panHorStart"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panHorStart"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Fin (%)</label>
-                                        <input type="number" step="10" x-model="formData.panHorEnd"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panHorEnd"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                 </div>
@@ -1309,12 +1488,12 @@
                                 <div x-show="formData.usePanVer" class="grid grid-cols-2 gap-2 pl-6" x-transition>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Arriba (%)</label>
-                                        <input type="number" step="10" x-model="formData.panVerStart"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panVerStart"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-gray-400 block">Abajo (%)</label>
-                                        <input type="number" step="10" x-model="formData.panVerEnd"
+                                        <input type="number" step="10" min="0" max="100" x-model="formData.panVerEnd"
                                             class="w-full bg-gray-900 border border-gray-600 rounded px-1 py-1 text-center font-mono text-xs">
                                     </div>
                                 </div>
@@ -1545,9 +1724,11 @@
                                     <span class="text-[10px] text-blue-300 font-bold">Horizontal</span>
                                 </label>
                                 <div x-show="groupForm.usePanHor" class="flex gap-1" x-transition>
-                                    <input type="number" step="10" x-model="groupForm.panHorStart" placeholder="0"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panHorStart"
+                                        placeholder="0"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
-                                    <input type="number" step="10" x-model="groupForm.panHorEnd" placeholder="10"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panHorEnd"
+                                        placeholder="10"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
                                 </div>
                             </div>
@@ -1560,13 +1741,39 @@
                                     <span class="text-[10px] text-green-300 font-bold">Vertical</span>
                                 </label>
                                 <div x-show="groupForm.usePanVer" class="flex gap-1" x-transition>
-                                    <input type="number" step="10" x-model="groupForm.panVerStart" placeholder="0"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panVerStart"
+                                        placeholder="0"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
-                                    <input type="number" step="10" x-model="groupForm.panVerEnd" placeholder="10"
+                                    <input type="number" step="10" min="0" max="100" x-model="groupForm.panVerEnd"
+                                        placeholder="10"
                                         class="w-1/2 bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-center text-white">
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Force Duration (Group) -->
+                <div class="bg-gray-800/50 p-3 rounded border border-gray-700">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-xs text-orange-400 font-bold uppercase">Constreñir Duración</span>
+                        <div
+                            class="relative inline-block w-8 h-4 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="groupForm.force_duration"
+                                class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-1 appearance-none cursor-pointer transition-transform duration-200"
+                                style="top: 0px; left: 0px;" />
+                            <label
+                                class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-700 cursor-pointer"></label>
+                        </div>
+                    </label>
+                    <div x-show="groupForm.force_duration" class="mt-2 pt-2 border-t border-gray-700" x-transition>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] font-bold text-gray-400">Max Segundos:</label>
+                            <input type="number" step="0.1" min="0" x-model="groupForm.duration"
+                                class="flex-1 bg-gray-900 border border-gray-600 rounded p-1 text-xs text-yellow-300 text-center font-mono font-bold">
+                        </div>
+                        <p class="text-[9px] text-gray-500 mt-2 leading-tight">Si el grupo dura más de este tiempo, se
+                            ajustarán proporcionalmente todas sus escenas para NO exceder este límite.</p>
                     </div>
                 </div>
 
@@ -1616,7 +1823,7 @@
                     <div class="bg-blue-900/20 p-2 rounded border border-blue-500/20">
                         <label class="block text-[10px] uppercase text-green-400 font-bold mb-1 flex justify-between">
                             <span>Audio Personalizado (Voz Real Grupo)</span>
-                            <button @click="showRecordModal = true"
+                            <button @click="openRecordModal()"
                                 class="text-[8px] text-red-400 hover:text-red-300 flex items-center gap-1">
                                 <span>🎙️</span> Grabar
                             </button>
@@ -1643,7 +1850,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false, initialEngine = 'edge') => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false, initialEngine = 'edge', initialDucking = 0.17, initialAttack = 0.15, initialRelease = 0.4, initialMerge = 1.5, initialFade = 1.0, initialEarly = 0.1, initialSubtitlesY = 0.70, initialLanguage = '', initialDubbingMode = '') => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -1657,11 +1864,15 @@
                 showGroupModal: false,
                 showBulkModal: false,
                 showRecordModal: false,
+                showAudioMasterModal: false,
+                recordingText: '', // v20.3: Para el Teleprompter
                 editIndex: null,
                 editBlockIndex: 0,
                 editGroupIndex: null,
                 bulkText: '',
                 imageError: false,
+                assetWidth: 0,
+                assetHeight: 0,
 
                 // Block Form
                 blockForm: { title: '', music: '', volume: 0.2, master_asset: '' },
@@ -1670,7 +1881,8 @@
                     usePanHor: false, panHorStart: 0, panHorEnd: 0,
                     usePanVer: false, panVerStart: 0, panVerEnd: 0,
                     music: '', volume: 0.2, voice: '', voice_speed: '', audio: '',
-                    asset_audio_bool: false, asset_audio_vol: 0.8
+                    asset_audio_bool: false, asset_audio_vol: 0.8,
+                    force_duration: false, duration: 0
                 },
 
                 // Settings Model
@@ -1685,7 +1897,16 @@
                     voice_speed: '+0%',
                     music_volume_lock: initialMusicLock,
                     dynamic_subtitles: initialDynamic,
-                    engine: initialEngine
+                    subtitles_y_position: parseFloat(initialSubtitlesY),
+                    engine: initialEngine,
+                    audio_ducking_ratio: initialDucking,
+                    audio_attack_time: initialAttack,
+                    audio_release_time: initialRelease,
+                    audio_merge_threshold: initialMerge,
+                    audio_block_fade: initialFade,
+                    audio_early_finish: initialEarly,
+                    language: initialLanguage,
+                    dubbing_mode: initialDubbingMode
                 },
 
                 voiceSpeedNum: 0,
@@ -1694,8 +1915,12 @@
                 formData: {
                     title: '',
                     asset_type: '',
+                    start_time: 0,
+                    end_time: '',
                     text: '',
                     pause: 0.5,
+                    duration: 0,
+                    force_duration: false,
                     subtitle: '',
                     fit: false,
                     voice: '',
@@ -1703,7 +1928,10 @@
                     overlay: '',
                     asset_audio_bool: false,
                     asset_audio_vol: 0.8,
-                    usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50
+                    usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50,
+                    language: '', 
+                    dubbing_mode: '',
+                    silent: false
                 },
 
                 overlays: [
@@ -1751,6 +1979,63 @@
                 recordingBlob: null,
                 recordingTimer: 0,
                 recordingInterval: null,
+                
+                // v16.1: Audio Preview Engine
+                currentAudio: null,
+                playingVoicePath: null,
+
+                playVoice(path) {
+                    if (!path) return;
+                    // Adjust URL if needed (ensure leading slash)
+                    if (path.startsWith('media/')) path = '/' + path;
+                    
+                    // If same audio is playing, stop it
+                    if (this.currentAudio && this.playingVoicePath === path) {
+                        this.stopVoice();
+                        return;
+                    }
+                    
+                    // Stop previous if playing
+                    this.stopVoice();
+                    
+                    console.log("[Editor] Playing voice:", path);
+                    this.currentAudio = new Audio(path);
+                    this.playingVoicePath = path;
+                    
+                    this.currentAudio.play().catch(e => {
+                        console.error("[Editor] Audio play failed:", e);
+                        alert("Error al reproducir audio: " + e.message);
+                        this.playingVoicePath = null;
+                        this.currentAudio = null;
+                    });
+                    
+                    this.currentAudio.onended = () => {
+                        this.playingVoicePath = null;
+                        this.currentAudio = null;
+                    };
+                },
+                
+                stopVoice() {
+                    if (this.currentAudio) {
+                        this.currentAudio.pause();
+                        this.currentAudio.currentTime = 0;
+                        this.currentAudio = null;
+                        this.playingVoicePath = null;
+                    }
+                },
+
+                openRecordModal() {
+                    // v20.3: Teleprompter Logic
+                    if (this.showModal) {
+                        this.recordingText = this.formData.text || '';
+                    } else if (this.showGroupModal) {
+                        // For groups, we might want to show the group title or description if exists
+                        this.recordingText = "Grabando para Grupo: " + (this.groupForm.title || "Sin título");
+                    } else {
+                        this.recordingText = "Grabando audio general...";
+                    }
+                    this.showRecordModal = true;
+                },
 
                 async startRecording() {
                     try {
@@ -1852,6 +2137,85 @@
                     this.audioPreviewUrl = null;
                 },
 
+                _safeEval(val, defaultValue = 0) {
+                    if (val === null || val === undefined || val === '') return defaultValue;
+                    try {
+                        const clean = String(val).replace(/[^0-9+\-*/().]/g, '');
+                        const res = Function('"use strict";return (' + clean + ')')();
+                        return (res !== undefined && res !== null && !isNaN(res)) ? res : defaultValue;
+                    } catch (e) {
+                        // Fallback to parseFloat if complex eval fails
+                        const f = parseFloat(val);
+                        return isNaN(f) ? defaultValue : f;
+                    }
+                },
+
+                get viewfinderStyle() {
+                    const zoom = this._safeEval(this.formData.zoomStr.split(':')[0], 1.0);
+                    const panH = this._safeEval(this.formData.panHorStart, 50);
+                    const panV = this._safeEval(this.formData.panVerStart, 50);
+                    const rotate = this._safeEval(this.formData.rotate ? this.formData.rotate.split(':')[0] : 0, 0);
+
+                    // 1. Aspect Ratio del Proyecto
+                    let targetAR = 16 / 9; // Default landscape
+                    if (this.projectSettings.aspect_ratio === 'portrait') targetAR = 9 / 16;
+                    else if (this.projectSettings.aspect_ratio === 'square') targetAR = 1.0;
+
+                    // 2. Aspect Ratio del Asset
+                    let assetAR = targetAR; // Fallback if unknown
+                    if (this.assetWidth > 0 && this.assetHeight > 0) {
+                        assetAR = this.assetWidth / this.assetHeight;
+                    }
+
+                    // 3. Base percentages (at Zoom 1.0)
+                    // Logic MUST match video_engine.py COVER mode
+                    let baseW_pct = 100;
+                    let baseH_pct = 100;
+
+                    if (this.formData.fit) {
+                        // FIT (Contain) Mode
+                        if (assetAR > targetAR) {
+                            // Asset is wider. Full width, height is partial.
+                            baseH_pct = (assetAR / targetAR) * 100;
+                        } else {
+                            // Asset is taller. Full height, width is partial.
+                            baseW_pct = (targetAR / assetAR) * 100;
+                        }
+                    } else {
+                        // COVER Mode (Default for Ken Burns)
+                        if (assetAR > targetAR) {
+                            // Asset is wider than target. Full height, width is partial.
+                            baseW_pct = (targetAR / assetAR) * 100;
+                        } else {
+                            // Asset is taller than target. Full width, height is partial.
+                            baseH_pct = (assetAR / targetAR) * 100;
+                        }
+                    }
+
+                    // 4. Apply Zoom
+                    const finalW = baseW_pct / zoom;
+                    const finalH = baseH_pct / zoom;
+
+                    // 5. Calculate Position (Center Panning)
+                    // We clamp to ensure we don't go outside the 0-100 range of the background
+                    const left = Math.max(0, Math.min(100 - finalW, panH - (finalW / 2)));
+                    const top = Math.max(0, Math.min(100 - finalH, panV - (finalH / 2)));
+
+                    return `width: ${finalW}%; height: ${finalH}%; left: ${left}%; top: ${top}%; transform: rotate(${rotate}deg);`;
+                },
+
+                onAssetLoad(event) {
+                    this.imageError = false;
+                    if (event.target.tagName === 'IMG') {
+                        this.assetWidth = event.target.naturalWidth;
+                        this.assetHeight = event.target.naturalHeight;
+                    } else if (event.target.tagName === 'VIDEO') {
+                        this.assetWidth = event.target.videoWidth;
+                        this.assetHeight = event.target.videoHeight;
+                    }
+                    console.log(`[Editor] Asset Loaded: ${this.assetWidth}x${this.assetHeight} (AR: ${(this.assetWidth / this.assetHeight).toFixed(2)})`);
+                },
+
                 isAssetVideo(path) {
                     if (typeof path === 'object' && path !== null) {
                         path = path.id || path.type || '';
@@ -1877,22 +2241,22 @@
                     // Si ya es una URL absoluta (HTTP), no tocar
                     if (normalizedPath.startsWith('http')) return normalizedPath;
 
-                    // v16.0 Robust Resolution: Extraer /media/ de cualquier ruta absoluta o ya formateada
-                    const mediaIndex = normalizedPath.toLowerCase().indexOf('media/');
+                    // v16.1 Hybrid Resolution: Intentar extraer /media/ incluso de rutas de disco duro
+                    const lowPath = normalizedPath.toLowerCase();
+                    const mediaIndex = lowPath.indexOf('media/');
                     if (mediaIndex !== -1) {
                         return '/' + normalizedPath.substring(mediaIndex);
                     }
 
-                    // Si empieza con "assets/", añadir /media/ al principio (vanguardia local)
+                    // Si empieza con "assets/", añadir /media/ al principio
                     if (normalizedPath.startsWith('assets/')) return '/media/' + normalizedPath;
 
                     // Si ya es una ruta relativa al root que empieza con /, devolver tal cual
                     if (normalizedPath.startsWith('/')) return normalizedPath;
 
-                    // Evitar rutas absolutas de Windows que el navegador no puede cargar (ej: C:/Users/...)
-                    // Si llegamos aquí y tiene formato de disco, probablemente está fuera de media/
+                    // Seguridad: Bloquear rutas absolutas de disco que el navegador no cargará
                     if (normalizedPath.match(/^[a-zA-Z]:/)) {
-                        console.warn("[Editor] Ruta absoluta fuera de media detectada:", normalizedPath);
+                        console.warn("[Editor] Ruta absoluta bloqueada por navegador. El backend debería haberla convertido a relativa:", normalizedPath);
                         return '';
                     }
 
@@ -2097,6 +2461,16 @@
                             if (data.settings.auto_upload !== undefined) this.projectSettings.auto_upload = data.settings.auto_upload;
                             if (data.settings.engine) this.projectSettings.engine = data.settings.engine;
 
+                            // v20.2: Audio master console settings
+                            if (data.settings.audio_ducking_ratio !== undefined) this.projectSettings.audio_ducking_ratio = data.settings.audio_ducking_ratio;
+                            if (data.settings.audio_attack_time !== undefined) this.projectSettings.audio_attack_time = data.settings.audio_attack_time;
+                            if (data.settings.audio_release_time !== undefined) this.projectSettings.audio_release_time = data.settings.audio_release_time;
+                            if (data.settings.audio_merge_threshold !== undefined) this.projectSettings.audio_merge_threshold = data.settings.audio_merge_threshold;
+                            if (data.settings.audio_block_fade !== undefined) this.projectSettings.audio_block_fade = data.settings.audio_block_fade;
+                            if (data.settings.audio_early_finish !== undefined) this.projectSettings.audio_early_finish = data.settings.audio_early_finish;
+                            if (data.settings.language) this.projectSettings.language = data.settings.language;
+                            if (data.settings.dubbing_mode) this.projectSettings.dubbing_mode = data.settings.dubbing_mode;
+
                             // Support for old key names
                             if (data.settings.voice) this.projectSettings.voice_id = data.settings.voice;
                         }
@@ -2130,8 +2504,20 @@
                     this.script.aspect_ratio = this.projectSettings.aspect_ratio;
                     this.script.render_mode = this.projectSettings.render_mode;
                     this.script.music_volume_lock = this.projectSettings.music_volume_lock;
+                    this.script.dynamic_subtitles = this.projectSettings.dynamic_subtitles;
+                    this.script.subtitles_y_position = parseFloat(this.projectSettings.subtitles_y_position);
                     this.script.auto_upload = this.projectSettings.auto_upload;
                     this.script.engine = this.projectSettings.engine;
+
+                    // v20.2: Audio Console Sync
+                    this.script.audio_ducking_ratio = this.projectSettings.audio_ducking_ratio;
+                    this.script.audio_attack_time = this.projectSettings.audio_attack_time;
+                    this.script.audio_release_time = this.projectSettings.audio_release_time;
+                    this.script.audio_merge_threshold = this.projectSettings.audio_merge_threshold;
+                    this.script.audio_block_fade = this.projectSettings.audio_block_fade;
+                    this.script.audio_early_finish = this.projectSettings.audio_early_finish;
+                    this.script.language = this.projectSettings.language;
+                    this.script.dubbing_mode = this.projectSettings.dubbing_mode;
 
                     // Also maintain a persistent settings object inside the script
                     if (!this.script.settings) this.script.settings = {};
@@ -2196,6 +2582,42 @@
                         if (!silent && e.message !== "Invalid JSON") alert("Error guardando: " + e.message);
                     } finally {
                         if (!silent) setTimeout(() => { this.isSaving = false; }, 500);
+                    }
+                },
+
+                async translateScript() {
+                    const targetPrompt = this.projectSettings.language === 'es' ? 'Español' : 'Inglés';
+                    if (!confirm(`¿Estás seguro de traducir todo el guion al ${targetPrompt}? Se sobreescribirán los textos y subtítulos actuales.`)) return;
+                    
+                    this.isSaving = true;
+                    try {
+                        const res = await fetch(`/api/project/${this.projectId}/script/translate/`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                target_lang: this.projectSettings.language,
+                                script: this.script
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            this.script = data.script;
+                            // Update local title if changed
+                            if (this.script.settings && this.script.settings.title) {
+                                this.projectSettings.title = this.script.settings.title;
+                            }
+                            alert("✅ Guion traducido con éxito. Revisa los cambios y guarda el proyecto.");
+                            this.saveScript(true); // Auto-save after translation
+                        } else {
+                            alert("❌ Error en la traducción: " + (data.error || "Error desconocido"));
+                        }
+                    } catch (e) {
+                        alert("❌ Error de red: " + e.message);
+                    } finally {
+                        this.isSaving = false;
                     }
                 },
 
@@ -2313,23 +2735,25 @@
                         voice_speed: group.voice_speed || '',
                         audio: group.audio || '',
                         asset_audio_bool: !!group.video_volume,
-                        asset_audio_vol: (typeof group.video_volume === 'number') ? group.video_volume : (group.video_volume ? 1.0 : 0.8)
+                        asset_audio_vol: (typeof group.video_volume === 'number') ? group.video_volume : (group.video_volume ? 1.0 : 0.8),
+                        force_duration: group.force_duration || false,
+                        duration: group.duration || 0
                     };
 
                     // Parse existing move string
                     if (group.move) {
-                        const moves = group.move.split('+');
+                        const moves = group.move.replace(/MOVE:/g, '').split('+');
                         moves.forEach(m => {
                             const parts = m.trim().split(':');
                             const dim = parts[0];
                             if (dim === 'HOR') {
                                 this.groupForm.usePanHor = true;
                                 this.groupForm.panHorStart = parseFloat(parts[1]) || 0;
-                                this.groupForm.panHorEnd = parseFloat(parts[2]) || 0;
+                                this.groupForm.panHorEnd = (parts[2] !== undefined) ? parseFloat(parts[2]) : this.groupForm.panHorStart;
                             } else if (dim === 'VER') {
                                 this.groupForm.usePanVer = true;
                                 this.groupForm.panVerStart = parseFloat(parts[1]) || 0;
-                                this.groupForm.panVerEnd = parseFloat(parts[2]) || 0;
+                                this.groupForm.panVerEnd = (parts[2] !== undefined) ? parseFloat(parts[2]) : this.groupForm.panVerStart;
                             }
                         });
                     }
@@ -2361,10 +2785,16 @@
                         // Reconstruct Move String
                         let moveParts = [];
                         if (this.groupForm.usePanHor) {
-                            moveParts.push(`HOR:${this.groupForm.panHorStart}:${this.groupForm.panHorEnd}`);
+                            const hStart = Math.max(0, Math.min(100, parseFloat(this.groupForm.panHorStart || 0)));
+                            const rawEnd = this.groupForm.panHorEnd;
+                            const hEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? hStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
+                            moveParts.push(`HOR:${hStart}:${hEnd}`);
                         }
                         if (this.groupForm.usePanVer) {
-                            moveParts.push(`VER:${this.groupForm.panVerStart}:${this.groupForm.panVerEnd}`);
+                            const vStart = Math.max(0, Math.min(100, parseFloat(this.groupForm.panVerStart || 0)));
+                            const rawEnd = this.groupForm.panVerEnd;
+                            const vEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? vStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
+                            moveParts.push(`VER:${vStart}:${vEnd}`);
                         }
                         group.move = moveParts.length > 0 ? moveParts.join(' + ') : '';
 
@@ -2563,6 +2993,8 @@
                             asset_type: displayAssetPath,
                             text: scene.text || '',
                             pause: scene.pause || 0.5,
+                            duration: scene.duration || 0,
+                            force_duration: scene.force_duration || false,
                             subtitle: subTxt,
                             subDur: subDurVal,
                             subDelay: 0.0, // Deprecated in UI
@@ -2585,7 +3017,11 @@
                             usePanVer: false, panVerStart: 50, panVerEnd: 50,
 
                             // SFX Support
-                            sfx: scene.sfx ? JSON.parse(JSON.stringify(scene.sfx)) : [],
+                            sfx: scene.sfx ? scene.sfx.map(s => ({
+                                type: s.type || s.id || '',
+                                volume: s.volume !== undefined ? s.volume : 0.5,
+                                offset: s.offset || 0
+                            })) : [],
 
                             // Camera FX (v12.4)
                             shake: asset.shake || false,
@@ -2593,26 +3029,34 @@
                             rotate: asset.rotate || '',
                             w_rotate: asset.w_rotate || '',
                             fast_assembly: asset.fast_assembly || false,
-                            cinema_mode: asset.cinema_mode || false
+                            dubbing_mode: scene.dubbing_mode || '',
+                            language: scene.language || '',
+                            start_time: asset.start_time || 0.0,
+                            end_time: asset.end_time || '',
+                            silent: scene.silent || false
                         };
 
 
                         // Load Move (Search for HOR and VER independently)
                         if (asset.move) {
-                            // Example: "HOR:0:100 + VER:50:50" or just "HOR:0:100"
-                            const moves = asset.move.split('+');
+                            // Example: "HOR:0:100 + VER:50:50" or "MOVE:HOR:0:100"
+                            const moves = asset.move.replace(/MOVE:/g, '').split('+');
 
                             moves.forEach(m => {
                                 const parts = m.trim().split(':');
                                 const dim = parts[0]; // HOR or VER
                                 if (dim === 'HOR') {
                                     this.formData.usePanHor = true;
-                                    this.formData.panHorStart = parseFloat(parts[1]);
-                                    this.formData.panHorEnd = parseFloat(parts[2]);
+                                    this.formData.panHorStart = parseFloat(parts[1]) || 0;
+                                    this.formData.panHorEnd = (parts[2] !== undefined) ? parseFloat(parts[2]) : this.formData.panHorStart;
                                 } else if (dim === 'VER') {
                                     this.formData.usePanVer = true;
-                                    this.formData.panVerStart = parseFloat(parts[1]);
-                                    this.formData.panVerEnd = parseFloat(parts[2]);
+                                    this.formData.panVerStart = parseFloat(parts[1]) || 0;
+                                    this.formData.panVerEnd = (parts[2] !== undefined) ? parseFloat(parts[2]) : this.formData.panVerStart;
+                                } else if (dim === 'SHAKE') {
+                                    // v16.2: Auto-detect legacy shake from move string
+                                    this.formData.shake = true;
+                                    this.formData.shake_intensity = parseInt(parts[1]) || 5;
                                 }
                             });
                         }
@@ -2646,7 +3090,11 @@
                             shake: false,
                             shake_intensity: 5,
                             rotate: '',
-                            fast_assembly: false
+                            dubbing_mode: '',
+                            language: '',
+                            start_time: 0, // Added start_time for new scenes
+                            end_time: '', // Added end_time for new scenes
+                            silent: false
                         };
                     }
                 },
@@ -2698,10 +3146,16 @@
                     // Build Move String (Combine HOR + VER)
                     let moveParts = [];
                     if (this.formData.usePanHor) {
-                        moveParts.push(`HOR:${this.formData.panHorStart}:${this.formData.panHorEnd}`);
+                        const hStart = Math.max(0, Math.min(100, parseFloat(this.formData.panHorStart || 0)));
+                        const rawEnd = this.formData.panHorEnd;
+                        const hEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? hStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
+                        moveParts.push(`HOR:${hStart}:${hEnd}`);
                     }
                     if (this.formData.usePanVer) {
-                        moveParts.push(`VER:${this.formData.panVerStart}:${this.formData.panVerEnd}`);
+                        const vStart = Math.max(0, Math.min(100, parseFloat(this.formData.panVerStart || 0)));
+                        const rawEnd = this.formData.panVerEnd;
+                        const vEnd = (rawEnd === null || rawEnd === undefined || rawEnd === '') ? vStart : Math.max(0, Math.min(100, parseFloat(rawEnd)));
+                        moveParts.push(`VER:${vStart}:${vEnd}`);
                     }
                     let moveStr = moveParts.length > 0 ? moveParts.join(' + ') : null;
 
@@ -2719,7 +3173,9 @@
                         rotate: isInGroup ? null : (this.formData.rotate || null),
                         w_rotate: isInGroup ? null : (this.formData.w_rotate || null),
                         fast_assembly: this.formData.fast_assembly || false,
-                        cinema_mode: this.formData.cinema_mode || false
+                        cinema_mode: this.formData.cinema_mode || false,
+                        start_time: parseFloat(this.formData.start_time || 0),
+                        end_time: this.formData.end_time || this.formData.end_time === 0 ? parseFloat(this.formData.end_time) : null
                     };
 
                     // 2. Build Scene Object
@@ -2728,12 +3184,17 @@
                         title: this.formData.title,
                         text: this.formData.text,
                         pause: parseFloat(this.formData.pause),
+                        duration: parseFloat(this.formData.duration || 0),
+                        force_duration: this.formData.force_duration || false,
                         subtitle: this.formData.subtitle,
                         voice: this.formData.voice || null,
                         audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
                         assets: [assetObj],
-                        sfx: this.formData.sfx // Save SFX array
+                        sfx: this.formData.sfx, // Save SFX array
+                        language: this.formData.language || null,
+                        dubbing_mode: this.formData.dubbing_mode || null,
+                        silent: this.formData.silent || false
                     };
 
                     // 3. Update Script Model
@@ -2833,7 +3294,10 @@
                     try {
                         const res = await fetch('/api/script/json_to_text/', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                             },
                             body: JSON.stringify(this.script)
                         });
                         const data = await res.json();
@@ -2855,7 +3319,10 @@
                     try {
                         const res = await fetch('/api/script/text_to_json/', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                             },
                             body: JSON.stringify({ text: this.bulkText, title: this.projectSettings.title })
                         });
                         const data = await res.json();
@@ -2934,6 +3401,28 @@
                     event.target.value = '';
                 },
 
+                exportScript() {
+                    const scriptCopy = JSON.parse(JSON.stringify(this.script));
+                    // Aplicar los mismos metadatos que en el guardado para consistencia (v9.1)
+                    scriptCopy.title = this.projectSettings.title;
+                    scriptCopy.voice = this.projectSettings.voice_id;
+                    scriptCopy.voice_speed = this.projectSettings.voice_speed;
+                    scriptCopy.background_music = this.projectSettings.background_music;
+                    scriptCopy.auto_upload = this.projectSettings.auto_upload;
+                    scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
+                    scriptCopy.render_mode = this.projectSettings.render_mode;
+
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scriptCopy, null, 4));
+                    const downloadAnchorNode = document.createElement('a');
+                    const fileName = (this.projectSettings.title || "guion").replace(/[^a-z0-9]/gi, '_').toLowerCase() + ".avgl3.json";
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", fileName);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                    logger.log("    [System] Guion exportado localmente: " + fileName);
+                },
+
                 // Music Browsers
                 async browseGlobalMusic() {
                     try {
@@ -2993,20 +3482,30 @@
 
                 // Helper for asset repair
                 sanitizeSceneAssets(scene) {
-                    if (!scene.assets) return;
-                    scene.assets.forEach(asset => {
-                        // Repair filenames hidden in 'type'
-                        if ((!asset.id || asset.id === 'image' || asset.id === 'video') &&
-                            (asset.type && asset.type.includes('.'))) {
-                            asset.id = asset.type;
-                            asset.type = (asset.id.toLowerCase().endsWith('.mp4') || asset.id.toLowerCase().endsWith('.mov')) ? 'video' : 'image';
-                        }
-                        // Ensure ID is never 'image' if type is what we really want
-                        if (asset.id === 'image' && asset.type && asset.type.includes('.')) {
-                            asset.id = asset.type;
-                            asset.type = 'image';
-                        }
-                    });
+                    if (scene.assets) {
+                        scene.assets.forEach(asset => {
+                            // Repair filenames hidden in 'type'
+                            if ((!asset.id || asset.id === 'image' || asset.id === 'video') &&
+                                (asset.type && asset.type.includes('.'))) {
+                                asset.id = asset.type;
+                                asset.type = (asset.id.toLowerCase().endsWith('.mp4') || asset.id.toLowerCase().endsWith('.mov')) ? 'video' : 'image';
+                            }
+                            // Ensure ID is never 'image' if type is what we really want
+                            if (asset.id === 'image' && asset.type && asset.type.includes('.')) {
+                                asset.id = asset.type;
+                                asset.type = 'image';
+                            }
+                        });
+                    }
+                    // v27.7: Sanitize SFX (id -> type)
+                    if (scene.sfx) {
+                        scene.sfx.forEach(s => {
+                            if (s.id && !s.type) {
+                                s.type = s.id;
+                                delete s.id;
+                            }
+                        });
+                    }
                 },
 
                 async browseAsset() {
@@ -3039,127 +3538,285 @@
 
     <!-- RECORDING MODAL -->
     <div x-show="showRecordModal" style="display: none;"
-        class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[60] p-4" x-transition
+        class="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[70] p-4" x-transition
         x-cloak>
-        <div class="bg-gray-900 border border-red-500/50 rounded-xl shadow-[0_0_50px_rgba(239,68,68,0.2)] w-full max-w-sm overflow-hidden animate-scale"
+        <div class="bg-[#0f0f15] border border-red-500/30 rounded-3xl shadow-[0_0_80px_rgba(239,68,68,0.15)] w-full max-w-2xl overflow-hidden flex flex-col animate-scale"
             @click.away="cancelRecording()">
 
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/50">
-                <h3 class="text-lg font-bold text-red-400">🎙️ Grabadora de Voz</h3>
-                <button @click="cancelRecording()" class="text-gray-500 hover:text-white">&times;</button>
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-red-950/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                        :class="isRecording ? 'animate-pulse' : ''">
+                        <span class="text-sm">🎙️</span>
+                    </div>
+                    <h3 class="text-lg font-black text-white tracking-tighter uppercase italic">Studio <span
+                            class="text-red-500">Recorder</span></h3>
+                </div>
+                <button @click="cancelRecording()"
+                    class="text-gray-500 hover:text-white transition-colors">&times;</button>
             </div>
 
-            <div class="p-8 flex flex-col items-center gap-6">
-                <!-- Recording Animation / Timer -->
-                <div class="relative w-24 h-24 flex items-center justify-center">
-                    <template x-if="isRecording">
-                        <div class="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
-                    </template>
-                    <div class="z-10 text-4xl" :class="isRecording ? 'text-red-500' : 'text-gray-600'">🎙️</div>
+            <div class="p-0 flex flex-col items-center">
+                <!-- TELEPROMPTER SECTION (v20.3) -->
+                <div class="w-full bg-black/40 p-10 border-b border-white/5 relative group/tele">
+                    <div
+                        class="absolute top-2 left-6 text-[8px] font-bold text-red-500/50 uppercase tracking-[0.3em] font-mono">
+                        Teleprompter Active</div>
+                    <div class="max-h-64 overflow-y-auto custom-scrollbar pr-4 text-center">
+                        <p class="text-2xl md:text-3xl font-bold text-gray-100 leading-relaxed selection:bg-red-500/30"
+                            x-text="recordingText || 'No hay texto definido para esta escena.'"
+                            :class="isRecording ? 'text-white' : 'text-gray-400'"></p>
+                    </div>
+                    <!-- Focus guides -->
+                    <div
+                        class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-transparent via-red-500/40 to-transparent">
+                    </div>
+                    <div
+                        class="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-transparent via-red-500/40 to-transparent">
+                    </div>
                 </div>
-
-                <div class="text-center">
-                    <p class="text-2xl font-mono text-white" x-text="'00:' + String(recordingTimer).padStart(2, '0')">
-                    </p>
-                    <p class="text-xs text-gray-500 uppercase mt-1"
-                        x-text="isRecording ? 'Grabando...' : (audioPreviewUrl ? 'Grabación completa' : 'Listo para grabar')">
-                    </p>
-                </div>
-
-                <!-- Preview Audio -->
-                <template x-if="audioPreviewUrl">
-                    <audio x-ref="audioPreview" :src="audioPreviewUrl" controls
-                        class="w-full h-8 brightness-90"></audio>
-                </template>
-
-                <!-- Controls -->
-                <div class="flex gap-4 w-full mt-4">
-                    <template x-if="!isRecording && !audioPreviewUrl">
-                        <button @click="startRecording()"
-                            class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95">
-                            🔴 Iniciar
-                        </button>
-                    </template>
-
-                    <template x-if="isRecording">
-                        <button @click="stopRecording()"
-                            class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95 border border-red-500/50">
-                            ⏹️ Detener
-                        </button>
-                    </template>
-
-                    <template x-if="audioPreviewUrl">
-                        <div class="flex gap-2 w-full">
-                            <button @click="audioChunks = []; audioPreviewUrl = null; startRecording()"
-                                class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg font-bold text-sm transition">
-                                Reintentar
-                            </button>
-                            <button @click="uploadRecording()" :disabled="isSaving"
-                                class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span x-show="!isSaving">✅ Usar Audio</span>
-                                <span x-show="isSaving" class="flex items-center justify-center gap-2">
-                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
-                                        fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                    Subiendo...
-                                </span>
-                            </button>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <div class="p-4 bg-gray-950/50 border-t border-gray-800 text-[10px] text-gray-500 text-center">
-                El audio se guardará como asset y se asignará automáticamente a la escena.
-            </div>
-        </div>
-    </div>
-
-    <!-- BULK TEXT EDITOR MODAL -->
-
-    <div x-show="showBulkModal" style="display: none;"
-        class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4" x-transition
-        x-cloak>
-        <div class="bg-gray-900 border border-indigo-500/50 rounded-xl shadow-[0_0_50px_rgba(79,70,229,0.3)] w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-scale"
-            @click.away="if (!showRecordModal) showBulkModal = false">
-
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/50">
-                <div>
-                    <h3 class="text-lg font-bold text-indigo-400">📝 Editor de Guion Pro (Texto)</h3>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Formato: Título | Asset |
-                        Efectos | Texto | Pausa</p>
-                </div>
-                <div class="flex gap-2">
-                    <button @click="showBulkModal = false"
-                        class="text-gray-400 hover:text-white px-3 py-1 rounded text-sm transition">Cancelar</button>
-                    <button @click="saveBulkEditor()"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-indigo-500/20 transition transform active:scale-95">
-                        ✅ Aplicar Cambios
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex-1 p-4 bg-gray-950 relative">
-                <textarea x-model="bulkText"
-                    class="w-full h-full bg-transparent text-gray-300 font-mono text-sm p-4 focus:ring-0 border-none resize-none leading-relaxed"
-                    placeholder="Escribe tu guion aquí..."></textarea>
 
                 <div
-                    class="absolute bottom-6 right-8 text-[10px] text-gray-600 font-mono space-y-1 bg-gray-900/80 p-3 rounded border border-gray-800 pointer-events-none">
-                    <p>📌 TIP: Usa [SFX: nombre | vol | off] para efectos.</p>
-                    <p>📌 TIP: Usa [OVERLAY: nombre] para capas visuales.</p>
-                    <p>📌 TIP: Usa [SUB: palabras | texto] para subtítulos manuales.</p>
+                    class="p-8 w-full flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-b from-transparent to-red-950/10">
+
+                    <!-- Timer & Status -->
+                    <div class="flex flex-col items-center md:items-start shrink-0">
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-4xl font-mono text-white font-black"
+                                x-text="String(Math.floor(recordingTimer/60)).padStart(2, '0')"></span>
+                            <span class="text-2xl font-mono text-red-500">:</span>
+                            <span class="text-4xl font-mono text-white font-black"
+                                x-text="String(recordingTimer % 60).padStart(2, '0')"></span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-1"
+                            x-text="isRecording ? 'En el aire • ON AIR' : (audioPreviewUrl ? 'Captura Finalizada' : 'Pulse para iniciar')">
+                        </p>
+                    </div>
+                    <!-- Recording Animation / Timer -->
+                    <div class="relative w-24 h-24 flex items-center justify-center">
+                        <template x-if="isRecording">
+                            <div class="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+                        </template>
+                        <div class="z-10 text-4xl" :class="isRecording ? 'text-red-500' : 'text-gray-600'">🎙️</div>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-2xl font-mono text-white"
+                            x-text="'00:' + String(recordingTimer).padStart(2, '0')">
+                        </p>
+                        <p class="text-xs text-gray-500 uppercase mt-1"
+                            x-text="isRecording ? 'Grabando...' : (audioPreviewUrl ? 'Grabación completa' : 'Listo para grabar')">
+                        </p>
+                    </div>
+
+                    <!-- Preview Audio -->
+                    <template x-if="audioPreviewUrl">
+                        <audio x-ref="audioPreview" :src="audioPreviewUrl" controls
+                            class="w-full h-8 brightness-90"></audio>
+                    </template>
+
+                    <!-- Controls -->
+                    <div class="flex gap-4 w-full mt-4">
+                        <template x-if="!isRecording && !audioPreviewUrl">
+                            <button @click="startRecording()"
+                                class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95">
+                                🔴 Iniciar
+                            </button>
+                        </template>
+
+                        <template x-if="isRecording">
+                            <button @click="stopRecording()"
+                                class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition transform active:scale-95 border border-red-500/50">
+                                ⏹️ Detener
+                            </button>
+                        </template>
+
+                        <template x-if="audioPreviewUrl">
+                            <div class="flex gap-2 w-full">
+                                <button @click="audioChunks = []; audioPreviewUrl = null; startRecording()"
+                                    class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg font-bold text-sm transition">
+                                    Reintentar
+                                </button>
+                                <button @click="uploadRecording()" :disabled="isSaving"
+                                    class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span x-show="!isSaving">✅ Usar Audio</span>
+                                    <span x-show="isSaving" class="flex items-center justify-center gap-2">
+                                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        Subiendo...
+                                    </span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gray-950/50 border-t border-gray-800 text-[10px] text-gray-500 text-center">
+                    El audio se guardará como asset y se asignará automáticamente a la escena.
                 </div>
             </div>
+        </div>
 
-            <div class="px-4 py-2 bg-gray-900/50 border-t border-gray-800 text-[10px] text-yellow-500/70 italic">
-                ⚠️ Al aplicar, el sistema regenerará la estructura visual. Asegúrate de respetar el formato de columnas
-                (|).
+        <!-- BULK TEXT EDITOR MODAL -->
+
+    </div>
+
+    <!-- AUDIO MASTER CONSOLE MODAL (v20.2 PREMIUM) -->
+    <div x-show="showAudioMasterModal" style="display: none;"
+        class="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[60] p-4" x-transition
+        x-cloak>
+        <div class="bg-[#0a0a0f] border border-indigo-500/40 rounded-3xl shadow-[0_0_80px_rgba(79,70,229,0.2)] w-full max-w-2xl overflow-hidden flex flex-col border-t-indigo-400/60"
+            @click.away="showAudioMasterModal = false">
+
+            <!-- Console Header -->
+            <div
+                class="p-6 bg-gradient-to-b from-indigo-950/30 to-transparent flex justify-between items-center border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)] animate-pulse">
+                        <span class="text-xl">🎚️</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white tracking-tighter uppercase italic">Audio Master <span
+                                class="text-indigo-400">Console</span></h3>
+                        <p class="text-[9px] text-indigo-300/60 font-mono uppercase tracking-[0.2em]">Professional
+                            Mastering Engine v20.2</p>
+                    </div>
+                </div>
+                <button @click="showAudioMasterModal = false" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Console Content -->
+            <div class="p-8 space-y-8">
+
+                <!-- Presets (Quick Access) -->
+                <div class="grid grid-cols-3 gap-3">
+                    <button
+                        @click="projectSettings.audio_ducking_ratio = 0.12; projectSettings.audio_attack_time = 0.1; projectSettings.audio_release_time = 0.3; projectSettings.audio_merge_threshold = 1.0; projectSettings.audio_block_fade = 0.8"
+                        class="bg-indigo-900/20 hover:bg-indigo-600/40 border border-indigo-500/20 py-3 rounded-xl transition group">
+                        <span class="block text-xl mb-1 group-hover:scale-125 transition">🎙️</span>
+                        <span class="text-[10px] font-bold text-indigo-300 uppercase">Vlog Pro</span>
+                    </button>
+                    <button
+                        @click="projectSettings.audio_ducking_ratio = 0.05; projectSettings.audio_attack_time = 0.3; projectSettings.audio_release_time = 0.8; projectSettings.audio_merge_threshold = 2.0; projectSettings.audio_block_fade = 2.0"
+                        class="bg-blue-900/20 hover:bg-blue-600/40 border border-blue-500/20 py-3 rounded-xl transition group">
+                        <span class="block text-xl mb-1 group-hover:scale-125 transition">🎭</span>
+                        <span class="text-[10px] font-bold text-blue-300 uppercase">Documental</span>
+                    </button>
+                    <button
+                        @click="projectSettings.audio_ducking_ratio = 0.4; projectSettings.audio_attack_time = 0.5; projectSettings.audio_release_time = 1.5; projectSettings.audio_merge_threshold = 0.5; projectSettings.audio_block_fade = 3.0"
+                        class="bg-cyan-900/20 hover:bg-cyan-600/40 border border-cyan-500/20 py-3 rounded-xl transition group">
+                        <span class="block text-xl mb-1 group-hover:scale-125 transition">🧘</span>
+                        <span class="text-[10px] font-bold text-cyan-300 uppercase">Zen / Atmos</span>
+                    </button>
+                </div>
+
+                <!-- Main Mixer Section -->
+                <div class="grid grid-cols-2 gap-8">
+
+                    <!-- Left Column: Ducking Engine -->
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_5px_indigo]"></span>
+                            <h4 class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Ducking Engine
+                            </h4>
+                        </div>
+
+                        <!-- Ratio Slider -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-end">
+                                <label class="text-xs text-gray-400 font-bold">Ducking Ratio (Vol. Música)</label>
+                                <span class="text-lg font-mono text-indigo-400 font-black"
+                                    x-text="Math.round(projectSettings.audio_ducking_ratio * 100) + '%'"></span>
+                            </div>
+                            <input type="range" min="0" max="0.5" step="0.01"
+                                x-model="projectSettings.audio_ducking_ratio"
+                                class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <p class="text-[9px] text-gray-600 italic">Nivel de la música cuando hay voz (0% es silencio
+                                total)</p>
+                        </div>
+
+                        <!-- Attack/Release Grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] text-gray-500 uppercase font-bold">Attack (s)</label>
+                                <input type="number" step="0.05" min="0" x-model="projectSettings.audio_attack_time"
+                                    class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-indigo-500/50 outline-none">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] text-gray-500 uppercase font-bold">Release (s)</label>
+                                <input type="number" step="0.05" min="0" x-model="projectSettings.audio_release_time"
+                                    class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-indigo-500/50 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Mastering & Transitions -->
+                    <div class="space-y-6 border-l border-white/5 pl-8">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_emerald]"></span>
+                            <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Master
+                                Workflow</h4>
+                        </div>
+
+                        <!-- Merge Threshold -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-end">
+                                <label class="text-xs text-gray-400 font-bold">Merge Threshold (s)</label>
+                                <span class="text-lg font-mono text-emerald-400 font-black"
+                                    x-text="projectSettings.audio_merge_threshold + 's'"></span>
+                            </div>
+                            <input type="range" min="0.1" max="5.0" step="0.1"
+                                x-model="projectSettings.audio_merge_threshold"
+                                class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                            <p class="text-[9px] text-gray-600 italic">Une huecos de silencio menores a este tiempo</p>
+                        </div>
+
+                        <!-- Block Fade -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-end">
+                                <label class="text-xs text-gray-400 font-bold">Block Transition Fade (s)</label>
+                                <span class="text-lg font-mono text-emerald-400 font-black"
+                                    x-text="projectSettings.audio_block_fade + 's'"></span>
+                            </div>
+                            <input type="range" min="0.0" max="5.0" step="0.1"
+                                x-model="projectSettings.audio_block_fade"
+                                class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        </div>
+
+                        <!-- Early Finish -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-gray-500 uppercase font-bold">Early Finish Buffer (s)</label>
+                            <input type="number" step="0.05" min="0" x-model="projectSettings.audio_early_finish"
+                                class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-emerald-500/50 outline-none">
+                            <p class="text-[8px] text-gray-700">Silencio forzado al final de cada bloque</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Status -->
+                <div class="pt-6 border-t border-white/5 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></div>
+                        <span class="text-[10px] text-gray-500 font-mono uppercase tracking-tighter">Real-time Sync
+                            Active</span>
+                    </div>
+                    <button @click="showAudioMasterModal = false"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition active:scale-95">
+                        Close Console
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3173,6 +3830,30 @@
         setInterval(sendHeartbeat, 10000); // 10s
         document.addEventListener('DOMContentLoaded', sendHeartbeat);
     </script>
+    <!-- BULK EDITOR MODAL (Restored) -->
+    <div x-show="showBulkModal" style="display: none;"
+        class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+        x-transition.opacity x-cloak>
+        <div class="bg-gray-800 w-full max-w-5xl rounded-xl shadow-2xl border border-gray-600 flex flex-col h-[90vh] animate-scale">
+            <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-xl">
+                <h3 class="text-xl font-bold text-gray-200">Editor de Texto (Modo Experto)</h3>
+                <button @click="showBulkModal = false" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 p-4 overflow-hidden flex flex-col">
+                <p class="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Formato: Título | Archivo | Instrucciones | Pausa | Texto [SFX:archivo:vol:off]</p>
+                <textarea x-model="bulkText" 
+                    class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-blue-300 focus:outline-none focus:border-blue-500 resize-none shadow-inner"></textarea>
+            </div>
+            <div class="px-6 py-4 bg-gray-900 border-t border-gray-700 flex justify-end gap-3 rounded-b-xl">
+                <button @click="showBulkModal = false" class="text-gray-400 hover:text-white px-4 py-2 text-sm uppercase font-bold">Cancelar</button>
+                <button @click="saveBulkEditor()"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-2 rounded shadow font-bold uppercase tracking-wide transition">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

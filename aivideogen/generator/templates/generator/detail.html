@@ -1,4 +1,4 @@
-﻿{% extends 'generator/base.html' %}
+{% extends 'generator/base.html' %}
 {% block content %}
 <!-- VERSION 4.0 DEFINITIVE FIX -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -91,13 +91,34 @@
         <p style="margin-bottom: 30px; color: #aaa;">El proyecto ha sido creado. Haz clic abajo para comenzar la
             generación del video.</p>
 
-        <form action="{% url 'generator:start_project' project.id %}" method="post">
+        <!-- v4.1: Render Confirmation with YouTube Safeguard -->
+        <form action="{% url 'generator:start_project' project.id %}" method="post" id="render-form">
             {% csrf_token %}
-            <button type="submit" class="btn"
-                style="background-color: #00e676; color: #000; font-size: 1.2rem; padding: 15px 30px; font-weight: bold; border: none;">
-                🚀 Comenzar Generación
+            <div style="margin-bottom: 25px; padding: 15px; background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 0, 0, 0.2); border-radius: 8px; display: inline-block;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="confirm_auto_upload" {% if project.auto_upload_youtube %}checked{% endif %} style="width: 20px; height: 20px;">
+                    <span style="font-size: 1rem; color: #ff4444; font-weight: bold;">🚀 Subir automáticamente a YouTube al terminar</span>
+                </label>
+            </div>
+            <br>
+            <button type="submit" class="btn" onclick="return confirmRender()"
+                style="background-color: #00e676; color: #000; font-size: 1.2rem; padding: 15px 30px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;">
+                🎬 Comenzar Generación
             </button>
         </form>
+
+        <script>
+            function confirmRender() {
+                const autoUpload = document.querySelector('input[name="confirm_auto_upload"]').checked;
+                let msg = "¿Estás listo para comenzar el renderizado?";
+                if (autoUpload) {
+                    msg += "\n\n⚠️ AVISO: El video se subirá AUTOMÁTICAMENTE a YouTube.";
+                } else {
+                    msg += "\n\n(No se subirá a YouTube, solo se generará el archivo local)";
+                }
+                return confirm(msg);
+            }
+        </script>
     </div>
     {% elif project.status == 'processing' %}
     <div id="progress-container"
@@ -197,6 +218,19 @@
     </p>
 
     <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <!-- v14.5: Social Info Title -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="font-size: 0.75rem; font-weight: bold; color: #cbd5e1; text-transform: uppercase;">🎬
+                    Título para YouTube</label>
+                <button onclick="copyToClipboard('title-text', this)" class="btn"
+                    style="padding: 2px 10px; font-size: 0.7rem; background: #334155; height: auto;">Copiar</button>
+            </div>
+            <input id="title-text" placeholder="Título impactante para YouTube..." value="{{ social_copy.title }}"
+                style="width: 100%; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-size: 0.85rem; font-family: inherit; transition: border-color 0.2s; outline: none;"
+                onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#334155'">
+        </div>
+
         <!-- Description -->
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -241,6 +275,14 @@
             </div>
         </div>
     </div>
+
+    <!-- v14.5: Save Button -->
+    <div style="margin-top: 25px; text-align: right; border-top: 1px solid #334155; padding-top: 15px;">
+        <button onclick="saveSocialInfo()" id="btn-save-social" class="btn"
+            style="background: linear-gradient(135deg, #4f46e5, #6366f1); border: none; padding: 10px 30px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); transition: transform 0.2s, background 0.2s;">
+            💾 Guardar Cambios para YouTube
+        </button>
+    </div>
 </div>
 
 <script>
@@ -259,6 +301,51 @@
                 btn.style.background = "#334155";
             }, 2000);
         });
+    }
+
+    function saveSocialInfo() {
+        const btn = document.getElementById('btn-save-social');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Guardando...";
+        btn.disabled = true;
+
+        const data = {
+            title: document.getElementById('title-text').value,
+            description: document.getElementById('desc-text').value,
+            tags: document.getElementById('tags-text').value,
+            pinned_comment: document.getElementById('comment-text').value
+        };
+
+        fetch("{% url 'generator:save_social_info' project.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    btn.innerText = "✅ Guardado";
+                    btn.style.background = "#059669";
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                        btn.style.background = "linear-gradient(135deg, #4f46e5, #6366f1)";
+                    }, 2000);
+                } else {
+                    alert("Error: " + data.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error de conexión al guardar.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
     }
 </script>
 {% endif %}

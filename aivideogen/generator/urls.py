@@ -21,6 +21,7 @@ urlpatterns = [
     path('youtube/callback/', views.youtube_callback, name='youtube_callback'),
     path('youtube/reset/', views.youtube_reset_view, name='youtube_reset'),
     path('project/<int:project_id>/youtube-upload/', views.upload_to_youtube_view, name='youtube_upload'),
+    path('project/<int:project_id>/save-social/', views.save_social_info, name='save_social_info'),
     path('music/', views.music_list, name='music_list'),
     path('music/upload/', views.upload_music, name='upload_music'),
     path('music/<int:music_id>/delete/', views.delete_music, name='delete_music'),
@@ -34,6 +35,7 @@ urlpatterns = [
     path('project/<int:project_id>/editor/', views.project_editor, name='project_editor'),
     path('api/project/<int:project_id>/script/', views.get_project_script_json, name='get_project_script_json'),
     path('api/project/<int:project_id>/script/save/', views.save_project_script_json, name='save_project_script_json'),
+    path('api/project/<int:project_id>/script/translate/', views.translate_project_script_api, name='translate_project_script_api'),
     # HTMX endpoints for modal
     path('api/project/<int:project_id>/scene/form/', views.scene_form, name='scene_form'),
     
@@ -61,6 +63,5 @@ urlpatterns = [
     path('tools/carousel/', views.carousel_tool_view, name='carousel_tool'),
     path('api/tools/process-carousel/', views.process_carousel_api, name='api_process_carousel'),
     path('api/tools/upload-carousel-images/', views.upload_carousel_images, name='api_upload_carousel_images'),
-    path('api/tools/browse-images/', views.browse_images, name='api_browse_images'),
 ]
 

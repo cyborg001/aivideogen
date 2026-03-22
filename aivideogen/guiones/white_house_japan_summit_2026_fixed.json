@@ -1,0 +1,40 @@
+{
+  "title": "Casa Blanca: Cumbre EEUU-Japón 2026 (CORREGIDO)",
+  "background_music": "orchestral_diplomacy.mp3",
+  "music_volume": 0.15,
+  "language": "es",
+  "dubbing_mode": "hq",
+  "blocks": [
+    {
+      "title": "Introducción y Cumbre",
+      "scenes": [
+        {
+          "text": "La Casa Blanca se viste de gala. El Presidente Trump recibe a la PM de Japón, Sanae Takaichi, en una cumbre donde no solo se sellaron acuerdos de 40 mil millones de dólares, ¡sino que también se celebró el cumpleaños número 20 de Barron Trump! [pause] Diplomacia y celebración se unieron en el Salón de Cenas de Estado.",
+          "assets": [
+            {
+              "id": "white_house_gala_march2026_1774068252219.png",
+              "zoom": "1.0:1.3",
+              "move": "HOR:0:100"
+            }
+          ],
+          "pause": 1.5
+        },
+        {
+          "text": "Muchas gracias a todos. Es un placer tenerlos aquí. Tenemos a una persona muy especial que acaba de ganar unas elecciones tremendas de una manera que ha batido todos los récords. Como ven, tenemos algo en común. Me sentí muy orgulloso y honrado de respaldar a la Primera Ministra porque sentí que era realmente buena. Ella hizo un trabajo fantástico. La respeto mucho, así que le di mi respaldo. Y tuvo la elección más exitosa, en mi opinión, en la historia de Japón, ganando por el mayor margen de la historia. Así que tenemos a una mujer muy popular y poderosa, es una gran mujer.",
+          "assets": [
+            {
+              "id": "white_house_dinner_japan.mp4",
+              "video_volume": 0.4,
+              "start_time": 0.0
+            }
+          ],
+          "language": "es",
+          "dubbing_mode": "hq",
+          "force_duration": true,
+          "duration": 45.0,
+          "subtitle": "DISCURSO TRADUCIDO: TRUMP & TAKAICHI"
+        }
+      ]
+    }
+  ]
+}

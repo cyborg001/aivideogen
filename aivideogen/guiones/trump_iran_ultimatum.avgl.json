@@ -1,0 +1,89 @@
+{
+    "title": "¡TRUMP LANZA EL ULTIMÁTUM FINAL A IRÁN! 🤯",
+    "version": "7.2 (Music & CTA Fix)",
+    "settings": {
+        "engine": "edge",
+        "voice": "es-US-AlonsoNeural",
+        "background_music": "Epic_Battle_Speech_-_Wayne_Jones.mp3",
+        "audio_ducking_ratio": 0.07,
+        "voice_speed": 1.18,
+        "render_mode": "cpu"
+    },
+    "blocks": [
+        {
+            "id": "block_1",
+            "title": "Ultimátum Nuclear",
+            "scenes": [
+                {
+                    "title": "El Gancho de las 48h",
+                    "text": "¡48 HORAS O EL BORRADO TOTAL! 🚨",
+                    "duration": 2.2,
+                    "speed": 1.18,
+                    "assets": [
+                        {
+                            "id": "trump_iran_ultimatum.png",
+                            "type": "image",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:50:50"
+                        }
+                    ]
+                },
+                {
+                    "title": "Bloqueo en Ormuz",
+                    "text": "Donald Trump acaba de lanzar un ultimátum a Irán: si el Estrecho de Ormuz no se abre en dos días, EE.UU. atacará sus plantas eléctricas.",
+                    "duration": 6.8,
+                    "speed": 1.18,
+                    "assets": [
+                        {
+                            "id": "hormuz_ships_blockade.png",
+                            "type": "image",
+                            "zoom": "1.4:1.0",
+                            "move": "VER:100:0"
+                        }
+                    ]
+                },
+                {
+                    "title": "La Amenaza Directa",
+                    "text": "En sus propias palabras: 'Atacaremos sus plantas de energía, ¡empezando por la más grande primero!'.",
+                    "duration": 5.8,
+                    "speed": 1.18,
+                    "assets": [
+                        {
+                            "id": "iran_nuclear_natanz.png",
+                            "type": "image",
+                            "zoom": "1.1:1.4",
+                            "move": "HOR:40:60"
+                        }
+                    ]
+                },
+                {
+                    "title": "Crisis Global",
+                    "text": "Con el petróleo por las nubes, el mundo contiene el aliento. ¿Es este el inicio de una escalada total o un farol de máxima presión?",
+                    "duration": 6.5,
+                    "speed": 1.17,
+                    "assets": [
+                        {
+                            "id": "global_oil_prices.png",
+                            "type": "image",
+                            "zoom": "1.0:1.2",
+                            "move": "VER:0:100"
+                        }
+                    ]
+                },
+                {
+                    "title": "CTA: @Transhuman37",
+                    "text": "¿Crees que Trump cumplirá su amenaza? Déjanos tu opinión abajo, queremos leerte. Suscríbete y únete a la conversación más importante de nuestra generación.",
+                    "duration": 7.5,
+                    "speed": 1.16,
+                    "assets": [
+                        {
+                            "id": "trump_white_house_speech.png",
+                            "type": "image",
+                            "zoom": "1.2:1.0"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

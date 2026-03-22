@@ -1,0 +1,124 @@
+LISTADO INICIAL DE FUENTES - REVISIÓN SISTEMÁTICA PRISMA
+Proyecto: Modelado y Calibración de la Magnitud de Momento (Mw) - RD
+Fecha: 13 de marzo de 2026
+
+1.  Amorèse, D. (2007). Applying a general orthogonal regression to seismic data. BSSA.
+2.  Calais, E., et al. (2002). Strain partitioning in Hispaniola. JGR.
+3.  Mancini, F., et al. (2019). Zonal calibration of Colombia’s local magnitude scale. BSSA.
+4.  Scordilis, E. M. (2006). Empirical global relations converting mb and Ms to Mw. J. Seismol.
+5.  Convertito, V., & Pino, N. A. (2014). ML and MW for the Italian territory. BSSA.
+6.  Richter, C. F. (1935). An instrumental earthquake magnitude scale. BSSA.
+7.  Kanamori, H. (1977). The energy release in great earthquakes. JGR.
+8.  Hanks, T. C., & Kanamori, H. (1979). A moment magnitude scale. JGR.
+9.  Di Bona, D., et al. (2016). A Local Magnitude Scale for Crustal Earthquakes in Italy. BSSA.
+10. Gasperini, P., et al. (2013). Empirical Calibration of Local Magnitude Data Sets Italy. BSSA.
+11. Rosero-Rueda, S.P., et al. (2020). Calibration of Local Magnitude Scale for Colombia. ResearchGate.
+12. Muñoz-Molina, J.J., et al. (2024). Empirical Earthquake Source Scaling Relations Central America.
+13. Villalón-Semanat, M., & Palau-Clares, R. Relaciones empíricas mb/Ms, Ms/Mw La Española.
+14. Hutton, L. K., & Boore, D. M. (1987). The ML scale in Southern California. BSSA.
+15. Bakun, W. H., & Joyner, W. B. (1984). The ML scale in central California. BSSA.
+16. Bormann, P., et al. (2013). The New Manual of Seismological Observatory Practice (NMSOP-2).
+17. Gutenberg, B., & Richter, C. F. (1944). Frequency of earthquakes in California. BSSA.
+18. Das, S. (2004). The physics of earthquake ruptures.
+19. Mann, P., et al. (2002). Strike-slip faulting Hispaniola. Geological Society London.
+20. Tebbens, S. F. (2001). Self-similarity in earthquake size distributions.
+21. Wald, D. J., et al. (1999). Relationships between peak ground acceleration and Modified Mercalli Intensity.
+22. Joyner, W. B., & Boore, D. M. (1981). Peak horizontal acceleration and velocity.
+23. Wells, D. L., & Coppersmith, K. J. (1994). New empirical relationships among magnitude, rupture length.
+24. Akkar, S., & Bommer, J. J. (2010). Empirical equations for the prediction of PGA in Europe and Middle East.
+25. Boore, D. M., & Atkinson, G. M. (2008). Ground-motion prediction equations for average horizontal component.
+26. Campbell, K. W., & Bozorgnia, Y. (2008). NGA ground motion model for average horizontal component.
+27. Chiou, B. S. J., & Youngs, R. R. (2008). NGA model for average horizontal component of peak ground motion.
+28. Abrahamson, N. A., & Silva, W. J. (2008). Summary of the Abrahamson & Silva NGA ground-motion relations.
+29. Idriss, I. M. (2008). An NGA empirical model for estimating the horizontal spectral values.
+30. Petersen, M. D., et al. (2008). Documentation for the 2008 Update of the United States National Seismic Hazard Maps.
+31. Giardini, D., et al. (1999). The ASH Global Seismic Hazard Assessment Program (GSHAP).
+32. Grünthal, G., et al. (1999). The GSHAP seismic hazard map of the European-Mediterranean region.
+33. Shedlock, K. M., et al. (2000). The GSHAP seismic hazard map of North and Central America and the Caribbean.
+34. McCaffrey, R. (2008). Global time-dependent design of plate boundary zones from GPS.
+35. DeMets, C., et al. (2010). Geologically current plate motions.
+36. Stein, S., & Wysession, M. (2003). An Introduction to Seismology, Earthquakes, and Earth Structure.
+37. Lay, T., & Wallace, T. C. (1995). Modern Global Seismology.
+38. Aki, K., & Richards, P. G. (2002). Quantitative Seismology.
+39. Shearer, P. M. (2009). Introduction to Seismology.
+40. Bolt, B. A. (2004). Earthquakes.
+41. Udías, A. (1999). Principles of Seismology.
+42. Müller, G. (1985). The theory of seismic sources.
+43. Madariaga, R. (2007). Seismic source theory.
+44. Kostrov, V. V., & Das, S. (1988). Principles of Earthquake Source Mechanics.
+45. Scholz, C. H. (2019). The Mechanics of Earthquakes and Faulting.
+46. Sibson, R. H. (1982). Fault zone models, heat flow, and the depth-distribution of seismicity.
+47. Kanamori, H., & Anderson, D. L. (1975). Theoretical basis of some empirical relations in seismology.
+48. Ben-Menahem, A., & Singh, S. J. (1981). Seismic Waves and Sources.
+49. Kennett, B. L. N. (2001). The Seismic Wavefield.
+50. Malagnini, L., et al. (2000). Ground-motion scaling in the Apennines (Italy).
+51. Mayeda, K., & Walter, W. R. (1996). Moment, energy, and stress drop of the 1992 Little Skull Mountain.
+52. Prejean, S. G., & Ellsworth, W. L. (2001). Observations of earthquake source parameters at 2 km depth.
+53. Abercrombie, R. E. (1995). Earthquake source scaling at high frequencies: A comparison of L/H.
+54. Ide, S., et al. (2003). A scaling law for small and large earthquakes based on a fracture model.
+55. Imanishi, K., & Ellsworth, W. L. (2006). Source scaling with constant stress drop small earthquakes.
+56. Prieto, G. A., et al. (2004). On the uncertainty of earthquake source parameters.
+57. Viegas, G., et al. (2010). Segmentation of the North Anatolian Fault based on source parameters.
+58. Allmann, B. P., & Shearer, P. M. (2009). Global variations of stress drop for moderate to large earthquakes.
+59. Somerville, P. G., et al. (1999). Characterizing crustal earthquake slip models for the prediction of G.M.
+60. Mai, P. M., & Beroza, G. C. (2002). A spatial random field model to characterize complexity in slip.
+61. Guatteri, M., et al. (2003). Determination of kinematic source parameters for the 1999 Chi-Chi earthquake.
+62. Dreger, D. S., & Helmberger, D. V. (1993). Determination of source parameters of moderate S.C. earthquakes.
+63. Pasyanos, M. E., et al. (1996). Source parameters of events in the San Francisco Bay region.
+64. Ristau, J., et al. (2003). Regional moment tensor analysis in western Canada.
+65. Clinton, J. F., et al. (2006). The ShakeMovie project: automated and on-line real-time three-dimensional.
+66. Ekström, G., et al. (2012). The global CMT project 2004-2010: Centroid-moment tensors for 13,000 events.
+67. Dziewonski, A. M., et al. (1981). Determination of earthquake source parameters from waveform data.
+68. Sipkin, S. A. (1982). Estimation of earthquake source parameters by the inversion of teleseismic.
+69. Storchak, D. A., et al. (2013). Public release of the ISC-GEM global instrumental earthquake catalogue.
+70. Bondár, I., & Storchak, D. A. (2011). Improved location procedures at the International Seismological Centre.
+71. Engdahl, E. R., et al. (1998). Global teleseismic earthquake relocation with improved phases.
+72. Karabulut, H., et al. (2011). The 2011 Van (Eastern Turkey) earthquake: Shear velocity structure.
+73. Tan, O., et al. (2008). Source parameters of the 2004-2005 Sivrice earthquake sequence.
+74. Kiratzi, A. A., & Louvari, E. K. (2003). Focal mechanisms of shallow earthquakes in the Aegean Sea.
+75. Papazachos, B. C., et al. (1997). Source parameters of large earthquakes in Greece.
+76. Slejko, D., et al. (1999). Seismic hazard assessment for Adria.
+77. Meletti, C., et al. (2008). Zonation model for the seismic hazard assessment in Italy.
+78. Faccioli, E., et al. (2010). Seismic hazard assessment for Italy: The 2004 consensus map.
+79. Woessner, J., et al. (2015). The 2013 European Seismic Hazard Model: key components and results.
+80. Delavaud, E., et al. (2012). Towards a unified ground motion prediction model for Europe.
+81. Cotton, F., et al. (2006). Criteria for selecting and adjusting ground-motion models for PSHA.
+82. Bommer, J. J., et al. (2010). On the selection of ground-motion prediction equations for PSHA.
+83. Scherbaum, F., et al. (2004). On the use of response spectral-ratio data for the selection of G.M. models.
+84. Al Atik, L., et al. (2010). The variability of ground-motion prediction models and its components.
+85. Strasser, F. O., et al. (2010). Scaling of the source geometry of interface and intraslab subduction events.
+86. Blaser, L., et al. (2010). Database, scaling relations and subduction-zone constraints for PSHA.
+87. Murotani, S., et al. (2008). Scaling relations of source parameters for enormous interplate earthquakes.
+88. Geller, R. J. (1976). Scaling relations for earthquake source parameters and magnitudes.
+89. Purcaru, G., & Berckhemer, H. (1982). Quantitative relations of earthquake source parameters.
+90. Nuttli, O. W. (1983). Average seismic source-parameter relations for mid-plate earthquakes.
+91. Herrmann, R. B., & Kijko, A. (1983). Modeling some tertiary earthquake parameters in the E.U.S.
+92. Boore, D. M. (1983). Stochastic simulation of high-frequency ground motions based on seismo. models.
+93. Atkinson, G. M., & Boore, D. M. (1995). Ground-motion relations for eastern North America.
+94. Toro, G. R., et al. (1997). Model of peak ground motions from earthquakes in central and eastern N.A.
+95. Frankel, A. (1995). Mapping seismic hazard in the central and eastern United States.
+96. Mueller, C. S. (2010). USGS National Seismic Hazard Maps: Methods and insights.
+97. Field, E. H., et al. (2009). Uniform California Earthquake Rupture Forecast, Version 2 (UCERF 2).
+98. WGCEP (2003). Earthquake Probabilities in the San Francisco Bay Region: 2002–2031.
+99. Stepp, J. C. (1972). Analysis of completeness of the earthquake sample in the Puget Sound area.
+100. Weichert, D. H. (1980). Estimation of the Gutenberg-Richter recurrence parameters.
+101. Kijko, A., & Sellevoll, M. A. (1989). Estimation of earthquake hazard parameters from incomplete data.
+102. Gardner, J. K., & Knopoff, L. (1974). Is the sequence of earthquakes in Southern California Poissonian?
+103. Reasenberg, P. (1985). Second-order moment of central California seismicity, 1969-1982.
+104. Uhrhammer, R. A. (1986). Characteristics of northern California seismicity.
+105. Wesnousky, S. G. (1986). Earthquakes, quaternary faults, and seismic hazard in California.
+106. Stirling, M., et al. (2012). National seismic hazard model for New Zealand: 2010 update.
+107. Berryman, K. R., et al. (2012). The New Zealand active fault database.
+108. Zhao, J. X., et al. (2006). Attenuation relations of strong ground motion in Japan.
+109. Fukushima, Y., & Tanaka, T. (1990). A new attenuation relation for peak horizontal acceleration.
+110. Youngs, R. R., et al. (1997). Strong ground motion attenuation relationships for subduction zone.
+111. Gregor, N. J., et al. (2002). Ground motion attenuation relationships for Cascadia subduction zone.
+112. Atkinson, G. M., & Macias, M. (2009). Predicted ground motions for Mw 9 Cascadia earthquakes.
+113. Garcia, D., et al. (2005). Estimation of parameters of the source of the 2003 Tecoman earthquake.
+114. Ordaz, M., et al. (1989). Estimation of local magnitudes from strong motion records in Mexico.
+115. Singh, S. K., et al. (1989). The Mexico earthquake of September 19, 1985.
+116. Anderson, J. G., et al. (1986). Strong ground motion from the Michoacán, Mexico, earthquake.
+117. McNally, K. C., et al. (1986). The 1985 Mexico earthquake: Spatial distribution of aftershocks.
+118. Pardo, M., & Suarez, G. (1995). Shape of the subducted Rivera and Cocos plates in Mexico.
+119. Benz, H. M., et al. (2011). Seismicity of the Earth 1900-2010 Caribbean plate and vicinity.
+120. USGS (2025). Global Earthquake Catalog Search Results (Simulated for Identification phase).

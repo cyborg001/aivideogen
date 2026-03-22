@@ -14,6 +14,7 @@ class NewsSource(models.Model):
     category_old = models.CharField(max_length=50, blank=True, null=True)
     is_secure = models.BooleanField(default=True)
     is_rss = models.BooleanField(default=False)
+    translate_auto = models.BooleanField(default=False, help_text="Traducir automáticamente al español si la fuente es extranjera")
     added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
