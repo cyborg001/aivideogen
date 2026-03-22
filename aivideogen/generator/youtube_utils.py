@@ -309,7 +309,29 @@ def trigger_auto_upload(project):
         project.log_output += f"\n[{now}] [YouTube] [START] Iniciando subida con Tags: {', '.join(final_tags[:3])}..."
         project.save(update_fields=['log_output'])
         
-        result = upload_video(youtube, project.output_video.path, title, description, tags=final_tags)
+        import shutil
+        from django.utils.text import slugify
+        
+        # v9.1: Slug-Naming Humanization
+        # YouTube uses the original filename as a metadata signal.
+        # We create a temporary copy with a human-readable name.
+        video_dir = os.path.dirname(project.output_video.path)
+        human_slug = slugify(title) or f"video_proyecto_{project.id}"
+        temp_human_path = os.path.join(video_dir, f"{human_slug}.mp4")
+        
+        try:
+            logger.info(f"[YouTube] [HUMANIZATION] Creando copia temporal humanizada: {human_slug}.mp4")
+            shutil.copy2(project.output_video.path, temp_human_path)
+            
+            result = upload_video(youtube, temp_human_path, title, description, tags=final_tags)
+        finally:
+            # Always cleanup the temporary humanized file
+            if os.path.exists(temp_human_path):
+                try:
+                    os.remove(temp_human_path)
+                    logger.info(f"[YouTube] [CLEANUP] Archivo temporal humanizado eliminado.")
+                except Exception as e:
+                    logger.warning(f"[YouTube] No se pudo eliminar el archivo temporal: {e}")
         
         if result and 'id' in result:
              video_id = result['id']
