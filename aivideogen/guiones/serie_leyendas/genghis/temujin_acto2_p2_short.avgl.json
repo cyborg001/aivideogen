@@ -1,0 +1,138 @@
+{
+    "title": "Genghis Khan: El Terror del Este (Acto 2 Parte 2)",
+    "voice": "es-DO-EmilioNeural",
+    "background_music": "Epic_War_Drums.mp3",
+    "music_volume": 0.3,
+    "dynamic_subtitles": true,
+    "human_signature": true,
+    "tags": "GenghisKhan, Historia, China, Conquista, Beijing, Guerra",
+    "hashtags": "#GenghisKhan #Historia #China #Conquista #Shorts #Estrategia",
+    "blocks": [
+        {
+            "title": "EL HORIZONTE DE SEDA",
+            "music": "Epic_War_Drums.mp3",
+            "volume": 0.4,
+            "scenes": [
+                {
+                    "title": "Hook Dentro",
+                    "text": "[TITLE:MÁS ALLÁ DEL MURO] La muralla ha caído. Delante, el imperio más avanzado del mundo. Detrás, cien mil jinetes sedientos de gloria.",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/04_cavalry_charge.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:100",
+                            "fit": false,
+                            "overlay": "dust"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "EL ASEDIO DE LAS 900 CIUDADES",
+            "music": "Shadow_of_Betrayal.mp3",
+            "volume": 0.3,
+            "scenes": [
+                {
+                    "title": "El Avance Inparable",
+                    "text": "[SUB:La tormenta de los jinetes] En meses, las llanuras de China se tiñeron de rojo. Los mongoles aparecían como fantasmas entre el polvo de la estepa.",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/mongol_horde_gobi_dust.png",
+                            "zoom": "1.2:1.0",
+                            "move": "HOR:0:80",
+                            "fit": false,
+                            "overlay": "viento_polvo_de_estepa"
+                        }
+                    ]
+                },
+                {
+                    "title": "Carga de Caballería",
+                    "text": "[SUB:Viento y Sangre] No eran soldados, eran una fuerza de la naturaleza descargando su furia sobre el imperio más rico del mundo.",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/04_cavalry_charge.png",
+                            "zoom": "1.1:1.3",
+                            "move": "HOR:100:0",
+                            "fit": false,
+                            "overlay": "dust"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Battle Intimidation Forest.mp3",
+                            "volume": 0.4,
+                            "offset": 0.0
+                        }
+                    ]
+                },
+                {
+                    "title": "Zhongdu",
+                    "text": "[SUB:El sitio de Zhongdu] 1215. La joya de los Jin, [PHO]Zhongdu[/PHO], es rodeada. Sus murallas eran las más altas de oriente, pero el hambre fue su mayor enemigo.",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/05_siege_engines.png",
+                            "zoom": "1.1:1.3",
+                            "move": "HOR:20:80",
+                            "fit": false,
+                            "overlay": "cenizas_y_brazas"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "EL FIN DE UN IMPERIO",
+            "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
+            "volume": 0.4,
+            "scenes": [
+                {
+                    "title": "Columnas de Humo",
+                    "text": "[SUB:Fuego en el trono] La capital cayó. Cuando los mongoles entraron, el humo de las bibliotecas y palacios ardiendo se vio a kilómetros.",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/09_zhongdu_flames.png",
+                            "zoom": "1.5:1.1",
+                            "move": "HOR:50:50",
+                            "fit": false,
+                            "overlay": "fuego_intenso"
+                        }
+                    ],
+                    "sfx": [
+                        {
+                            "type": "Fire Loop.mp3",
+                            "volume": 0.4,
+                            "offset": 0.0
+                        }
+                    ]
+                },
+                {
+                    "title": "Outro Destino",
+                    "text": "[SUB:El nuevo dueño del Este] El Emperador huyó al sur. Genghis Khan ahora gobernaba el corazón de China. [EPICO]El mundo nunca volvería a ser el mismo.[/EPICO]",
+                    "assets": [
+                        {
+                            "id": "genghis/acto2/08_chinese_city_entry.png",
+                            "zoom": "1.0:1.3",
+                            "move": "HOR:0:0 + VER:100:0",
+                            "fit": false,
+                            "overlay": "vignette"
+                        }
+                    ]
+                },
+                {
+                    "title": "CTA SOCIAL",
+                    "text": "[SUB:¿Quién será el siguiente?] China ha caído, pero el Khan tiene sed de más. Suscríbete para el Acto 3: La Venganza Khwarazmian.",
+                    "assets": [
+                        {
+                            "id": "genghis/genghis_khan_portrait_epic.png",
+                            "zoom": "1.1:1.0",
+                            "move": "HOR:50:50",
+                            "fit": false,
+                            "overlay": "grain"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

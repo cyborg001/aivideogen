@@ -164,13 +164,23 @@ def generate_youtube_description(project):
     
     description_parts = []
     
-    # 1. Welcome
-    description_parts.append("👋 ¡Hola! Bienvenidos a mi canal")
+    # 1. Welcome Rotation (Humanization v10.2)
+    import random
+    greetings = [
+        "👋 ¡Hola! Bienvenidos a un nuevo video de NotiACI.",
+        "🚀 ¡Qué tal a todos! Hoy exploramos los últimos avances.",
+        "💡 Bienvenidos a la cápsula informativa de hoy.",
+        "🔥 ¡Hola! Gracias por acompañarme en este análisis de tecnología.",
+        "🤖 ¿Listos para lo nuevo? Bienvenidos a mi canal.",
+        "✨ ¡Hola, Arquitecto! Aquí tienes el resumen de hoy."
+    ]
+    description_parts.append(random.choice(greetings))
     description_parts.append("")
     
-    # 2. Project Title (Humanized)
+    # 2. Project Title (Humanized with random emoji)
+    title_emojis = ["🎬", "🎥", "📺", "📽️", "📱", "📡"]
     human_title = get_human_title(project.title)
-    description_parts.append(f"🎬 {human_title}")
+    description_parts.append(f"{random.choice(title_emojis)} {human_title}")
     description_parts.append("")
     
     # 3. Sources

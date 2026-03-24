@@ -38,7 +38,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None, human_signature=None, human_amplitude=1.0):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -53,6 +53,8 @@ class AVGLAsset:
         self.cinema_mode = cinema_mode
         self.start_time = start_time
         self.end_time = end_time
+        self.human_signature = human_signature
+        self.human_amplitude = safe_float(human_amplitude, 1.0)
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -106,6 +108,7 @@ class AVGLScript:
         self.tags = ""
         self.hashtags = ""
         self.music_volume_lock = False
+        self.settings = {}
 
     def get_all_scenes(self):
         scenes = []
@@ -465,6 +468,8 @@ def parse_avgl_json(json_text):
     script.tags = data.get("tags", "")
     script.hashtags = data.get("hashtags", "")
     script.music_volume_lock = data.get("music_volume_lock", False)
+    # v11.8: General settings pass-through
+    script.settings = data.get("settings", {})
     
     for block_data in data.get("blocks", []):
         try: b_vol = float(block_data.get("volume", 0.2))
@@ -540,6 +545,7 @@ def parse_avgl_json(json_text):
 
         for group in block_data.get("groups", []):
             master_asset = group.get("master_asset")
+            group_master_audio = group.get("audio") # v11.0 Performance Mode
             group_id = f"g_{id(group)}"
             
             for s_data in group.get("scenes", []):
@@ -558,7 +564,7 @@ def parse_avgl_json(json_text):
                 scene.force_duration = s_data.get("force_duration", False)
                 
                 scene.subtitle = s_data.get("subtitle", "")
-                scene.audio = s_data.get("audio")
+                scene.audio = s_data.get("audio") or group_master_audio
                 scene.language = s_data.get("language") # v5.1
                 scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
                 

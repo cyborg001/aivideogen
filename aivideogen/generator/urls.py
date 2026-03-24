@@ -63,5 +63,6 @@ urlpatterns = [
     path('tools/carousel/', views.carousel_tool_view, name='carousel_tool'),
     path('api/tools/process-carousel/', views.process_carousel_api, name='api_process_carousel'),
     path('api/tools/upload-carousel-images/', views.upload_carousel_images, name='api_upload_carousel_images'),
+    path('api/open-folder/', views.open_file_folder, name='open_file_folder'),
 ]
 

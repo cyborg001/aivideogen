@@ -18,9 +18,14 @@
             <tr>
                 <td>
                     {% if asset.file_exists %}
-                    <a href="{{ asset.file.url }}" target="_blank">
-                        Ver
-                    </a>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <a href="{{ asset.file.url }}" target="_blank" class="btn" style="padding: 5px 10px; font-size: 0.7rem; background: #3b82f6;">
+                            Ver
+                        </a>
+                        <button onclick="openFolder('{{ asset.file.name|escapejs }}')" class="btn" style="padding: 5px 10px; font-size: 0.7rem; background: #4b5563;" title="Abrir en Carpeta">
+                            📁
+                        </button>
+                    </div>
                     {% else %}
                     <span style="color: #cf6679; font-weight: bold;">⚠️ Archivo no encontrado</span>
                     {% endif %}
@@ -46,4 +51,23 @@
         </tbody>
     </table>
 </div>
+
+<script>
+async function openFolder(path) {
+    try {
+        const response = await fetch('{% url "generator:open_file_folder" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ path: 'assets/' + path })
+        });
+        const data = await response.json();
+        if (data.error) alert("Error: " + data.error);
+    } catch (e) {
+        alert("Error de conexión: " + e);
+    }
+}
+</script>
 {% endblock %}

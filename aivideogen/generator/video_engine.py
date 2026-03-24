@@ -164,7 +164,7 @@ def fast_mux_audio_video(video_path, audio_path, output_path, video_volume=1.0, 
         return False
 # ═══════════════════════════════════════════════════════════════════
 
-def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None, clips_to_close=None, overlay_clip=None):
+def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR:50:50", overlay_path=None, fit=None, shake=False, rotate=None, shake_intensity=5, w_rotate=None, clips_to_close=None, overlay_clip=None, project_settings=None, human_noise_enabled=None, human_noise_intensity=1.0):
     """
     Applies optimized Ken Burns effect with robust sizing and movement.
     Supports diagonal movement: "HOR:start:end + VER:start:end"
@@ -349,7 +349,24 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         # Apply default center-lock if no move defined for axis
         # (Already handled by 50% default in logic above effectively)
 
-        # Shake Effect
+        # v10.1: Human Camera Noise (Global Imperfection)
+        # v11.8: Sub-pixel granular control (Amplitude/Local Toggle)
+        if human_noise_enabled is None:
+            human_noise_enabled = str(os.getenv('HUMAN_SIGNATURE_ENABLED', 'True')).lower() == 'true'
+            # Override from script settings if present
+            if project_settings and 'human_signature' in project_settings:
+                human_noise_enabled = project_settings['human_signature']
+
+        if human_noise_enabled:
+            # Very low frequency, very low amplitude random-like drift
+            # Amplitud base multiplicada por la intensidad local
+            amp = human_noise_intensity if human_noise_intensity is not None else 1.0
+            drift_x = (np.sin(t * 0.5 * 2 * np.pi) * 1.5 + np.cos(t * 1.2 * 2 * np.pi) * 0.8) * amp
+            drift_y = (np.cos(t * 0.7 * 2 * np.pi) * 1.2 + np.sin(t * 1.5 * 2 * np.pi) * 0.7) * amp
+            off_x += drift_x
+            off_y += drift_y
+
+        # Shake Effect (Intense)
         if shake:
             freq = 12.0
             intensity = safe_eval_math(shake_intensity, 5.0)
@@ -1725,7 +1742,10 @@ def generate_video_avgl(project):
                                 shake_intensity=eff_shake_intensity,
                                 rotate=eff_rotate,
                                 w_rotate=getattr(asset, 'w_rotate', None),
-                                clips_to_close=clips_to_close
+                                clips_to_close=clips_to_close,
+                                project_settings=getattr(script, 'settings', {}),
+                                human_noise_enabled=getattr(asset, 'human_signature', None),
+                                human_noise_intensity=getattr(asset, 'human_amplitude', 1.0)
                             )
                 else:
                     # v8.6: FAST AUDIO TEST MODE

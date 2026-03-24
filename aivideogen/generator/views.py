@@ -1592,6 +1592,52 @@ def toggle_auto_upload(request, project_id):
     messages.success(request, f"Subida automática a YouTube: {status_str}")
     return redirect('generator:project_detail', project_id=project.id)
 
+@csrf_exempt
+def open_file_folder(request):
+    """
+    API: Opens Windows Explorer with the specified file selected.
+    v1.0 - Bill's Explorer Integration
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    try:
+        import json
+        import subprocess
+        data = json.loads(request.body)
+        rel_path = data.get('path', '')
+        
+        if not rel_path:
+            return JsonResponse({'error': 'Path is required'}, status=400)
+            
+        # 1. Resolve to absolute path
+        # Remove leading /media/ if present
+        clean_rel = rel_path
+        if clean_rel.startswith('/media/'):
+            clean_rel = clean_rel[7:]
+        elif clean_rel.startswith('media/'):
+            clean_rel = clean_rel[6:]
+        
+        # Normalize and join
+        abs_path = os.path.join(settings.MEDIA_ROOT, clean_rel.replace('/', os.sep))
+        
+        # 2. Check if exists
+        if not os.path.exists(abs_path):
+            # Try joined with BASE_DIR as fallback
+            fallback_path = os.path.join(settings.BASE_DIR, clean_rel.replace('/', os.sep))
+            if os.path.exists(fallback_path):
+                abs_path = fallback_path
+            else:
+                return JsonResponse({'error': f'Archivo no encontrado: {abs_path}'}, status=404)
+        
+        # 3. Open Explorer
+        # Use /select to highlight the file
+        subprocess.run(['explorer.exe', '/select,', os.path.normpath(abs_path)])
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 # ═══════════════════════════════════════════════════════════════════
 # v12.5: PROGRESS & SHUTDOWN API
 # ═══════════════════════════════════════════════════════════════════
