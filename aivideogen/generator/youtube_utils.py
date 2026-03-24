@@ -370,6 +370,7 @@ def trigger_auto_upload(project):
             project.save(update_fields=['log_output'])
             
     except Exception as e:
+        error_msg = str(e)
         from datetime import datetime
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logger.error(f"[YouTube] Error en subida: {error_msg}")
