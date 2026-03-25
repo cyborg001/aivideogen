@@ -406,6 +406,25 @@ def get_human_title(raw_title):
     # Capitalize words
     return clean_name.strip().title()
 
+def get_viral_title_from_json(project):
+    """
+    Extracts the official title/headline from the AVGL JSON script.
+    v8.1: Used as high-priority metadata for YouTube upload.
+    """
+    if not project.script_text:
+        return None
+    
+    script_text = project.script_text.strip()
+    if script_text.startswith('{') and script_text.endswith('}'):
+        try:
+            import json
+            data = json.loads(script_text)
+            # Try different key names for flexibility
+            return data.get('title') or data.get('titulo') or data.get('viral_title')
+        except:
+            pass
+    return None
+
 def generate_contextual_tags(project):
     """
     Intelligently generates contextual tags based on title and script content.
