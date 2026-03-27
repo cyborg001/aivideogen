@@ -15,6 +15,12 @@ def run_file_dialog(filter_type='visual', multiple=False):
                 ("Archivos de Audio (*.mp3, *.wav, *.aac)", "*.mp3 *.wav *.aac *.ogg *.m4a *.flac *.webm"),
                 ("Todo", "*.*")
             ]
+        elif filter_type == 'image':
+            dialog_title = "Seleccionar Carátula / Miniatura"
+            file_types = [
+                ("Imágenes (*.png, *.jpg, *.webp)", "*.png *.jpg *.jpeg *.webp *.gif"),
+                ("Todo", "*.*")
+            ]
         else:
             dialog_title = "Seleccionar Imágenes o Videos"
             file_types = [

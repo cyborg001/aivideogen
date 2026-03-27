@@ -44,6 +44,19 @@ def compile_full_script_ass(all_subtitles, output_path):
         style_title.alignment = 8 # Top Center
         style_title.marginv = 200
         subs.styles["AlphaTitle"] = style_title
+        
+        # Estilo Cabecera/Tag (Naranja) - v28.1.5
+        style_header = SSAStyle()
+        style_header.fontname = "Arial"
+        style_header.fontsize = 50
+        style_header.primarycolor = pysubs2.Color(255, 140, 0) # Naranja Vibrante
+        style_header.outlinecolor = pysubs2.Color(0, 0, 0)
+        style_header.bold = True
+        style_header.outline = 3.5
+        style_header.shadow = 1.0
+        style_header.alignment = 2
+        style_header.marginv = 150
+        subs.styles["AlphaHeader"] = style_header
 
         # 2. Agregar Eventos
         for sub in all_subtitles:
@@ -54,8 +67,13 @@ def compile_full_script_ass(all_subtitles, output_path):
             
             # v26.6: Dynamic Vertical Positioning (Respect y_pos)
             y_pos = sub.get('y_pos', 0.70)
+            style_req = sub.get('style')
             
-            if y_pos < 0.5:
+            if style_req == 'Header':
+                event.style = "AlphaHeader"
+                # Naranja headers follow bottom logic but often slightly higher
+                event.marginv = int((1.0 - y_pos) * 1920)
+            elif y_pos < 0.5:
                 event.style = "AlphaTitle"
                 # Top Alignment (an8) -> MarginV from top
                 event.marginv = int(y_pos * 1920)

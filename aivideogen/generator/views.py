@@ -1157,8 +1157,17 @@ def get_project_script_json(request, project_id):
         'dynamic_subtitles': project.dynamic_subtitles,
         'subtitles_y_position': getattr(project, 'subtitles_y_position', 0.70),
         'auto_upload': project.auto_upload_youtube,
-        'language': getattr(project, 'language', 'es'),
-        'dubbing_mode': getattr(project, 'dubbing_mode', 'hq')
+        'dubbing_mode': getattr(project, 'dubbing_mode', 'hq'),
+        'thumbnail': getattr(project, 'thumbnail_path', ''),
+        'human_signature': getattr(project, 'human_signature', True),
+        'human_amplitude': getattr(project, 'human_amplitude', 1.0),
+        # v20.2: Audio Console
+        'audio_ducking_ratio': getattr(project, 'audio_ducking_ratio', 0.17),
+        'audio_attack_time': getattr(project, 'audio_attack_time', 0.15),
+        'audio_release_time': getattr(project, 'audio_release_time', 0.4),
+        'audio_merge_threshold': getattr(project, 'audio_merge_threshold', 1.5),
+        'audio_block_fade': getattr(project, 'audio_block_fade', 1.0),
+        'audio_early_finish': getattr(project, 'audio_early_finish', 0.1)
     }
     
     # Also sync root-level if missing (redundancy)
@@ -1244,6 +1253,7 @@ def save_project_script_json(request, project_id):
                 if 'music_volume_lock' in settings_data: script_data['music_volume_lock'] = settings_data['music_volume_lock']
                 if 'dynamic_subtitles' in settings_data: script_data['dynamic_subtitles'] = settings_data['dynamic_subtitles']
                 if 'subtitles_y_position' in settings_data: script_data['subtitles_y_position'] = float(settings_data['subtitles_y_position'])
+                if 'thumbnail' in settings_data: script_data['thumbnail'] = settings_data['thumbnail']
                 
                 # v20.2: Audio Console Sync
                 for key in ['audio_ducking_ratio', 'audio_attack_time', 'audio_release_time', 'audio_merge_threshold', 'audio_block_fade', 'audio_early_finish']:
@@ -1356,6 +1366,18 @@ def save_project_script_json(request, project_id):
                 if key in settings_data:
                     try: setattr(project, key, float(settings_data[key]) if settings_data[key] is not None else None)
                     except: pass
+            
+            if 'thumbnail' in settings_data:
+                project.thumbnail_path = settings_data['thumbnail']
+            
+            if 'human_signature' in settings_data:
+                project.human_signature = bool(settings_data['human_signature'])
+                
+            if 'human_amplitude' in settings_data:
+                try: 
+                    project.human_amplitude = float(settings_data['human_amplitude'])
+                except:
+                    pass
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})

@@ -114,6 +114,29 @@ Permite ignorar la duración calculada automáticamente (basada en el audio TTS 
 
 ---
 
+## 🔡 Subtítulos y Jerarquía Visual (v28.1.5)
+
+El motor ahora soporta **Diferenciación de Color** y **Posicionamiento Manual** para evitar solapamientos.
+
+### 1. Encabezados Naranja (`[SUB: texto]`)
+Cuando usas un tag `[SUB]` simple (sin cerrar), el motor lo trata como un aviso o título de soporte:
+- **Color**: Naranja Vibrante (para destacar sobre el blanco).
+- **Posición**: Automáticamente en `y=0.65` (sobre la línea de subtítulos normal).
+- **Uso**: Ideal para slugs de ubicación o temas (`[SUB: Planeta Tierra]`).
+
+### 2. Posicionamiento Dinámico (`y_position`)
+Puedes forzar la altura de cualquier subtítulo pasando un valor decimal en los parámetros:
+- **Sintaxis**: `[TAG: y_pos | texto]` 
+- **Regla**: El motor detecta el tipo de parámetro automáticamente:
+    - **Número Entero** (ej: `40`): Se trata como **Duración Fonética** (60 unidades ~ 4s).
+    - **Número Decimal** (ej: `0.15`): Se trata como **Posición Vertical** (0.0=techo, 1.0=suelo).
+- **Ejemplos**:
+    - `[SUB: 0.15 | Texto]` -> Subtítulo en la parte **superior** (estilo título).
+    - `[DYN: 0.50 | Texto]` -> Subtítulo en el **centro** de la pantalla.
+    - `[SUB: 40:0.25 | Texto]` -> Dura lo de 40 palabras y aparece en el tercio superior.
+
+---
+
 ## 🛠️ Compatibilidad y Robustez
 
 ### Sanitización Automática

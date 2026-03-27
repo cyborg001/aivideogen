@@ -36,7 +36,8 @@ Este documento es nuestra central de mando. Aquí rastreamos el progreso de cada
 **Estado:** Edición y Lore (Hard Sci-Fi)
 **Objetivo:** Escribir una novela de ciencia ficción rigurosa y culturalmente rica.
 
-- [x] Refinar Capítulos 1 al 6 con conceptos de Relatividad General.
+- [x] Refinar Capítulos 1 al 6 con conceptos de Relatividad General (Escritos).
+- [x] **LANZAMIENTO: Prólogo "El Regalo"** ([YouTube Link](https://www.youtube.com/watch?v=B58YDziSrfs)) ✅
 - [x] Actualizar la "Biblia del Universo" con el efecto Geodésica.
 - [x] Integrar jerga caribeña auténtica en los diálogos de Nathan.
 - [ ] **TODO:** Estimar tiempo de lectura total y conteo de palabras del manuscrito completo.

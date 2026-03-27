@@ -107,3 +107,18 @@ El sistema empezará a:
 - **Guarda siempre en JSON**: Si te falta una coma `,` o una llave `}`, el sistema te avisará con un error. VS Code te ayuda a verlo en rojo.
 - **Prueba con clips cortos**: Antes de hacer un documental de 10 minutos, haz pruebas de 15 segundos para ajustar los tiempos.
 - **Usa la carpeta `examples`**: Es tu mejor "libro de recetas". Copia y pega lo que necesites.
+
+---
+
+### 🟠 Subtítulos Profesionales y Color (v28.1.5)
+
+Para que tus videos se vean con un acabado superior, ahora puedes controlar el color y la altura:
+
+-   **Encabezados Naranja**: Usa `[SUB: Mi Título]` (sin cerrar el tag). El motor lo pintará de **naranja brillante** y lo subirá un poco (`y=0.65`) para que no se pise con los subtítulos normales.
+-   **Altura Personalizada**: Puedes mover cualquier texto a donde quieras:
+    -   `[SUB: 0.15 | Texto]` -> Lo pone en el techo (Dorado).
+    -   `[SUB: 0.50 | Texto]` -> Lo pone en el centro.
+    -   `[SUB: 0.85 | Texto]` -> Lo pone bien abajo.
+
+> [!NOTE]
+> Solo usa **punto decimal** (ej: `0.15`) para la altura. Si usas un número entero (ej: `30`), el sistema lo interpretará como **duración fonética** (cuánto tiempo se queda en pantalla).

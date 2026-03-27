@@ -89,6 +89,7 @@ class VideoProject(models.Model):
     
     output_video = models.FileField(upload_to='videos/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
+    thumbnail_path = models.CharField(max_length=1024, blank=True, null=True, help_text="Path to asset image for thumbnail injection")
     
     source_path = models.CharField(max_length=1024, blank=True, help_text="Path to local folder containing script and assets")
     
@@ -110,6 +111,10 @@ class VideoProject(models.Model):
     audio_merge_threshold = models.FloatField(null=True, blank=True, help_text="Umbral de unión de bloques de silencio")
     audio_block_fade = models.FloatField(null=True, blank=True, help_text="Fade entre bloques de audio")
     audio_early_finish = models.FloatField(null=True, blank=True, help_text="Silencio técnico al final del bloque")
+    
+    # v28.1.1: Anti-detection (Human Signature) Persistence
+    human_signature = models.BooleanField(default=True, help_text="Añade micro-variaciones aleatorias al movimiento de cámara")
+    human_amplitude = models.FloatField(default=1.0, help_text="Intensidad de la firma humana (0.1 a 5.0)")
     
     social_title = models.CharField(max_length=255, blank=True, null=True, help_text="Título editado para YouTube")
     social_description = models.TextField(blank=True, null=True, help_text="Descripción editada para YouTube")

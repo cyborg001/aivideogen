@@ -6,6 +6,7 @@ Handles the complete video rendering pipeline with optimizations
 import os
 import time
 import re
+import random
 import numpy as np
 import logging
 import uuid
@@ -286,6 +287,31 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             base_w = w_orig
             base_h = int(w_orig / tar_ar)
 
+    # v11.35: Multi-wave Stochastics with Amplitude Envelope
+    h_noise_active = human_noise_enabled
+    if h_noise_active is None:
+        h_noise_active = str(os.getenv('HUMAN_SIGNATURE_ENABLED', 'True')).lower() == 'true'
+        if project_settings and 'human_signature' in project_settings:
+            h_noise_active = project_settings['human_signature']
+
+    # Pre-calculate unique noise parameters per clip
+    import hashlib
+    clip_seed_int = int(hashlib.md5(image_path.encode()).hexdigest(), 16) % (2**32)
+    rng = random.Random(clip_seed_int)
+    
+    # Base frequencies and phases
+    f1, f2 = 0.5 + rng.uniform(-0.15, 0.15), 1.2 + rng.uniform(-0.3, 0.3)
+    f3, f4 = 0.7 + rng.uniform(-0.2, 0.2), 1.5 + rng.uniform(-0.4, 0.4)
+    p1, p2, p3, p4 = [rng.uniform(0, 2*np.pi) for _ in range(4)]
+    
+    # Normalized amplitudes (Sum of a1+a2 and a3+a4 = 1.0 to respect 'max_amplitude')
+    a1 = rng.uniform(0.5, 0.7); a2 = 1.0 - a1
+    a3 = rng.uniform(0.5, 0.7); a4 = 1.0 - a3
+
+    # v11.35: Amplitude Envelopes (Low frequency modulation [0.2, 1.0])
+    fe1, fe2 = 0.1 + rng.uniform(-0.05, 0.05), 0.12 + rng.uniform(-0.06, 0.06)
+    pe1, pe2 = rng.uniform(0, 2*np.pi), rng.uniform(0, 2*np.pi)
+
     # ═══════════════════════════════════════════════════════════════════
     # 3. FAST OPENCV MAKE_FRAME
     # ═══════════════════════════════════════════════════════════════════
@@ -294,9 +320,6 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         else: progress = t / duration
 
         # 1. Current Zoom Level
-        # Note: In our previous logic, scale was inverse? 
-        # Usually Ken Burns: Zoom 1.0 = Full Cover. Zoom 1.5 = Crop is smaller (1/1.5)
-        # Let's align with logic: Zoom > 1 means "Zoom In" -> Show smaller area.
         current_zoom = z_start + (z_end - z_start) * progress
         scale_factor = 1.0 / current_zoom
 
@@ -305,8 +328,6 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         curr_h = base_h * scale_factor
 
         # 2. Current Pan Position (Center of the crop)
-        # We navigate the "Slack" - the space between the crop and the image edges.
-        # Slack dimensions
         slack_w = w_orig - curr_w
         slack_h = h_orig - curr_h
 
@@ -314,55 +335,35 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
         center_x = w_orig / 2
         center_y = h_orig / 2
         
-        # Apply offsets based on Moves
-        # 0% = Left/Top, 100% = Right/Bottom
-        # Center = 50%
-        
-        # Accumulate normalized offsets (-0.5 to 0.5)
+        # Accumulate normalized offsets
         off_x = 0.0
         off_y = 0.0
         
-        has_hor = False
-        has_ver = False
-        
         # v30.10: Unificado con Frontend (Slack-based Panning)
         for cfg in move_configs:
-            # Porcentaje de paneo (0 a 100, donde 50 es el centro)
             m_prog = cfg['start'] + (cfg['end'] - cfg['start']) * progress
-            
-            # El Frontend mueve el div desde left:0 hasta left: (100 - zoom_width)
-            # En OpenCV, movemos el centro de la cámara.
-            # Rango de movimiento válido del centro = desde (w_orig/2 - slack_w/2) hasta (w_orig/2 + slack_w/2)
-            # Por lo tanto, el offset desde el centro oscila entre -slack_w/2 y +slack_w/2
-            
-            # Mapeo: 0% -> -slack/2 | 50% -> 0 | 100% -> +slack/2
             factor = (m_prog - 50.0) / 50.0 # Rango de -1.0 a 1.0
             
             if cfg['dir'] == 'HOR':
                 off_x = factor * (slack_w / 2.0)
-                # Clamp de seguridad estricto (no se puede ver negro)
                 off_x = max(-slack_w/2.0, min(slack_w/2.0, off_x))
             elif cfg['dir'] == 'VER':
                 off_y = factor * (slack_h / 2.0)
                 off_y = max(-slack_h/2.0, min(slack_h/2.0, off_y))
-
-        # Apply default center-lock if no move defined for axis
-        # (Already handled by 50% default in logic above effectively)
-
-        # v10.1: Human Camera Noise (Global Imperfection)
-        # v11.8: Sub-pixel granular control (Amplitude/Local Toggle)
-        if human_noise_enabled is None:
-            human_noise_enabled = str(os.getenv('HUMAN_SIGNATURE_ENABLED', 'True')).lower() == 'true'
-            # Override from script settings if present
-            if project_settings and 'human_signature' in project_settings:
-                human_noise_enabled = project_settings['human_signature']
-
-        if human_noise_enabled:
-            # Very low frequency, very low amplitude random-like drift
-            # Amplitud base multiplicada por la intensidad local
+            
+        if h_noise_active:
+            # v11.35: Multi-wave Stochastics with Amplitude Envelope
             amp = human_noise_intensity if human_noise_intensity is not None else 1.0
-            drift_x = (np.sin(t * 0.5 * 2 * np.pi) * 1.5 + np.cos(t * 1.2 * 2 * np.pi) * 0.8) * amp
-            drift_y = (np.cos(t * 0.7 * 2 * np.pi) * 1.2 + np.sin(t * 1.5 * 2 * np.pi) * 0.7) * amp
+            
+            # Envelopes oscillate between [0.2, 1.0] to vary intensity organically
+            env_x = 0.6 + 0.4 * np.sin(t * fe1 * 2 * np.pi + pe1)
+            env_y = 0.6 + 0.4 * np.cos(t * fe2 * 2 * np.pi + pe2)
+            
+            # Combined drift (Normalized Base * Current Envelope * Max Amplitude)
+            # This ensures maximum displacement NEVER exceeds 'amp'
+            drift_x = (np.sin(t * f1 * 2 * np.pi + p1) * a1 + np.cos(t * f2 * 2 * np.pi + p2) * a2) * env_x * amp
+            drift_y = (np.cos(t * f3 * 2 * np.pi + p3) * a3 + np.sin(t * f4 * 2 * np.pi + p4) * a4) * env_y * amp
+            
             off_x += drift_x
             off_y += drift_y
 
@@ -402,19 +403,19 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
 
         # v30.9: Rotated Source Points (Matches Editor Viewfinder)
         pivot = np.array([cx, cy])
-        p1 = np.array([cx - curr_w / 2, cy - curr_h / 2])
-        p2 = np.array([cx + curr_w / 2, cy - curr_h / 2])
-        p3 = np.array([cx - curr_w / 2, cy + curr_h / 2])
+        pt1 = np.array([cx - curr_w / 2, cy - curr_h / 2])
+        pt2 = np.array([cx + curr_w / 2, cy - curr_h / 2])
+        pt3 = np.array([cx - curr_w / 2, cy + curr_h / 2])
         
         if angle != 0:
             rad = np.radians(-angle) # CSS CW -> OpenCV CCW
             c, s = np.cos(rad), np.sin(rad)
             R_mat = np.array([[c, -s], [s, c]])
-            p1 = pivot + R_mat @ (p1 - pivot)
-            p2 = pivot + R_mat @ (p2 - pivot)
-            p3 = pivot + R_mat @ (p3 - pivot)
+            pt1 = pivot + R_mat @ (pt1 - pivot)
+            pt2 = pivot + R_mat @ (pt2 - pivot)
+            pt3 = pivot + R_mat @ (pt3 - pivot)
 
-        src_pts = np.array([p1, p2, p3], dtype=np.float32)
+        src_pts = np.array([pt1, pt2, pt3], dtype=np.float32)
         
         # Destination Points (The full target frame)
         dst_pts = np.float32([
@@ -1190,14 +1191,24 @@ def generate_video_avgl(project):
                  else:
                      logger.log(f"       ⚠️ Error en traducción: {err}")
             
+            # v35.0: Smart Audio Router (Universal Dispatcher)
+            # Detects if voice is an ElevenLabs ID or an Edge TTS voice name.
+            eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
+            is_eleven = (len(eff_voice) > 15 and '-' not in eff_voice and 'Neural' not in eff_voice)
+            
             success = False
-            if project.engine == 'edge':
+            if is_eleven:
+                # ElevenLabs (usually multilingual v2 handled by API)
+                api_key = os.getenv('ELEVENLABS_API_KEY')
+                # If scene voice is alphanumeric and long, use it as voice_id
+                voice_id = eff_voice 
+                success = asyncio.run(generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key))
+            else:
+                # Edge TTS
                 env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
                 speed_rate = f"+{int((scene.speed - 1.0) * 100)}%" if scene.speed != 1.0 else env_rate
                 
-                # v22.5: Smart Voice Switch (Edge TTS ONLY)
-                # If target is English but voice is Spanish, switch to a native English voice
-                eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
+                # Smart Native Switch (Edge ONLY)
                 if target_lang == 'en' and eff_voice.startswith('es-'):
                     eff_voice = "en-US-GuyNeural"
                     logger.log(f"    🎙️ [VoiceSwitch] Cambiando a voz nativa en-US para coherencia lingüística.")
@@ -1208,11 +1219,6 @@ def generate_video_avgl(project):
                 loop = asyncio.new_event_loop(); asyncio.set_event_loop(loop)
                 success = loop.run_until_complete(generate_audio_edge(text_with_emotions, audio_path, eff_voice, speed_rate, pitch=scene.pitch or "+0Hz", scene=scene))
                 loop.close()
-            else:
-                # ElevenLabs (usually multilingual v2 handled by API)
-                api_key = os.getenv('ELEVENLABS_API_KEY')
-                voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL')
-                success = asyncio.run(generate_audio_elevenlabs(text_with_emotions, audio_path, voice_id, api_key))
             
             if success:
                 audio_files.append((scene, audio_path))
@@ -1273,6 +1279,11 @@ def generate_video_avgl(project):
             block_cursor = 0.0
             
             for s_idx, scene in enumerate(block.scenes):
+                # v28.1.16: Initialize word count to prevent ducking errors in mute scripts
+                words = 0
+                clean_text = re.sub(r'\[.*?\]', '', str(scene.text))
+                words = len(clean_text.split())
+                
                 # v20.8: Emergency Stop - Check if project was cancelled between scenes
                 project.refresh_from_db()
                 if project.status == 'cancelled':
@@ -1758,7 +1769,12 @@ def generate_video_avgl(project):
                 if scene.sfx:
                     sfx_dir = os.path.join(settings.MEDIA_ROOT, 'sfx')
                     for sfx_item in scene.sfx:
-                        sfx_path = os.path.join(sfx_dir, sfx_item.type)
+                        # v15.8: Robust fallback for sfx type/id property
+                        sfx_name = getattr(sfx_item, 'type', None) or getattr(sfx_item, 'id', None)
+                        if not sfx_name: 
+                            logger.log(f"  ⚠️ SFX Skip: Propiedad 'type' o 'id' ausente en bloque.")
+                            continue
+                        sfx_path = os.path.join(sfx_dir, sfx_name)
                         # Tolerance for extension
                         if not os.path.exists(sfx_path):
                             for ext in ['.mp3', '.wav', '.m4a']:
@@ -1836,6 +1852,7 @@ def generate_video_avgl(project):
                             except (TypeError, ValueError):
                                 y_pos = 0.70
                             is_dynamic = sub_data.get('is_dynamic', False)
+                            style_req = sub_data.get('style') # v28.1.5: Orange Header Support
                             is_movie_mode = sub_data.get('movie_mode', False)
                             
                             # v26.0: Collect for Post-Injection (Absolute Timing)
@@ -1958,6 +1975,7 @@ def generate_video_avgl(project):
                                 'end': s_start_global_base + s_start + s_dur,
                                 'is_dynamic': is_dynamic,
                                 'y_pos': y_pos,
+                                'style': style_req, # v28.1.5
                                 'relevant_timings': final_timings if is_dynamic else None
                             }
                             all_srt_items.append(metadata)
@@ -1985,6 +2003,15 @@ def generate_video_avgl(project):
                     mixed_audio = CompositeAudioClip([audio_clip, clip.audio])
                     clip = clip.with_audio(mixed_audio)
                 elif audio_clip:
+                    # v28.1.14: Robust Padding Logic.
+                    # MoviePy can truncate background music if the primary audio track (voice) is shorter than the visual.
+                    # We force the audio track to match the visual duration by mixing with a silence clip of full length.
+                    if audio_clip.duration < duration:
+                        from moviepy import CompositeAudioClip, AudioClip
+                        silence = AudioClip(lambda t: 0, duration=duration)
+                        audio_clip = CompositeAudioClip([audio_clip, silence])
+                    else:
+                        audio_clip = audio_clip.with_duration(duration)
                     clip = clip.with_audio(audio_clip)
                 elif clip.audio:
                     # v14.3: If NO text/voice, but video has audio, leave it as is
@@ -2001,8 +2028,10 @@ def generate_video_avgl(project):
                 timestamps_list.append(f"{m:02d}:{s:02d} {scene.title}")
                 
                 # Ducking Intervals
-                # v14.3 Smart Ducking: Only registr intervals if there is real text/voice
-                if audio_clip:
+                # v28.1.15 Smart Ducking: ONLY register intervals if there is REAL speech (not Mute Mode or Tag-Only).
+                # This prevents the "silent music" bug in pause scenes.
+                has_real_speech = not getattr(scene, 'silent', False) and words > 0
+                if audio_clip and has_real_speech:
                     scene_intervals = []
                     if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
                         for vs, ve in scene.voice_intervals: 
@@ -2073,6 +2102,9 @@ def generate_video_avgl(project):
                 # ═══════════════════════════════════════════════════════════════
                 if has_local_music and bg_audio:
                     try:
+                        # v28.1.19: Restoring structure after corruption
+                        logger.log(f"  [Audio] Mezclando musica local: {m_obj.name if 'm_obj' in locals() and m_obj else 'Direct Path'}, Vol Target: {peak_vol}")
+                        
                         # v20.2: Project-specific Audio Master Console Integration
                         _duck_ratio = safe_float(project.audio_ducking_ratio, getattr(settings, 'AUDIO_DUCKING_RATIO', 0.17))
                         _attack = safe_float(project.audio_attack_time, getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
@@ -2085,6 +2117,11 @@ def generate_video_avgl(project):
                         local_merged = merge_voice_intervals(block_voice_intervals, threshold=_merge_th)
                         
                         # Loop music to block duration
+                        try:
+                            from moviepy.audio import fx as afx
+                        except:
+                            import moviepy.audio.fx as afx
+
                         loops_needed = int(block_video.duration / bg_audio.duration) + 1
                         bg_looped = bg_audio.with_effects([afx.AudioLoop(n_loops=loops_needed)]).with_duration(block_video.duration)
                         
@@ -2149,10 +2186,13 @@ def generate_video_avgl(project):
                         ducking_fn = make_block_ducking(local_merged, peak_vol, _duck_ratio, _attack, _release, block_video.duration)
                         bg_ducked = bg_looped.transform(ducking_fn)
                         
-                        # v19.2: Direct mix (same approach as original engine - fast)
-                        block_video = block_video.with_audio(CompositeAudioClip([block_video.audio, bg_ducked]))
+                        # v28.1.17: Filter None clips before mixing. MoviePy 2.x is strict.
+                        audio_to_mix = [c for c in [block_video.audio, bg_ducked] if c is not None]
+                        if audio_to_mix:
+                            from moviepy import CompositeAudioClip
+                            block_video = block_video.with_audio(CompositeAudioClip(audio_to_mix))
                         
-                        logger.log(f"  [Audio] ✅ Ducking Inline Aplicado: Bloque {b_idx+1}")
+                        logger.log(f"  [Audio] ✅ Mezcla final completada para Bloque {b_idx+1}")
                     except Exception as e:
                         logger.log(f"  ⚠️ Error ducking inline bloque {b_idx+1}: {e}")
 
@@ -2172,6 +2212,50 @@ def generate_video_avgl(project):
                 video_base_cursor += block_video.duration
 
         if not block_clips: raise Exception("No block clips generated")
+
+        # ═══════════════════════════════════════════════════════════════════
+        # v11.36: Implementation of "The Thumbnail Trick" (Cover Injection)
+        # ═══════════════════════════════════════════════════════════════════
+        if getattr(script, 'thumbnail', None):
+            raw_thumb = str(script.thumbnail).strip()
+            thumb_path = None
+            
+            # 1. Absolute Path Check
+            if os.path.isabs(raw_thumb) and os.path.isfile(raw_thumb):
+                thumb_path = raw_thumb
+            else:
+                # 2. Relative Search
+                fname = os.path.basename(raw_thumb)
+                for s_dir in [assets_dir, os.path.join(settings.MEDIA_ROOT, 'videos'), os.path.join(settings.MEDIA_ROOT, 'uploads')]:
+                    test_p = os.path.join(s_dir, fname)
+                    if os.path.isfile(test_p): thumb_path = test_p; break
+                    for ext in ['.png', '.jpg', '.jpeg', '.webp']:
+                        if os.path.isfile(test_p + ext): thumb_path = test_p + ext; break
+                    if thumb_path: break
+
+            if thumb_path:
+                logger.log(f"🎬 [Trick] Inyectando Carátula: {os.path.basename(thumb_path)} (0.1s)")
+                try:
+                    # Prepare Cover Clip (0.1s is enough for algorithms, invisible to humans)
+                    t_duration = 0.1
+                    thumb_img = ImageClip(thumb_path).with_duration(t_duration)
+                    
+                    # Fit logic (Simple center-fit)
+                    w_ratio = target_size[0] / thumb_img.w
+                    h_ratio = target_size[1] / thumb_img.h
+                    ratio = min(w_ratio, h_ratio)
+                    thumb_img = thumb_img.resized(ratio)
+                    
+                    cover_clip = CompositeVideoClip([
+                        ColorClip(target_size, color=(0,0,0)).with_duration(t_duration),
+                        thumb_img.with_position('center')
+                    ], size=target_size)
+                    
+                    block_clips.insert(0, cover_clip)
+                    clips_to_close.append(thumb_img)
+                    clips_to_close.append(cover_clip)
+                except Exception as te:
+                    logger.log(f"  ⚠️ Error inyectando carátula: {te}")
 
         # 4. Final Export
         final_video = concatenate_videoclips(block_clips, method="chain")
