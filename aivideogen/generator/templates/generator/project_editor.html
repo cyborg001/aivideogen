@@ -186,7 +186,7 @@
             <span x-show="isSaving" class="text-yellow-400 text-sm font-mono animate-pulse" x-cloak>Guardando...</span>
             <button @click="saveScript()"
                 class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded shadow flex items-center gap-2 font-bold transition">
-                <span>💾</span> Guardar Guion
+                <span>💾</span> GUARDAR V5.1 (CAPAS) ✅
             </button>
 
             <button x-show="isStandalone" @click="saveAsProject()"
@@ -332,24 +332,24 @@
                                                     <!-- Visual Preview -->
                                                     <div
                                                         class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                        <template x-if="scene.assets?.[0]">
+                                                        <template x-if="(scene.assets && scene.assets.length > 0) || (scene.layers && scene.layers.background)">
                                                             <div class="w-full h-full relative">
-                                                                <template x-if="isAssetVideo(scene.assets[0])">
+                                                                <template x-if="isAssetVideo((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)">
                                                                     <video
-                                                                        :src="getAssetPath(scene.assets[0]) + '#t=1.0'"
+                                                                       :src="getAssetPath((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background) + '#t=1.0'"
                                                                         class="w-full h-full object-cover opacity-80 transition hover:scale-110"
                                                                         muted playsinline preload="metadata"
                                                                         onmouseover="this.play()"
                                                                         onmouseout="this.pause();"></video>
                                                                 </template>
-                                                                <template x-if="!isAssetVideo(scene.assets[0])">
-                                                                    <img :src="getAssetPath(scene.assets[0])"
+                                                                <template x-if="!isAssetVideo((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)">
+                                                                    <img :src="getAssetPath((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)"
                                                                         class="w-full h-full object-cover transition hover:scale-110"
                                                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E'; this.style.opacity=0.3">
                                                                 </template>
 
                                                                 <!-- Video Overlay Icon -->
-                                                                <template x-if="isAssetVideo(scene.assets[0])">
+                                                                <template x-if="isAssetVideo(scene.assets?.[0] || scene.layers?.background)">
                                                                     <div
                                                                         class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
                                                                         <svg class="w-4 h-4 text-white opacity-70"
@@ -361,7 +361,7 @@
                                                                 </template>
                                                             </div>
                                                         </template>
-                                                        <template x-if="!scene.assets?.[0]">
+                                                        <template x-if="!scene.assets?.[0] && !(scene.layers && scene.layers.background)">
                                                             <div
                                                                 class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
                                                                 <span class="text-xs">📺</span>
@@ -1455,10 +1455,19 @@
                                     </template>
                                     <template x-if="!isVideo">
                                         <div class="relative w-full h-full flex items-center justify-center">
+                                            <!-- Background Layer -->
                                             <img :src="getAssetPath(formData.asset_type)"
                                                 class="block max-w-full max-h-full object-contain shadow-2xl"
                                                 @load="onAssetLoad($event)"
                                                 @error="imageError = true; console.error('[Editor] Error cargando:', $el.src)">
+
+                                            <!-- Main Layer Preview (v5.2.2) -->
+                                            <template x-if="formData.main_asset">
+                                                <img :src="getAssetPath(formData.main_asset)"
+                                                    class="absolute inset-0 m-auto max-w-full max-h-full object-contain pointer-events-none transition-opacity duration-200"
+                                                    :style="`opacity: ${formData.main_opacity || 1.0}; z-index: 10;`"
+                                                    @error="console.warn('[Editor] Error en preview de Main asset')">
+                                            </template>
 
                                             <!-- Error Overlay -->
                                             <div x-show="imageError" x-cloak
@@ -1499,63 +1508,98 @@
                         </template>
                     </div>
 
-                    <!-- Asset Input -->
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Archivo de Asset</label>
-                        <div class="flex gap-2">
-                            <input type="text" x-model="formData.asset_type" :title="formData.asset_type"
-                                class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-xs font-mono text-yellow-300 placeholder-gray-600"
-                                placeholder="imagen.png / video.mp4">
-                            
-                            <!-- BROWSE BUTTON -->
-                            <button @click="browseAsset()"
-                                class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white p-2 rounded"
-                                title="Explorar en PC">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z">
-                                    </path>
-                                </svg>
+                    <!-- MULTILAYER ASSET SELECTOR (v5.0) -->
+                    <div class="space-y-4 bg-gray-900/40 p-3 rounded-lg border border-white/5">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Capas de Composición V5.0</span>
+                        </div>
+                        
+                        <!-- Layer: Background -->
+                        <div>
+                            <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Capas: Background</label>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="formData.asset_type" :title="formData.asset_type"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded p-1.5 text-xs font-mono text-yellow-300 placeholder-gray-600"
+                                    placeholder="Fondo (Imagen o Video)">
+                                <button @click="browseAsset()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-2 rounded">📂</button>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Main -->
+                        <div>
+                            <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Capas: Main (Centro)</label>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="formData.main_asset" :title="formData.main_asset"
+                                    class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-xs font-mono text-blue-300 placeholder-gray-600"
+                                    placeholder="Opcional: Personaje, objeto...">
+                                <button @click="browseMainAsset()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-2 rounded">📂</button>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Overlay (Clean v5.9) -->
+                        <div>
+                            <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Overlay / Efecto</label>
+                            <div class="flex gap-1">
+                                <!-- The Smart Selector is now the only main field -->
+                                <select x-model="formData.overlay" 
+                                    @change="updateOverlayFromPreset()"
+                                    x-html="overlayOptionsHTML" x-init="fetchOverlays()"
+                                    class="flex-1 bg-gray-800 border border-gray-700 rounded p-2 text-xs text-pink-300 focus:border-pink-500 outline-none">
+                                </select>
+                                <button @click="browseOverlayAsset()" type="button"
+                                    class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-3 rounded-md transition-all flex items-center justify-center"
+                                    title="Usar archivo fuera de carpeta overlays">
+                                    <span class="text-sm">📁</span>
+                                </button>
+                            </div>
+                            <!-- Small path indicator (only if custom) -->
+                            <div x-show="formData.overlay === 'custom'" x-transition 
+                                class="mt-1 text-[9px] font-mono text-pink-400 truncate opacity-70"
+                                x-text="'Ruta: ' + formData.overlay_asset">
+                            </div>
+                        </div>
+
+                        <!-- v5.2.2: COLLAPSABLE MAIN LAYER FX (ACCORDION) - RESTORED -->
+                        <div x-show="formData.main_asset" class="mt-2 border border-indigo-500/30 rounded-lg overflow-hidden transition-all duration-300">
+                            <!-- Accordion Header -->
+                            <button @click="formData.expandMainFX = !formData.expandMainFX" type="button"
+                                class="w-full flex items-center justify-between p-2 bg-indigo-900/20 hover:bg-indigo-900/40 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">👤 Ajustes Capa MAIN</span>
+                                    <span class="text-[8px] px-1 bg-indigo-500/20 text-indigo-400 rounded" x-text="formData.expandMainFX ? 'ABIERTO' : 'CERRADO (CLICK)'"></span>
+                                </div>
+                                <span class="text-indigo-400 transition-transform duration-300" :class="formData.expandMainFX ? 'rotate-180' : ''">▼</span>
                             </button>
-                            <button @click="openInFolder(formData.asset_type)"
-                                class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white p-2 rounded"
-                                title="Abrir Carpeta Contenedora">📁</button>
-                        </div>
 
-                        <!-- v22.0: Video Clipping Controls (OUTSIDE flex for proper layout) -->
-                        <div x-show="isVideo" class="flex flex-col gap-2 mt-2 p-3 bg-gray-900/100 rounded border border-cyan-900/50 w-full shadow-2xl">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">✂️ Control Temporal Quirúrgico</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
+                            <!-- Accordion Content -->
+                            <div x-show="formData.expandMainFX" x-transition class="p-3 bg-black/40 space-y-3 border-t border-indigo-500/20">
+                                <!-- Opacity Control -->
                                 <div>
-                                    <label class="block text-[9px] uppercase text-gray-500 mb-1">Inicio (seg)</label>
-                                    <input type="number" step="0.1" x-model="formData.start_time" 
-                                        class="w-full bg-black border border-gray-800 text-cyan-300 rounded px-2 py-1 text-xs focus:border-cyan-500 outline-none"
-                                        placeholder="0.0">
+                                    <div class="flex justify-between items-center text-[9px] uppercase text-gray-400 font-bold mb-1">
+                                        <span>Opacidad</span>
+                                        <span class="text-indigo-400 font-mono" x-text="Math.round((formData.main_opacity || 1.0)*100)+'%'"></span>
+                                    </div>
+                                    <input type="range" min="0.0" max="1.0" step="0.01" x-model="formData.main_opacity"
+                                        class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
                                 </div>
-                                <div>
-                                    <label class="block text-[9px] uppercase text-gray-500 mb-1">Fin (seg)</label>
-                                    <input type="number" step="0.1" x-model="formData.end_time"
-                                        class="w-full bg-black border border-gray-800 text-pink-300 rounded px-2 py-1 text-xs focus:border-pink-500 outline-none"
-                                        placeholder="Auto">
+
+                                <!-- Main Dynamic Controls -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[9px] uppercase text-gray-500 mb-1">Zoom Main</label>
+                                        <input type="text" x-model="formData.main_zoom" 
+                                            class="w-full bg-gray-900 border border-indigo-900/50 text-indigo-200 rounded px-2 py-1 text-[10px] font-mono"
+                                            placeholder="1.0:1.3">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] uppercase text-gray-500 mb-1">Paneo Main</label>
+                                        <input type="text" x-model="formData.main_move"
+                                            class="w-full bg-gray-900 border border-indigo-900/50 text-indigo-200 rounded px-2 py-1 text-[10px] font-mono"
+                                            placeholder="HOR:50:50">
+                                    </div>
                                 </div>
                             </div>
-                            <p class="text-[9px] text-gray-600 italic">Define el fragmento exacto del video que quieres usar.</p>
                         </div>
-
-
-                        <p class="text-[10px] text-gray-500 mt-1">Debe estar en la carpeta
-                            <code>media/assets</code> o ser una ruta absoluta.
-                        </p>
-                    </div>
-
-                    <!-- Overlay -->
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Overlay (Efecto Capa)</label>
-                        <select x-model="formData.overlay" x-html="overlayOptionsHTML" x-init="fetchOverlays()"
-                            class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm text-gray-200 focus:border-blue-500">
-                        </select>
                     </div>
 
                     <!-- Movement Type -->
@@ -1737,7 +1781,7 @@
                     </div>
                     <div class="relative flex items-center gap-2">
                         <span class="text-lg">💾</span>
-                        <span x-text="editIndex === null ? 'Añadir Escena' : 'Guardar Cambios'"></span>
+                        <span x-text="editIndex === null ? 'Añadir Escena' : '💾 GUARDAR V5.1 (CAPAS) ✅'"></span>
                     </div>
                 </button>
             </div>
@@ -2130,6 +2174,10 @@
                     voice: '',
                     pitch: '',
                     overlay: '',
+                    overlay_asset: '',
+                    main_opacity: 1.0,
+                    main_zoom: '1.0:1.3',
+                    main_move: 'HOR:50:50',
                     asset_audio_bool: false,
                     asset_audio_vol: 0.8,
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50,
@@ -2137,6 +2185,10 @@
                     dubbing_mode: '',
                     silent: false
                 },
+
+                // v5.8 Fix: Overlay Dropdown Options
+                overlayOptionsHTML: '<option value="">Sin Efecto</option>',
+                groupOverlayOptionsHTML: '<option value="">Sin Efecto</option>',
 
                 // v11.0: Timeline Ghost Engine
                 currentTime: 0, 
@@ -2554,7 +2606,7 @@
                 getAssetPath(asset) {
                     if (!asset) return '';
                     let path = typeof asset === 'string' ? asset : (asset.id || asset.type || '');
-                    if (!path) return '';
+                    if (!path || path === 'image' || path === 'video') return '';
 
                     // Normalizar barras (Windows a Web)
                     let normalizedPath = path.replace(/\\/g, '/');
@@ -3280,26 +3332,39 @@
                             scene = this.script.blocks[blockIndex].scenes[sceneIndex];
                         }
 
-                        let asset = scene.assets && scene.assets.length > 0 ? scene.assets[0] : null;
+                        // v15.2.0: Aggressive V5.0 Layer Detection (Prioritize Layers over Legacy Assets)
+                        let displayAssetPath = '';
+                        
+                        const layerBg = scene.layers?.background;
+                        const legacyAsset = (scene.assets && scene.assets.length > 0) ? scene.assets[0] : null;
 
-                        // v15.1: Robust Path Detection for UI
-                        // Supports older scripts where path was in 'type' field
-                        const assetId = (asset && asset.id) ? asset.id : '';
-                        const assetType = (asset && asset.type) ? asset.type : '';
-
-                        if (!asset) asset = {};
-
-                        let displayAssetPath = assetId;
-                        if (!displayAssetPath || displayAssetPath === 'video' || displayAssetPath === 'image') {
-                            if (assetType && assetType !== 'video' && assetType !== 'image') {
-                                displayAssetPath = assetType;
+                        // 1. Check Layer Background ID (The new source of truth)
+                        if (layerBg && layerBg.id && layerBg.id !== 'image' && layerBg.id !== 'video') {
+                            displayAssetPath = layerBg.id;
+                        } 
+                        // 2. Fallback to Legacy Assets / Other fields
+                        else if (legacyAsset) {
+                            if (typeof legacyAsset === 'string') {
+                                displayAssetPath = legacyAsset;
+                            } else {
+                                displayAssetPath = legacyAsset.id || legacyAsset.type || '';
                             }
+                        }
+
+                        // 3. Final cleanup of generic strings
+                        if (displayAssetPath === 'video' || displayAssetPath === 'image') {
+                            displayAssetPath = '';
                         }
 
                         // Fallback to Group Master Asset if still empty and in Group
                         if (!displayAssetPath && groupIndex !== null) {
-                            displayAssetPath = this.script.blocks[blockIndex].groups[groupIndex].master_asset;
+                            const group = this.script.blocks[blockIndex].groups[groupIndex];
+                            const mAsset = group.master_asset;
+                            displayAssetPath = (typeof mAsset === 'object') ? (mAsset.id || mAsset.path || mAsset.type || '') : (mAsset || '');
                         }
+
+                        // v15.2.1: Reference Unification (Source of Truth for Effects)
+                        const sourceAsset = layerBg || legacyAsset || {};
 
                         // Parse Subtitle for UI (Word-Based Sync v3.2)
                         // Note: If multiple subs exist, we load the first one into the editor fields for quick tweaking
@@ -3336,13 +3401,13 @@
                             audio: scene.audio || '',
                             pitch: scene.pitch || '',
 
-                            // Visual FX
-                            overlay: (asset.overlay || '').replace('.mp4', '').replace('.mov', ''),
-                            fit: asset.fit || false,
-                            asset_audio_bool: asset.video_volume !== null && asset.video_volume !== undefined,
-                            asset_audio_vol: (typeof asset.video_volume === 'number') ? asset.video_volume : 0.8,
-                            useZoom: !!asset.zoom,
-                            zoomStr: asset.zoom || '1.0',
+                            // Visual FX (Using sourceAsset)
+                            overlay: (sourceAsset.overlay || '').replace('.mp4', '').replace('.mov', ''),
+                            fit: sourceAsset.fit || false,
+                            asset_audio_bool: sourceAsset.video_volume !== null && sourceAsset.video_volume !== undefined,
+                            asset_audio_vol: (typeof sourceAsset.video_volume === 'number') ? sourceAsset.video_volume : 0.8,
+                            useZoom: !!sourceAsset.zoom,
+                            zoomStr: sourceAsset.zoom || '1.0',
 
                             // Split Pan logic for Diagonal support
                             usePanHor: false, panHorStart: 50, panHorEnd: 50,
@@ -3356,25 +3421,47 @@
                             })) : [],
 
                             // Camera FX (v12.4)
-                            shake: asset.shake || false,
-                            shake_intensity: asset.shake_intensity || 5,
-                            rotate: asset.rotate || '',
-                            w_rotate: asset.w_rotate || '',
-                            fast_assembly: asset.fast_assembly || false,
+                            shake: sourceAsset.shake || false,
+                            shake_intensity: sourceAsset.shake_intensity || 5,
+                            rotate: sourceAsset.rotate || '',
+                            w_rotate: sourceAsset.w_rotate || '',
+                            fast_assembly: sourceAsset.fast_assembly || false,
                             dubbing_mode: scene.dubbing_mode || '',
                             language: scene.language || '',
-                            start_time: asset.start_time || 0.0,
-                            end_time: asset.end_time || '',
+                            start_time: sourceAsset.start_time || 0.0,
+                            end_time: sourceAsset.end_time || '',
                             silent: scene.silent || false,
-                            human_signature: asset.human_signature || false,
-                            human_amplitude: asset.human_amplitude || 1.0
+                            human_signature: sourceAsset.human_signature || false,
+                            human_amplitude: sourceAsset.human_amplitude || 1.0,
+                            
+                            // v5.2.0: Load Layers into formData
+                            main_asset: scene.layers?.main?.id || '',
+                            main_zoom: scene.layers?.main?.zoom || '1.0:1.0',
+                            main_move: scene.layers?.main?.move || 'HOR:50:50',
+                            main_opacity: scene.layers?.main?.opacity || 1.0,
+                            overlay_asset: scene.layers?.overlay?.id || '',
+                            expandMainFX: false // v5.8.9: Start closed for clean UI
                         };
+
+                        // v5.8.9: Initialize Overlay Selector from Loaded Path
+                        if (this.formData.overlay_asset) {
+                            const path = this.formData.overlay_asset;
+                            const isCustom = path.includes('/') || path.includes('\\') || path.includes(':');
+                            if (isCustom) {
+                                if (!this.overlayOptionsHTML.includes('value="custom"')) {
+                                    this.overlayOptionsHTML += '<option value="custom">📂 ARCHIVO PERSONALIZADO</option>';
+                                }
+                                this.formData.overlay = 'custom';
+                            } else {
+                                this.formData.overlay = path.replace('.mp4', '').replace('.mov', '');
+                            }
+                        }
 
 
                         // Load Move (Search for HOR and VER independently)
-                        if (asset.move) {
+                        if (sourceAsset.move) {
                             // Example: "HOR:0:100 + VER:50:50" or "MOVE:HOR:0:100"
-                            const moves = asset.move.replace(/MOVE:/g, '').split('+');
+                            const moves = sourceAsset.move.replace(/MOVE:/g, '').split('+');
 
                             moves.forEach(m => {
                                 const parts = m.trim().split(':');
@@ -3430,9 +3517,27 @@
                             end_time: '', // Added end_time for new scenes
                             silent: false,
                             human_signature: false,
-                            human_amplitude: 1.0
+                            human_amplitude: 1.0,
+
+                            // v5.2.0: Multilayer formData
+                            main_asset: '',
+                            main_zoom: '1.0:1.0',
+                            main_move: 'HOR:50:50',
+                            main_opacity: 1.0,
+                            overlay_asset: '',
+                            expandMainFX: false // v5.7 Accordion state
                         };
                     }
+                },
+
+                // v5.2.0: Layer Browsers
+                async browseMainAsset() {
+                    const path = await this._internalBrowseAsset('visual');
+                    if (path) this.formData.main_asset = path;
+                },
+                async browseOverlayAsset() {
+                    const path = await this._internalBrowseAsset('visual');
+                    if (path) this.formData.overlay_asset = path;
                 },
 
                 closeModal() {
@@ -3530,15 +3635,20 @@
                         video_volume: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null,
                         shake: isInGroup ? false : (this.formData.shake || false),
                         shake_intensity: isInGroup ? 0 : parseInt(this.formData.shake_intensity || 5),
-                        rotate: isInGroup ? null : (this.formData.rotate || null),
-                        w_rotate: isInGroup ? null : (this.formData.w_rotate || null),
-                        fast_assembly: this.formData.fast_assembly || false,
-                        cinema_mode: this.formData.cinema_mode || false,
-                        start_time: parseFloat(this.formData.start_time || 0),
-                        end_time: this.formData.end_time || this.formData.end_time === 0 ? parseFloat(this.formData.end_time) : null,
                         human_signature: isInGroup ? false : (this.formData.human_signature || false),
                         human_amplitude: isInGroup ? 0 : parseFloat(this.formData.human_amplitude || 1.0)
                     };
+
+                    // 3. Identify Target List first for layer preservation
+                    let sceneList;
+                    if (this.editGroupIndex !== null) {
+                        if (!this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes) {
+                            this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes = [];
+                        }
+                        sceneList = this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes;
+                    } else {
+                        sceneList = this.script.blocks[this.editBlockIndex].scenes;
+                    }
 
                     // 2. Build Scene Object
                     const newScene = {
@@ -3553,25 +3663,22 @@
                         audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
                         assets: [assetObj],
-                        sfx: this.formData.sfx, // Save SFX array
+                        layers: {
+                                background: { ...assetObj, id: this.formData.asset_type },
+                                main: this.formData.main_asset ? { 
+                                    id: this.formData.main_asset, 
+                                    type: this.isAssetVideo(this.formData.main_asset) ? 'video' : 'image',
+                                    zoom: this.formData.main_zoom || '1.0:1.0',
+                                    move: this.formData.main_move || 'HOR:50:50',
+                                    opacity: parseFloat(this.formData.main_opacity || 1.0)
+                                } : null,
+                                overlay: this.formData.overlay_asset ? { id: this.formData.overlay_asset, type: this.isAssetVideo(this.formData.overlay_asset) ? 'video' : 'image' } : null
+                        },
+                        sfx: this.formData.sfx,
                         language: this.formData.language || null,
                         dubbing_mode: this.formData.dubbing_mode || null,
                         silent: this.formData.silent || false
                     };
-
-                    // 3. Update Script Model
-                    let sceneList;
-                    if (this.editGroupIndex !== null) {
-                        // Target: Group Scenes
-                        // Ensure scenes array exists in group
-                        if (!this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes) {
-                            this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes = [];
-                        }
-                        sceneList = this.script.blocks[this.editBlockIndex].groups[this.editGroupIndex].scenes;
-                    } else {
-                        // Target: Standard Scenes
-                        sceneList = this.script.blocks[this.editBlockIndex].scenes;
-                    }
 
                     if (this.editIndex !== null) {
                         // Edit existing
@@ -3874,6 +3981,20 @@
                             }
                         });
                     }
+
+                    // v15.2.1: Forced Layer Synchronization (Guarantee V5.0 structure exists in Reactivity)
+                    if (!scene.layers) {
+                        const legacy = (scene.assets && scene.assets.length > 0) ? scene.assets[0] : {};
+                        scene.layers = {
+                            background: { ...legacy, id: legacy.id || legacy.type || '' },
+                            main: null,
+                            overlay: null
+                        };
+                    } else if (!scene.layers.background && scene.assets && scene.assets.length > 0) {
+                        // Patch missing background from existing legacy asset
+                        const legacy = scene.assets[0];
+                        scene.layers.background = { ...legacy, id: legacy.id || legacy.type || '' };
+                    }
                     // v27.7: Sanitize SFX (id -> type)
                     if (scene.sfx) {
                         scene.sfx.forEach(s => {
@@ -3936,7 +4057,49 @@
                     } catch (e) {
                         console.error("Connection Error:", e);
                     }
-                }
+                },
+
+                // v5.8: RESTORED OVERLAY DROP_DOWN LOGIC
+                async fetchOverlays() {
+                    try {
+                        const res = await fetch('/api/overlays/');
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            let options = '<option value="">Sin Efecto</option>';
+                            data.overlays.forEach(o => {
+                                const val = o.replace('.mp4', '').replace('.mov', '');
+                                options += `<option value="${val}">${val.toUpperCase()}</option>`;
+                            });
+                            this.overlayOptionsHTML = options;
+                            this.groupOverlayOptionsHTML = options;
+                            console.log("[Editor] Overlays cargados:", data.overlays.length);
+                        }
+                    } catch (e) {
+                        console.warn("[Editor] No se pudieron cargar presets de overlay");
+                    }
+                },
+
+                updateOverlayFromPreset() {
+                    if (this.formData.overlay && this.formData.overlay !== 'custom') {
+                        // Map internal preset name to asset path for V5.0 engine compatibility
+                        this.formData.overlay_asset = this.formData.overlay + '.mp4';
+                    } else if (this.formData.overlay === '') {
+                        this.formData.overlay_asset = '';
+                    }
+                },
+
+                // Overload browser to sync dropdown
+                async browseOverlayAsset() {
+                    const path = await this._internalBrowseAsset('visual');
+                    if (path) {
+                        this.formData.overlay_asset = path;
+                        // Add specialized option if not exists or just set to manual
+                        if (!this.overlayOptionsHTML.includes('value="custom"')) {
+                             this.overlayOptionsHTML += '<option value="custom">📂 ARCHIVO PERSONALIZADO</option>';
+                        }
+                        this.formData.overlay = 'custom';
+                    }
+                },
 
             }));
         });

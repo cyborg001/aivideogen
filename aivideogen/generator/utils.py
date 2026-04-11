@@ -126,6 +126,7 @@ def translate_script_ai(script_data, target_lang="es"):
     """
     Translates an AVGL script JSON into the target language using Gemini.
     Translates 'text' and 'subtitle' fields of each scene.
+    v15.9.8: Includes Temporal Sync (TSync) to preserve original pacing.
     """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -160,11 +161,100 @@ def translate_script_ai(script_data, target_lang="es"):
         if response.status_code == 200:
             result = response.json()
             content = result['candidates'][0]['content']['parts'][0]['text']
-            return json.loads(content), None
+            
+            # v15.9.10: Handle Gemini's tendency to wrap JSON in Markdown blocks
+            if "```json" in content:
+                content = content.split("```json")[-1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[-1].split("```")[0].strip()
+                
+            translated_json = json.loads(content)
+            
+            # v15.9.10: Apply Temporal Sync (TSync) & Metadata Healing
+            try:
+                apply_temporal_sync_and_heal(script_data, translated_json)
+            except Exception as e:
+                print(f"[TSync/Healer] Error applying sync: {e}")
+                
+            return translated_json, None
         else:
             return None, f"Error Gemini: {response.status_code}"
     except Exception as e:
         return None, str(e)
+
+def apply_temporal_sync_and_heal(original, translated):
+    """
+    v15.9.11: Deep Merges metadata (assets) and Anchors Duration 
+    to video clip ranges (0-146s) to prevent "fast-skipping" scenes.
+    """
+    def get_scenes(data):
+        scenes = []
+        for block in data.get('blocks', []):
+            scenes.extend(block.get('scenes', []))
+            for group in block.get('groups', []):
+                scenes.extend(group.get('scenes', []))
+        return scenes
+
+    orig_scenes = get_scenes(original)
+    trans_scenes = get_scenes(translated)
+
+    for i in range(min(len(orig_scenes), len(trans_scenes))):
+        oscn = orig_scenes[i]
+        tscn = trans_scenes[i]
+        
+        # --- HEALER: Deep Property Restoration (v15.9.11) ---
+        if 'assets' in oscn:
+             if 'assets' not in tscn or not tscn['assets']:
+                 tscn['assets'] = oscn['assets']
+             else:
+                 # Deep merge assets property by property
+                 for k in range(min(len(oscn['assets']), len(tscn['assets']))):
+                     oa = oscn['assets'][k]
+                     ta = tscn['assets'][k]
+                     # Restoration Priority: Technical Params from Original
+                     tech_keys = ['id', 'type', 'start_time', 'end_time', 'zoom', 'move', 'fit', 'overlay', 'video_volume']
+                     for key in tech_keys:
+                         if key in oa and (key not in ta or ta.get(key) is None or ta.get(key) == ""):
+                             ta[key] = oa[key]
+                             
+        # --- DURATION ANCHOR (v15.9.11) ---
+        # User Priority: "la escena debe durar los segundos que marco"
+        if 'assets' in tscn and tscn['assets']:
+            asset = tscn['assets'][0]
+            start = asset.get('start_time', 0)
+            end = asset.get('end_time')
+            if isinstance(end, (int, float)) and end > start:
+                clip_dur = end - start
+                # Absolute Anchor: Architect's clip range defines the scene duration
+                tscn['duration'] = clip_dur
+                tscn['force_duration'] = True
+                print(f"[Healer] Anchoring Duration to Clip (Absolute): {clip_dur}s (Scene: {tscn.get('title')})")
+
+        if 'sfx' not in tscn and 'sfx' in oscn:
+            tscn['sfx'] = oscn['sfx']
+        if 'pause' not in tscn and 'pause' in oscn:
+            tscn['pause'] = oscn['pause']
+        if 'duration' not in tscn and 'duration' in oscn:
+            tscn['duration'] = oscn['duration']
+            
+        # --- TSync: Time Adjustment (Standard) ---
+        o_text = oscn.get('text', '') or oscn.get('voice', '')
+        t_text = tscn.get('text', '') or tscn.get('voice', '')
+        
+        o_words = len(str(o_text).split())
+        t_words = len(str(t_text).split())
+        
+        if o_words > 0 and t_words > 0:
+            ratio = t_words / o_words
+            adjustment_pct = int((ratio - 1.0) * 100)
+            adjustment_pct = max(-25, min(40, adjustment_pct))
+            
+            if adjustment_pct != 0:
+                sign = "+" if adjustment_pct >= 0 else ""
+                t_speed = f"{sign}{adjustment_pct}%"
+                tscn['speed'] = t_speed
+                tscn['voice_speed'] = t_speed
+
 
 def translate_text_ai(text, target_lang="es"):
     """

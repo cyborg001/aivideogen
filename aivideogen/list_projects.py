@@ -5,7 +5,7 @@ import sys
 
 # Setup Django environment
 sys.path.append(os.getcwd())
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aivideogen.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from generator.models import VideoProject
