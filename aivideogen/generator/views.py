@@ -1167,7 +1167,11 @@ def get_project_script_json(request, project_id):
         'audio_release_time': getattr(project, 'audio_release_time', 0.4),
         'audio_merge_threshold': getattr(project, 'audio_merge_threshold', 1.5),
         'audio_block_fade': getattr(project, 'audio_block_fade', 1.0),
-        'audio_early_finish': getattr(project, 'audio_early_finish', 0.1)
+        'audio_early_finish': getattr(project, 'audio_early_finish', 0.1),
+        'social_title': project.social_title or '',
+        'social_description': project.social_description or '',
+        'social_tags': project.social_tags or '',
+        'social_pinned_comment': project.social_pinned_comment or ''
     }
     
     # Also sync root-level if missing (redundancy)
@@ -1218,6 +1222,29 @@ def save_project_script_json(request, project_id):
                             elif isinstance(obj['master_asset'], dict) and 'id' in obj['master_asset']:
                                 obj['master_asset']['id'] = normalize_asset_path(obj['master_asset']['id'])
                         
+                        # 3. Handle Overlay Persistence (v5.6.9 Fix)
+                        # Fix for: "lo que se ve en el editor debe ser lo que se vea al guardarse"
+                        if 'overlay' in obj:
+                            if isinstance(obj['overlay'], str):
+                                obj['overlay'] = normalize_asset_path(obj['overlay'])
+                            elif isinstance(obj['overlay'], dict) and obj['overlay'].get('id'):
+                                obj['overlay']['id'] = normalize_asset_path(obj['overlay']['id'])
+                        
+                        # 4. Handle Layers object or standard scene properties (v5.6.9 Fix)
+                        if 'layers' in obj and isinstance(obj['layers'], dict):
+                            ly = obj['layers']
+                            for layer_name in ['background', 'main', 'overlay']:
+                                if layer_name in ly and ly[layer_name]:
+                                    dat = ly[layer_name]
+                                    if isinstance(dat, dict):
+                                        if 'id' in dat: dat['id'] = normalize_asset_path(dat['id'])
+                                        if 'overlay' in dat:
+                                            if isinstance(dat['overlay'], str): dat['overlay'] = normalize_asset_path(dat['overlay'])
+                                            elif isinstance(dat['overlay'], dict) and dat['overlay'].get('id'):
+                                                dat['overlay']['id'] = normalize_asset_path(dat['overlay']['id'])
+                                    elif isinstance(dat, str):
+                                        ly[layer_name] = normalize_asset_path(dat)
+
                         # Recursive call for nested blocks/groups
                         for k, v in obj.items():
                             if k in ['blocks', 'scenes', 'groups']:
@@ -1225,6 +1252,7 @@ def save_project_script_json(request, project_id):
 
                 if isinstance(script_data, dict):
                     clean_script_assets(script_data)
+
             except Exception as e:
                 logger.warning(f"[Persistence Fix] Error sanitizing assets: {e}")
         
@@ -1378,6 +1406,12 @@ def save_project_script_json(request, project_id):
                     project.human_amplitude = float(settings_data['human_amplitude'])
                 except:
                     pass
+
+            # v4.3 Social Metadata Restoration
+            if 'social_title' in settings_data: project.social_title = settings_data['social_title']
+            if 'social_description' in settings_data: project.social_description = settings_data['social_description']
+            if 'social_tags' in settings_data: project.social_tags = settings_data['social_tags']
+            if 'social_pinned_comment' in settings_data: project.social_pinned_comment = settings_data['social_pinned_comment']
 
         project.save()
         return JsonResponse({'status': 'saved', 'title': project.title})
