@@ -251,7 +251,22 @@ def generate_video_avgl(project):
                 disp = getattr(s, 'display_text', s.text).split()
                 for i1, wt in enumerate(s.word_timings): all_word_timings.append({"start": cur_t-dur+wt['start'], "end": cur_t-dur+wt['end'], "word": disp[i1] if i1 < len(disp) else wt['word']})
             if s.subtitles:
-                for sub in s.subtitles: all_static_subs.append({"text": sub['text'], "start": cur_t-dur+(sub['offset']*(dur/len(s.text.split())) if s.text.split() else 0), "end": cur_t-dur+(sub['offset']*(dur/len(s.text.split())) if s.text.split() else 0)+((sub['phonetic_count']*0.075) if sub.get('phonetic_count') else dur), "y_pos": sub.get('y_position', 0.15)})
+                for sub in s.subtitles:
+                    calc_start = cur_t - dur + (sub['offset'] * (dur / len(s.text.split())) if s.text.split() else 0)
+                    # v5.6.10 - Human-Friendly Duration: Minimum 5s or full scene duration
+                    base_dur = (sub['phonetic_count'] * 0.075) if sub.get('phonetic_count') else dur
+                    final_dur = max(5.0, base_dur)
+                    # Cap to scene duration to prevent leaking into next scene
+                    if final_dur > (dur - (calc_start - (cur_t - dur))):
+                        final_dur = dur - (calc_start - (cur_t - dur))
+                    
+                    all_static_subs.append({
+                        "text": sub['text'],
+                        "start": calc_start,
+                        "end": calc_start + final_dur,
+                        "y_pos": sub.get('y_position', 0.15)
+                    })
+
         if b.music:
             from .models import Music
             mo = Music.objects.filter(file__icontains=os.path.basename(b.music)).first()
