@@ -1084,6 +1084,48 @@
                     <p class="text-[9px] text-gray-500 mt-2 text-center italic">El renderizado por GPU requiere drivers
                         de NVIDIA actualizados.</p>
                 </div>
+                
+                <!-- SOCIAL / SEO CONFIGURATION (Restored v4.3) -->
+                <div class="bg-gray-800/80 backdrop-blur-md p-4 rounded-xl border border-pink-500/30 shadow-lg shadow-pink-900/10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-xl">📊</span>
+                        <h4 class="text-xs font-black text-pink-400 uppercase tracking-[0.2em]">Social / SEO Integration</h4>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- YT Title -->
+                        <div>
+                            <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1 ml-1">Título de YouTube</label>
+                            <input type="text" x-model="projectSettings.social_title" 
+                                class="w-full bg-gray-900/50 border border-gray-700 focus:border-pink-500/50 rounded-lg p-2 text-xs text-white placeholder-gray-600 transition-all outline-none"
+                                placeholder="Ej: Genghis Khan: El Castigo de Dios [SHORT]">
+                        </div>
+
+                        <!-- YT Description -->
+                        <div>
+                            <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1 ml-1">Descripción</label>
+                            <textarea x-model="projectSettings.social_description" rows="3"
+                                class="w-full bg-gray-900/50 border border-gray-700 focus:border-pink-500/50 rounded-lg p-2 text-xs text-gray-300 placeholder-gray-600 transition-all outline-none resize-none"
+                                placeholder="Escribe la descripción para el video..."></textarea>
+                        </div>
+
+                        <!-- YT Tags -->
+                        <div>
+                            <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1 ml-1">Tags (Separados por coma)</label>
+                            <input type="text" x-model="projectSettings.social_tags" 
+                                class="w-full bg-gray-900/50 border border-gray-700 focus:border-pink-500/50 rounded-lg p-2 text-xs text-pink-200 placeholder-gray-600 transition-all outline-none"
+                                placeholder="genghis khan, historia, mongoles, shorts">
+                        </div>
+
+                        <!-- Pinned Comment -->
+                        <div class="pt-2 border-t border-white/5">
+                            <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1 ml-1">Comentario Fijado (Auto-Pin)</label>
+                            <textarea x-model="projectSettings.social_pinned_comment" rows="2"
+                                class="w-full bg-gray-900/50 border border-gray-700 focus:border-pink-500/50 rounded-lg p-2 text-xs text-yellow-200/80 placeholder-gray-600 transition-all outline-none resize-none italic"
+                                placeholder="Aparecerá fijado en los comentarios..."></textarea>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
@@ -2846,6 +2888,12 @@
                             if (data.settings.human_signature !== undefined) this.projectSettings.human_signature = data.settings.human_signature;
                             if (data.settings.human_amplitude !== undefined) this.projectSettings.human_amplitude = parseFloat(data.settings.human_amplitude);
 
+                            // v4.3 Social Sync
+                            if (data.settings.social_title) this.projectSettings.social_title = data.settings.social_title;
+                            if (data.settings.social_description) this.projectSettings.social_description = data.settings.social_description;
+                            if (data.settings.social_tags) this.projectSettings.social_tags = data.settings.social_tags;
+                            if (data.settings.social_pinned_comment) this.projectSettings.social_pinned_comment = data.settings.social_pinned_comment;
+
                             // Support for old key names
                             if (data.settings.voice) this.projectSettings.voice_id = data.settings.voice;
                         }
@@ -2896,6 +2944,12 @@
                     this.script.human_signature = this.projectSettings.human_signature;
                     this.script.human_amplitude = parseFloat(this.projectSettings.human_amplitude);
                     this.script.thumbnail = this.projectSettings.thumbnail;
+
+                    // v4.3 Social Persistence
+                    this.script.social_title = this.projectSettings.social_title;
+                    this.script.social_description = this.projectSettings.social_description;
+                    this.script.social_tags = this.projectSettings.social_tags;
+                    this.script.social_pinned_comment = this.projectSettings.social_pinned_comment;
 
                     // Also maintain a persistent settings object inside the script
                     if (!this.script.settings) this.script.settings = {};
@@ -4272,24 +4326,25 @@
                 <!-- Presets (Quick Access) -->
                 <div class="grid grid-cols-3 gap-3">
                     <button
-                        @click="projectSettings.audio_ducking_ratio = 0.12; projectSettings.audio_attack_time = 0.1; projectSettings.audio_release_time = 0.3; projectSettings.audio_merge_threshold = 1.0; projectSettings.audio_block_fade = 0.8"
+                        @click="projectSettings.audio_ducking_ratio = 0.12; projectSettings.audio_attack_time = 0.1; projectSettings.audio_release_time = 0.3; projectSettings.audio_merge_threshold = 1.0; projectSettings.audio_block_fade = 0.8; saveScript(true)"
                         class="bg-indigo-900/20 hover:bg-indigo-600/40 border border-indigo-500/20 py-3 rounded-xl transition group">
                         <span class="block text-xl mb-1 group-hover:scale-125 transition">🎙️</span>
                         <span class="text-[10px] font-bold text-indigo-300 uppercase">Vlog Pro</span>
                     </button>
                     <button
-                        @click="projectSettings.audio_ducking_ratio = 0.05; projectSettings.audio_attack_time = 0.3; projectSettings.audio_release_time = 0.8; projectSettings.audio_merge_threshold = 2.0; projectSettings.audio_block_fade = 2.0"
+                        @click="projectSettings.audio_ducking_ratio = 0.05; projectSettings.audio_attack_time = 0.3; projectSettings.audio_release_time = 0.8; projectSettings.audio_merge_threshold = 2.0; projectSettings.audio_block_fade = 2.0; saveScript(true)"
                         class="bg-blue-900/20 hover:bg-blue-600/40 border border-blue-500/20 py-3 rounded-xl transition group">
                         <span class="block text-xl mb-1 group-hover:scale-125 transition">🎭</span>
                         <span class="text-[10px] font-bold text-blue-300 uppercase">Documental</span>
                     </button>
                     <button
-                        @click="projectSettings.audio_ducking_ratio = 0.4; projectSettings.audio_attack_time = 0.5; projectSettings.audio_release_time = 1.5; projectSettings.audio_merge_threshold = 0.5; projectSettings.audio_block_fade = 3.0"
+                        @click="projectSettings.audio_ducking_ratio = 0.4; projectSettings.audio_attack_time = 0.5; projectSettings.audio_release_time = 1.5; projectSettings.audio_merge_threshold = 0.5; projectSettings.audio_block_fade = 3.0; saveScript(true)"
                         class="bg-cyan-900/20 hover:bg-cyan-600/40 border border-cyan-500/20 py-3 rounded-xl transition group">
                         <span class="block text-xl mb-1 group-hover:scale-125 transition">🧘</span>
                         <span class="text-[10px] font-bold text-cyan-300 uppercase">Zen / Atmos</span>
                     </button>
                 </div>
+
 
                 <!-- Main Mixer Section -->
                 <div class="grid grid-cols-2 gap-8">
@@ -4311,24 +4366,25 @@
                             </div>
                             <input type="range" min="0" max="0.5" step="0.01"
                                 x-model="projectSettings.audio_ducking_ratio"
+                                @change="saveScript(true)"
                                 class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
                             <p class="text-[9px] text-gray-600 italic">Nivel de la música cuando hay voz (0% es silencio
                                 total)</p>
                         </div>
 
                         <!-- Attack/Release Grid -->
-                        <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="text-[10px] text-gray-500 uppercase font-bold">Attack (s)</label>
                                 <input type="number" step="0.05" min="0" x-model="projectSettings.audio_attack_time"
+                                    @change="saveScript(true)"
                                     class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-indigo-500/50 outline-none">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[10px] text-gray-500 uppercase font-bold">Release (s)</label>
                                 <input type="number" step="0.05" min="0" x-model="projectSettings.audio_release_time"
+                                    @change="saveScript(true)"
                                     class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-indigo-500/50 outline-none">
                             </div>
-                        </div>
                     </div>
 
                     <!-- Right Column: Mastering & Transitions -->
@@ -4348,6 +4404,7 @@
                             </div>
                             <input type="range" min="0.1" max="5.0" step="0.1"
                                 x-model="projectSettings.audio_merge_threshold"
+                                @change="saveScript(true)"
                                 class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
                             <p class="text-[9px] text-gray-600 italic">Une huecos de silencio menores a este tiempo</p>
                         </div>
@@ -4361,6 +4418,7 @@
                             </div>
                             <input type="range" min="0.0" max="5.0" step="0.1"
                                 x-model="projectSettings.audio_block_fade"
+                                @change="saveScript(true)"
                                 class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
                         </div>
 
@@ -4368,6 +4426,7 @@
                         <div class="space-y-2">
                             <label class="text-[10px] text-gray-500 uppercase font-bold">Early Finish Buffer (s)</label>
                             <input type="number" step="0.05" min="0" x-model="projectSettings.audio_early_finish"
+                                @change="saveScript(true)"
                                 class="w-full bg-gray-950 border border-white/5 rounded-lg p-2 text-sm text-center font-mono text-white focus:border-emerald-500/50 outline-none">
                             <p class="text-[8px] text-gray-700">Silencio forzado al final de cada bloque</p>
                         </div>

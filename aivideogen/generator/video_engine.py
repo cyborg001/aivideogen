@@ -33,9 +33,10 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     sw, sh = tw / img.size[0], th / img.size[1]
     bs = max(sw, sh)
     
-    pan_b = 1.25 
+    pan_b = 1.4 
     max_z = max(zs, ze)
     total_scale = bs * max_z * pan_b
+
     
     wi = img.resize((int(img.size[0]*total_scale), int(img.size[1]*total_scale)), Image.Resampling.BICUBIC)
     inp = np.array(wi)
@@ -148,9 +149,13 @@ def generate_video_avgl(project):
     except Exception as e:
         logger.log(f"❌ JSON Error: {e}"); project.status = 'error'; project.save(); return
     
-    duck_att = safe_float(script.settings.get('audio_ducking_attack', 0.15))
-    duck_rel = safe_float(script.settings.get('audio_ducking_release', 0.35))
-    logger.log(f"🚀 AVGL v5.6.9 - Shielded Engine (Absolute Mapping)")
+    # v5.6.11 - Audio Console Priority
+    duck_att = safe_float(getattr(project, 'audio_attack_time', None) or script.settings.get('audio_ducking_attack', 0.15))
+    duck_rel = safe_float(getattr(project, 'audio_release_time', None) or script.settings.get('audio_ducking_release', 0.35))
+    duck_ratio_global = safe_float(getattr(project, 'audio_ducking_ratio', None) or script.settings.get('audio_ducking_ratio', 0.17))
+
+    logger.log(f"🚀 AVGL v5.6.11 - Audio Master & Kinematic Sync")
+
 
     assets_dir = os.path.join(settings.MEDIA_ROOT, 'assets')
     overlays_dir = os.path.join(settings.MEDIA_ROOT, 'overlays')
@@ -272,8 +277,9 @@ def generate_video_avgl(project):
             mo = Music.objects.filter(file__icontains=os.path.basename(b.music)).first()
             if mo and os.path.exists(mo.file.path):
                 bd = cur_t - b_start; bga = AudioFileClip(mo.file.path).with_effects([afx.AudioLoop(n_loops=int(bd/120)+1)]).with_duration(bd).with_effects([afx.AudioFadeOut(0.5)])
-                bvk, dr = safe_float(b.volume, 0.2), safe_float(script.settings.get('audio_ducking_ratio', 0.17))
+                bvk, dr = safe_float(b.volume, 0.2), duck_ratio_global
                 def b_vol(gf, t, b_s=b_start, b_v=b_voice_intervals, b_pk=bvk, d_r=dr, att=duck_att, rel=duck_rel):
+
                     at = t if isinstance(t, np.ndarray) else np.array([t]); res = np.full(at.shape, b_pk)
                     for vs, ve in b_v:
                         v_s, v_e = vs - b_s, ve - b_s; res[(at >= v_s) & (at <= v_e)] = b_pk * d_r
@@ -291,8 +297,9 @@ def generate_video_avgl(project):
             gm = Music.objects.filter(file__icontains=gm_n).first()
             if gm and os.path.exists(gm.file.path):
                 bga = AudioFileClip(gm.file.path).with_effects([afx.AudioLoop(n_loops=int(final_v.duration/120)+1)]).with_duration(final_v.duration)
-                gv, dr = safe_float(script.music_volume or project.music_volume, 0.2), safe_float(script.settings.get('audio_ducking_ratio', 0.17))
+                gv, dr = safe_float(script.music_volume or project.music_volume, 0.2), duck_ratio_global
                 def g_vol(gf, t, g_v=gv, d_r=dr, m_i=mute_intervals, v_i=all_voice_intervals, att=duck_att, rel=duck_rel):
+
                     at = t if isinstance(t, np.ndarray) else np.array([t]); res = np.full(at.shape, g_v); cross = 0.5
                     for s, e in m_i: res[(at >= s) & (at <= e)] = 0; m_in = (at>=s-cross) & (at<s); res[m_in] *= (1.0-(at[m_in]-(s-cross))/cross); m_out = (at>e) & (at<=e+cross); res[m_out] *= (at[m_out]-e)/cross
                     for s, e in v_i: res[(at>=s)&(at<=e)] *= d_r; m_att = (at>=s-att)&(at<s); res[m_att] = res[m_att]*(1.0-(1.0-d_r)*(at[m_att]-(s-att))/att); m_rel = (at>e)&(at<=e+rel); res[m_rel] = (res[m_rel]*d_r)+(res[m_rel]*(1.0-d_r)*(at[m_rel]-e)/rel)

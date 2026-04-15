@@ -375,7 +375,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             # v28.1.5: 'SUB' simple tags are treated as Orange Headers at y=0.65
             if tag_name == 'SUB' and tag['type'] == 'simple':
                 style_override = 'Header'
-                y_pos_override = 0.65 # Sligthly above normal subs
+                y_pos_override = 0.25 # Zona superior-media para evitar solapamiento
             else:
                 style_override = None
                 y_pos_override = None 
@@ -482,7 +482,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             "text": _cleanup(h["text"]), # v17.2.21: Cleanup highlights too
             "offset": h["offset"],
             "word_count": len(h["text"].split()),
-            "phonetic_count": len(h["text"].split()), # v19.6: consistency
+            "phonetic_count": 40, # v5.4.35: Fixed 3s duration for highlights
             "is_dynamic": False,
             "is_highlight": True,
             "y_position": 0.35
@@ -583,7 +583,9 @@ def parse_avgl_json(json_text):
                         fast_assembly=a_data.get("fast_assembly", False),
                         cinema_mode=a_data.get("cinema_mode", False),
                         start_time=safe_float(a_data.get("start_time"), 0.0),
-                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None
+                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None,
+                        human_signature=a_data.get("human_signature"),
+                        human_amplitude=safe_float(a_data.get("human_amplitude"), 1.0)
                     ))
             
             # v30.5: AVGL v5.0 Layers Support (Robust parsing for null layers)
@@ -609,7 +611,9 @@ def parse_avgl_json(json_text):
                         shake=l_data.get("shake", False),
                         rotate=l_data.get("rotate"),
                         shake_intensity=l_data.get("shake_intensity", 5),
-                        video_volume=l_data.get("video_volume")
+                        video_volume=l_data.get("video_volume"),
+                        human_signature=l_data.get("human_signature"),
+                        human_amplitude=safe_float(l_data.get("human_amplitude"), 1.0)
                     )
                     # Support for extra v5 fields in layers
                     scene.layers[layer_name].opacity = safe_float(l_data.get("opacity"), 1.0)
@@ -1052,7 +1056,15 @@ def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
             asset_id = parts[1]
             instr = parts[2].upper()
             
-            scene = {"title": parts[0], "text": parts[-1], "assets": []}
+            # v31.0: Integración del procesador fonético (Fonetica vs Display)
+            tts_text, display_text, highlights = parse_escena(parts[-1])
+            scene = {
+                "title": parts[0], 
+                "text": tts_text,           # Fonética para el locutor
+                "display_text": display_text, # Texto real para subtítulos
+                "highlights": highlights, 
+                "assets": []
+            }
             
             # Asset Logic
             if asset_id and asset_id != "negro.png":
