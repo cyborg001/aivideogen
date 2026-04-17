@@ -38,9 +38,8 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_id, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None, human_signature=None, human_amplitude=1.0):
-        self.id = asset_id
-        self._type_legacy = asset_id # Alias interno
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None, human_signature=None, human_amplitude=1.0):
+        self.type = asset_type
         self.zoom = zoom
         self.move = move
         self.overlay = overlay
@@ -57,27 +56,11 @@ class AVGLAsset:
         self.human_signature = human_signature
         self.human_amplitude = safe_float(human_amplitude, 1.0)
 
-    @property
-    def type(self):
-        return self.id
-    
-    @type.setter
-    def type(self, value):
-        self.id = value
-
 class AVGLSFX:
-    def __init__(self, sfx_id, volume=0.5, offset=0):
-        self.id = sfx_id
+    def __init__(self, sfx_type, volume=0.5, offset=0):
+        self.type = sfx_type
         self.volume = volume
         self.offset = offset
-
-    @property
-    def type(self):
-        return self.id
-
-    @type.setter
-    def type(self, value):
-        self.id = value
 
 class AVGLScene:
     def __init__(self, title):
@@ -103,7 +86,6 @@ class AVGLScene:
         self.language = None # v5.1: Per-scene language
         self.dubbing_mode = None # v5.1: Per-scene dubbing mode
         self.silent = False # v28.0: Mute mode (Subtitles without TTS)
-        self.layers = {} # v30.5: AVGL v5.0 Multilayer Support
 
 class AVGLBlock:
     def __init__(self, title, music=None, volume=0.2):
@@ -375,7 +357,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             # v28.1.5: 'SUB' simple tags are treated as Orange Headers at y=0.65
             if tag_name == 'SUB' and tag['type'] == 'simple':
                 style_override = 'Header'
-                y_pos_override = 0.25 # Zona superior-media para evitar solapamiento
+                y_pos_override = 0.65 # Sligthly above normal subs
             else:
                 style_override = None
                 y_pos_override = None 
@@ -482,7 +464,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             "text": _cleanup(h["text"]), # v17.2.21: Cleanup highlights too
             "offset": h["offset"],
             "word_count": len(h["text"].split()),
-            "phonetic_count": 40, # v5.4.35: Fixed 3s duration for highlights
+            "phonetic_count": len(h["text"].split()), # v19.6: consistency
             "is_dynamic": False,
             "is_highlight": True,
             "y_position": 0.35
@@ -519,7 +501,7 @@ def parse_avgl_json(json_text):
         except: b_vol = 0.2
         block = AVGLBlock(
             title=block_data.get("title", "Bloque"), 
-            music=block_data.get("music") or block_data.get("background_music") or block_data.get("bg_music"), 
+            music=block_data.get("music"), 
             volume=b_vol
         )
         # Block-level Voice Overrides
@@ -583,40 +565,8 @@ def parse_avgl_json(json_text):
                         fast_assembly=a_data.get("fast_assembly", False),
                         cinema_mode=a_data.get("cinema_mode", False),
                         start_time=safe_float(a_data.get("start_time"), 0.0),
-                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None,
-                        human_signature=a_data.get("human_signature"),
-                        human_amplitude=safe_float(a_data.get("human_amplitude"), 1.0)
+                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None
                     ))
-            
-            # v30.5: AVGL v5.0 Layers Support (Robust parsing for null layers)
-            layers_data = s_data.get("layers", {})
-            for layer_name, l_data in layers_data.items():
-                if l_data is None: continue # Skip null layers
-                if isinstance(l_data, str):
-                    scene.layers[layer_name] = AVGLAsset(l_data)
-                else:
-                    # v15.2.1: Robust ID detection (Priority for Layers)
-                    target_id = l_data.get("id")
-                    if not target_id or target_id in ['image', 'video']:
-                        target_id = l_data.get("type")
-                    
-                    scene.layers[layer_name] = AVGLAsset(
-                        target_id,
-                        l_data.get("zoom"),
-                        l_data.get("move"),
-                        l_data.get("overlay"),
-                        l_data.get("fit", False),
-                        start_time=safe_float(l_data.get("start_time"), 0.0),
-                        end_time=safe_float(l_data.get("end_time"), None),
-                        shake=l_data.get("shake", False),
-                        rotate=l_data.get("rotate"),
-                        shake_intensity=l_data.get("shake_intensity", 5),
-                        video_volume=l_data.get("video_volume"),
-                        human_signature=l_data.get("human_signature"),
-                        human_amplitude=safe_float(l_data.get("human_amplitude"), 1.0)
-                    )
-                    # Support for extra v5 fields in layers
-                    scene.layers[layer_name].opacity = safe_float(l_data.get("opacity"), 1.0)
             
             for sfx_data in s_data.get("sfx", []):
                 if isinstance(sfx_data, str): scene.sfx.append(AVGLSFX(sfx_data))
@@ -947,13 +897,9 @@ async def generate_audio_elevenlabs(text, output_path, voice_id, api_key):
     """
     import requests
     import json
-    if not text or not str(text).strip():
-        return False
     try:
         clean_text = re.sub(r'<[^>]+>', '', text)
         clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()
-        if not clean_text:
-            return False
         
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
@@ -1050,21 +996,12 @@ def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
             continue
 
         # Scene: TITLE | asset | instructions | pause | text
-        # v30.9: Refactorizado para soportar 5 o 6 columnas con Rotación (Vórtice)
         parts = [p.strip() for p in line.split('|')]
         if len(parts) >= 3:
             asset_id = parts[1]
             instr = parts[2].upper()
             
-            # v31.0: Integración del procesador fonético (Fonetica vs Display)
-            tts_text, display_text, highlights = parse_escena(parts[-1])
-            scene = {
-                "title": parts[0], 
-                "text": tts_text,           # Fonética para el locutor
-                "display_text": display_text, # Texto real para subtítulos
-                "highlights": highlights, 
-                "assets": []
-            }
+            scene = {"title": parts[0], "text": parts[-1], "assets": []}
             
             # Asset Logic
             if asset_id and asset_id != "negro.png":
@@ -1076,21 +1013,11 @@ def convert_text_to_avgl_json(text_script, title="Nuevo Video"):
                 if 'MOVE:' in instr:
                     m = re.search(r'MOVE:(.*?)(?: \||$)', instr)
                     if m: asset_obj["move"] = m.group(1).strip()
-                
-                # v30.9.1: Captura de Rotación (Vórtice) en columna 4 (index 3)
-                if len(parts) >= 5:
-                    try: asset_obj["rotate"] = float(parts[3])
-                    except: pass
-                
                 scene["assets"].append(asset_obj)
             
-            # v30.9.2: Pausa en penúltima columna si hay 6+ partes
-            if len(parts) >= 6:
+            if len(parts) >= 5:
                 try: scene["pause"] = float(parts[4])
                 except: pass
-            else:
-                scene["pause"] = 0.0 # Default si es el formato de 5 columnas
-
             
             # v27.7: Parse SFX from text [SFX:file:vol:off]
             sfx_matches = re.findall(r'\[SFX:(.*?)\]', scene["text"])
