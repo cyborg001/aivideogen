@@ -1380,6 +1380,26 @@
                                         class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-700 cursor-pointer"></label>
                                 </div>
                             </label>
+
+                            <!-- v15.8: RECORTE QUIRÚRGICO (Surgical Cut) -->
+                            <div class="mt-3 pt-3 border-t border-blue-500/30">
+                                <label class="block text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-2">✂️ Recorte Quirúrgico (Video Trimming)</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-[8px] text-gray-500 uppercase block mb-1">Inicio</label>
+                                        <input type="text" x-model="formData.start_time"
+                                            class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-xs text-white text-center font-mono focus:border-blue-500 outline-none"
+                                            placeholder="0:00 o seg">
+                                    </div>
+                                    <div>
+                                        <label class="text-[8px] text-gray-500 uppercase block mb-1">Fin</label>
+                                        <input type="text" x-model="formData.end_time"
+                                            class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-xs text-white text-center font-mono focus:border-blue-500 outline-none"
+                                            placeholder="Auto o min:seg">
+                                    </div>
+                                </div>
+                                <p class="text-[8px] text-gray-600 mt-1.5 italic">Define el rango exacto de video a utilizar.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -2140,6 +2160,21 @@
                 script: {},
                 isSaving: false,
                 showGrid: false, // Nueva preferencia visual global
+                
+                // v36.2: Human-Friendly Time Formatter
+                secondsToHuman(sec) {
+                    if (sec === null || sec === undefined || sec === '' || sec === 0) return sec === 0 ? '0' : '';
+                    const s = parseFloat(sec);
+                    if (isNaN(s)) return sec;
+                    const mins = Math.floor(s / 60);
+                    const secs = Math.floor(s % 60);
+                    const ms = Math.floor((s % 1) * 100);
+                    // Standard MM:SS
+                    let res = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                    // Add ms if relevant
+                    if (ms > 0) res += '.' + String(ms).padStart(2, '0');
+                    return res;
+                },
 
                 // v31.1: Explorer Integration
                 lastUploadedPath: '',
@@ -3482,8 +3517,8 @@
                             fast_assembly: sourceAsset.fast_assembly || false,
                             dubbing_mode: scene.dubbing_mode || '',
                             language: scene.language || '',
-                            start_time: sourceAsset.start_time || 0.0,
-                            end_time: sourceAsset.end_time || '',
+                            start_time: this.secondsToHuman(sourceAsset.start_time || 0.0),
+                            end_time: this.secondsToHuman(sourceAsset.end_time || ''),
                             silent: scene.silent || false,
                             human_signature: sourceAsset.human_signature || false,
                             human_amplitude: sourceAsset.human_amplitude || 1.0,
@@ -3659,6 +3694,19 @@
                 },
 
                 saveScene() {
+                    // v15.9: Intelligent Time Parser (Human to Engine)
+                    const parseTime = (val) => {
+                        if (val === null || val === undefined || val === '') return null;
+                        let sVal = String(val).trim();
+                        if (sVal.includes(':')) {
+                            const parts = sVal.split(':');
+                            if (parts.length >= 2) {
+                                return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
+                            }
+                        }
+                        return parseFloat(sVal) || 0;
+                    };
+
                     // 1. Build Asset Object
                     let currentZoom = this.formData.useZoom ? (this.formData.zoomStr || '1.0') : null;
 
@@ -3690,7 +3738,9 @@
                         shake: isInGroup ? false : (this.formData.shake || false),
                         shake_intensity: isInGroup ? 0 : parseInt(this.formData.shake_intensity || 5),
                         human_signature: isInGroup ? false : (this.formData.human_signature || false),
-                        human_amplitude: isInGroup ? 0 : parseFloat(this.formData.human_amplitude || 1.0)
+                        human_amplitude: isInGroup ? 0 : parseFloat(this.formData.human_amplitude || 1.0),
+                        start_time: parseTime(this.formData.start_time) || 0,
+                        end_time: parseTime(this.formData.end_time)
                     };
 
                     // 3. Identify Target List first for layer preservation
@@ -3705,6 +3755,9 @@
                     }
 
                     // 2. Build Scene Object
+                    const finalStartTime = parseTime(this.formData.start_time) || 0;
+                    const finalEndTime = parseTime(this.formData.end_time);
+
                     const newScene = {
                         _uId: 's' + Math.random().toString(36).substr(2, 9),
                         title: this.formData.title,
@@ -3717,8 +3770,15 @@
                         audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
                         assets: [assetObj],
+                        start_time: finalStartTime,
+                        end_time: finalEndTime,
                         layers: {
-                                background: { ...assetObj, id: this.formData.asset_type },
+                                background: { 
+                                    ...assetObj, 
+                                    id: this.formData.asset_type,
+                                    start_time: finalStartTime,
+                                    end_time: finalEndTime
+                                },
                                 main: this.formData.main_asset ? { 
                                     id: this.formData.main_asset, 
                                     type: this.isAssetVideo(this.formData.main_asset) ? 'video' : 'image',
@@ -3907,15 +3967,53 @@
 
                             this.sanitizeScript(json);
                             this.script = json;
-                            // Sync settings from imported script
+                            
+                            // v36.4: UNIFIED UNIVERSAL SETTINGS SYNC (JSON -> UI Priority)
+                            // We prioritize the 'settings' block (v4.0) but fallback to root fields
+                            const settings = json.settings || {};
+                            
+                            // Basic Settings
                             if (json.title) this.projectSettings.title = json.title;
-                            if (json.voice) this.projectSettings.voice_id = json.voice;
-                            if (json.voice_speed) this.projectSettings.voice_speed = json.voice_speed;
-                            if (json.background_music) this.projectSettings.background_music = json.background_music;
-                            if (json.auto_upload !== undefined) this.projectSettings.auto_upload = json.auto_upload;
+                            else if (settings.title) this.projectSettings.title = settings.title;
+
+                            // Voice & Engine Logic
+                            let finalVoice = settings.voice_id || json.voice || null;
+                            if (finalVoice) this.projectSettings.voice_id = finalVoice;
+                            
+                            if (settings.engine) this.projectSettings.engine = settings.engine;
+                            if (settings.voice_speed) this.projectSettings.voice_speed = settings.voice_speed;
+
+                            // Music Settings (Crucial for Bloqueo Naval)
+                            let finalMusic = settings.background_music || json.background_music || null;
+                            if (finalMusic) this.projectSettings.background_music = finalMusic;
+                            
+                            if (settings.music_volume !== undefined) {
+                                this.projectSettings.music_volume = parseFloat(settings.music_volume);
+                            }
+
+                            // Subs & Composition Settings
+                            if (settings.subtitles_y_position !== undefined) {
+                                this.projectSettings.subtitles_y_position = parseFloat(settings.subtitles_y_position);
+                            }
+                            if (settings.dynamic_subtitles !== undefined) {
+                                this.projectSettings.dynamic_subtitles = !!settings.dynamic_subtitles;
+                            }
+                            if (settings.aspect_ratio) this.projectSettings.aspect_ratio = settings.aspect_ratio;
+                            if (settings.render_mode) this.projectSettings.render_mode = settings.render_mode;
+                            
+                            // Anti-detection & Quality
+                            if (settings.human_signature !== undefined) {
+                                this.projectSettings.human_signature = !!settings.human_signature;
+                            }
+                            if (settings.human_amplitude !== undefined) {
+                                this.projectSettings.human_amplitude = parseFloat(settings.human_amplitude);
+                            }
+                            if (json.auto_upload !== undefined) {
+                                this.projectSettings.auto_upload = json.auto_upload;
+                            }
 
                             this.saveScript(this.isStandalone);
-                            alert("✅ Guion cargado correctamente.");
+                            alert("✅ Guion cargado y sincronizado correctamente.");
                         } catch (err) {
                             alert("Error cargando JSON: " + err.message);
                         }

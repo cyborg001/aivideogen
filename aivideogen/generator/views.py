@@ -1212,9 +1212,10 @@ def save_project_script_json(request, project_id):
                         if 'assets' in obj and isinstance(obj['assets'], list):
                             for asset in obj['assets']:
                                 if isinstance(asset, dict):
-                                    for key in ['id', 'type', 'path']:
-                                        if key in asset and isinstance(asset[key], str):
-                                            asset[key] = normalize_asset_path(asset[key])
+                                    for key in ['id', 'type', 'path', 'start_time', 'end_time']:
+                                        if key in asset and asset[key] is not None:
+                                            if isinstance(asset[key], str):
+                                                asset[key] = normalize_asset_path(asset[key])
                         # 2. Handle group/block master_assets
                         if 'master_asset' in obj:
                             if isinstance(obj['master_asset'], str):

@@ -11,7 +11,17 @@ import numpy as np
 def safe_float(val, default=0.0):
     try:
         if val is None or str(val).strip() == "": return default
-        return float(val)
+        # v36.0: Support for human time format (min:seg or min:seg.ms)
+        s = str(val).strip().replace(',', '.')
+        if ':' in s:
+            parts = s.split(':')
+            if len(parts) == 2:
+                # 02:30 -> 150.0
+                return float(parts[0]) * 60 + float(parts[1])
+            elif len(parts) == 3:
+                # 01:02:30 -> 3750.0
+                return float(parts[0]) * 3600 + float(parts[1]) * 60 + float(parts[2])
+        return float(s)
     except:
         return default
 
@@ -366,26 +376,32 @@ def extract_subtitles_v35(text, force_dynamic=False):
         # v28.1: Silent tags [SUB:S] or [SUB:S | text] should NOT be narrated
         is_silent_tag = (tag_name == 'SUB:S' or (tag_name == 'SUB' and tag.get('param', '').upper() == 'S'))
         
+        # v36.3: UNIFIED PARAMETER PARSER (Universal Meta-Stripper)
+        # We now look for parameters in BOTH the content (simple tags with |) 
+        # and the tag header (wrapped tags param field).
+        params_to_parse = []
+        
         if '|' in content_raw and tag['type'] == 'simple':
             p_parts = content_raw.split('|', 1)
-            params_raw = p_parts[0].strip()
+            params_to_parse = [p.strip() for p in p_parts[0].split(':')]
             display_text = p_parts[1].strip()
-            
-            # v19.2: Support extended syntax [SUB: count:style | text]
-            # v28.1.8: Smart Multi-Param Parser (Order Independent)
-            # Supports [SUB: 20:0.15:h | text] or [SUB: 0.15:20 | text] etc.
-            p_split = [p.strip() for p in params_raw.split(':')]
-            for p in p_split:
-                lc = p.lower()
-                if lc in ['h', 'highlight', 'resaltado']:
-                    is_highlight_tag = True
-                elif '.' in p:
-                    try: y_pos_override = float(p)
-                    except: pass
-                else:
-                    try: p_count_override = int(p)
-                    except: pass
+        elif tag['type'] == 'wrapped' and tag.get('param'):
+            # [SUB: 0.15] Contenido [/SUB] -> param is "0.15"
+            params_to_parse = [p.strip() for p in tag['param'].split(':')]
+            display_text = content_raw # Keep original content
         
+        # Parse all detected parameters (Order Independent)
+        for p in params_to_parse:
+            lc = p.lower()
+            if lc in ['h', 'highlight', 'resaltado']:
+                is_highlight_tag = True
+            elif '.' in p:
+                try: y_pos_override = float(p)
+                except: pass
+            else:
+                try: p_count_override = int(p)
+                except: pass
+
         f_part, d_part, h_list = parse_escena(display_text)
         is_dyn = tag['type'] == 'dyn'
         
@@ -543,7 +559,18 @@ def parse_avgl_json(json_text):
             scene.text = clean_txt
             scene.subtitles = extracted_subs or s_data.get("subtitles", [])
             
-            for a_data in s_data.get("assets", []):
+            # v35.5: Unified Layer Logic
+            # Support both legacy 'assets' list and modern 'layers' structure from Visual Editor
+            raw_assets = s_data.get("assets", [])
+            layers = s_data.get("layers", {})
+            if layers and layers.get("background"):
+                # Avoid duplicates if it's already in the assets list
+                bg_data = layers["background"]
+                bg_id = bg_data.get("id") or bg_data.get("type")
+                if not any((getattr(a, 'id', None) == bg_id or getattr(a, 'type', None) == bg_id) for a in scene.assets):
+                    raw_assets.append(bg_data)
+
+            for a_data in raw_assets:
                 if isinstance(a_data, str): scene.assets.append(AVGLAsset(a_data))
                 else: 
                     # v15.1: Robust Path Detection (id vs type)
@@ -557,7 +584,7 @@ def parse_avgl_json(json_text):
                         a_data.get("move"), 
                         a_data.get("overlay"), 
                         a_data.get("fit", False),
-                        shake=a_data.get("shake", False),
+                        shake=a_data.get("shake", False) or a_data.get("shake_intensity", 0) > 0,
                         rotate=a_data.get("rotate"),
                         shake_intensity=a_data.get("shake_intensity", 5),
                         w_rotate=a_data.get("w_rotate"),
@@ -608,6 +635,10 @@ def parse_avgl_json(json_text):
 
                 # Inheritance from Group Master Asset (v14.5 Refined)
                 raw_assets = s_data.get("assets", [])
+                layers = s_data.get("layers", {})
+                if layers and layers.get("background"):
+                     raw_assets.append(layers["background"])
+
                 if not raw_assets and master_asset:
                     raw_assets = [master_asset]
                 
@@ -626,7 +657,7 @@ def parse_avgl_json(json_text):
                             a_data.get("move"), 
                             a_data.get("overlay"), 
                             a_data.get("fit", False),
-                            shake=a_data.get("shake", False),
+                            shake=a_data.get("shake", False) or a_data.get("shake_intensity", 0) > 0,
                             rotate=a_data.get("rotate"),
                             shake_intensity=a_data.get("shake_intensity", 5),
                             w_rotate=a_data.get("w_rotate"),

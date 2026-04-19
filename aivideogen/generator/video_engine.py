@@ -1,18 +1,17 @@
-"""
-AVGL v4.0 - Video Generation Engine
-Handles the complete video rendering pipeline with optimizations
-"""
-
 import os
-import time
+import subprocess
+import json
+import uuid
 import re
 import random
+import time
 import numpy as np
 import logging
-import uuid
 import proglog
 from django.conf import settings
+from moviepy import AudioClip
 from .subtitle_utils import compile_full_script_ass
+from .clipping_service import ClippingService
 from scripts.local_lipsync import LipSyncEngine
 
 # v8.5 Notification Support
@@ -43,7 +42,17 @@ def play_finish_sound(success=True):
 def safe_float(val, default=0.0):
     try:
         if val is None or str(val).strip() == "": return default
-        return float(val)
+        # v36.5: Identical Intelligent Time Parser (Sync with avgl_engine.py)
+        s = str(val).strip().replace(',', '.')
+        if ':' in s:
+            parts = s.split(':')
+            if len(parts) == 2:
+                # 02:30 -> 150.0
+                return float(parts[0]) * 60 + float(parts[1])
+            elif len(parts) == 3:
+                # 01:02:30 -> 3750.0
+                return float(parts[0]) * 3600 + float(parts[1]) * 60 + float(parts[2])
+        return float(s)
     except:
         return default
 
@@ -533,7 +542,7 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
             logger.info(f"    ⚠️ [GIF Error] Fallo carga avanzada: {ge}. Revirtiendo a VideoFileClip.")
             v_clip = VideoFileClip(video_path)
     else:
-        # Standard Video loading
+        # Standard Video loading (Pre-recut clip received from main loop)
         v_clip = VideoFileClip(video_path)
     
     if clips_to_close is not None: clips_to_close.append(v_clip)
@@ -1117,7 +1126,6 @@ def generate_video_avgl(project):
                     
                     # Force normalization via FFmpeg (Fixes Duration: N/A from browsers)
                     try:
-                        import subprocess
                         # Find FFmpeg binary path robustly
                         ffmpeg_exe = 'ffmpeg'
                         try:
@@ -1658,13 +1666,6 @@ def generate_video_avgl(project):
                             # v14.9: Smart Default - If not specified, we assume user wants sound (Cinema Mode)
                             v_vol = float(getattr(asset, 'video_volume', 0.0)) if getattr(asset, 'video_volume', None) is not None else 0.0
                             
-                            # v5.7: Intelligent Audio Fallback for Dubbing failures
-                            # If no translated voice is available, MUST NOT silence the scene.
-                            if scene_dubbing in ['lipsync', 'hq'] and not audio_clip:
-                                if v_vol < 0.1: # Auto-mute protection
-                                    v_vol = 1.0
-                                    logger.log(f"    🔊 [AudioFallback] Doblaje ausente. Recuperando audio original (Vol: {v_vol})")
-                            
                             # v15.2: Explicit Cinema mode (Auto-Persistence)
                             is_cinema = getattr(asset, 'cinema_mode', False)
                             
@@ -1679,8 +1680,42 @@ def generate_video_avgl(project):
                                 except Exception as e:
                                     logger.log(f"    ⚠️ Error en Auto-Persistencia: {e}")
 
-                            logger.log(f"  📽️ Asset detectado como VÍDEO (v14.0): {os.path.basename(asset_path)} | Sync: {sync_start_time:.2f}s | Vol: {v_vol}")
+                            logger.log(f"  📽️ Asset detectado como VÍDEO (v14.0): {os.path.basename(asset_path)} | StartTime: {safe_float(getattr(asset, 'start_time', 0.0)):.2f}s | Vol: {v_vol}")
                             
+                            # ═══════════════════════════════════════════════════════════════════
+                            # v16.2: UNIFIED FFmpeg Force Seek (Pre-bifurcation)
+                            # ═══════════════════════════════════════════════════════════════════
+                            a_start = safe_float(getattr(asset, 'start_time', 0.0), 0.0)
+                            if a_start > 10.0:
+                                temp_id = str(uuid.uuid4())[:8]
+                                temp_clip_path = os.path.join(temp_audio_dir, f"force_seek_{temp_id}.mp4")
+                                logger.log(f"    🚀 [Unified Force Seek] Extrayendo minuto {a_start/60:.2f} para TODAS las rutas...")
+                                
+                                # Chunk size: duration + padding
+                                ff_dur = duration + 10.0
+                                if is_cinema: ff_dur = 3600 # 1h max if cinema mode is on and we don't know duration
+                                
+                                cmd = [
+                                    "ffmpeg", "-y", "-v", "error",
+                                    "-ss", str(max(0, a_start - 1.0)),
+                                    "-i", asset_path,
+                                    "-t", str(ff_dur),
+                                    "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
+                                    "-c:a", "aac",
+                                    temp_clip_path
+                                ]
+                                try:
+                                    subprocess.run(cmd, check=True, capture_output=True)
+                                    if os.path.exists(temp_clip_path):
+                                        asset_path = temp_clip_path
+                                        # IMPORTANT: Downstream functions must now use 1.0s relative to this clip
+                                        setattr(asset, 'start_time', 1.0)
+                                        # Cleanup tracking
+                                        if 'temp_files_to_clean' not in locals(): temp_files_to_clean = []
+                                        temp_files_to_clean.append(temp_clip_path)
+                                except Exception as fe:
+                                    logger.log(f"      ⚠️ [ForceSeek Error] Fallo pre-recorte: {fe}. Usando archivo original.")
+
                             # v15.0: Fast Assembly Check
                             is_fast = getattr(asset, 'fast_assembly', False)
                             
@@ -1702,7 +1737,6 @@ def generate_video_avgl(project):
                                     else:
                                         # Inyectar silencio de la duración de la escena
                                         logger.log(f"    🔇 Inyectando silencio de {duration:.2f}s para inyección directa.")
-                                        from moviepy import AudioClip
                                         silent_audio = AudioClip(lambda t: 0, duration=duration)
                                         silent_audio.write_audiofile(temp_scene_audio, fps=44100, logger=None)
                                         silent_audio.close()
@@ -1736,7 +1770,7 @@ def generate_video_avgl(project):
                                     overlay_clip=current_overlay_clip,
                                     fit=asset.fit,
                                     clips_to_close=clips_to_close,
-                                    start_time=sync_start_time + safe_float(getattr(asset, 'start_time', 0.0), 0.0),
+                                    start_time=safe_float(getattr(asset, 'start_time', 0.0), 0.0) if safe_float(getattr(asset, 'start_time', 0.0), 0.0) > 0 else sync_start_time,
                                     end_time=getattr(asset, 'end_time', None),
                                     video_volume=v_vol
                                 )
