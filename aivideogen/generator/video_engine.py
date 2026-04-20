@@ -12,6 +12,7 @@ from django.conf import settings
 from moviepy import AudioClip
 from .subtitle_utils import compile_full_script_ass
 from .clipping_service import ClippingService
+from .motion_utils import HumanSignatureEngine
 from scripts.local_lipsync import LipSyncEngine
 
 # v8.5 Notification Support
@@ -296,30 +297,16 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             base_w = w_orig
             base_h = int(w_orig / tar_ar)
 
-    # v11.35: Multi-wave Stochastics with Amplitude Envelope
+    # v11.35: Initialize Organic Motion Engine
     h_noise_active = human_noise_enabled
     if h_noise_active is None:
         h_noise_active = str(os.getenv('HUMAN_SIGNATURE_ENABLED', 'True')).lower() == 'true'
         if project_settings and 'human_signature' in project_settings:
             h_noise_active = project_settings['human_signature']
 
-    # Pre-calculate unique noise parameters per clip
-    import hashlib
-    clip_seed_int = int(hashlib.md5(image_path.encode()).hexdigest(), 16) % (2**32)
-    rng = random.Random(clip_seed_int)
-    
-    # Base frequencies and phases
-    f1, f2 = 0.5 + rng.uniform(-0.15, 0.15), 1.2 + rng.uniform(-0.3, 0.3)
-    f3, f4 = 0.7 + rng.uniform(-0.2, 0.2), 1.5 + rng.uniform(-0.4, 0.4)
-    p1, p2, p3, p4 = [rng.uniform(0, 2*np.pi) for _ in range(4)]
-    
-    # Normalized amplitudes (Sum of a1+a2 and a3+a4 = 1.0 to respect 'max_amplitude')
-    a1 = rng.uniform(0.5, 0.7); a2 = 1.0 - a1
-    a3 = rng.uniform(0.5, 0.7); a4 = 1.0 - a3
-
-    # v11.35: Amplitude Envelopes (Low frequency modulation [0.2, 1.0])
-    fe1, fe2 = 0.1 + rng.uniform(-0.05, 0.05), 0.12 + rng.uniform(-0.06, 0.06)
-    pe1, pe2 = rng.uniform(0, 2*np.pi), rng.uniform(0, 2*np.pi)
+    motion_engine = None
+    if h_noise_active:
+        motion_engine = HumanSignatureEngine(image_path, intensity=human_noise_intensity)
 
     # ═══════════════════════════════════════════════════════════════════
     # 3. FAST OPENCV MAKE_FRAME
@@ -360,19 +347,9 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
                 off_y = factor * (slack_h / 2.0)
                 off_y = max(-slack_h/2.0, min(slack_h/2.0, off_y))
             
-        if h_noise_active:
-            # v11.35: Multi-wave Stochastics with Amplitude Envelope
-            amp = human_noise_intensity if human_noise_intensity is not None else 1.0
-            
-            # Envelopes oscillate between [0.2, 1.0] to vary intensity organically
-            env_x = 0.6 + 0.4 * np.sin(t * fe1 * 2 * np.pi + pe1)
-            env_y = 0.6 + 0.4 * np.cos(t * fe2 * 2 * np.pi + pe2)
-            
-            # Combined drift (Normalized Base * Current Envelope * Max Amplitude)
-            # This ensures maximum displacement NEVER exceeds 'amp'
-            drift_x = (np.sin(t * f1 * 2 * np.pi + p1) * a1 + np.cos(t * f2 * 2 * np.pi + p2) * a2) * env_x * amp
-            drift_y = (np.cos(t * f3 * 2 * np.pi + p3) * a3 + np.sin(t * f4 * 2 * np.pi + p4) * a4) * env_y * amp
-            
+        if motion_engine:
+            # v36.9: Modular Organic Movement (Proportional)
+            drift_x, drift_y = motion_engine.get_offset(t, width=base_w, height=base_h)
             off_x += drift_x
             off_y += drift_y
 
@@ -505,9 +482,9 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
     return clip.with_duration(duration)
 
 
-def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, end_time=None, video_volume=0.0, overlay_clip=None):
+def process_video_asset(video_path, duration, target_size, overlay_path=None, fit=None, clips_to_close=None, start_time=0.0, end_time=None, video_volume=0.0, overlay_clip=None, human_noise_enabled=None, human_noise_intensity=1.0, project_settings=None):
     """
-    v14.0: Processes video with group-sync (start_time) and audio mixing (video_volume).
+    v36.9: Processes video with group-sync, audio mixing AND Organic Human Signature support.
     """
     from moviepy import VideoFileClip, CompositeVideoClip, vfx, afx
     
@@ -593,7 +570,44 @@ def process_video_asset(video_path, duration, target_size, overlay_path=None, fi
         base_scale = max(scale_w, scale_h)
         
     v_clip = v_clip.resized(base_scale)
-    v_clip = v_clip.with_position("center")
+    
+    # v36.9: Human Signature Support for Video
+    h_noise_active = human_noise_enabled
+    if h_noise_active is None:
+        h_noise_active = str(os.getenv('HUMAN_SIGNATURE_ENABLED', 'True')).lower() == 'true'
+        if project_settings and 'human_signature' in project_settings:
+            h_noise_active = project_settings['human_signature']
+
+    if h_noise_active:
+        from .motion_utils import HumanSignatureEngine
+        motion_engine = HumanSignatureEngine(video_path, intensity=human_noise_intensity)
+        # Apply 5% overscan to prevent black edges during sway
+        v_clip = v_clip.resized(1.05)
+        
+        def move_video(t):
+            dx, dy = motion_engine.get_offset(t, width=target_w, height=target_h)
+            return ('center', 'center') # Base position is center, we offset the coordinates
+            # Wait, moviepy's with_position as a func returns absolute (x,y) or ('center',...)
+            # To apply offset, we use a custom position function.
+            
+        def get_pos(t):
+            dx, dy = motion_engine.get_offset(t, width=target_w, height=target_h)
+            # Offset from center
+            return ('center', 'center') # Not practical to use lambda for offsets easily here.
+            
+        # Refined approach: Use a wrapper to shift position
+        # MoviePy's position can be (lambda t: (x_val, y_val))
+        def organic_pos(t):
+            dx, dy = motion_engine.get_offset(t, width=target_w, height=target_h)
+            # X: center is (target_w - clip.w)/2. We add dx.
+            # Y: center is (target_h - clip.h)/2. We add dy.
+            x = (target_w - v_clip.w) // 2 + dx
+            y = (target_h - v_clip.h) // 2 + dy
+            return (x, y)
+            
+        v_clip = v_clip.with_position(organic_pos)
+    else:
+        v_clip = v_clip.with_position("center")
     
     # Audio Logic
     try:

@@ -584,7 +584,7 @@ def parse_avgl_json(json_text):
                         a_data.get("move"), 
                         a_data.get("overlay"), 
                         a_data.get("fit", False),
-                        shake=a_data.get("shake", False) or a_data.get("shake_intensity", 0) > 0,
+                        shake=a_data.get("shake", False),
                         rotate=a_data.get("rotate"),
                         shake_intensity=a_data.get("shake_intensity", 5),
                         w_rotate=a_data.get("w_rotate"),
@@ -592,7 +592,9 @@ def parse_avgl_json(json_text):
                         fast_assembly=a_data.get("fast_assembly", False),
                         cinema_mode=a_data.get("cinema_mode", False),
                         start_time=safe_float(a_data.get("start_time"), 0.0),
-                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None
+                        end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None,
+                        human_signature=a_data.get("human_signature"),
+                        human_amplitude=a_data.get("human_amplitude", 1.0)
                     ))
             
             for sfx_data in s_data.get("sfx", []):
