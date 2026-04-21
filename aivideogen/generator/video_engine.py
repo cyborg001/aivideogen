@@ -9,11 +9,12 @@ import numpy as np
 import logging
 import proglog
 from django.conf import settings
-from moviepy import AudioClip
+from moviepy import AudioClip, AudioFileClip, VideoFileClip
 from .subtitle_utils import compile_full_script_ass
 from .clipping_service import ClippingService
 from .motion_utils import HumanSignatureEngine
 from scripts.local_lipsync import LipSyncEngine
+from . import audio_engine
 
 # v8.5 Notification Support
 if os.name == 'nt':
@@ -77,23 +78,6 @@ def safe_eval_math(val, default=0.0):
         except:
             return default
 
-def merge_voice_intervals(intervals, threshold=1.5):
-    """v18.0: Merges voice intervals that are within the threshold distance."""
-    if not intervals: return []
-    try:
-        sorted_intervals = sorted(intervals, key=lambda x: x[0])
-        merged = [sorted_intervals[0]]
-        for current in sorted_intervals[1:]:
-            prev_start, prev_end = merged[-1]
-            curr_start, curr_end = current
-            if curr_start <= prev_end + threshold:
-                merged[-1] = (prev_start, max(prev_end, curr_end))
-            else:
-                merged.append(current)
-        return merged
-    except Exception as e:
-        logger.warning(f"Error merging intervals: {e}")
-        return intervals
 
 # ═══════════════════════════════════════════════════════════════════
 # MONKEY PATCH: Absolute Audio Immunity (v15.9)
@@ -984,6 +968,89 @@ def render_pro_subtitles(text, duration, target_size, active_word_index=None, fu
         
         return final_clip
 
+# v36.21.3: Modular Audio Resolver with Priority Refactoring
+def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, logger=None, threshold=0.02, min_silence=0.5):
+    """
+    Simulates Function Overloading: Resolves the "Voice Evidence" from multiple potential layers.
+    Priority: 1. Locally Processed Audio (Pre-normalized) > 2. Manual JSON Audio > 3. Video Asset Sound.
+    """
+    final_audio = local_audio_clip
+    source_type = "PROCESSED/TTS"
+    detected_intervals = None
+
+    # Layer 1: Already Processed by Engine (Highest Priority)
+    if final_audio:
+        # Check if it was a manual asset originally handled by the engine loop
+        if getattr(scene, 'audio', None) or getattr(scene, 'audio_path', None):
+            source_type = "MANUAL_ASSET (PROCESSED)"
+            # v36.21.7: Apply the 1.2x boost even to already normalized audio for consistency
+            from moviepy.audio import fx as afx
+            final_audio = final_audio.with_effects([afx.MultiplyVolume(1.2)])
+            # v36.20.2: Analyze for Noise Gate on the clean processed audio
+            detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
+    else:
+        # Layer 2: Manual Override (Fallback if engine missed it)
+        manual_path = getattr(scene, 'audio', None) or getattr(scene, 'audio_path', None)
+        if manual_path:
+            # v36.20.7: Intelligent Path Resolution
+            potential_paths = [
+                manual_path, os.path.abspath(manual_path),
+                os.path.join(settings.MEDIA_ROOT, manual_path),
+                os.path.join(settings.MEDIA_ROOT, 'assets', manual_path)
+            ]
+            
+            audio_resolved = None
+            for p in potential_paths:
+                if os.path.exists(p) and os.path.isfile(p):
+                    audio_resolved = p; break
+            
+            if audio_resolved:
+                try:
+                    from moviepy.audio import fx as afx
+                    # v36.24: Use absolute path for reliability
+                    abs_path = os.path.abspath(audio_resolved)
+                    final_audio = AudioFileClip(abs_path).with_effects([afx.MultiplyVolume(1.2)])
+                    source_type = f"MANUAL_ASSET ({os.path.splitext(abs_path)[1].upper()})"
+                    detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold, min_silence=min_silence)
+                except Exception as e:
+                    if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual raw: {e}")
+
+        # Layer 3: Asset Sound Extraction (Failsafe for Video Voice)
+        if not final_audio and video_asset_clip and video_asset_clip.audio:
+            try:
+                if video_asset_clip.audio.duration > 0.1:
+                    final_audio = video_asset_clip.audio
+                    source_type = "VIDEO_INTEGRATED"
+                    detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold, min_silence=min_silence)
+            except: pass
+        try:
+            # Only use if it has a meaningful volume/duration
+            if video_asset_clip.audio.duration > 0.1:
+                final_audio = video_asset_clip.audio
+                source_type = "VIDEO_INTEGRATED"
+                if logger: logger.log(f"    🔊 [Audio] Capa de Video detectada (Sonido original del asset)")
+                # v36.22.4: Analyze for Noise Gate using dynamic threshold
+                detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold)
+        except:
+            pass
+
+    # v36.19.3: Absolute Failsafe - If we found ANY audio, the scene CANNOT be silent.
+    if final_audio:
+        setattr(scene, 'silent', False)
+        # v36.21.1: Inject intervals into scene. 
+        # Crucial: Use 'is not None' because an empty list [] is a valid analysis result (Mute/Noise).
+        if detected_intervals is not None:
+            setattr(scene, 'voice_intervals', detected_intervals)
+            if logger: 
+                if not detected_intervals:
+                    logger.log(f"    📉 [NoiseGate] Escena analizada: NO se detectó voz real (Umbral > {threshold})")
+                else:
+                    i_str = ", ".join([f"{s:.1f}s-{e:.1f}s" for s, e in detected_intervals[:3]])
+                    if len(detected_intervals) > 3: i_str += "..."
+                    logger.log(f"    📈 [NoiseGate] Voz real detectada: {i_str} ({len(detected_intervals)} segmentos)")
+
+    return final_audio, source_type
+
 def generate_video_avgl(project):
     """
     Main video generation function using AVGL v4.0 JSON format.
@@ -1070,7 +1137,7 @@ def generate_video_avgl(project):
             
             # v13.5.5: Professional Audio Normalization (Stereo Force & Validation)
             base_audio_name = f"project_{project.id}_scene_{i:03d}"
-            audio_path = os.path.join(temp_audio_dir, f"{base_audio_name}.mp3")
+            audio_path = os.path.join(temp_audio_dir, f"{base_audio_name}.wav")
 
             # v5.2 Hook: Auto-Dubbing (Direct Transcription/Translation Pre-check)
             scene_dubbing = getattr(scene, 'dubbing_mode', None)
@@ -1151,9 +1218,11 @@ def generate_video_avgl(project):
                         # v13.5.5: Force -ac 2 (Stereo) to prevent mixing issues with background music
                         cmd = [
                             ffmpeg_exe, '-y', '-i', custom_audio_path,
-                            '-af', 'volume=1.5',
+                            '-vn', # Descartar video si lo hubiera
+                            '-ar', '44100',
                             '-ac', '2',
-                            '-codec:a', 'libmp3lame', '-qscale:a', '2',
+                            '-codec:a', 'pcm_s16le',
+                            '-f', 'wav',
                             audio_path
                         ]
                         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -1196,8 +1265,8 @@ def generate_video_avgl(project):
                 
             use_ssml = (project.engine == 'eleven')
             curr_text = re.sub(r'\(.*?\)', '', scene.text).strip()
-            if curr_text.startswith('[') and not re.match(r'^\[\s*SUB', curr_text, flags=re.IGNORECASE):
-                curr_text = re.sub(r'^\[(?!(?:\s*/?SUB|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO))[^\]]+\]\s*', '', curr_text, flags=re.IGNORECASE)
+            if curr_text.startswith('[') and not re.match(r'^\[\s*(?:/?SUB|PAUSE|PAUSA)', curr_text, flags=re.IGNORECASE):
+                curr_text = re.sub(r'^\[(?!(?:\s*/?SUB|PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO))[^\]]+\]\s*', '', curr_text, flags=re.IGNORECASE)
 
             text_with_emotions = translate_emotions(curr_text, use_ssml=use_ssml)
             
@@ -1292,17 +1361,23 @@ def generate_video_avgl(project):
                     try: c.close()
                     except: pass
                 return
-
             # Legacy Block-based progress removed in favor of granular scene progress
             # kept only for debug log
             logger.log(f"📦 Procesando Bloque {b_idx+1}: {block.title}")
             block_scene_clips = []
             block_voice_intervals = []
+            # v1.4: Universal Block-Level Audio Safety Initializers
+            has_local_music = False
+            bg_audio = None
+            peak_vol = 0.18
+            music_to_use = None
+            
             block_cursor = 0.0
             
             for s_idx, scene in enumerate(block.scenes):
-                # v28.1.16: Initialize word count to prevent ducking errors in mute scripts
+                scene_audio_duration = 0
                 words = 0
+                # v28.1.16: Initialize word count to prevent ducking errors in mute scripts
                 clean_text = re.sub(r'\[.*?\]', '', str(scene.text))
                 words = len(clean_text.split())
                 
@@ -1812,6 +1887,23 @@ def generate_video_avgl(project):
                     logger.log(f"  🔇 Modo Solo Audio/Debug: Sin assets. Fondo negro rápido.")
                     clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
 
+                # v36.22.2: Dynamic Ducking Threshold Capture
+                # Priority: Scene level > Global Script Setting > Default (0.02)
+                global_th = float(script.settings.get('ducking_threshold', 0.02))
+                global_merge = float(script.settings.get('audio_merge_threshold', 0.5))
+                
+                val_scene = getattr(scene, 'ducking_threshold', None)
+                eff_threshold = float(val_scene or global_th)
+                eff_merge = float(global_merge) # v36.27.2: Universal merge connection
+                
+                if logger:
+                    loc_str = f" [ESCENA: {val_scene}]" if val_scene else " [GLOBAL]"
+                    logger.log(f"    🎚️ [Audio] Radar Ducking: Umbral {eff_threshold}{loc_str}")
+
+                # v36.20.5: Global Voice Resolver (Consolidated)
+                actual_voice, voice_source = resolve_scene_audio_layer(scene, audio_clip, clip, logger, threshold=eff_threshold, min_silence=eff_merge)
+                has_real_speech = not getattr(scene, 'silent', False) and (actual_voice is not None or words > 0)
+
                 # 2. SFX Processing (New)
                 scene_sfx_clips = []
                 if scene.sfx:
@@ -2045,28 +2137,25 @@ def generate_video_avgl(project):
                     logger.log(f"    [WARNING] Error renderizando subtitulos PRO: {e}\n{traceback.format_exc()}")
 
                 # v14.0 Audio Mixing: Mix Voice + Original Video Sound (if volume > 0)
-                # v14.3: Robust check for audio presence
-                if audio_clip and clip.audio:
+                # v36.20.3: Use ACTUAL_VOICE (the unified modular source)
+                if actual_voice and clip.audio:
                     from moviepy import CompositeAudioClip
-                    mixed_audio = CompositeAudioClip([audio_clip, clip.audio])
+                    mixed_audio = CompositeAudioClip([actual_voice, clip.audio])
                     clip = clip.with_audio(mixed_audio)
-                elif audio_clip:
+                elif actual_voice:
                     # v28.1.14: Robust Padding Logic.
-                    # MoviePy can truncate background music if the primary audio track (voice) is shorter than the visual.
-                    # We force the audio track to match the visual duration by mixing with a silence clip of full length.
-                    if audio_clip.duration < duration:
+                    if actual_voice.duration < duration:
                         from moviepy import CompositeAudioClip, AudioClip
                         silence = AudioClip(lambda t: 0, duration=duration)
-                        audio_clip = CompositeAudioClip([audio_clip, silence])
+                        final_v = CompositeAudioClip([actual_voice, silence])
                     else:
-                        audio_clip = audio_clip.with_duration(duration)
-                    clip = clip.with_audio(audio_clip)
+                        final_v = actual_voice.with_duration(duration)
+                    clip = clip.with_audio(final_v)
                 elif clip.audio:
                     # v14.3: If NO text/voice, but video has audio, leave it as is
                     logger.log(f"    🔊 [Audio] Usando audio original del video (No hay locución).")
                 else:
                     # v14.3: No voice, no video audio = silent clip
-                    #logger.log(f"    🔇 [Audio] Escena silenciosa (No hay voz ni audio de video).")
                     clip = clip.without_audio()
 
                 block_scene_clips.append(clip)
@@ -2075,30 +2164,36 @@ def generate_video_avgl(project):
                 m, s = divmod(int(current_time), 60)
                 timestamps_list.append(f"{m:02d}:{s:02d} {scene.title}")
                 
-                # Ducking Intervals
-                # v28.1.15 Smart Ducking: ONLY register intervals if there is REAL speech (not Mute Mode or Tag-Only).
-                # This prevents the "silent music" bug in pause scenes.
-                has_real_speech = not getattr(scene, 'silent', False) and words > 0
-                if audio_clip and has_real_speech:
+                # v28.1.16 Smart Ducking: Apply if there is real text OR an explicit custom audio file.
+                if actual_voice and has_real_speech:
+                    logger.log(f"    🔊 [Audio] Habla detectada ({voice_source}) en Escena {s_idx+1}: Activando Ducking Maestro (Dur={actual_voice.duration:.2f}s)")
                     scene_intervals = []
-                    if hasattr(scene, 'voice_intervals') and scene.voice_intervals:
-                        for vs, ve in scene.voice_intervals: 
-                            scene_intervals.append((block_cursor + vs, block_cursor + ve))
+                    # v36.21.0: Refined interval collection - Handle empty lists as "No Voice"
+                    if hasattr(scene, 'voice_intervals') and scene.voice_intervals is not None:
+                        if scene.voice_intervals:
+                            for vs, ve in scene.voice_intervals: 
+                                scene_intervals.append((block_cursor + vs, block_cursor + ve))
+                        else:
+                            # v36.21.0: Noise Gate analyzed this and found ZERO voice. 
+                            # Do NOT add any intervals (this prevents ducking the whole duration).
+                            logger.log(f"    🔇 [Audio] Noise Gate: Silencio/Ruido total detectado. Música al 100%.")
                     else: 
-                        # Usar pure_voice_duration para ducking real (excluyendo la cola de SFX)
+                        # Fallback for Edge TTS or other sources without interval analysis
                         v_dur = pure_voice_duration if 'pure_voice_duration' in locals() else voice_duration
                         scene_intervals.append((block_cursor, block_cursor + v_dur))
                     
                     # Store in block local
-                    block_voice_intervals.extend(scene_intervals)
+                    if scene_intervals:
+                        block_voice_intervals.extend(scene_intervals)
                     # Store in global absolute
                     for s_start_rel, s_end_rel in scene_intervals:
                         global_voice_intervals.append((video_base_cursor + s_start_rel, video_base_cursor + s_end_rel))
-                
-                current_time += duration; block_cursor += duration
+                    
+                    current_time += duration; block_cursor += duration
 
             if block_scene_clips:
                 block_video = concatenate_videoclips(block_scene_clips, method="chain")
+                
                 
                 # Apply Block Music (Local Ducking)
                 # v4.8.4: Explicit var initialization to prevent NameError on blocks without music
@@ -2162,7 +2257,7 @@ def generate_video_avgl(project):
                         _early_finish = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
                         
                         # Merge block intervals (relative to block start)
-                        local_merged = merge_voice_intervals(block_voice_intervals, threshold=_merge_th)
+                        local_merged = audio_engine.IntervalManager.merge(block_voice_intervals, threshold=_merge_th)
                         
                         # Loop music to block duration
                         try:
@@ -2175,63 +2270,10 @@ def generate_video_avgl(project):
                         
                         logger.log(f"  [Audio] Ducking Inline Bloque {b_idx+1}: {len(local_merged)} intervalos, vol={peak_vol}, ratio={_duck_ratio}")
                         
-                        # Simple ducking function (block-local, no external references)
-                        def make_block_ducking(intervals, vol, dr, att, rel, block_dur):
-                            """Factory function to avoid closure issues."""
-                            def apply_ducking(get_frame, t):
-                                audio = get_frame(t)
-                                if isinstance(t, np.ndarray):
-                                    factors = np.full(t.shape, float(vol))
-                                    for vs, ve in intervals:
-                                        # Attack
-                                        m = (t >= (vs - att)) & (t < vs)
-                                        if np.any(m):
-                                            p = (t[m] - (vs - att)) / att
-                                            factors[m] = np.minimum(factors[m], vol * (1.0 - p * (1.0 - dr)))
-                                        # Ducked
-                                        factors[(t >= vs) & (t <= ve)] = vol * dr
-                                        # Release
-                                        m = (t > ve) & (t <= (ve + rel))
-                                        if np.any(m):
-                                            p = (t[m] - ve) / rel
-                                            factors[m] = np.minimum(factors[m], vol * (dr + p * (1.0 - dr)))
-                                    
-                                    # Block fade-in and fade-out based on settings
-                                    if _block_fade > 0:
-                                        factors[t < _block_fade] *= (t[t < _block_fade] / _block_fade)
-                                        m_out = t > (block_dur - _early_finish - _block_fade)
-                                        if np.any(m_out):
-                                            # Smooth transition to 0 at the very end
-                                            p_out = (block_dur - _early_finish - t[m_out]) / _block_fade
-                                            factors[m_out] *= np.maximum(0, np.minimum(1, p_out))
-                                        
-                                        # Force silence during early finish
-                                        factors[t > (block_dur - _early_finish)] = 0.0
-                                    
-                                    return audio * factors[:, None]
-                                else:
-                                    factor = float(vol)
-                                    for vs, ve in intervals:
-                                        if vs <= t <= ve:
-                                            factor = vol * dr; break
-                                        elif (vs - att) <= t < vs:
-                                            p = (t - (vs - att)) / att
-                                            factor = min(factor, vol * (1.0 - p * (1.0 - dr)))
-                                        elif ve < t <= (ve + rel):
-                                            p = (t - ve) / rel
-                                            factor = min(factor, vol * (dr + p * (1.0 - dr)))
-                                    # Scalar fade-in/fade-out
-                                    if _block_fade > 0:
-                                        if t < _block_fade: factor *= (t / _block_fade)
-                                        if t > (block_dur - _early_finish - _block_fade):
-                                            p_out = (block_dur - _early_finish - t) / _block_fade
-                                            factor *= max(0, min(1, p_out))
-                                        if t > (block_dur - _early_finish):
-                                            factor = 0.0
-                                    return audio * factor
-                            return apply_ducking
-                        
-                        ducking_fn = make_block_ducking(local_merged, peak_vol, _duck_ratio, _attack, _release, block_video.duration)
+                        ducking_fn = audio_engine.DuckingMaster.create_ducking_transform(
+                            local_merged, peak_vol, _duck_ratio, _attack, _release, 
+                            block_video.duration, fade_in=_block_fade, early_finish=_early_finish
+                        )
                         bg_ducked = bg_looped.transform(ducking_fn)
                         
                         # v28.1.17: Filter None clips before mixing. MoviePy 2.x is strict.
@@ -2240,6 +2282,11 @@ def generate_video_avgl(project):
                             from moviepy import CompositeAudioClip
                             block_video = block_video.with_audio(CompositeAudioClip(audio_to_mix))
                         
+                        # v36.27: Ducking Anatomy Log
+                        ducked_time = sum([(v[1]-v[0]) for v in local_merged])
+                        total_time = block_video.duration
+                        pct = (ducked_time / total_time * 100) if total_time > 0 else 0
+                        logger.log(f"  📊 [Anatomía de Mezcla] Voz detectada en {ducked_time:.2f}s de {total_time:.2f}s total ({pct:.1f}% de cobertura)")
                         logger.log(f"  [Audio] ✅ Mezcla final completada para Bloque {b_idx+1}")
                     except Exception as e:
                         logger.log(f"  ⚠️ Error ducking inline bloque {b_idx+1}: {e}")
@@ -2403,136 +2450,54 @@ def generate_video_avgl(project):
                     # 5. Dynamic Ducking Master (v4.5)
                     # v18.1: Robust threshold from settings (fallback to 1.5s professional standard)
                     # v20.2: Global Ducking Master (Master Console Override)
-                    merge_threshold = safe_float(project.audio_merge_threshold, safe_float(os.getenv("AUDIO_MERGE_THRESHOLD"), getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5)))
-                    duck_ratio = safe_float(project.audio_ducking_ratio, float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25)))
-                    attack_t = safe_float(project.audio_attack_time, float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15)))
-                    release_t = safe_float(project.audio_release_time, float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4)))
-                    block_fade_t = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
-                    early_finish_t = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                    # v36.27.3: Global Ducking Master (Sovereign JSON Integration)
+                    # Priority: 1. JSON Guion (Sovereign) > 2. Django DB > 3. System Defaults
+                    s_sets = getattr(script, 'settings', {})
+                    
+                    merge_threshold = safe_float(s_sets.get('audio_merge_threshold'), 
+                                                 safe_float(project.audio_merge_threshold, getattr(settings, 'AUDIO_MERGE_THRESHOLD', 0.8)))
+
+                    # Telemetry: Deep Dive into intervals
+                    logger.log(f"    📡 [Radar PCM] Analizando silencios con merge_threshold: {merge_threshold}s")
+                    
+                    duck_ratio = safe_float(s_sets.get('audio_ducking_ratio'), 
+                                            safe_float(project.audio_ducking_ratio, float(getattr(settings, 'AUDIO_DUCKING_RATIO', 0.25))))
+                    
+                    attack_t = safe_float(s_sets.get('audio_attack_time'), 
+                                           safe_float(project.audio_attack_time, float(getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))))
+                    
+                    release_t = safe_float(s_sets.get('audio_release_time'), 
+                                            safe_float(project.audio_release_time, float(getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))))
+                    
+                    block_fade_t = safe_float(s_sets.get('audio_block_fade'), 
+                                               safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0)))
+                    
+                    early_finish_t = safe_float(s_sets.get('audio_early_finish'), 
+                                                 safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1)))
+
+                    logger.log(f"    📡 [Audio] Soberanía: JSON (Soberano)")
 
                     logger.log(f"    [Audio] Mezclando Autoducking Maestro v20.2 ({len(global_voice_intervals)} intervalos)")
                     logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s, block_fade={block_fade_t}s, early_finish={early_finish_t}s")
                     logger.log(f"    [Audio] Intervalos RAW: {global_voice_intervals[:10]}")
-                    merged_global_intervals = merge_voice_intervals(global_voice_intervals, threshold=merge_threshold)
+                    merged_global_intervals = audio_engine.IntervalManager.merge(global_voice_intervals, threshold=merge_threshold)
+                    # New Telemetry: Breath Analysis
+                    total_breath_time = 0.0
+                    for i in range(len(merged_global_intervals) - 1):
+                        gap = merged_global_intervals[i+1][0] - merged_global_intervals[i][1]
+                        if gap > 0.1: total_breath_time += gap
+                    
                     logger.log(f"    [Audio] Intervalos MERGED: {merged_global_intervals}")
-                    logger.log(f"    [Audio] Block Time Ranges: {block_time_ranges}")
-                    logger.log(f"    [Audio] Mute Intervals: {mute_intervals}")
-                    logger.log(f"    [Audio] Default Vol: {default_vol}")
-                    # Probe: Check ducking factor at a few key points
-                    test_times = [5.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
-                    for tt in test_times:
-                        if tt < final_video.duration:
-                            # Simple scalar test
-                            factor = 1.0
-                            for v_start, v_end in merged_global_intervals:
-                                if v_start <= tt <= v_end: factor = duck_ratio; break
-                            logger.log(f"    [Audio] PROBE t={tt:.1f}s -> factor={factor:.3f} (ducked={factor < 1.0})")
-
-                    def get_ducking_factor(t, peak_vol_val, current_intervals, time_offset=0.0):
-                        if isinstance(t, np.ndarray):
-                            factors = np.ones_like(t, dtype=float)
-                            for v_start, v_end in current_intervals:
-                                # 1. Attack (Fade Down)
-                                m_out = (t >= (v_start - attack_t)) & (t < v_start)
-                                if np.any(m_out):
-                                    p = (t[m_out] - (v_start - attack_t)) / attack_t
-                                    factors[m_out] = np.minimum(factors[m_out], 1.0 - (p * (1.0 - duck_ratio)))
-                                
-                                # 2. Release (Fade Up)
-                                m_in = (t > v_end) & (t <= (v_end + release_t))
-                                if np.any(m_in):
-                                    p = (t[m_in] - v_end) / release_t
-                                    factors[m_in] = np.minimum(factors[m_in], duck_ratio + (p * (1.0 - duck_ratio)))
-
-                                # 3. SILENCE PRIORITY (v4.8.5): Force duck_ratio if voice is active
-                                # This prevents Attack logic from 'lifting' volume during voice
-                                factors[(t >= v_start) & (t <= v_end)] = duck_ratio
-                            
-                            # v20.2: Master Console Fade/Finish Integration (Vectorized)
-                            # (Values already captured as block_fade_t and early_finish_t)
-                            if block_fade_t > 0:
-                                t_abs = t + time_offset
-                                for b_start, b_end, b_vol in block_time_ranges:
-                                    # Fade In
-                                    m_fade_in = (t_abs >= b_start) & (t_abs <= (b_start + block_fade_t))
-                                    if np.any(m_fade_in):
-                                        p = (t_abs[m_fade_in] - b_start) / block_fade_t
-                                        factors[m_fade_in] *= p
-                                    
-                                    # Finish Early: Silence during the last 1s of the block
-                                    m_silent = (t_abs > (b_end - early_finish_t)) & (t_abs <= b_end)
-                                    if np.any(m_silent):
-                                        factors[m_silent] = 0.0
-                                    
-                                    # Fade Out: Transition to silence before the early finish
-                                    m_fade_out = (t_abs >= (b_end - early_finish_t - block_fade_t)) & (t_abs <= (b_end - early_finish_t))
-                                    if np.any(m_fade_out):
-                                        p = (b_end - early_finish_t - t_abs[m_fade_out]) / block_fade_t
-                                        factors[m_fade_out] *= np.maximum(0, np.minimum(1, p))
-
-                            if t.size == 0: return np.zeros((0, 1))
-                            return (float(peak_vol_val) * factors)[:, None]
-                        else:
-                            factor = 1.0
-                            for v_start, v_end in current_intervals:
-                                # 1. Attack (Fade Down)
-                                if (v_start - attack_t) <= t < v_start:
-                                    p = (t - (v_start - attack_t)) / attack_t
-                                    factor = min(factor, 1.0 - (p * (1.0 - duck_ratio)))
-                                
-                                # 2. Release (Fade Up)
-                                if v_end < t <= (v_end + release_t):
-                                    p = (t - v_end) / release_t
-                                    factor = min(factor, duck_ratio + (p * (1.0 - duck_ratio)))
-                                
-                                # 3. SILENCE PRIORITY (v4.8.6): Absolute drop if voice is active
-                                if v_start <= t <= v_end:
-                                    factor = duck_ratio
-                            
-                            # v20.2: Master Console Fade/Finish Integration (Scalar)
-                            # (Values already captured as block_fade_t and early_finish_t)
-                            if block_fade_t > 0:
-                                t_abs = t + time_offset
-                                for b_start, b_end, b_vol in block_time_ranges:
-                                    # Fade In at start of block
-                                    if b_start <= t_abs <= (b_start + block_fade_t):
-                                        p_in = (t_abs - b_start) / block_fade_t
-                                        factor *= p_in
-                                    
-                                    # Finish Early Logic: Volume is 0 during the last 1 second of the block
-                                    if t_abs > (b_end - early_finish_t):
-                                        factor = 0.0
-                                    # Fade Out Early: Smooth transition to 0 before the early finish
-                                    elif (b_end - early_finish_t - block_fade_t) <= t_abs <= (b_end - early_finish_t):
-                                        p_out = (b_end - early_finish_t - t_abs) / block_fade_t
-                                        factor *= max(0, min(1, p_out))
-                                        
-                            return float(peak_vol_val * factor)
-
-                    # --- LOCAL MUSIC DUCKING ---
-                    # v19.0: Moved to inline block construction (see "INLINE BLOCK DUCKING" above)
-                    # Local music is now ducked immediately when each block is built.
-
-                    # --- APPLY TO GLOBAL MUSIC ---
+                    logger.log(f"    [Audio] Tiempo de 'Respiración' (Música Alta) detectado: {total_breath_time:.2f}s")
+                    
+                    # --- APPLY TO GLOBAL MUSIC (v1.2 Modular) ---
                     if bg_audio_looped:
-                        def volume_ducking_global(t):
-                            if isinstance(t, np.ndarray):
-                                base_vols = np.full(t.shape, float(default_vol))
-                                for b_start, b_end, b_vol in block_time_ranges:
-                                    mask = (t >= b_start) & (t <= b_end)
-                                    base_vols[mask] = b_vol
-                                factors = get_ducking_factor(t, 1.0, merged_global_intervals)
-                                for ms, me in mute_intervals: factors[(t >= ms) & (t <= me)] = 0.0
-                                return (base_vols[:, None] * factors)
-                            else:
-                                cur_peak = default_vol
-                                for b_start, b_end, b_vol in block_time_ranges:
-                                    if b_start <= t <= b_end: cur_peak = b_vol; break
-                                for ms, me in mute_intervals:
-                                    if ms <= t <= me: return 0.0
-                                return get_ducking_factor(t, cur_peak, merged_global_intervals)
-
-                        bg_audio_final = bg_audio_looped.transform(lambda get_f, t: get_f(t) * volume_ducking_global(t))
+                        ducking_fn_global = audio_engine.DuckingMaster.create_global_transform(
+                            merged_global_intervals, block_time_ranges, mute_intervals, 
+                            duck_ratio, attack_t, release_t, default_vol
+                        )
+                        bg_audio_final = bg_audio_looped.transform(ducking_fn_global)
+                        
                         audio_sources = [final_video.audio] if final_video.audio else []
                         if bg_audio_final: audio_sources.append(bg_audio_final)
                         if audio_sources:
@@ -2660,7 +2625,6 @@ def generate_video_avgl(project):
                 from .subtitle_utils import compile_full_script_ass
                 if compile_full_script_ass(all_srt_items, ass_path):
                     # 2. FFmpeg Injection Command (Automated Binary Discovery)
-                    import subprocess
                     import imageio_ffmpeg
                     ff_exe = imageio_ffmpeg.get_ffmpeg_exe()
                     

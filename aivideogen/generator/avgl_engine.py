@@ -96,6 +96,7 @@ class AVGLScene:
         self.language = None # v5.1: Per-scene language
         self.dubbing_mode = None # v5.1: Per-scene dubbing mode
         self.silent = False # v28.0: Mute mode (Subtitles without TTS)
+        self.ducking_threshold = None # v36.22: Custom Noise Gate sensitivity
 
 class AVGLBlock:
     def __init__(self, title, music=None, volume=0.2):
@@ -223,13 +224,12 @@ def extract_subtitles_v35(text, force_dynamic=False):
     """
     import re
     
-    # v17.2.19: Hardened cleanup with DOTALL support
+    # v1.2: Smart Cleanup - Preserves rhythmic and emotional tags for the audio engine
     def _cleanup(content):
         if not content: return ""
-        # Remove all bracket tags like [TENSO], [EPICO], [DYN], etc.
-        res = re.sub(r'\[.*?\]', '', content, flags=re.IGNORECASE | re.DOTALL)
-        # v27.3: SE PERMITEN PARÉNTESIS (Arquitecto's Request para BLAME!)
-        # res = re.sub(r'\(.*?\)', '', res, flags=re.DOTALL)
+        # Remove técnica-only tags like [SUB], [TITLE], [PHO], [DYN] but KEEP [PAUSE] and emotions
+        # We use a negative lookahead to exclude what we want to keep
+        res = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', content, flags=re.IGNORECASE | re.DOTALL)
         return res.strip()
 
     # 1. Identify all tags in ORIGINAL text to avoid index mismatch
@@ -251,14 +251,14 @@ def extract_subtitles_v35(text, force_dynamic=False):
             }
             if t_type == 'wrapped' or t_type == 'silent_wrapped':
                 tag_info['tag_name'] = m.group(1).upper() if t_type == 'wrapped' else 'SUB:S'
-                tag_info['param'] = (m.group(2) if t_type == 'wrapped' else "").strip()
-                tag_info['content'] = (m.group(3) if t_type == 'wrapped' else m.group(1)).strip()
+                tag_info['param'] = (m.group(2) or "" if t_type == 'wrapped' else "").strip()
+                tag_info['content'] = (m.group(3) or "" if t_type == 'wrapped' else m.group(1) or "").strip()
             elif t_type == 'simple':
-                tag_info['tag_name'] = m.group(1).upper()
-                tag_info['content'] = m.group(2).strip()
+                tag_info['tag_name'] = (m.group(1) or "").upper()
+                tag_info['content'] = (m.group(2) or "").strip()
             else: # dyn
                 tag_info['tag_name'] = 'DYN'
-                tag_info['content'] = m.group(1).strip()
+                tag_info['content'] = (m.group(1) or "").strip()
             
             all_tags.append(tag_info)
             
@@ -327,8 +327,12 @@ def extract_subtitles_v35(text, force_dynamic=False):
             f_part, d_part, h_list = parse_escena(before_raw)
             clean_text = _cleanup(d_part.strip())
 
-            # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
-            if force_dynamic and clean_text:
+            # v35.5.1: Smart Control - If scene HAS manual tags, disable auto-force for naked parts
+            has_manual_tags = any(t['tag_name'] in ['SUB', 'TITLE', 'DYN'] for t in tags)
+            should_force = force_dynamic and not has_manual_tags
+
+            # v17.3.1: Only add sub if should_force is True (Opt-in logic)
+            if should_force and clean_text:
                 _add_sub(clean_text, f_part, force_dynamic, fonetica_offset, y_position=None)
             
             # Add highlights
@@ -336,11 +340,11 @@ def extract_subtitles_v35(text, force_dynamic=False):
                 h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
                 scene_highlights.append(h)
                 
-            # v17.3: Clean f_part before counting words to match TTS output (ignores [PAUSA], [TENSO], etc.)
-            f_part_clean = re.sub(r'\[.*?\]', '', f_part)
-            f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+            # v1.5: We keep the original f_part with tags for the audio engine, 
+            # but use f_part_clean ONLY for offset calculations.
+            f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
             fonetica_offset += len(f_part_clean.split())
-            fonetica_full_parts.append(f_part_clean)
+            fonetica_full_parts.append(f_part)
         
         # Tag content
         content_raw = tag.get('content', '')
@@ -446,10 +450,10 @@ def extract_subtitles_v35(text, force_dynamic=False):
             should_narrate = False
 
         if should_narrate:
-            f_part_clean = re.sub(r'\[.*?\]', '', f_part)
-            f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+            # v1.5: Preservation logic - keep tags for audio engine
+            f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
             fonetica_offset += len(f_part_clean.split())
-            fonetica_full_parts.append(f_part_clean)
+            fonetica_full_parts.append(f_part)
         
         last_idx = tag['end']
         
@@ -459,19 +463,22 @@ def extract_subtitles_v35(text, force_dynamic=False):
         f_part, d_part, h_list = parse_escena(rest_raw)
         clean_text = _cleanup(d_part.strip())
 
-        # v17.3.1: Only add sub if force_dynamic is True (Opt-in logic)
-        if force_dynamic and clean_text:
+        # v35.5.2: Final piece smart control
+        has_manual_tags = any(t['tag_name'] in ['SUB', 'TITLE', 'DYN'] for t in tags)
+        should_force = force_dynamic and not has_manual_tags
+
+        # v17.3.1: Only add sub if should_force is True (Opt-in logic)
+        if should_force and clean_text:
             _add_sub(clean_text, f_part, force_dynamic, fonetica_offset, y_position=None)
         
         for h in h_list:
             h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
             scene_highlights.append(h)
         
-        # v17.3: Clean f_part (Unified)
-        f_part_clean = re.sub(r'\[.*?\]', '', f_part)
-        f_part_clean = re.sub(r'\(.*?\)', '', f_part_clean)
+        # v1.5: Final piece preservation
+        f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
         fonetica_offset += len(f_part_clean.split())
-        fonetica_full_parts.append(f_part_clean)
+        fonetica_full_parts.append(f_part)
 
     # 3. Add highlights as extra subtitles at y=0.35
     raw_subs = [s for s in raw_subs_unfiltered]
@@ -497,20 +504,23 @@ def parse_avgl_json(json_text):
         if '|' in json_text: data = convert_text_to_avgl_json(json_text)
         else: raise ValueError("Invalid Script Format")
     
-    script = AVGLScript(title=data.get("title", "Video Sin Título"))
-    script.voice = data.get("voice") or data.get("voice_id") or "es-ES-AlvaroNeural"
-    script.speed = parse_speed(data.get("speed") or data.get("voice_speed"))
-    script.style = data.get("style", "neutral")
-    script.background_music = data.get("background_music")
-    script.music_volume = float(data.get("music_volume", 0.18))
-    # v7.5 Metadata
-    script.fuentes = data.get("fuentes", "")
-    script.tags = data.get("tags", "")
-    script.hashtags = data.get("hashtags", "")
-    script.thumbnail = data.get("thumbnail") # v11.36: Cover Injection
-    script.music_volume_lock = data.get("music_volume_lock", False)
-    # v11.8: General settings pass-through
-    script.settings = data.get("settings", {})
+    # v36.22.3: Resilient Data Fetching (Unified Settings)
+    settings = data.get("settings", {})
+    
+    script = AVGLScript(title=data.get("title") or settings.get("title") or "Video Sin Título")
+    script.voice = data.get("voice") or data.get("voice_id") or settings.get("voice") or settings.get("voice_id") or "es-ES-AlvaroNeural"
+    script.speed = parse_speed(data.get("speed") or data.get("voice_speed") or settings.get("speed") or settings.get("voice_speed"))
+    script.style = data.get("style") or settings.get("style") or "neutral"
+    script.background_music = data.get("background_music") or settings.get("background_music")
+    script.music_volume = float(data.get("music_volume") or settings.get("music_volume", 0.18))
+    
+    # Metadata support
+    script.fuentes = data.get("fuentes") or settings.get("fuentes", "")
+    script.tags = data.get("tags") or settings.get("tags", "")
+    script.hashtags = data.get("hashtags") or settings.get("hashtags", "")
+    script.thumbnail = data.get("thumbnail") or settings.get("thumbnail") 
+    script.music_volume_lock = data.get("music_volume_lock") or settings.get("music_volume_lock", False)
+    script.settings = settings # Store official settings dict
     
     for block_data in data.get("blocks", []):
         try: b_vol = float(block_data.get("volume", 0.2))
@@ -544,6 +554,7 @@ def parse_avgl_json(json_text):
             scene.language = s_data.get("language") # v5.1
             scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
             scene.silent = s_data.get("silent", False) # v28.0
+            scene.ducking_threshold = s_data.get("ducking_threshold") # v36.22: Scene level override
             
             # v28.1: Tag-based Silent Mode (Global Scene)
             if "[silencio]" in scene.text.lower() or "[sub:s]" in scene.text.lower():
@@ -630,6 +641,7 @@ def parse_avgl_json(json_text):
                 scene.audio = s_data.get("audio") or group_master_audio
                 scene.language = s_data.get("language") # v5.1
                 scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
+                scene.ducking_threshold = s_data.get("ducking_threshold") # v36.22.3: Fixed missing inheritance in groups
                 
                 clean_txt, extracted_subs = extract_subtitles_v35(scene.text)
                 scene.text = clean_txt
@@ -732,15 +744,15 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
     
     # Buscamos etiquetas de emocion: [TAG]contenido[/TAG]
     # pattern = r'(\[PAUSA:[\d\.]+\]|\[(PHO|SFX|BOX|SUB|TITLE|SUB:.*?|TITLE:.*?|PHO:.*?)\]|\[(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\].*?\[/(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\])'
-    # v28.1: Added SUB:S to pattern for partial silence
-    pattern = r'(\[PAUSA:[\d\.]+\]|\[SUB:S\].*?\[/SUB\]|\[(PHO|SFX|BOX|SUB|TITLE|SUB:.*?|TITLE:.*?|PHO:.*?)\]|\[(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\].*?\[/(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\])'
+    # v1.1: Poliglota Regex - Atrapa [PAUSA:X] o [PAUSE:X] o [PAUSE X]
+    pattern = r'(\[(?:PAUSE|PAUSA):?[\d\.]+\]|\[SUB:S\].*?\[/SUB\]|\[(PHO|SFX|BOX|SUB|TITLE|SUB:.*?|TITLE:.*?|PHO:.*?)\]|\[(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\].*?\[/(?:TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO)\])'
     parts = re.split(pattern, fonetica_raw, flags=re.IGNORECASE | re.DOTALL)
     
     for part in parts:
         if not part: continue
         
-        # ¿Es una pausa?
-        pause_match = re.match(r'\[PAUSA:([\d\.]+)\]', part, re.IGNORECASE)
+        # ¿Es una pausa? (Soporta PAUSE y PAUSA con : opcional)
+        pause_match = re.match(r'\[(?:PAUSE|PAUSA):?([\d\.]+)\]', part, re.IGNORECASE)
         if pause_match:
             segments.append(('pause', float(pause_match.group(1)), {}))
             continue
@@ -770,9 +782,7 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
             segments.append(('text', clean_text, {}))
 
     if not segments:
-        # v28.1.10: Tag-only scenes or empty text should return a tiny silence 
-        # instead of False to avoid "Error generating audio" alerts.
-        from moviepy import AudioClip
+        # v1.6: Using global AudioClip import from line 8
         silent_clip = AudioClip(lambda t: 0, duration=0.1)
         silent_clip.write_audiofile(output_path, fps=44100, logger=None)
         silent_clip.close()
@@ -789,13 +799,14 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
     try:
         for i, (tag, val, settings_emo) in enumerate(segments):
             if tag == 'pause':
-                silence = AudioClip(lambda t: np.zeros(2), duration=val).with_fps(44100)
+                # v1.4: Mono-compatible silence (zeros(1)) to match TTS output
+                silence = AudioClip(lambda t: np.zeros(1), duration=val).with_fps(44100)
                 audio_clips.append(silence)
                 current_time += val
             elif tag == 'silent_sub':
-                # v28.1: Inyectar silencio y finguir word_timings para que los subtítulos aparezcan
+                # v1.4: Mono-compatible silence (zeros(1))
                 dur = settings_emo.get('duration', 1.0)
-                silence = AudioClip(lambda t: np.zeros(2), duration=dur).with_fps(44100)
+                silence = AudioClip(lambda t: np.zeros(1), duration=dur).with_fps(44100)
                 audio_clips.append(silence)
                 
                 if scene:
@@ -905,7 +916,7 @@ async def generate_audio_edge(text, output_path, voice="es-DO-EmilioNeural", rat
                                 wt['start'] = current_time + (rel_start * scale_factor)
                                 wt['end'] = current_time + (rel_end * scale_factor)
 
-                if audio_clips:
+                if audio_clips and tag != 'pause' and tag != 'silent_sub':
                      current_time += audio_clips[-1].duration
 
         if audio_clips:
