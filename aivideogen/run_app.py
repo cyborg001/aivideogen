@@ -171,8 +171,8 @@ if __name__ == "__main__":
     try:
         print(f"Server starting on 127.0.0.1:{port}...")
         # Skip checks to avoid hangs in standalone mode
-        # Note: runserver is threaded by default in Django.
-        sys.argv = ['manage.py', 'runserver', f'127.0.0.1:{port}', '--noreload', '--skip-checks']
+        # v13.8.1: Enable auto-reload for dynamic patching support
+        sys.argv = ['manage.py', 'runserver', f'127.0.0.1:{port}', '--skip-checks']
         execute_from_command_line(sys.argv)
     except Exception as e:
         print(f"CRITICAL: Server failed to start: {e}")

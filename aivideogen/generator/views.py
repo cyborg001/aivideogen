@@ -1618,16 +1618,32 @@ def browse_local_asset(request):
 def download_project_script_json(request, project_id):
     """
     Downloads the project's script_text as a .json file.
+    v5.9.1 - Atomic Protection
     """
     from django.http import HttpResponse
     from django.utils.text import slugify
+    import json
     
     project = get_object_or_404(VideoProject, id=project_id)
-    script_content = project.script_text
+    script_content = project.script_text or "{}"
     
-    response = HttpResponse(script_content, content_type='application/json')
-    safe_title = slugify(project.title) or f"project_{project.id}"
-    response['Content-Disposition'] = f'attachment; filename="{safe_title}.json"'
+    # Ensure it's valid JSON for the response
+    try:
+        # Just to validate format before sending
+        json.loads(script_content)
+    except:
+        pass # If it's not JSON, we send it as text anyway
+
+    response = HttpResponse(script_content, content_type='application/json; charset=utf-8')
+    
+    # Generate a safe filename
+    safe_title = slugify(project.title)
+    if not safe_title:
+        safe_title = f"proyecto_{project.id}"
+        
+    filename = f"{safe_title}.avgl.json"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
     return response
 
 def toggle_auto_upload(request, project_id):

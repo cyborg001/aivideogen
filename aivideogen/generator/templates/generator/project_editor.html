@@ -780,7 +780,8 @@
         <div
             class="w-1/2 bg-black flex flex-col items-center justify-center border-l border-gray-800 relative bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 to-black">
             <!-- v11.0: GHOST VIEWFINDER (Global Asset Preview) -->
-            <div class="relative w-full max-w-lg aspect-video bg-gray-950 border-4 border-gray-800 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group/viewfinder mb-6">
+            <div class="relative w-full bg-gray-950 border-4 border-gray-800 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group/viewfinder mb-6 transition-all duration-500 mx-auto mt-12"
+                 :style="projectSettings.aspect_ratio === 'portrait' ? 'aspect-ratio: 9/16; max-width: 280px;' : 'aspect-ratio: 16/9; max-width: 500px;'">
                 
                 <!-- Active Segment Asset -->
                 <template x-if="currentActiveSegment">
@@ -1416,15 +1417,52 @@
                             <input type="text" x-model="formData.audio"
                                 placeholder="ruta/archivo.mp3 (en assets o media)"
                                 class="w-full bg-gray-700 border border-gray-600 rounded p-1 text-xs text-white font-mono">
+                            
+                            <!-- v36.34: Mini Audio Player (Architect's Request) -->
+                            <button @click="playVoice(getAssetPath(formData.audio))"
+                                class="bg-blue-600 hover:bg-blue-500 text-white px-2 rounded transition-all active:scale-90"
+                                title="Reproducir Audio"
+                                x-show="formData.audio && playingVoicePath !== getAssetPath(formData.audio)">
+                                ▶️
+                            </button>
+                            <button @click="stopVoice()"
+                                class="bg-red-600 hover:bg-red-500 text-white px-2 rounded transition-all animate-pulse"
+                                title="Detener"
+                                x-show="playingVoicePath === getAssetPath(formData.audio)"
+                                x-cloak>
+                                ⏹️
+                            </button>
+
                             <button @click="browseSceneAudio()"
                                 class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
                                 title="Buscar Archivo">📂</button>
+                            
+                            <button @click="formData.audio = ''"
+                                class="bg-gray-700 hover:bg-red-900/60 text-red-400 px-2 rounded border border-red-500/30 transition-all"
+                                title="Quitar Audio"
+                                x-show="formData.audio"
+                                x-cloak>
+                                🗑️
+                            </button>
+
                             <button @click="openInFolder(formData.audio)"
                                 class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
                                 title="Abrir Carpeta Contenedora">📁</button>
                         </div>
-                        <p class="text-[10px] text-gray-500 mt-1">Si se define, desactiva la voz IA (TTS) para esta
-                            escena.</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Si se define, desactiva la voz IA (TTS) para esta escena.</p>
+                        
+                        <!-- Radar Sensitivity Control (v36.5) -->
+                        <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between gap-4">
+                            <div class="flex flex-col">
+                                <label class="text-[10px] uppercase text-green-500/80 font-black tracking-widest">🧬 Sensibilidad Radar</label>
+                                <p class="text-[8px] text-gray-600 italic leading-none mt-0.5">Umbral (0.01: Sensible | 0.1: Robusto)</p>
+                            </div>
+                            <div class="w-24">
+                                <input type="number" step="0.005" min="0.001" max="0.5" 
+                                    x-model="formData.ducking_threshold"
+                                    class="w-full bg-black/40 border border-green-500/30 rounded px-2 py-0.5 text-xs text-green-400 font-mono text-center focus:border-green-500/60 outline-none">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- SFX SECTION -->
@@ -2132,9 +2170,50 @@
                         <div class="flex gap-1">
                             <input type="text" x-model="groupForm.audio" placeholder="ruta/archivo.mp3"
                                 class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white font-mono">
+                            
+                            <!-- v36.34: Mini Audio Player (Group Master) -->
+                            <button @click="playVoice(getAssetPath(groupForm.audio))"
+                                class="bg-blue-600 hover:bg-blue-500 text-white px-2 rounded transition-all active:scale-90"
+                                title="Reproducir Audio"
+                                x-show="groupForm.audio && playingVoicePath !== getAssetPath(groupForm.audio)">
+                                ▶️
+                            </button>
+                            <button @click="stopVoice()"
+                                class="bg-red-600 hover:bg-red-500 text-white px-2 rounded transition-all animate-pulse"
+                                title="Detener"
+                                x-show="playingVoicePath === getAssetPath(groupForm.audio)"
+                                x-cloak>
+                                ⏹️
+                            </button>
+
                             <button @click="browseGroupAudio()"
                                 class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
                                 title="Buscar Archivo">📂</button>
+
+                            <button @click="groupForm.audio = ''"
+                                class="bg-gray-700 hover:bg-red-900/60 text-red-400 px-2 rounded border border-red-500/30 transition-all"
+                                title="Quitar Audio"
+                                x-show="groupForm.audio"
+                                x-cloak>
+                                🗑️
+                            </button>
+
+                            <button @click="openInFolder(groupForm.audio)"
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-2 rounded"
+                                title="Abrir Carpeta Contenedora">📁</button>
+                        </div>
+                    </div>
+
+                    <!-- Radar Sensitivity Control (v36.5 Group Master) -->
+                    <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between gap-4">
+                        <div class="flex flex-col">
+                            <label class="text-[10px] uppercase text-green-500/80 font-black tracking-widest">🧬 Sensibilidad Radar Maestro</label>
+                            <p class="text-[8px] text-gray-600 italic leading-none mt-0.5">Umbral aplicado a todo el grupo (0.01 - 0.1)</p>
+                        </div>
+                        <div class="w-24">
+                            <input type="number" step="0.005" min="0.001" max="0.5" 
+                                x-model="groupForm.ducking_threshold"
+                                class="w-full bg-black/40 border border-green-500/30 rounded px-2 py-0.5 text-xs text-green-400 font-mono text-center focus:border-green-500/60 outline-none">
                         </div>
                     </div>
                 </div>
@@ -2204,7 +2283,8 @@
                     usePanVer: false, panVerStart: 0, panVerEnd: 0,
                     music: '', volume: 0.2, voice: '', voice_speed: '', audio: '',
                     asset_audio_bool: false, asset_audio_vol: 0.8,
-                    force_duration: false, duration: 0
+                    force_duration: false, duration: 0,
+                    ducking_threshold: 0.05
                 },
 
                 // Settings Model
@@ -2260,7 +2340,8 @@
                     usePan: false, panDir: 'HOR', panStart: 50, panEnd: 50,
                     language: '', 
                     dubbing_mode: '',
-                    silent: false
+                    silent: false,
+                    ducking_threshold: 0.05
                 },
 
                 // v5.8 Fix: Overlay Dropdown Options
@@ -2473,6 +2554,16 @@
                 },
 
                 openRecordModal() {
+                    // v36.32: Reset timer state to avoid "phantom" running
+                    this.recordingTimer = 0;
+                    if (this.recordingInterval) {
+                        clearInterval(this.recordingInterval);
+                        this.recordingInterval = null;
+                    }
+                    this.isRecording = false;
+                    this.audioPreviewUrl = null;
+                    this.audioChunks = [];
+
                     // v20.3: Teleprompter Logic
                     if (this.showModal) {
                         this.recordingText = this.formData.text || '';
@@ -2515,6 +2606,7 @@
                         };
 
                         this.mediaRecorder.start(200); // v13.5: Use 200ms timeslice for better reliability
+                        if (this.recordingInterval) clearInterval(this.recordingInterval);
                         this.recordingInterval = setInterval(() => { this.recordingTimer++; }, 1000);
                     } catch (err) {
                         alert("Error al acceder al micrófono: " + err);
@@ -3206,7 +3298,8 @@
                         force_duration: group.force_duration || false,
                         duration: group.duration || 0,
                         human_signature: group.human_signature || false,
-                        human_amplitude: group.human_amplitude || 1.0
+                        human_amplitude: group.human_amplitude || 1.0,
+                        ducking_threshold: group.ducking_threshold !== undefined ? group.ducking_threshold : 0.05
                     };
 
                     // Parse existing move string
@@ -3273,8 +3366,8 @@
                         group.voice_speed = this.groupForm.voice_speed;
                         group.audio = this.groupForm.audio;
                         group.video_volume = this.groupForm.asset_audio_bool ? parseFloat(this.groupForm.asset_audio_vol) : null;
-                        group.human_signature = this.groupForm.human_signature;
                         group.human_amplitude = parseFloat(this.groupForm.human_amplitude || 1.0);
+                        group.ducking_threshold = parseFloat(this.groupForm.ducking_threshold || 0.05);
 
                         // Apply Visuals to Scenes (Master Shot Interpolation)
                         if (group.scenes && group.scenes.length > 0) {
@@ -3339,7 +3432,8 @@
                                     shake: group.shake || false,
                                     rotate: group.rotate || null,
                                     human_signature: group.human_signature || false,
-                                    human_amplitude: group.human_amplitude || 1.0
+                                    human_amplitude: group.human_amplitude || 1.0,
+                                    ducking_threshold: group.ducking_threshold || 0.05
                                 };
                                 // Overwrite scene assets
                                 scene.assets = [assetObj];
@@ -3522,6 +3616,7 @@
                             silent: scene.silent || false,
                             human_signature: sourceAsset.human_signature || false,
                             human_amplitude: sourceAsset.human_amplitude || 1.0,
+                            ducking_threshold: scene.ducking_threshold !== undefined ? scene.ducking_threshold : 0.05,
                             
                             // v5.2.0: Load Layers into formData
                             main_asset: scene.layers?.main?.id || '',
@@ -3607,6 +3702,7 @@
                             silent: false,
                             human_signature: false,
                             human_amplitude: 1.0,
+                            ducking_threshold: 0.05,
 
                             // v5.2.0: Multilayer formData
                             main_asset: '',
@@ -3761,6 +3857,7 @@
                     const newScene = {
                         _uId: 's' + Math.random().toString(36).substr(2, 9),
                         title: this.formData.title,
+                        ducking_threshold: parseFloat(this.formData.ducking_threshold || 0.05),
                         text: this.formData.text,
                         pause: parseFloat(this.formData.pause),
                         duration: parseFloat(this.formData.duration || 0),
@@ -4012,6 +4109,17 @@
                                 this.projectSettings.auto_upload = json.auto_upload;
                             }
 
+                            // v36.30: Audio Master Console Synchronization (JSON -> UI)
+                            if (settings.audio_ducking_ratio !== undefined) this.projectSettings.audio_ducking_ratio = parseFloat(settings.audio_ducking_ratio);
+                            if (settings.audio_attack_time !== undefined) this.projectSettings.audio_attack_time = parseFloat(settings.audio_attack_time);
+                            if (settings.audio_release_time !== undefined) this.projectSettings.audio_release_time = parseFloat(settings.audio_release_time);
+                            if (settings.audio_merge_threshold !== undefined) this.projectSettings.audio_merge_threshold = parseFloat(settings.audio_merge_threshold);
+                            if (settings.audio_block_fade !== undefined) this.projectSettings.audio_block_fade = parseFloat(settings.audio_block_fade);
+                            if (settings.audio_early_finish !== undefined) this.projectSettings.audio_early_finish = parseFloat(settings.audio_early_finish);
+                            
+                            // v36.31: Fallback for root settings (Legacy compat)
+                            if (json.audio_merge_threshold !== undefined) this.projectSettings.audio_merge_threshold = parseFloat(json.audio_merge_threshold);
+
                             this.saveScript(this.isStandalone);
                             alert("✅ Guion cargado y sincronizado correctamente.");
                         } catch (err) {
@@ -4023,27 +4131,43 @@
                 },
 
                 exportScript() {
-                    const scriptCopy = JSON.parse(JSON.stringify(this.script));
-                    // Aplicar los mismos metadatos que en el guardado para consistencia (v9.1)
-                    scriptCopy.title = this.projectSettings.title;
-                    scriptCopy.voice = this.projectSettings.voice_id;
-                    scriptCopy.voice_speed = this.projectSettings.voice_speed;
-                    scriptCopy.background_music = this.projectSettings.background_music;
-                    scriptCopy.auto_upload = this.projectSettings.auto_upload;
-                    scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
-                    scriptCopy.render_mode = this.projectSettings.render_mode;
-                    scriptCopy.human_signature = this.projectSettings.human_signature;
-                    scriptCopy.human_amplitude = this.projectSettings.human_amplitude;
+                    try {
+                        const scriptCopy = JSON.parse(JSON.stringify(this.script));
+                        // Aplicar los mismos metadatos que en el guardado para consistencia (v9.1)
+                        scriptCopy.title = this.projectSettings.title;
+                        scriptCopy.voice = this.projectSettings.voice_id;
+                        scriptCopy.voice_speed = this.projectSettings.voice_speed;
+                        scriptCopy.background_music = this.projectSettings.background_music;
+                        scriptCopy.auto_upload = this.projectSettings.auto_upload;
+                        scriptCopy.aspect_ratio = this.projectSettings.aspect_ratio;
+                        scriptCopy.render_mode = this.projectSettings.render_mode;
+                        scriptCopy.human_signature = this.projectSettings.human_signature;
+                        scriptCopy.human_amplitude = this.projectSettings.human_amplitude;
 
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scriptCopy, null, 4));
-                    const downloadAnchorNode = document.createElement('a');
-                    const fileName = (this.projectSettings.title || "guion").replace(/[^a-z0-9]/gi, '_').toLowerCase() + ".avgl3.json";
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute("download", fileName);
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
-                    logger.log("    [System] Guion exportado localmente: " + fileName);
+                        // v5.9.1: Robust Blob Download (Fixes URL limit for large documentaries)
+                        const jsonString = JSON.stringify(scriptCopy, null, 4);
+                        const blob = new Blob([jsonString], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const downloadAnchorNode = document.createElement('a');
+                        const fileName = (this.projectSettings.title || "guion").replace(/[^a-z0-9]/gi, '_').toLowerCase() + ".avgl3.json";
+                        
+                        downloadAnchorNode.setAttribute("href", url);
+                        downloadAnchorNode.setAttribute("download", fileName);
+                        document.body.appendChild(downloadAnchorNode);
+                        downloadAnchorNode.click();
+                        
+                        // Cleanup
+                        setTimeout(() => {
+                            document.body.removeChild(downloadAnchorNode);
+                            URL.revokeObjectURL(url);
+                        }, 100);
+                        
+                        console.log("[System] Guion exportado correctamente:", fileName);
+                    } catch (err) {
+                        console.error("[Export Error]", err);
+                        alert("Error al exportar el guion: " + err.message);
+                    }
                 },
 
                 // Music Browsers

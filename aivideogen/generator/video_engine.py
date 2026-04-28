@@ -1007,11 +1007,11 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
             if audio_resolved:
                 try:
                     from moviepy.audio import fx as afx
-                    # v36.24: Use absolute path for reliability
+                    # v36.35: Corrected Radar Dispatch (Fixed phantom function bug)
                     abs_path = os.path.abspath(audio_resolved)
                     final_audio = AudioFileClip(abs_path).with_effects([afx.MultiplyVolume(1.2)])
                     source_type = f"MANUAL_ASSET ({os.path.splitext(abs_path)[1].upper()})"
-                    detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold, min_silence=min_silence)
+                    detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
                 except Exception as e:
                     if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual raw: {e}")
 
@@ -1021,7 +1021,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 if video_asset_clip.audio.duration > 0.1:
                     final_audio = video_asset_clip.audio
                     source_type = "VIDEO_INTEGRATED"
-                    detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold, min_silence=min_silence)
+                    detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
             except: pass
         try:
             # Only use if it has a meaningful volume/duration
@@ -1030,7 +1030,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 source_type = "VIDEO_INTEGRATED"
                 if logger: logger.log(f"    🔊 [Audio] Capa de Video detectada (Sonido original del asset)")
                 # v36.22.4: Analyze for Noise Gate using dynamic threshold
-                detected_intervals = analyze_audio_activity(final_audio, logger=logger, threshold=threshold)
+                detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
         except:
             pass
 
@@ -1282,10 +1282,20 @@ def generate_video_avgl(project):
                  else:
                      logger.log(f"       ⚠️ Error en traducción: {err}")
             
-            # v35.0: Smart Audio Router (Universal Dispatcher)
-            # Detects if voice is an ElevenLabs ID or an Edge TTS voice name.
+            # v36.33: Strict Engine Priority (Architect's Rule: No ElevenLabs by default)
+            engine_mode = getattr(project, 'engine', 'edge')
+            
+            # Smart Audio Router (Universal Dispatcher)
             eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
-            is_eleven = (len(eff_voice) > 15 and '-' not in eff_voice and 'Neural' not in eff_voice)
+            
+            # Decide engine based on project settings, fallback to heuristic only if engine is unknown
+            if engine_mode == 'eleven':
+                is_eleven = True
+            elif engine_mode == 'edge':
+                is_eleven = False
+            else:
+                # Legacy heuristic fallback
+                is_eleven = (len(eff_voice) > 15 and '-' not in eff_voice and 'Neural' not in eff_voice)
             
             success = False
             if is_eleven:
@@ -2172,24 +2182,37 @@ def generate_video_avgl(project):
                     if hasattr(scene, 'voice_intervals') and scene.voice_intervals is not None:
                         if scene.voice_intervals:
                             for vs, ve in scene.voice_intervals: 
-                                scene_intervals.append((block_cursor + vs, block_cursor + ve))
+                                scene_intervals.append((vs, ve)) # Relative to scene
                         else:
                             # v36.21.0: Noise Gate analyzed this and found ZERO voice. 
                             # Do NOT add any intervals (this prevents ducking the whole duration).
                             logger.log(f"    🔇 [Audio] Noise Gate: Silencio/Ruido total detectado. Música al 100%.")
                     else: 
-                        # Fallback for Edge TTS or other sources without interval analysis
-                        v_dur = pure_voice_duration if 'pure_voice_duration' in locals() else voice_duration
-                        scene_intervals.append((block_cursor, block_cursor + v_dur))
+                        # v1.1 Modular Fix: Call PCMRadar for any source without intervals (Personalized Voice)
+                        from .audio_engine import PCMRadar
+                        # Use scene.ducking_threshold if available, otherwise default 0.05
+                        # v36.22.4: Ensure we use the scene level threshold for calibration
+                        eff_threshold = float(getattr(scene, 'ducking_threshold', 0.0) or 0.05)
+                        logger.log(f"    🔬 [Audio] Analizando Radar PCM para fuente externa (Sincronizando silencios, Threshold: {eff_threshold})...")
+                        analysis_intervals = PCMRadar.analyze(actual_voice, logger=logger, threshold=eff_threshold)
+                        if analysis_intervals:
+                            for vs, ve in analysis_intervals:
+                                scene_intervals.append((vs, ve)) # Relative to scene
+                        else:
+                            # v36.27.6: Quiet Mode. If no voice detected, music stays high.
+                            scene_intervals = []
+                            logger.log(f"    🔇 [Audio] Noise Gate: No se detectó habla (Zona Silenciosa). Música al 100%.")
                     
-                    # Store in block local
-                    if scene_intervals:
-                        block_voice_intervals.extend(scene_intervals)
-                    # Store in global absolute
-                    for s_start_rel, s_end_rel in scene_intervals:
-                        global_voice_intervals.append((video_base_cursor + s_start_rel, video_base_cursor + s_end_rel))
+                    # Store in block local (Relative to block)
+                    for vs, ve in scene_intervals:
+                        block_voice_intervals.append((block_cursor + vs, block_cursor + ve))
                     
-                    current_time += duration; block_cursor += duration
+                    # Store in global absolute (Relative to video start)
+                    for vs, ve in scene_intervals:
+                        global_voice_intervals.append((current_time + vs, current_time + ve))
+                    
+                # v5.9.2: Master clock must advance for EVERY scene to maintain sync
+                current_time += duration; block_cursor += duration
 
             if block_scene_clips:
                 block_video = concatenate_videoclips(block_scene_clips, method="chain")
@@ -2248,13 +2271,14 @@ def generate_video_avgl(project):
                         # v28.1.19: Restoring structure after corruption
                         logger.log(f"  [Audio] Mezclando musica local: {m_obj.name if 'm_obj' in locals() and m_obj else 'Direct Path'}, Vol Target: {peak_vol}")
                         
-                        # v20.2: Project-specific Audio Master Console Integration
-                        _duck_ratio = safe_float(project.audio_ducking_ratio, getattr(settings, 'AUDIO_DUCKING_RATIO', 0.17))
-                        _attack = safe_float(project.audio_attack_time, getattr(settings, 'AUDIO_ATTACK_TIME', 0.15))
-                        _release = safe_float(project.audio_release_time, getattr(settings, 'AUDIO_RELEASE_TIME', 0.4))
-                        _merge_th = safe_float(project.audio_merge_threshold, getattr(settings, 'AUDIO_MERGE_THRESHOLD', 1.5))
-                        _block_fade = safe_float(project.audio_block_fade, getattr(settings, 'AUDIO_BLOCK_FADE', 1.0))
-                        _early_finish = safe_float(project.audio_early_finish, getattr(settings, 'AUDIO_EARLY_FINISH', 0.1))
+                        # v36.29: DB Priority Restoration (As requested by Architect)
+                        # All .env (settings.AUDIO_...) references removed.
+                        _duck_ratio = safe_float(project.audio_ducking_ratio, 0.17)
+                        _attack = safe_float(project.audio_attack_time, 0.15)
+                        _release = safe_float(project.audio_release_time, 0.4)
+                        _merge_th = safe_float(project.audio_merge_threshold, 1.5)
+                        _block_fade = safe_float(project.audio_block_fade, 1.0)
+                        _early_finish = safe_float(project.audio_early_finish, 0.1)
                         
                         # Merge block intervals (relative to block start)
                         local_merged = audio_engine.IntervalManager.merge(block_voice_intervals, threshold=_merge_th)
@@ -2481,14 +2505,25 @@ def generate_video_avgl(project):
                     logger.log(f"    [Audio] Params: duck_ratio={duck_ratio}, attack={attack_t}s, release={release_t}s, merge_threshold={merge_threshold}s, block_fade={block_fade_t}s, early_finish={early_finish_t}s")
                     logger.log(f"    [Audio] Intervalos RAW: {global_voice_intervals[:10]}")
                     merged_global_intervals = audio_engine.IntervalManager.merge(global_voice_intervals, threshold=merge_threshold)
-                    # New Telemetry: Breath Analysis
-                    total_breath_time = 0.0
-                    for i in range(len(merged_global_intervals) - 1):
-                        gap = merged_global_intervals[i+1][0] - merged_global_intervals[i][1]
-                        if gap > 0.1: total_breath_time += gap
+                    # New Telemetry: Breath Analysis (Absolute Subtraction v1.5)
+                    # Breathing = Total Duration - Total Talking Time
+                    total_talking_time = sum([(v[1]-v[0]) for v in merged_global_intervals])
+                    total_breath_time = max(0.0, final_video.duration - total_talking_time)
                     
-                    logger.log(f"    [Audio] Intervalos MERGED: {merged_global_intervals}")
-                    logger.log(f"    [Audio] Tiempo de 'Respiración' (Música Alta) detectado: {total_breath_time:.2f}s")
+                    # v36.28: Advanced Breath Telemetry (Architect Request)
+                    voice_samples = merged_global_intervals[:3]
+                    breath_samples = []
+                    for i in range(len(merged_global_intervals) - 1):
+                        gap_start = merged_global_intervals[i][1]
+                        gap_end = merged_global_intervals[i+1][0]
+                        if (gap_end - gap_start) > 0.1: # Considerar silencio significativo
+                            breath_samples.append((gap_start, gap_end))
+                        if len(breath_samples) >= 3: break
+                    
+                    logger.log(f"    [Audio] Tabla de Cortes (Primeros 3):")
+                    logger.log(f"      🗣️  Voz: {', '.join([f'{s:.2f}s-{e:.1f}s' for s, e in voice_samples]) if voice_samples else 'Ninguna'}")
+                    logger.log(f"      🌬️  Respiración: {', '.join([f'{s:.2f}s-{e:.1f}s' for s, e in breath_samples]) if breath_samples else 'Ninguna'}")
+                    logger.log(f"    [Audio] Tiempo Total de Respiración (Música Alta): {total_breath_time:.2f}s")
                     
                     # --- APPLY TO GLOBAL MUSIC (v1.2 Modular) ---
                     if bg_audio_looped:
