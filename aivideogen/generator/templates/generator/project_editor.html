@@ -785,7 +785,7 @@
                 
                 <!-- Active Segment Asset -->
                 <template x-if="currentActiveSegment">
-                    <div class="w-full h-full">
+                    <div class="absolute inset-0 w-full h-full">
                         <template x-if="isAssetVideo(currentActiveSegment.asset)">
                             <video :src="getAssetPath(currentActiveSegment.asset) + '#t=1.0'"
                                 class="w-full h-full object-cover opacity-90 transition-all duration-300"
@@ -794,6 +794,13 @@
                         <template x-if="!isAssetVideo(currentActiveSegment.asset)">
                             <img :src="getAssetPath(currentActiveSegment.asset)"
                                 class="w-full h-full object-cover transition-all duration-300"
+                                onerror="this.style.display='none'">
+                        </template>
+                        
+                        <!-- V5.0 Multilayer Ghost Preview -->
+                        <template x-if="currentActiveSegment.main_asset">
+                            <img :src="getAssetPath(currentActiveSegment.main_asset)"
+                                class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 drop-shadow-2xl transition-all duration-300"
                                 onerror="this.style.display='none'">
                         </template>
                     </div>
@@ -2397,9 +2404,14 @@
                             
                             // v11.3: Asset Inheritance Logic for Timeline
                             let segAsset = '';
+                            let segMainAsset = '';
                             if (scene.assets && scene.assets.length > 0) {
                                 const a = scene.assets[0];
                                 segAsset = (typeof a === 'string') ? a : (a.asset_type || a.id || '');
+                            }
+                            if (scene.assets && scene.assets.length > 1) {
+                                const b = scene.assets[1];
+                                segMainAsset = (typeof b === 'string') ? b : (b.asset_type || b.id || '');
                             }
                             if (!segAsset || segAsset === 'image' || segAsset === 'video') {
                                 segAsset = block.master_asset || '';
@@ -2409,6 +2421,7 @@
                                 start: currentStart,
                                 end: currentStart + dur,
                                 asset: segAsset,
+                                main_asset: segMainAsset,
                                 title: scene.title || `B${bIdx+1}.S${sIdx+1}`,
                                 type: 'scene',
                                 bIdx: bIdx,
@@ -2442,11 +2455,17 @@
                                 
                                 // v11.3: Group Asset Inheritance
                                 let segAsset = group.master_asset || block.master_asset || '';
+                                let segMainAsset = '';
+                                if (sub.scene.assets && sub.scene.assets.length > 1) {
+                                    const b = sub.scene.assets[1];
+                                    segMainAsset = (typeof b === 'string') ? b : (b.asset_type || b.id || '');
+                                }
 
                                 segments.push({
                                     start: currentStart,
                                     end: currentStart + actualDur,
                                     asset: segAsset,
+                                    main_asset: segMainAsset,
                                     title: sub.scene.title || `B${bIdx+1}.G${gIdx+1}.S${sub.sIdx+1}`,
                                     type: 'group',
                                     bIdx: bIdx,
@@ -3619,9 +3638,9 @@
                             ducking_threshold: scene.ducking_threshold !== undefined ? scene.ducking_threshold : 0.05,
                             
                             // v5.2.0: Load Layers into formData
-                            main_asset: scene.layers?.main?.id || '',
-                            main_zoom: scene.layers?.main?.zoom || '1.0:1.0',
-                            main_move: scene.layers?.main?.move || 'HOR:50:50',
+                            main_asset: scene.layers?.main?.id || (scene.assets && scene.assets.length > 1 ? (typeof scene.assets[1] === 'string' ? scene.assets[1] : scene.assets[1].id || scene.assets[1].type || '') : ''),
+                            main_zoom: scene.layers?.main?.zoom || (scene.assets && scene.assets.length > 1 && scene.assets[1].zoom ? scene.assets[1].zoom : '1.0:1.0'),
+                            main_move: scene.layers?.main?.move || (scene.assets && scene.assets.length > 1 && scene.assets[1].move ? scene.assets[1].move : 'HOR:50:50'),
                             main_opacity: scene.layers?.main?.opacity || 1.0,
                             overlay_asset: scene.layers?.overlay?.id || '',
                             expandMainFX: false // v5.8.9: Start closed for clean UI
@@ -3854,6 +3873,18 @@
                     const finalStartTime = parseTime(this.formData.start_time) || 0;
                     const finalEndTime = parseTime(this.formData.end_time);
 
+                    // V5 Multilayer Sync: Ensure assets array has both background and main layers for the python engine
+                    const assetsArr = [assetObj];
+                    if (this.formData.main_asset) {
+                        assetsArr.push({
+                            id: this.formData.main_asset,
+                            type: this.isAssetVideo(this.formData.main_asset) ? 'video' : 'image',
+                            zoom: this.formData.main_zoom || '1.0:1.0',
+                            move: this.formData.main_move || 'HOR:50:50',
+                            opacity: parseFloat(this.formData.main_opacity || 1.0)
+                        });
+                    }
+
                     const newScene = {
                         _uId: 's' + Math.random().toString(36).substr(2, 9),
                         title: this.formData.title,
@@ -3866,7 +3897,7 @@
                         voice: this.formData.voice || null,
                         audio: this.formData.audio || null,
                         pitch: this.formData.pitch || null,
-                        assets: [assetObj],
+                        assets: assetsArr,
                         start_time: finalStartTime,
                         end_time: finalEndTime,
                         layers: {

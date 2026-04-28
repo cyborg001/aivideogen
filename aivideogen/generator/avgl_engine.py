@@ -48,7 +48,7 @@ ACTIONS_CONFIG = {
 }
 
 class AVGLAsset:
-    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None, human_signature=None, human_amplitude=1.0):
+    def __init__(self, asset_type, zoom=None, move=None, overlay=None, fit=False, shake=False, rotate=None, shake_intensity=5, w_rotate=None, video_volume=None, fast_assembly=False, cinema_mode=False, start_time=0.0, end_time=None, human_signature=None, human_amplitude=1.0, opacity=1.0):
         self.type = asset_type
         self.zoom = zoom
         self.move = move
@@ -65,6 +65,7 @@ class AVGLAsset:
         self.end_time = end_time
         self.human_signature = human_signature
         self.human_amplitude = safe_float(human_amplitude, 1.0)
+        self.opacity = safe_float(opacity, 1.0)
 
 class AVGLSFX:
     def __init__(self, sfx_type, volume=0.5, offset=0):
@@ -574,12 +575,20 @@ def parse_avgl_json(json_text):
             # Support both legacy 'assets' list and modern 'layers' structure from Visual Editor
             raw_assets = s_data.get("assets", [])
             layers = s_data.get("layers", {})
-            if layers and layers.get("background"):
-                # Avoid duplicates if it's already in the assets list
-                bg_data = layers["background"]
-                bg_id = bg_data.get("id") or bg_data.get("type")
-                if not any((getattr(a, 'id', None) == bg_id or getattr(a, 'type', None) == bg_id) for a in scene.assets):
-                    raw_assets.append(bg_data)
+            
+            # Helper function to avoid duplicates
+            def _append_layer_if_missing(layer_data):
+                if not layer_data: return
+                layer_id = layer_data.get("id") or layer_data.get("type")
+                if not layer_id: return
+                # Check if it's already in raw_assets
+                if not any((a.get('id') == layer_id or a.get('type') == layer_id) for a in raw_assets if isinstance(a, dict)):
+                    raw_assets.append(layer_data)
+
+            if layers:
+                _append_layer_if_missing(layers.get("background"))
+                _append_layer_if_missing(layers.get("main"))
+                _append_layer_if_missing(layers.get("overlay"))
 
             for a_data in raw_assets:
                 if isinstance(a_data, str): scene.assets.append(AVGLAsset(a_data))
@@ -605,7 +614,8 @@ def parse_avgl_json(json_text):
                         start_time=safe_float(a_data.get("start_time"), 0.0),
                         end_time=safe_float(a_data.get("end_time"), None) if a_data.get("end_time") is not None else None,
                         human_signature=a_data.get("human_signature"),
-                        human_amplitude=a_data.get("human_amplitude", 1.0)
+                        human_amplitude=a_data.get("human_amplitude", 1.0),
+                        opacity=a_data.get("opacity", 1.0)
                     ))
             
             for sfx_data in s_data.get("sfx", []):

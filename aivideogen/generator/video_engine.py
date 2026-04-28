@@ -1897,7 +1897,143 @@ def generate_video_avgl(project):
                     logger.log(f"  🔇 Modo Solo Audio/Debug: Sin assets. Fondo negro rápido.")
                     clip = ColorClip(size=target_size, color=(0,0,0), duration=duration)
 
-                # v36.22.2: Dynamic Ducking Threshold Capture
+                # ═══════════════════════════════════════════════════════════════════
+                # V5.0 MULTILAYER COMPOSITION ENGINE
+                # ═══════════════════════════════════════════════════════════════════
+                if len(valid_assets) > 1 and clip is not None:
+                    from moviepy import CompositeVideoClip, ImageClip
+                    logger.log(f"    🥞 [Multilayer V5] Detectadas {len(valid_assets)} capas. Iniciando apilamiento con Alpha Channel...")
+                    
+                    layers = [clip] # Base layer (Background from apply_ken_burns)
+                    
+                    for extra_idx in range(1, min(4, len(valid_assets))): # Max 3 extra layers to prevent crash
+                        e_asset = valid_assets[extra_idx]
+                        raw_e_path = str(getattr(e_asset, 'id', '') or getattr(e_asset, 'type', '')).strip()
+                        if not raw_e_path: continue
+                        
+                        e_norm = os.path.normpath(raw_e_path)
+                        if os.path.isabs(e_norm) and os.path.isfile(e_norm):
+                             e_path = e_norm
+                        else:
+                             e_fname = os.path.basename(raw_e_path)
+                             e_path = os.path.join(assets_dir, e_fname)
+                             if not os.path.isfile(e_path):
+                                 found_e = None
+                                 for root, _, files in os.walk(assets_dir):
+                                     if e_fname in files:
+                                         found_e = os.path.join(root, e_fname)
+                                         break
+                                 e_path = found_e if found_e else e_path
+                        
+                        if os.path.isfile(e_path):
+                            is_e_img = e_path.lower().endswith(('.png', '.webp', '.gif'))
+                            if is_e_img:
+                                logger.log(f"      ↳ Capa {extra_idx+1}: {os.path.basename(e_path)} (Transparencia Alpha conservada)")
+                                try:
+                                    # v31.2: Force explicit Alpha Mask extraction via PIL
+                                    # MoviePy/ImageIO sometimes drops indexed PNG alpha channels
+                                    e_clip = ImageClip(e_path).with_duration(duration)
+                                    explicit_mask = None
+                                    
+                                    if e_path.lower().endswith(('.png', '.webp')):
+                                        try:
+                                            from PIL import Image
+                                            import numpy as np
+                                            pil_img = Image.open(e_path).convert("RGBA")
+                                            # Extraer el canal alpha (0 a 255) y normalizar a (0.0 a 1.0)
+                                            alpha_channel = np.array(pil_img.split()[-1]) / 255.0
+                                            
+                                            # Si hay pixeles transparentes, aplicamos la máscara
+                                            if np.min(alpha_channel) < 1.0:
+                                                from moviepy import ImageClip as MpyImageClip
+                                                explicit_mask = MpyImageClip(alpha_channel, is_mask=True).with_duration(duration)
+                                                e_clip = e_clip.with_mask(explicit_mask)
+                                                logger.log(f"      [Debug] Máscara Alpha forzada con PIL para {os.path.basename(e_path)}")
+                                        except Exception as mask_err:
+                                            logger.log(f"      [Warning] Error forzando máscara PIL: {mask_err}")
+                                    
+                                    # Animations
+                                    e_zoom_raw = str(getattr(e_asset, 'zoom', "1.0:1.0")).strip()
+                                    e_move = str(getattr(e_asset, 'move', "HOR:50:50")).strip().upper()
+                                    
+                                    z_parts = e_zoom_raw.split(':')
+                                    z_start = float(z_parts[0]) if z_parts else 1.0
+                                    z_end = float(z_parts[1]) if len(z_parts) > 1 else z_start
+                                    
+                                    tgt_h_base = target_size[1]
+                                    orig_w, orig_h = e_clip.size
+                                    
+                                    # Funciones dinámicas para Zoom y Paneo
+                                    def make_zoom_func(z_s, z_e, base_h, o_h, dur):
+                                        def calc_zoom(t):
+                                            prog = min(1.0, t / dur)
+                                            scale = z_s + (z_e - z_s) * prog
+                                            # MoviePy resized function expects a scale factor relative to original size
+                                            return (base_h * scale) / o_h
+                                        return calc_zoom
+                                        
+                                    m_parts = e_move.split(':')
+                                    direction = m_parts[0] if m_parts else 'HOR'
+                                    m_start = float(m_parts[1]) if len(m_parts) > 1 else 50.0
+                                    m_end = float(m_parts[2]) if len(m_parts) > 2 else m_start
+                                    
+                                    def make_dynamic_pos_func(m_dir, m_s, m_e, o_w, o_h, base_h, z_s, z_e, tw, th, dur):
+                                        def calc_pos(t):
+                                            prog = min(1.0, t / dur)
+                                            scale = z_s + (z_e - z_s) * prog
+                                            
+                                            curr_h = int(base_h * scale)
+                                            curr_w = int(o_w * (curr_h / o_h))
+                                            
+                                            curr_pct = m_s + (m_e - m_s) * prog
+                                            
+                                            x_range = tw - curr_w
+                                            y_range = th - curr_h
+                                            
+                                            x_pos = x_range / 2
+                                            y_pos = y_range / 2
+                                            
+                                            if m_dir == 'HOR':
+                                                x_pos = (curr_pct / 100.0) * x_range
+                                            elif m_dir == 'VER':
+                                                y_pos = (curr_pct / 100.0) * y_range
+                                            
+                                            return (int(x_pos), int(y_pos))
+                                        return calc_pos
+                                        
+                                    zoom_func = make_zoom_func(z_start, z_end, tgt_h_base, orig_h, duration)
+                                    pos_func = make_dynamic_pos_func(direction, m_start, m_end, orig_w, orig_h, tgt_h_base, z_start, z_end, target_size[0], target_size[1], duration)
+                                    
+                                    # Aplicar resize dinámico (si z_start != z_end) o estático
+                                    if z_start == z_end:
+                                        fixed_scale = (tgt_h_base * z_start) / orig_h
+                                        e_clip = e_clip.resized(fixed_scale)
+                                        if explicit_mask is not None:
+                                            e_clip = e_clip.with_mask(explicit_mask.resized(fixed_scale))
+                                    else:
+                                        e_clip = e_clip.resized(zoom_func)
+                                        if explicit_mask is not None:
+                                            e_clip = e_clip.with_mask(explicit_mask.resized(zoom_func))
+                                            
+                                    e_clip = e_clip.with_position(pos_func)
+                                    
+                                    # v5.2: UI Opacity Support
+                                    e_opacity = getattr(e_asset, 'opacity', 1.0)
+                                    if e_opacity < 1.0:
+                                        e_clip = e_clip.with_opacity(e_opacity)
+                                        logger.log(f"      [Debug] Opacidad aplicada a capa {extra_idx+1}: {e_opacity*100}%")
+
+                                    
+                                    layers.append(e_clip)
+                                    if clips_to_close is not None: clips_to_close.append(e_clip)
+                                except Exception as multi_e:
+                                    logger.log(f"      ❌ Error procesando capa secundaria: {multi_e}")
+                    
+                    if len(layers) > 1:
+                        # Composite with native transparent background support
+                        clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
+                        logger.log(f"    🥞 [Multilayer V5] Apilamiento exitoso. {len(layers)} capas procesadas.")
+                # ═══════════════════════════════════════════════════════════════════                # v36.22.2: Dynamic Ducking Threshold Capture
                 # Priority: Scene level > Global Script Setting > Default (0.02)
                 global_th = float(script.settings.get('ducking_threshold', 0.02))
                 global_merge = float(script.settings.get('audio_merge_threshold', 0.5))
