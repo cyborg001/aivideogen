@@ -332,24 +332,24 @@
                                                     <!-- Visual Preview -->
                                                     <div
                                                         class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                        <template x-if="(scene.assets && scene.assets.length > 0) || (scene.layers && scene.layers.background)">
+                                                        <template x-if="getSceneThumbnail(scene)">
                                                             <div class="w-full h-full relative">
-                                                                <template x-if="isAssetVideo((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)">
+                                                                <template x-if="isAssetVideo(getSceneThumbnail(scene))">
                                                                     <video
-                                                                       :src="getAssetPath((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background) + '#t=1.0'"
+                                                                       :src="getAssetPath(getSceneThumbnail(scene)) + '#t=1.0'"
                                                                         class="w-full h-full object-cover opacity-80 transition hover:scale-110"
                                                                         muted playsinline preload="metadata"
                                                                         onmouseover="this.play()"
                                                                         onmouseout="this.pause();"></video>
                                                                 </template>
-                                                                <template x-if="!isAssetVideo((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)">
-                                                                    <img :src="getAssetPath((scene.assets && scene.assets.length > 0) ? scene.assets[0] : scene.layers.background)"
+                                                                <template x-if="!isAssetVideo(getSceneThumbnail(scene))">
+                                                                    <img :src="getAssetPath(getSceneThumbnail(scene))"
                                                                         class="w-full h-full object-cover transition hover:scale-110"
                                                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E'; this.style.opacity=0.3">
                                                                 </template>
 
                                                                 <!-- Video Overlay Icon -->
-                                                                <template x-if="isAssetVideo(scene.assets?.[0] || scene.layers?.background)">
+                                                                <template x-if="isAssetVideo(getSceneThumbnail(scene))">
                                                                     <div
                                                                         class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
                                                                         <svg class="w-4 h-4 text-white opacity-70"
@@ -361,7 +361,7 @@
                                                                 </template>
                                                             </div>
                                                         </template>
-                                                        <template x-if="!scene.assets?.[0] && !(scene.layers && scene.layers.background)">
+                                                        <template x-if="!getSceneThumbnail(scene)">
                                                             <div
                                                                 class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
                                                                 <span class="text-xs">📺</span>
@@ -619,32 +619,27 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="flex-grow min-w-0 grid grid-cols-12 gap-4">
+                                                                 <div class="flex-grow min-w-0 grid grid-cols-12 gap-4">
                                                                 <div
                                                                     class="col-span-2 aspect-video bg-black rounded overflow-hidden relative border border-gray-700/50">
-                                                                    <template
-                                                                        x-if="scene.assets?.[0] || group.master_asset">
+                                                                    <template x-if="getSceneThumbnail(scene, group)">
                                                                         <div class="w-full h-full relative">
-                                                                            <template
-                                                                                x-if="isAssetVideo(scene.assets?.[0]?.id || group.master_asset)">
+                                                                            <template x-if="isAssetVideo(getSceneThumbnail(scene, group))">
                                                                                 <video
-                                                                                    :src="getAssetPath(scene.assets?.[0]?.id || group.master_asset)"
+                                                                                    :src="getAssetPath(getSceneThumbnail(scene, group))"
                                                                                     class="w-full h-full object-cover opacity-80"
                                                                                     preload="metadata" muted
                                                                                     onloadedmetadata="this.currentTime = 1">
                                                                                 </video>
                                                                             </template>
-                                                                            <template
-                                                                                x-if="!isAssetVideo(scene.assets?.[0]?.id || group.master_asset)">
-                                                                                <img :src="getAssetPath(scene.assets?.[0]?.id || group.master_asset)"
+                                                                            <template x-if="!isAssetVideo(getSceneThumbnail(scene, group))">
+                                                                                <img :src="getAssetPath(getSceneThumbnail(scene, group))"
                                                                                     class="w-full h-full object-cover opacity-80"
                                                                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E'; this.style.opacity=0.3">
                                                                             </template>
-
                                                                         </div>
                                                                     </template>
-                                                                    <template
-                                                                        x-if="!scene.assets?.[0] && !group.master_asset">
+                                                                    <template x-if="!getSceneThumbnail(scene, group)">
                                                                         <div
                                                                             class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800/40">
                                                                             <span class="text-[8px]">📺</span>
@@ -2318,7 +2313,15 @@
                     language: initialLanguage,
                     dubbing_mode: initialDubbingMode,
                     human_signature: true, // v11.3: Default ON for anti-detection
-                    thumbnail: initialThumbnail
+                    thumbnail: initialThumbnail,
+                    // v36.40: Social Metadata Initialization
+                    social_title: '',
+                    social_description: '',
+                    social_tags: '',
+                    social_pinned_comment: '',
+                    fuentes: '',
+                    tags: '',
+                    hashtags: ''
                 },
 
                 voiceSpeedNum: 0,
@@ -2402,19 +2405,12 @@
                                 dur = Math.max(1.5, words / this.wordsPerSecond) + parseFloat(scene.pause || 0);
                             }
                             
-                            // v11.3: Asset Inheritance Logic for Timeline
-                            let segAsset = '';
-                            let segMainAsset = '';
-                            if (scene.assets && scene.assets.length > 0) {
-                                const a = scene.assets[0];
-                                segAsset = (typeof a === 'string') ? a : (a.asset_type || a.id || '');
-                            }
+                            // v37.0: Dynamic Layer Support for Timeline Ghost
+                            let segAsset = this.getSceneThumbnail(scene);
+                            let segMainAsset = scene.layers?.main?.id || '';
                             if (scene.assets && scene.assets.length > 1) {
                                 const b = scene.assets[1];
                                 segMainAsset = (typeof b === 'string') ? b : (b.asset_type || b.id || '');
-                            }
-                            if (!segAsset || segAsset === 'image' || segAsset === 'video') {
-                                segAsset = block.master_asset || '';
                             }
 
                             segments.push({
@@ -2453,9 +2449,9 @@
                             subSegments.forEach(sub => {
                                 let actualDur = sub.dur * scale;
                                 
-                                // v11.3: Group Asset Inheritance
-                                let segAsset = group.master_asset || block.master_asset || '';
-                                let segMainAsset = '';
+                                // v37.0: Dynamic Layer Support for Timeline Ghost
+                                let segAsset = this.getSceneThumbnail(sub.scene, group);
+                                let segMainAsset = sub.scene.layers?.main?.id || '';
                                 if (sub.scene.assets && sub.scene.assets.length > 1) {
                                     const b = sub.scene.assets[1];
                                     segMainAsset = (typeof b === 'string') ? b : (b.asset_type || b.id || '');
@@ -2825,6 +2821,25 @@
                     return '/media/assets/' + normalizedPath;
                 },
 
+                // v37.0: Centralized Scene Thumbnail Resolution
+                getSceneThumbnail(scene, group = null) {
+                    if (!scene) return '';
+                    // 1. Prioritize layers.background (V5 standard)
+                    if (scene.layers?.background?.id && scene.layers.background.id !== 'image' && scene.layers.background.id !== 'video') {
+                        return scene.layers.background.id;
+                    }
+                    // 2. Fallback to legacy assets[0]
+                    if (scene.assets && scene.assets.length > 0) {
+                        const first = scene.assets[0];
+                        return typeof first === 'string' ? first : (first.id || first.type || '');
+                    }
+                    // 3. Fallback to group master_asset
+                    if (group && group.master_asset) {
+                        return group.master_asset;
+                    }
+                    return '';
+                },
+
                 async init() {
                     // Load overlays immediately and independently
                     this.fetchOverlays();
@@ -3091,11 +3106,16 @@
                     this.script.human_amplitude = parseFloat(this.projectSettings.human_amplitude);
                     this.script.thumbnail = this.projectSettings.thumbnail;
 
-                    // v4.3 Social Persistence
+                    // v4.3 Social Persistence (Unified v36.40)
                     this.script.social_title = this.projectSettings.social_title;
                     this.script.social_description = this.projectSettings.social_description;
                     this.script.social_tags = this.projectSettings.social_tags;
                     this.script.social_pinned_comment = this.projectSettings.social_pinned_comment;
+
+                    // v36.40: Engine Compatibility (Root Fields)
+                    this.script.fuentes = this.projectSettings.social_description;
+                    this.script.tags = this.projectSettings.social_tags;
+                    this.script.hashtags = this.projectSettings.hashtags || "";
 
                     // Also maintain a persistent settings object inside the script
                     if (!this.script.settings) this.script.settings = {};
@@ -4147,6 +4167,13 @@
                             if (settings.audio_merge_threshold !== undefined) this.projectSettings.audio_merge_threshold = parseFloat(settings.audio_merge_threshold);
                             if (settings.audio_block_fade !== undefined) this.projectSettings.audio_block_fade = parseFloat(settings.audio_block_fade);
                             if (settings.audio_early_finish !== undefined) this.projectSettings.audio_early_finish = parseFloat(settings.audio_early_finish);
+
+                            // v36.40: SOCIAL INFO & SEO SYNC (The "Missing Link" Fix)
+                            this.projectSettings.social_title = settings.social_title || json.social_title || settings.title || json.title || "";
+                            this.projectSettings.social_description = settings.social_description || json.social_description || settings.fuentes || json.fuentes || "";
+                            this.projectSettings.social_tags = settings.social_tags || json.social_tags || settings.tags || json.tags || "";
+                            this.projectSettings.social_pinned_comment = settings.social_pinned_comment || json.social_pinned_comment || "";
+                            this.projectSettings.hashtags = settings.hashtags || json.hashtags || "";
                             
                             // v36.31: Fallback for root settings (Legacy compat)
                             if (json.audio_merge_threshold !== undefined) this.projectSettings.audio_merge_threshold = parseFloat(json.audio_merge_threshold);

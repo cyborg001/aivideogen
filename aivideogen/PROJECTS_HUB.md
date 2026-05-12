@@ -152,7 +152,23 @@ Este documento es nuestra central de mando. Aquí rastreamos el progreso de cada
  
  ---
  
- ## 🛠️ Herramientas de Apoyo
+ 
+## 🇩🇴 7. Nicho: "Dominicana Intelligence"
+**Estado:** ❌ Solicitudes de Afiliados Rechazadas  
+**Objetivo:** Canal automatizado de geopolítica y turismo de lujo en RD.
+
+- [x] Creación de canales de YouTube.
+- [x] Asociación con Travelpayouts (GetYourGuide & Agoda).
+- [x] Redacción de guiones V4:
+    - `rd_isla_saona_vip.json`
+    - `rd_singapur_caribe_v1.json`
+    - `rd_top_hoteles_afiliados.json`
+- [ ] **TODO:** Renderizar y subir videos como "contenido orgánico" para ganar autoridad antes de re-aplicar.
+- **Ruta de Proyecto:** `C:\Users\hp\aivideogen\aivideogen\guiones\dominicana_intelligence`
+
+---
+
+## 🛠️ Herramientas de Apoyo
 
 - **Guía de Prompts (IA):** `docs/GUIA_PROMPTS_IA.md`
 - **Script de conteo**: `count_lines.py` (Funcional).

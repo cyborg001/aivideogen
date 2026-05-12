@@ -121,6 +121,10 @@ class AVGLScript:
         self.hashtags = ""
         self.music_volume_lock = False
         self.thumbnail = None
+        self.social_title = ""
+        self.social_description = ""
+        self.social_tags = ""
+        self.social_pinned_comment = ""
         self.settings = {}
 
     def get_all_scenes(self):
@@ -228,9 +232,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
     # v1.2: Smart Cleanup - Preserves rhythmic and emotional tags for the audio engine
     def _cleanup(content):
         if not content: return ""
-        # Remove técnica-only tags like [SUB], [TITLE], [PHO], [DYN] but KEEP [PAUSE] and emotions
-        # We use a negative lookahead to exclude what we want to keep
-        res = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', content, flags=re.IGNORECASE | re.DOTALL)
+        # Remove all technical tags [TAG] for subtitle display
+        res = re.sub(r'\[[^\]]+\]', '', content, flags=re.IGNORECASE | re.DOTALL)
         return res.strip()
 
     # 1. Identify all tags in ORIGINAL text to avoid index mismatch
@@ -328,9 +331,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
             f_part, d_part, h_list = parse_escena(before_raw)
             clean_text = _cleanup(d_part.strip())
 
-            # v35.5.1: Smart Control - If scene HAS manual tags, disable auto-force for naked parts
-            has_manual_tags = any(t['tag_name'] in ['SUB', 'TITLE', 'DYN'] for t in tags)
-            should_force = force_dynamic and not has_manual_tags
+            # v35.5.1: Smart Control - Force dynamic applies to naked parts even if tags exist
+            should_force = force_dynamic
 
             # v17.3.1: Only add sub if should_force is True (Opt-in logic)
             if should_force and clean_text:
@@ -341,9 +343,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
                 h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
                 scene_highlights.append(h)
                 
-            # v1.5: We keep the original f_part with tags for the audio engine, 
-            # but use f_part_clean ONLY for offset calculations.
-            f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
+            # Clean all tags before counting words to ensure correct subtitle timing
+            f_part_clean = re.sub(r'\[[^\]]+\]', '', f_part, flags=re.IGNORECASE)
             fonetica_offset += len(f_part_clean.split())
             fonetica_full_parts.append(f_part)
         
@@ -410,11 +411,17 @@ def extract_subtitles_v35(text, force_dynamic=False):
         f_part, d_part, h_list = parse_escena(display_text)
         is_dyn = tag['type'] == 'dyn'
         
+        # v35.5.1: TITLE tags are always static (not dynamic) for better UI clarity
+        if tag_name == 'TITLE':
+            final_is_dyn = False
+        else:
+            final_is_dyn = is_dyn or force_dynamic
+
         # v18.7.1: Apply override if exists
         sub_info = {
             "text": _cleanup(d_part),
             "f_part": f_part,
-            "is_dyn": is_dyn or force_dynamic,
+            "is_dyn": final_is_dyn,
             "offset": fonetica_offset,
             "y_position": y_pos_override, # v19.6
             "style": style_override # v28.1.5
@@ -451,8 +458,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             should_narrate = False
 
         if should_narrate:
-            # v1.5: Preservation logic - keep tags for audio engine
-            f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
+            f_part_clean = re.sub(r'\[[^\]]+\]', '', f_part, flags=re.IGNORECASE)
             fonetica_offset += len(f_part_clean.split())
             fonetica_full_parts.append(f_part)
         
@@ -464,9 +470,8 @@ def extract_subtitles_v35(text, force_dynamic=False):
         f_part, d_part, h_list = parse_escena(rest_raw)
         clean_text = _cleanup(d_part.strip())
 
-        # v35.5.2: Final piece smart control
-        has_manual_tags = any(t['tag_name'] in ['SUB', 'TITLE', 'DYN'] for t in tags)
-        should_force = force_dynamic and not has_manual_tags
+        # v35.5.2: Final piece smart control - Allow force even if tags exist
+        should_force = force_dynamic
 
         # v17.3.1: Only add sub if should_force is True (Opt-in logic)
         if should_force and clean_text:
@@ -476,8 +481,7 @@ def extract_subtitles_v35(text, force_dynamic=False):
             h['offset'] = int(h.get('offset', 0)) + int(fonetica_offset)
             scene_highlights.append(h)
         
-        # v1.5: Final piece preservation
-        f_part_clean = re.sub(r'\[(?!(?:PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO|/TENSO|/EPICO|/SUSPENSO|/GRITANDO|/SUSURRO|SUB:S|/SUB))[^\]]+\]', '', f_part, flags=re.IGNORECASE)
+        f_part_clean = re.sub(r'\[[^\]]+\]', '', f_part, flags=re.IGNORECASE)
         fonetica_offset += len(f_part_clean.split())
         fonetica_full_parts.append(f_part)
 
@@ -520,6 +524,13 @@ def parse_avgl_json(json_text):
     script.tags = data.get("tags") or settings.get("tags", "")
     script.hashtags = data.get("hashtags") or settings.get("hashtags", "")
     script.thumbnail = data.get("thumbnail") or settings.get("thumbnail") 
+    
+    # v8.7: Social Metadata Extraction
+    script.social_title = settings.get("social_title") or data.get("social_title", "")
+    script.social_description = settings.get("social_description") or data.get("social_description", "")
+    script.social_tags = settings.get("social_tags") or data.get("social_tags", "")
+    script.social_pinned_comment = settings.get("social_pinned_comment") or data.get("social_pinned_comment", "")
+
     script.music_volume_lock = data.get("music_volume_lock") or settings.get("music_volume_lock", False)
     script.settings = settings # Store official settings dict
     

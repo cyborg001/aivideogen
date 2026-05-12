@@ -2033,14 +2033,14 @@ def generate_video_avgl(project):
                         # Composite with native transparent background support
                         clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
                         logger.log(f"    🥞 [Multilayer V5] Apilamiento exitoso. {len(layers)} capas procesadas.")
-                # ═══════════════════════════════════════════════════════════════════                # v36.22.2: Dynamic Ducking Threshold Capture
+                # v36.22.2: Dynamic Ducking Threshold Capture
                 # Priority: Scene level > Global Script Setting > Default (0.02)
-                global_th = float(script.settings.get('ducking_threshold', 0.02))
-                global_merge = float(script.settings.get('audio_merge_threshold', 0.5))
+                global_th = safe_float(script.settings.get('ducking_threshold'), 0.02)
+                global_merge = safe_float(script.settings.get('audio_merge_threshold'), 0.5)
                 
                 val_scene = getattr(scene, 'ducking_threshold', None)
-                eff_threshold = float(val_scene or global_th)
-                eff_merge = float(global_merge) # v36.27.2: Universal merge connection
+                eff_threshold = safe_float(val_scene if val_scene is not None else global_th, 0.02)
+                eff_merge = safe_float(global_merge, 0.5) # v36.27.2: Universal merge connection
                 
                 if logger:
                     loc_str = f" [ESCENA: {val_scene}]" if val_scene else " [GLOBAL]"
