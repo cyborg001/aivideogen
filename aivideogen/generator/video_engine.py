@@ -987,7 +987,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
             from moviepy.audio import fx as afx
             final_audio = final_audio.with_effects([afx.MultiplyVolume(1.2)])
             # v36.20.2: Analyze for Noise Gate on the clean processed audio
-            detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
+            detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
     else:
         # Layer 2: Manual Override (Fallback if engine missed it)
         manual_path = getattr(scene, 'audio', None) or getattr(scene, 'audio_path', None)
@@ -1007,13 +1007,31 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
             if audio_resolved:
                 try:
                     from moviepy.audio import fx as afx
-                    # v36.35: Corrected Radar Dispatch (Fixed phantom function bug)
                     abs_path = os.path.abspath(audio_resolved)
+                    
+                    # v41.0: MANDATORY WEBM RESCUE (FFmpeg Bridge)
+                    if abs_path.lower().endswith('.webm'):
+                        import subprocess
+                        import uuid
+                        from django.conf import settings
+                        t_dir = os.path.join(settings.MEDIA_ROOT, 'temp_audio')
+                        os.makedirs(t_dir, exist_ok=True)
+                        rescue_wav = os.path.join(t_dir, f"rescue_{uuid.uuid4().hex[:8]}.wav") 
+                        if logger: logger.log(f"    🚀 [WebM-Rescue] Convirtiendo WebM a WAV para Radar Binario...")
+                        try:
+                            cmd = ['ffmpeg', '-y', '-i', abs_path, '-ac', '1', '-ar', '44100', rescue_wav]
+                            subprocess.run(cmd, capture_output=True, check=True)
+                            if os.path.exists(rescue_wav):
+                                abs_path = rescue_wav
+                        except Exception as re:
+                            if logger: logger.log(f"    ⚠️ [WebM-Rescue] Fallo FFmpeg: {re}")
+
                     final_audio = AudioFileClip(abs_path).with_effects([afx.MultiplyVolume(1.2)])
                     source_type = f"MANUAL_ASSET ({os.path.splitext(abs_path)[1].upper()})"
-                    detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
+                    # v41.0: Use the high-fidelity Binary Radar
+                    detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
                 except Exception as e:
-                    if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual raw: {e}")
+                    if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual: {e}")
 
         # Layer 3: Asset Sound Extraction (Failsafe for Video Voice)
         if not final_audio and video_asset_clip and video_asset_clip.audio:
@@ -1021,16 +1039,16 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 if video_asset_clip.audio.duration > 0.1:
                     final_audio = video_asset_clip.audio
                     source_type = "VIDEO_INTEGRATED"
-                    detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
+                    detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
             except: pass
         try:
             # Only use if it has a meaningful volume/duration
             if video_asset_clip.audio.duration > 0.1:
                 final_audio = video_asset_clip.audio
                 source_type = "VIDEO_INTEGRATED"
-                if logger: logger.log(f"    🔊 [Audio] Capa de Video detectada (Sonido original del asset)")
-                # v36.22.4: Analyze for Noise Gate using dynamic threshold
-                detected_intervals = audio_engine.PCMRadar.analyze(final_audio, logger=logger, threshold=threshold)
+                if logger: logger.log(f"    🔊 [Audio] Capa de Video detectada (Usando Radar Binario)")
+                # v41.0: Use the high-fidelity Binary Radar even for integrated video
+                detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
         except:
             pass
 
@@ -2033,14 +2051,14 @@ def generate_video_avgl(project):
                         # Composite with native transparent background support
                         clip = CompositeVideoClip(layers, size=target_size, bg_color=(0,0,0)).with_duration(duration)
                         logger.log(f"    🥞 [Multilayer V5] Apilamiento exitoso. {len(layers)} capas procesadas.")
-                # v36.22.2: Dynamic Ducking Threshold Capture
-                # Priority: Scene level > Global Script Setting > Default (0.02)
-                global_th = safe_float(script.settings.get('ducking_threshold'), 0.02)
+                # v41.1: Visual Editor Sovereignty (No more hardcoded 0.02)
+                # Priority: Scene > Global Script > Default (0.008)
+                global_th = safe_float(script.settings.get('ducking_threshold'), 0.008)
                 global_merge = safe_float(script.settings.get('audio_merge_threshold'), 0.5)
                 
                 val_scene = getattr(scene, 'ducking_threshold', None)
-                eff_threshold = safe_float(val_scene if val_scene is not None else global_th, 0.02)
-                eff_merge = safe_float(global_merge, 0.5) # v36.27.2: Universal merge connection
+                eff_threshold = safe_float(val_scene if val_scene is not None else global_th, 0.008)
+                eff_merge = safe_float(global_merge, 0.5) 
                 
                 if logger:
                     loc_str = f" [ESCENA: {val_scene}]" if val_scene else " [GLOBAL]"
@@ -2330,7 +2348,7 @@ def generate_video_avgl(project):
                         # v36.22.4: Ensure we use the scene level threshold for calibration
                         eff_threshold = float(getattr(scene, 'ducking_threshold', 0.0) or 0.05)
                         logger.log(f"    🔬 [Audio] Analizando Radar PCM para fuente externa (Sincronizando silencios, Threshold: {eff_threshold})...")
-                        analysis_intervals = PCMRadar.analyze(actual_voice, logger=logger, threshold=eff_threshold)
+                        analysis_intervals = PCMRadar.analyze_custom_audio(actual_voice, logger=logger, threshold=eff_threshold)
                         if analysis_intervals:
                             for vs, ve in analysis_intervals:
                                 scene_intervals.append((vs, ve)) # Relative to scene
