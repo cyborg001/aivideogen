@@ -159,6 +159,36 @@ def upload_video(youtube, video_path, title, description, category_id="28", priv
         logger.error(f"[YouTube] Error durante upload: {error_msg}")
         raise
 
+def post_youtube_comment(youtube, video_id, comment_text):
+    """
+    Publica un comentario de nivel superior en el video recién subido.
+    Nota: La API v3 de YouTube permite publicar, pero el "fijado" (pinning) debe hacerse manualmente en Studio.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    if not comment_text:
+        return None
+    try:
+        request = youtube.commentThreads().insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "videoId": video_id,
+                    "topLevelComment": {
+                        "snippet": {
+                            "textOriginal": comment_text
+                        }
+                    }
+                }
+            }
+        )
+        response = request.execute()
+        logger.info(f"[YouTube] Comentario automatizado publicado con éxito en video {video_id}")
+        return response
+    except Exception as e:
+        logger.error(f"[YouTube] Error publicando el comentario en {video_id}: {e}")
+        return None
+
 def generate_youtube_description(project):
     from .utils import extract_sources_from_script, extract_hashtags_from_script, get_human_title
     
@@ -347,6 +377,15 @@ def trigger_auto_upload(project):
              video_id = result['id']
              video_url = f"https://www.youtube.com/watch?v={video_id}"
              
+             # v21.0: Publicar el comentario social automáticamente
+             pinned_text = project.social_pinned_comment
+             if not pinned_text:
+                 social_data = get_project_social_copy(project)
+                 pinned_text = social_data.get('pinned_comment', '')
+                 
+             if pinned_text:
+                 post_youtube_comment(youtube, video_id, pinned_text)
+                 
              # v13.5: ID with Timestamp (Append strategy)
              timestamp = datetime.now().strftime('%d/%m %H:%M')
              entry = f"{video_id} ({timestamp})"

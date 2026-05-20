@@ -1944,13 +1944,18 @@ def generate_video_avgl(project):
                                  e_path = found_e if found_e else e_path
                         
                         if os.path.isfile(e_path):
-                            is_e_img = e_path.lower().endswith(('.png', '.webp', '.gif'))
+                            is_e_img = e_path.lower().endswith(('.png', '.webp', '.gif', '.webm', '.mp4'))
                             if is_e_img:
                                 logger.log(f"      ↳ Capa {extra_idx+1}: {os.path.basename(e_path)} (Transparencia Alpha conservada)")
                                 try:
-                                    # v31.2: Force explicit Alpha Mask extraction via PIL
-                                    # MoviePy/ImageIO sometimes drops indexed PNG alpha channels
-                                    e_clip = ImageClip(e_path).with_duration(duration)
+                                    # Soporte V5 para VideoFileClip (WebM/MP4)
+                                    if e_path.lower().endswith(('.webm', '.mp4')):
+                                        from moviepy import VideoFileClip
+                                        e_clip = VideoFileClip(e_path, has_mask=True)
+                                        e_clip = e_clip.with_duration(duration)
+                                    else:
+                                        e_clip = ImageClip(e_path).with_duration(duration)
+                                        
                                     explicit_mask = None
                                     
                                     if e_path.lower().endswith(('.png', '.webp')):
