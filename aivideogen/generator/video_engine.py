@@ -987,7 +987,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
             from moviepy.audio import fx as afx
             final_audio = final_audio.with_effects([afx.MultiplyVolume(1.2)])
             # v36.20.2: Analyze for Noise Gate on the clean processed audio
-            detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
+            detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
     else:
         # Layer 2: Manual Override (Fallback if engine missed it)
         manual_path = getattr(scene, 'audio', None) or getattr(scene, 'audio_path', None)
@@ -1029,7 +1029,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                     final_audio = AudioFileClip(abs_path).with_effects([afx.MultiplyVolume(1.2)])
                     source_type = f"MANUAL_ASSET ({os.path.splitext(abs_path)[1].upper()})"
                     # v41.0: Use the high-fidelity Binary Radar
-                    detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
+                    detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
                 except Exception as e:
                     if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual: {e}")
 
@@ -1039,7 +1039,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 if video_asset_clip.audio.duration > 0.1:
                     final_audio = video_asset_clip.audio
                     source_type = "VIDEO_INTEGRATED"
-                    detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
+                    detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
             except: pass
         try:
             # Only use if it has a meaningful volume/duration
@@ -2353,7 +2353,12 @@ def generate_video_avgl(project):
                         # v36.22.4: Ensure we use the scene level threshold for calibration
                         eff_threshold = float(getattr(scene, 'ducking_threshold', 0.0) or 0.05)
                         logger.log(f"    🔬 [Audio] Analizando Radar PCM para fuente externa (Sincronizando silencios, Threshold: {eff_threshold})...")
-                        analysis_intervals = PCMRadar.analyze_custom_audio(actual_voice, logger=logger, threshold=eff_threshold)
+                        engine_mode = script.settings.get('engine', 'edge')
+                        is_ia_voice = engine_mode in ['edge', 'eleven']
+                        if is_ia_voice:
+                            analysis_intervals = PCMRadar.analyze_ia_voice(actual_voice, logger=logger, threshold=eff_threshold)
+                        else:
+                            analysis_intervals = PCMRadar.analyze_custom_audio(actual_voice, logger=logger, threshold=eff_threshold)
                         if analysis_intervals:
                             for vs, ve in analysis_intervals:
                                 scene_intervals.append((vs, ve)) # Relative to scene
