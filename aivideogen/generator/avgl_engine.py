@@ -93,6 +93,7 @@ class AVGLScene:
         # v20.4: Manual Override Support
         self.duration = 0.0
         self.force_duration = False
+        self.radar = None # v42.0: Manual Radar Override (ia/humano)
         self.lipsync = False # v9.0: Local Lip-Sync support
         self.language = None # v5.1: Per-scene language
         self.dubbing_mode = None # v5.1: Per-scene dubbing mode
@@ -567,6 +568,7 @@ def parse_avgl_json(json_text):
             scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
             scene.silent = s_data.get("silent", False) # v28.0
             scene.ducking_threshold = s_data.get("ducking_threshold") # v36.22: Scene level override
+            scene.radar = s_data.get("radar") # v42.0: Manual Radar Override (ia/humano)
             
             # v28.1: Tag-based Silent Mode (Global Scene)
             if "[silencio]" in scene.text.lower() or "[sub:s]" in scene.text.lower():
@@ -663,6 +665,7 @@ def parse_avgl_json(json_text):
                 scene.language = s_data.get("language") # v5.1
                 scene.dubbing_mode = s_data.get("dubbing_mode") # v5.1
                 scene.ducking_threshold = s_data.get("ducking_threshold") # v36.22.3: Fixed missing inheritance in groups
+                scene.radar = s_data.get("radar") # v42.0: Manual Radar Override (ia/humano)
                 
                 clean_txt, extracted_subs = extract_subtitles_v35(scene.text)
                 scene.text = clean_txt

@@ -978,6 +978,23 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
     source_type = "PROCESSED/TTS"
     detected_intervals = None
 
+    def get_detected_intervals(clip, src_type):
+        radar_override = getattr(scene, 'radar', None)
+        if radar_override:
+            lc = str(radar_override).lower()
+            if lc == 'ia':
+                if logger: logger.log(f"      🎯 [Radar Override] Forzando Radar de IA")
+                return audio_engine.PCMRadar.analyze_ia_voice(clip, logger=logger, threshold=threshold)
+            elif lc in ['humano', 'human']:
+                if logger: logger.log(f"      🎯 [Radar Override] Forzando Radar de Voz Humana")
+                return audio_engine.PCMRadar.analyze_custom_audio(clip, logger=logger, threshold=threshold)
+        
+        # Autodetectacion inteligente por defecto
+        if 'TTS' in src_type:
+            return audio_engine.PCMRadar.analyze_ia_voice(clip, logger=logger, threshold=threshold)
+        else:
+            return audio_engine.PCMRadar.analyze_custom_audio(clip, logger=logger, threshold=threshold)
+
     # Layer 1: Already Processed by Engine (Highest Priority)
     if final_audio:
         # Check if it was a manual asset originally handled by the engine loop
@@ -987,7 +1004,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
             from moviepy.audio import fx as afx
             final_audio = final_audio.with_effects([afx.MultiplyVolume(1.2)])
             # v36.20.2: Analyze for Noise Gate on the clean processed audio
-            detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
+            detected_intervals = get_detected_intervals(final_audio, source_type)
     else:
         # Layer 2: Manual Override (Fallback if engine missed it)
         manual_path = getattr(scene, 'audio', None) or getattr(scene, 'audio_path', None)
@@ -1029,7 +1046,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                     final_audio = AudioFileClip(abs_path).with_effects([afx.MultiplyVolume(1.2)])
                     source_type = f"MANUAL_ASSET ({os.path.splitext(abs_path)[1].upper()})"
                     # v41.0: Use the high-fidelity Binary Radar
-                    detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
+                    detected_intervals = get_detected_intervals(final_audio, source_type)
                 except Exception as e:
                     if logger: logger.log(f"    ⚠️ [Audio] Fallo cargando audio manual: {e}")
 
@@ -1039,7 +1056,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 if video_asset_clip.audio.duration > 0.1:
                     final_audio = video_asset_clip.audio
                     source_type = "VIDEO_INTEGRATED"
-                    detected_intervals = (audio_engine.PCMRadar.analyze_ia_voice(final_audio, logger=logger, threshold=threshold) if 'PROCESSED' in source_type else audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold))
+                    detected_intervals = get_detected_intervals(final_audio, source_type)
             except: pass
         try:
             # Only use if it has a meaningful volume/duration
@@ -1048,7 +1065,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 source_type = "VIDEO_INTEGRATED"
                 if logger: logger.log(f"    🔊 [Audio] Capa de Video detectada (Usando Radar Binario)")
                 # v41.0: Use the high-fidelity Binary Radar even for integrated video
-                detected_intervals = audio_engine.PCMRadar.analyze_custom_audio(final_audio, logger=logger, threshold=threshold)
+                detected_intervals = get_detected_intervals(final_audio, source_type)
         except:
             pass
 
