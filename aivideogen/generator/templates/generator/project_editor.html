@@ -2336,7 +2336,7 @@
                     music_volume_lock: initialMusicLock,
                     dynamic_subtitles: initialDynamic,
                     subtitles_y_position: parseFloat(initialSubtitlesY),
-                    engine: initialEngine,
+                    engine: (initialEngine === 'eleven') ? 'elevenlabs' : initialEngine,
                     audio_ducking_ratio: initialDucking,
                     audio_attack_time: initialAttack,
                     audio_release_time: initialRelease,
@@ -3069,7 +3069,7 @@
                             if (data.settings.render_mode) this.projectSettings.render_mode = data.settings.render_mode;
                             if (data.settings.music_volume_lock !== undefined) this.projectSettings.music_volume_lock = data.settings.music_volume_lock;
                             if (data.settings.auto_upload !== undefined) this.projectSettings.auto_upload = data.settings.auto_upload;
-                            if (data.settings.engine) this.projectSettings.engine = data.settings.engine;
+                             if (data.settings.engine) this.projectSettings.engine = (data.settings.engine === 'eleven') ? 'elevenlabs' : data.settings.engine;
 
                             // v20.2: Audio master console settings
                             if (data.settings.audio_ducking_ratio !== undefined) this.projectSettings.audio_ducking_ratio = data.settings.audio_ducking_ratio;
@@ -4168,7 +4168,7 @@
                             let finalVoice = settings.voice_id || json.voice || null;
                             if (finalVoice) this.projectSettings.voice_id = finalVoice;
                             
-                            if (settings.engine) this.projectSettings.engine = settings.engine;
+                            if (settings.engine) this.projectSettings.engine = (settings.engine === 'eleven') ? 'elevenlabs' : settings.engine;
                             if (settings.voice_speed) this.projectSettings.voice_speed = settings.voice_speed;
 
                             // Music Settings (Crucial for Bloqueo Naval)

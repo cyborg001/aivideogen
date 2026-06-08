@@ -2,8 +2,8 @@
   "title": "El Secreto del Poder Blando Dominicano: De la Bachata a la Guerra Fría del Turismo",
   "version": "4.0",
   "settings": {
-    "engine": "edge",
-    "voice_id": "es-DO-EmilioNeural",
+    "engine": "elevenlabs",
+    "voice_id": "nPczCjzI2devNBz1zQrb",
     "background_music": "media/music/Final Girl - Jeremy Blake.mp3",
     "music_volume": "0.20",
     "aspect_ratio": "landscape",

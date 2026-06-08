@@ -1298,7 +1298,7 @@ def generate_video_avgl(project):
                     audio_durations[scene] = 1.0 + getattr(scene, 'pause', 0.0)
                 continue
                 
-            use_ssml = (project.engine == 'eleven')
+            use_ssml = (project.engine in ['eleven', 'elevenlabs'])
             curr_text = re.sub(r'\(.*?\)', '', scene.text).strip()
             if curr_text.startswith('[') and not re.match(r'^\[\s*(?:/?SUB|PAUSE|PAUSA)', curr_text, flags=re.IGNORECASE):
                 curr_text = re.sub(r'^\[(?!(?:\s*/?SUB|PAUSE|PAUSA|TENSO|EPICO|SUSPENSO|GRITANDO|SUSURRO))[^\]]+\]\s*', '', curr_text, flags=re.IGNORECASE)
@@ -1324,7 +1324,7 @@ def generate_video_avgl(project):
             eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
             
             # Decide engine based on project settings, fallback to heuristic only if engine is unknown
-            if engine_mode == 'eleven':
+            if engine_mode in ['eleven', 'elevenlabs']:
                 is_eleven = True
             elif engine_mode == 'edge':
                 is_eleven = False
@@ -2371,7 +2371,7 @@ def generate_video_avgl(project):
                         eff_threshold = float(getattr(scene, 'ducking_threshold', 0.0) or 0.05)
                         logger.log(f"    🔬 [Audio] Analizando Radar PCM para fuente externa (Sincronizando silencios, Threshold: {eff_threshold})...")
                         engine_mode = script.settings.get('engine', 'edge')
-                        is_ia_voice = engine_mode in ['edge', 'eleven']
+                        is_ia_voice = engine_mode in ['edge', 'eleven', 'elevenlabs']
                         if is_ia_voice:
                             analysis_intervals = PCMRadar.analyze_ia_voice(actual_voice, logger=logger, threshold=eff_threshold)
                         else:
