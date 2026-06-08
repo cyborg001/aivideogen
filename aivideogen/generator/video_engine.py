@@ -2740,12 +2740,14 @@ def generate_video_avgl(project):
             use_gpu = (project.render_mode == 'gpu')
             
             # v11.8: Stable rendering (Single Thread)
+            # v26.12.1: Usar hilos equilibrados desde la configuracion del proyecto (default 4) para evitar contencion
+            cpu_threads = int(getattr(project, 'render_workers', 4) or 4)
             render_params = {
                 'fps': 30, 
                 'codec': 'libx264', 
                 'audio_codec': 'aac', 
                 'preset': 'ultrafast', 
-                'threads': 1  # Revertido v26.12: 16 threads causa severa contención de CPU en MoviePy
+                'threads': cpu_threads
             }
             
             if use_gpu:
