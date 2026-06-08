@@ -1556,15 +1556,16 @@ def generate_video_avgl(project):
                         
                         # 3. Recursive Deep Search (v20.7)
                         if not found_path:
-                            logger.log(f"    🔍 Escaneo profundo exigido: Buscando '{fname}' en subcarpetas...")
-                            for root, dirs, files in os.walk(assets_dir):
-                                if fname in files:
-                                    found_path = os.path.join(root, fname)
+                            search_fname = os.path.basename(fname)
+                            logger.log(f"    🔍 Escaneo profundo exigido: Buscando '{search_fname}' en subcarpetas de media...")
+                            for root, dirs, files in os.walk(settings.MEDIA_ROOT):
+                                if search_fname in files:
+                                    found_path = os.path.join(root, search_fname)
                                     break
                                 # Case insensitive / extension check
                                 for f in files:
                                     name_no_ext, _ = os.path.splitext(f)
-                                    if f.lower() == fname.lower() or name_no_ext.lower() == fname.lower():
+                                    if f.lower() == search_fname.lower() or name_no_ext.lower() == search_fname.lower():
                                         found_path = os.path.join(root, f)
                                         break
                                 if found_path: break
