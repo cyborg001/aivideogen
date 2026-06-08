@@ -1,0 +1,290 @@
+{
+  "title": "El Secreto del Poder Blando Dominicano: De la Bachata a la Guerra Fría del Turismo",
+  "version": "4.0",
+  "settings": {
+    "engine": "edge",
+    "voice_id": "es-DO-EmilioNeural",
+    "background_music": "media/music/Final Girl - Jeremy Blake.mp3",
+    "music_volume": "0.20",
+    "aspect_ratio": "landscape",
+    "dynamic_subtitles": true,
+    "subtitles_y_position": 0.8,
+    "human_signature": true,
+    "human_amplitude": 1.0,
+    "auto_upload": false,
+    "render_mode": "cpu",
+    "voice_speed": "+0%",
+    "music_volume_lock": false,
+    "audio_ducking_ratio": 0.17,
+    "audio_attack_time": 0.15,
+    "audio_release_time": 0.4,
+    "audio_merge_threshold": 1.5,
+    "audio_block_fade": 1.0,
+    "audio_early_finish": 0.1,
+    "ducking_threshold": 0.05,
+    "language": "es",
+    "dubbing_mode": "hq",
+    "thumbnail": "media/assets/rd_versus_cancun_mrbeast.png",
+    "social_title": "El Secreto del Poder Blando Dominicano: De la Bachata a la Guerra Fría del Turismo 🇩🇴",
+    "social_description": "República Dominicana no solo crece económicamente; domina culturalmente. Analizamos la batalla real de Punta Cana vs. Cancún, la falsa narrativa sobre FITUR y el porqué de la magia y resiliencia de Quisqueya.",
+    "social_tags": "República Dominicana, Geopolítica, Turismo, Punta Cana, Cancún, FITUR, Bachata, Diáspora",
+    "social_pinned_comment": "¿Crees que República Dominicana ganará la hegemonía total del Caribe frente a México? Déjanos tu opinión."
+  },
+  "blocks": [
+    {
+      "id": "DOMINICAN_IDENTITY_DOCUMENTARY",
+      "title": "DOCUMENTAL IDENTIDAD DOMINICANA",
+      "scenes": [
+        {
+          "title": "El Gancho del Poder Blando",
+          "text": "[SUB: 0.8] ¿Cómo es posible que una pequeña isla del Caribe, con apenas once millones de habitantes, logre seducir al planeta entero? No es solo casualidad. Hoy analizamos el poder blando definitivo de la República Dominicana, desde las pistas de baile hasta la guerra fría por el control del turismo en el Caribe. [/SUB]",
+          "duration": 20,
+          "assets": [
+            {
+              "id": "media/videos para usar/VID_DR_INTRO1.mp4",
+              "zoom": "1.0:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/videos para usar/VID_DR_INTRO1.mp4",
+              "zoom": "1.0:1.0"
+            },
+            "main": null,
+            "overlay": {
+              "id": "grain"
+            }
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "La Dominicanidad Histórica",
+          "text": "[SUB: 0.8] El carácter del dominicano no nació de la nada. Es el resultado de siglos de un mestizaje cultural único en el continente, donde la resiliencia colonial frente a piratas y potencias forjó una personalidad inquebrantable. La alegría dominicana no es simple diversión, es un mecanismo de defensa histórico que se transformó en calidez humana. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/IMG_PEOPLE_SMILE.png",
+              "zoom": "1.0:1.1"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/IMG_PEOPLE_SMILE.png",
+              "zoom": "1.0:1.1"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "Geopolítica Insular",
+          "text": "[SUB: 0.8] Ubicada en el mismo corazón del Caribe, la geografía insular de la República Dominicana ha sido su bendición y su desafío. Controlando los principales pasos marítimos del Atlántico, el país ha sabido capitalizar su ubicación para transformarse en el centro neurálgico del comercio regional, conectando continentes con una velocidad sin precedentes. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/IMG_DR_AERIAL_GLOBAL.png",
+              "zoom": "1.1:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/IMG_DR_AERIAL_GLOBAL.png",
+              "zoom": "1.1:1.0"
+            },
+            "main": null,
+            "overlay": {
+              "id": "dust"
+            }
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "La Conquista de los Ritmos",
+          "text": "[SUB: 0.8] La música es el gran ejército dominicano. Ritmos declarados patrimonio inmaterial de la humanidad como la bachata y el merengue han conquistado los rincones más lejanos del planeta. De la mano de figuras legendarias como Juan Luis Guerra, estos acordes han cruzado fronteras, enseñando al mundo entero a bailar y sentir como en Quisqueya. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/quisquella_la_bella.jpg",
+              "zoom": "1.0:1.2"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/quisquella_la_bella.jpg",
+              "zoom": "1.0:1.2"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "Vanguardia Urbana",
+          "text": "[SUB: 0.8] Pero el poder cultural dominicano no se detiene en el pasado. Hoy, la ola del dembow y artistas vanguardistas como Tokischa o El Alfa están rediseñando la música urbana y la alta moda global. Colaborando con íconos de la industria mundial, el dembow se ha convertido en el latido rítmico que domina los principales festivales y discotecas. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/IMG_SUNSET_TECH_DR.png",
+              "zoom": "1.0:1.15"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/IMG_SUNSET_TECH_DR.png",
+              "zoom": "1.0:1.15"
+            },
+            "main": null,
+            "overlay": {
+              "id": "grain"
+            }
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "El Plátano Power",
+          "text": "[SUB: 0.8] El béisbol es la otra gran religión. La República Dominicana es el mayor exportador de talento de Grandes Ligas fuera de los Estados Unidos. Leyendas como David Ortiz, Albert Pujols y estrellas actuales como Juan Soto o Fernando Tatis Junior no solo exportan jonrones, exportan una actitud alegre y una identidad cultural que redefine el béisbol moderno. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/carlos_recuerdos_rd.mp4",
+              "zoom": "1.0:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/carlos_recuerdos_rd.mp4",
+              "zoom": "1.0:1.0"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "El Plató de Hollywood",
+          "text": "[SUB: 0.8] La Ley de Cine dominicana ha transformado al país en el gran plató cinematográfico de la región. Gracias a sus espectaculares paisajes naturales como Samaná y a una infraestructura técnica de nivel mundial, las mayores productoras de Hollywood eligen filmar aquí, atrayendo capitales masivos y proyectando la belleza dominicana en las pantallas globales. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/videos para usar/VID_SAMANA.mp4",
+              "zoom": "1.0:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/videos para usar/VID_SAMANA.mp4",
+              "zoom": "1.0:1.0"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "La Batalla por Punta Cana",
+          "text": "[SUB: 0.8] El verdadero motor del poder dominicano es el turismo, desatando una auténtica batalla campal en el Caribe. La joya de la corona, Punta Cana, compite directamente contra Cancún en México por el dominio del turismo masivo. Esta rivalidad ha forzado al país a elevar constantemente sus estándares, apostando por resorts premium y campos de golf exclusivos. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/videos para usar/VID_PUNTA_CANA.mp4",
+              "zoom": "1.0:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/videos para usar/VID_PUNTA_CANA.mp4",
+              "zoom": "1.0:1.0"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "Guerra de Rendimiento",
+          "text": "[SUB: 0.8] Los datos financieros no mienten. Mientras México domina en volumen masivo gracias a su frontera continental, la República Dominicana lidera en rendimiento y tasa de retorno de inversión por habitación. La combinación de seguridad jurídica, incentivos fiscales y una tasa de criminalidad turística casi nula hace que los desarrolladores prefieran invertir en suelo quisqueyano. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/rd_vs_mexico_tourism_chart_serious.png",
+              "zoom": "1.0:1.2"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/rd_vs_mexico_tourism_chart_serious.png",
+              "zoom": "1.0:1.2"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "El Stand de FITUR",
+          "text": "[SUB: 0.8] Existe la falsa narrativa de que República Dominicana perdió su hegemonía en FITUR en Madrid frente a países sudamericanos como Ecuador. Esto es falso. La feria rota anualmente la figura de socio de honor por razones institucionales. En realidad, los pabellones de RD continúan rompiendo récords históricos de acuerdos comerciales y captación de inversiones privadas. [/SUB]",
+          "duration": 25,
+          "assets": [
+            {
+              "id": "media/assets/FITUR_RD_2026_STAND.jpeg",
+              "zoom": "1.0:1.2"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/FITUR_RD_2026_STAND.jpeg",
+              "zoom": "1.0:1.2"
+            },
+            "main": null,
+            "overlay": {
+              "id": "dust"
+            }
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "Socio Certificado OMT",
+          "text": "[SUB: 0.8] El éxito dominicano está certificado por organismos mundiales. Premiada repetidamente por la Organización Mundial del Turismo debido a su ejemplar recuperación, la República Dominicana demuestra que el éxito turístico no es casual. Es el resultado de una alianza público-privada sólida y de una marca país coherente, consolidada sobre el valor incalculable de su gente y de su hospitalidad. [/SUB]",
+          "duration": 30,
+          "assets": [
+            {
+              "id": "media/assets/rd_pandemic_recovery_award.png",
+              "zoom": "1.0:1.15"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/assets/rd_pandemic_recovery_award.png",
+              "zoom": "1.0:1.15"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        },
+        {
+          "title": "El Hub del Futuro",
+          "text": "[SUB: 0.8] La República Dominicana del futuro se proyecta como el gran hub logístico y turístico del Caribe. Su secreto no reside en las playas, sino en la energía inagotable de su sociedad. Comparte este video si crees en el potencial de esta media isla, suscríbete a Dominicana Intelligence para más análisis estratégicos y déjanos tu opinión en los comentarios. [/SUB]",
+          "duration": 30,
+          "assets": [
+            {
+              "id": "media/videos para usar/VID_CAUCEDO_PORT.mp4",
+              "zoom": "1.0:1.0"
+            }
+          ],
+          "layers": {
+            "background": {
+              "id": "media/videos para usar/VID_CAUCEDO_PORT.mp4",
+              "zoom": "1.0:1.0"
+            },
+            "main": null,
+            "overlay": null
+          },
+          "ducking_threshold": 0.05
+        }
+      ],
+      "groups": []
+    }
+  ]
+}
