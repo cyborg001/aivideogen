@@ -20,7 +20,7 @@
     - **Agoda** (Referenciado como "adopa"): Para reservas de hoteles y resorts de lujo.
 - **Estado**: ❌ **Rechazado**. (Posible causa: Falta de contenido previo en el canal o métricas de tráfico).
 
-### 3. Producción de Contenido (Guiones AVGL v4.0)
+### 3. Producción de Contenido (Guiones AVGL v5.0)
 Se han desarrollado los siguientes guiones estratégicos en la ruta: `aivideogen/guiones/dominicana_intelligence/`
 
 | Archivo | Tema | Objetivo |
