@@ -2154,6 +2154,22 @@ def generate_video_avgl(project):
                 sub_clips_dynamic = []
                 try:
                     if hasattr(scene, 'subtitles') and scene.subtitles:
+                        # v26.13: Autogenerar word_timings proporcionales si se requiere modo dinámico pero no hay timings de voz nativos (ej: ElevenLabs)
+                        is_dynamic_any = any(sub_data.get('is_dynamic', False) for sub_data in scene.subtitles)
+                        if is_dynamic_any and not getattr(scene, 'word_timings', None) and audio_clip and audio_clip.duration > 0:
+                            clean_scene_text = re.sub(r'\[.*?\]', '', scene.text)
+                            words = clean_scene_text.split()
+                            if words:
+                                time_per_word = audio_clip.duration / len(words)
+                                scene.word_timings = []
+                                for w_idx, w in enumerate(words):
+                                    scene.word_timings.append({
+                                        "start": w_idx * time_per_word,
+                                        "end": (w_idx + 1) * time_per_word,
+                                        "word": w
+                                    })
+                                logger.log(f"      ⏱️ [Subtítulos] Timings lineales aproximados generados para {len(words)} palabras (Voz IA sin timestamps)")
+
                         # v17.2.1: CRITICAL FIX - Use full duration (voice + pause) for timing
                         # Previously used only voice_duration, causing subtitle desync with scene pauses
                         timing_base = duration  # duration already = voice_duration + scene.pause (line 781)

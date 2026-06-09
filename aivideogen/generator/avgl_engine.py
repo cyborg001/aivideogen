@@ -579,7 +579,7 @@ def parse_avgl_json(json_text):
                 if "[silencio]" in scene.text.lower():
                     scene.silent = True
             
-            force_dynamic = data.get("dynamic_subtitles", False)
+            force_dynamic = data.get("dynamic_subtitles", False) or settings.get("dynamic_subtitles", False)
             clean_txt, extracted_subs = extract_subtitles_v35(scene.text, force_dynamic=force_dynamic)
             scene.text = clean_txt
             scene.subtitles = extracted_subs or s_data.get("subtitles", [])
