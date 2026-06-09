@@ -25,8 +25,10 @@
 | `news_quantum_lego_crystal.png` | Resumen Mayo 2026 | Verificado | Nanopartículas de plata en estructura cristalina de Lego. |
 | `news_living_plastics.png` | Resumen Mayo 2026 | Verificado | Microorganismos biodegradando plásticos con indicador de 6 días. |
 | `platano_power_baseball.png` | Identidad Dominicana | **NUEVO (IA)** | Pelotero dominicano bateando en un estadio de béisbol, con sticker de plátano en el casco. |
+| `trump_noticia_apache.mp4` | Conflicto Irán 2026 | Descargado (yt-dlp) | Cobertura de las declaraciones de Trump sobre el helicóptero Apache derribado. |
+| `ataques_americanos_iran.mp4` | Conflicto Irán 2026 | Descargado (yt-dlp) | Cobertura de los ataques aéreos de represalia de EE. UU. en Hormozgán. |
+| `urgente_iran_helicoptero.avgl.json` | Conflicto Irán 2026 | Guion Creado | Guion del Short de urgencia al estilo MrBeast. |
+| `caratula_noticia_apache_1781045339064.png` | Conflicto Irán 2026 | **NUEVO (CTR 11%+)** | Miniatura de Trump sorprendido con el helicóptero Apache en llamas en el Estrecho de Ormuz, estilo MrBeast. |
 
 > [!IMPORTANT]
 > El Arquitecto debe asegurar que las carátulas generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
-
-
