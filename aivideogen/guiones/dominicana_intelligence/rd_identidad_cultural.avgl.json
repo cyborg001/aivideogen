@@ -147,13 +147,13 @@
           "duration": 25,
           "assets": [
             {
-              "id": "media/assets/carlos_recuerdos_rd.mp4",
+              "id": "media/assets/platano_power_baseball.png",
               "zoom": "1.0:1.0"
             }
           ],
           "layers": {
             "background": {
-              "id": "media/assets/carlos_recuerdos_rd.mp4",
+              "id": "media/assets/platano_power_baseball.png",
               "zoom": "1.0:1.0"
             },
             "main": null,
