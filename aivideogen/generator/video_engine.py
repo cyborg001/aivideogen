@@ -2355,8 +2355,13 @@ def generate_video_avgl(project):
                 if actual_voice and has_real_speech:
                     logger.log(f"    🔊 [Audio] Habla detectada ({voice_source}) en Escena {s_idx+1}: Activando Ducking Maestro (Dur={actual_voice.duration:.2f}s)")
                     scene_intervals = []
-                    # v36.21.0: Refined interval collection - Handle empty lists as "No Voice"
-                    if hasattr(scene, 'voice_intervals') and scene.voice_intervals is not None:
+                    # Detectar si el motor de voz es ElevenLabs
+                    engine_mode = script.settings.get('engine', 'edge')
+                    eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
+                    is_eleven_voice = (len(eff_voice) > 15 and '-' not in eff_voice and 'Neural' not in eff_voice)
+                    is_eleven_local = (engine_mode in ['eleven', 'elevenlabs']) or is_eleven_voice
+
+                    if hasattr(scene, 'voice_intervals') and scene.voice_intervals is not None and (scene.voice_intervals or not is_eleven_local):
                         if scene.voice_intervals:
                             for vs, ve in scene.voice_intervals: 
                                 scene_intervals.append((vs, ve)) # Relative to scene
