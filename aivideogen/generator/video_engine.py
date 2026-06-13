@@ -1312,6 +1312,19 @@ def generate_video_avgl(project):
                                             "word": wt["word"]
                                         })
                                         
+                                    # Copiar y ajustar voice_intervals de forma local a la escena
+                                    s.voice_intervals = []
+                                    if hasattr(dummy, 'voice_intervals') and dummy.voice_intervals:
+                                        for vs, ve in dummy.voice_intervals:
+                                            # Intersectar el intervalo con los límites del segmento de la escena
+                                            clip_start = max(start_time_segment, vs)
+                                            clip_end = min(end_time_segment, ve)
+                                            if clip_start < clip_end:
+                                                s.voice_intervals.append((
+                                                    max(0.0, clip_start - start_time_segment),
+                                                    max(0.0, clip_end - start_time_segment)
+                                                ))
+                                        
                                     # Recortar archivo con FFmpeg
                                     s_audio_path = group_audio_paths[s]
                                     
