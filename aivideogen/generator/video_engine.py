@@ -1859,13 +1859,13 @@ def generate_video_avgl(project):
                             
                             if scene.group_id and scene.group_settings:
                                 g = scene.group_settings
-                                g_zoom = g.get("zoom", "1.0:1.3")
-                                g_move = g.get("move", "HOR:50:50")
+                                # v5.9.1: Solo interpolar del grupo si la escena no sobrescribe estos valores
+                                has_scene_zoom = asset.zoom is not None and asset.zoom != ""
+                                has_scene_move = asset.move is not None and asset.move != ""
                                 
                                 try:
                                     # Calculate group timing
                                     group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
-                                    # v20.4: Respect Force Duration in Group Calculations
                                     total_group_duration = 0.0
                                     for s in group_scenes:
                                         s_dur = audio_durations.get(s, 1.0) + s.pause
@@ -1879,33 +1879,40 @@ def generate_video_avgl(project):
                                         if s == scene: break
                                         s_dur = audio_durations.get(s, 1.0) + s.pause
                                         start_in_group += s_dur
+
+                                    # 1. Interpolate Zoom only if not overridden by scene
+                                    if not has_scene_zoom and g.get("zoom"):
+                                        g_zoom = g.get("zoom")
+                                        z_parts = g_zoom.split(':') if ':' in g_zoom else [g_zoom, g_zoom]
+                                        gz_start = safe_float(z_parts[0], 1.0); gz_end = safe_float(z_parts[1], 1.3)
+                                        
+                                        z_s = gz_start + (gz_end - gz_start) * (start_in_group / total_group_duration)
+                                        z_e = gz_start + (gz_end - gz_start) * ((start_in_group + duration) / total_group_duration)
+                                        eff_zoom = f"{z_s:.3f}:{z_e:.3f}"
                                     
-                                    # Interpolate Zoom
-                                    z_parts = g_zoom.split(':') if ':' in g_zoom else [g_zoom, g_zoom]
-                                    gz_start = safe_float(z_parts[0], 1.0); gz_end = safe_float(z_parts[1], 1.3)
-                                    
-                                    z_s = gz_start + (gz_end - gz_start) * (start_in_group / total_group_duration)
-                                    z_e = gz_start + (gz_end - gz_start) * ((start_in_group + duration) / total_group_duration)
-                                    eff_zoom = f"{z_s:.3f}:{z_e:.3f}"
-                                    
-                                    # Interpolate Move (Simple Linear)
-                                    m_configs = []
-                                    if '+' in g_move:
-                                        for p in [p.strip() for p in g_move.split('+')]:
-                                            mp = p.split(':')
-                                            if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
-                                    else:
-                                        mp = g_move.split(':')
-                                        if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
-                                    
-                                    for cfg in m_configs:
-                                        ms = cfg['s']; me = cfg['e']
-                                        m_s = ms + (me - ms) * (start_in_group / total_group_duration)
-                                        m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
-                                        if cfg['dir'] == 'HOR':
-                                            eff_move = f"HOR:{m_s:.1f}:{m_e:.1f}" if not eff_move or '+' not in eff_move else eff_move + f" + HOR:{m_s:.1f}:{m_e:.1f}"
+                                    # 2. Interpolate Move only if not overridden by scene
+                                    if not has_scene_move and g.get("move"):
+                                        g_move = g.get("move")
+                                        m_configs = []
+                                        if '+' in g_move:
+                                            for p in [p.strip() for p in g_move.split('+')]:
+                                                mp = p.split(':')
+                                                if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
                                         else:
-                                            eff_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if eff_move else f"VER:{m_s:.1f}:{m_e:.1f}"
+                                            mp = g_move.split(':')
+                                            if len(mp) >= 3: m_configs.append({'dir': mp[0], 's': safe_float(mp[1], 50.0), 'e': safe_float(mp[2], 50.0)})
+                                        
+                                        temp_move = ""
+                                        for cfg in m_configs:
+                                            ms = cfg['s']; me = cfg['e']
+                                            m_s = ms + (me - ms) * (start_in_group / total_group_duration)
+                                            m_e = ms + (me - ms) * ((start_in_group + duration) / total_group_duration)
+                                            if cfg['dir'] == 'HOR':
+                                                temp_move = f"HOR:{m_s:.1f}:{m_e:.1f}" if not temp_move or '+' not in temp_move else temp_move + f" + HOR:{m_s:.1f}:{m_e:.1f}"
+                                            else:
+                                                temp_move += f" + VER:{m_s:.1f}:{m_e:.1f}" if temp_move else f"VER:{m_s:.1f}:{m_e:.1f}"
+                                        if temp_move:
+                                            eff_move = temp_move
                                 except Exception as e:
                                     logger.log(f"    ⚠️ Error en interpolación visual de grupo: {e}")
                                     eff_zoom = "1.0:1.3"; eff_move = "HOR:50:50"
