@@ -1526,21 +1526,12 @@
 
                 <!-- RIGHT COL: VISUALS (5 cols) -->
                 <div class="col-span-5 space-y-5 border-l border-gray-700 pl-6 relative">
-                    <!-- GROUP LOCK OVERLAY -->
-                    <div x-show="editGroupIndex !== null"
-                        class="absolute inset-0 bg-gray-900/95 z-20 flex flex-col items-center justify-center text-center p-6 backdrop-blur-sm border-l border-blue-500/30">
-                        <span class="text-4xl mb-3">🔒</span>
-                        <h4 class="text-blue-300 font-bold uppercase tracking-widest text-sm mb-2">Visuales de Grupo
-                        </h4>
-                        <p class="text-xs text-gray-400 mb-6 leading-relaxed">
-                            Esta escena pertenece a un grupo.<br>
-                            Los cambios visuales (Imagen, Zoom, FX) se gestionan desde el <b>Master Asset</b> del grupo.
-                        </p>
-                        <button
-                            @click="closeModal(); setTimeout(() => openGroupSettings(editBlockIndex, editGroupIndex), 300)"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded shadow-lg uppercase tracking-wide transform hover:scale-105 transition">
-                            Configurar Grupo
-                        </button>
+                    <!-- BUBBLE INFO FOR GROUPS (v5.9.0) -->
+                    <div x-show="editGroupIndex !== null" class="bg-blue-950/40 border border-blue-500/30 rounded-lg p-2.5 mb-3 flex items-start gap-2 text-[11px] text-blue-300">
+                        <span class="text-sm">ℹ️</span>
+                        <div>
+                            <strong>Escena en Grupo:</strong> Puedes dejar el fondo vacío para heredar el <em>Master Asset</em> del grupo, o seleccionar un activo específico para esta escena si deseas que cambie de imagen.
+                        </div>
                     </div>
 
                     <h4
@@ -3902,17 +3893,17 @@
 
                     const isInGroup = this.editGroupIndex !== null;
                     const assetObj = {
-                        id: isInGroup ? null : this.formData.asset_type,
+                        id: this.formData.asset_type || null,
                         type: this.isAssetVideo(this.formData.asset_type || '') ? 'video' : 'image',
-                        zoom: isInGroup ? null : currentZoom,
-                        move: isInGroup ? null : moveStr,
+                        zoom: currentZoom,
+                        move: moveStr,
                         overlay: this.formData.overlay || null,
-                        fit: isInGroup ? false : this.formData.fit,
+                        fit: this.formData.fit || false,
                         video_volume: this.formData.asset_audio_bool ? parseFloat(this.formData.asset_audio_vol) : null,
-                        shake: isInGroup ? false : (this.formData.shake || false),
-                        shake_intensity: isInGroup ? 0 : parseInt(this.formData.shake_intensity || 5),
-                        human_signature: isInGroup ? false : (this.formData.human_signature || false),
-                        human_amplitude: isInGroup ? 0 : parseFloat(this.formData.human_amplitude || 1.0),
+                        shake: this.formData.shake || false,
+                        shake_intensity: parseInt(this.formData.shake_intensity || 5),
+                        human_signature: this.formData.human_signature || false,
+                        human_amplitude: parseFloat(this.formData.human_amplitude || 1.0),
                         start_time: parseTime(this.formData.start_time) || 0,
                         end_time: parseTime(this.formData.end_time)
                     };

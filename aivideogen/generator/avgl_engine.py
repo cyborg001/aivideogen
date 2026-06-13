@@ -99,6 +99,7 @@ class AVGLScene:
         self.dubbing_mode = None # v5.1: Per-scene dubbing mode
         self.silent = False # v28.0: Mute mode (Subtitles without TTS)
         self.ducking_threshold = None # v36.22: Custom Noise Gate sensitivity
+        self.continuous_voice = False # v43.0: Voz continua en grupos
 
 class AVGLBlock:
     def __init__(self, title, music=None, volume=0.2):
@@ -649,6 +650,7 @@ def parse_avgl_json(json_text):
                 scene = AVGLScene(title=s_data.get("title", "Escena"))
                 scene.group_id = group_id
                 scene.group_settings = group
+                scene.continuous_voice = group.get("continuous_voice", False)
                 scene.text = str(s_data.get("text") or s_data.get("voice") or "")
                 scene.voice = s_data.get("voice") or script.voice
                 scene.speed = parse_speed(s_data.get("speed")) if s_data.get("speed") else script.speed

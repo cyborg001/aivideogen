@@ -1167,12 +1167,210 @@ def generate_video_avgl(project):
         
         # v5.2.1: Pre-calculate durations for Master Shot interpolation
         audio_durations = {}
+        processed_continuous_groups = {} # group_id -> dict of scene_idx -> audio_path
+        
         for i, scene in enumerate(all_scenes):
             logger.log(f"  Escena {i+1}/{len(all_scenes)}: {scene.title}")
             
             # v13.5.5: Professional Audio Normalization (Stereo Force & Validation)
             base_audio_name = f"project_{project.id}_scene_{i:03d}"
             audio_path = os.path.join(temp_audio_dir, f"{base_audio_name}.wav")
+            
+            # ═══════════════════════════════════════════════════════════════════
+            # v43.0: Voz Continua en Grupos de Escenas (Continuous Voice Grouping)
+            # ═══════════════════════════════════════════════════════════════════
+            if getattr(scene, 'continuous_voice', False) and scene.group_id:
+                if scene.group_id in processed_continuous_groups:
+                    # Este grupo continuo ya fue pre-generado y segmentado.
+                    # Simplemente cargamos el archivo de audio asignado a esta escena.
+                    if os.path.exists(audio_path):
+                        audio_files.append((scene, audio_path))
+                        try:
+                            temp_clip = AudioFileClip(audio_path)
+                            audio_durations[scene] = temp_clip.duration
+                            temp_clip.close()
+                        except:
+                            audio_durations[scene] = 1.0
+                    else:
+                        audio_files.append((scene, None))
+                        audio_durations[scene] = 1.0
+                    continue
+                else:
+                    # Marcamos el grupo como procesado para que las siguientes escenas lo carguen directamente
+                    processed_continuous_groups[scene.group_id] = True
+                    
+                    # 1. Obtener todas las escenas de este grupo continuo ordenadas
+                    group_scenes = [s for s in all_scenes if s.group_id == scene.group_id]
+                    
+                    # 2. Obtener las rutas de audio asignadas a cada escena en base a su índice
+                    group_audio_paths = {}
+                    for idx, s in enumerate(all_scenes):
+                        if s.group_id == scene.group_id:
+                            group_audio_paths[s] = os.path.join(temp_audio_dir, f"project_{project.id}_scene_{idx:03d}.wav")
+                            
+                    # 3. Combinar los textos de narración de todo el grupo de forma continua
+                    combined_text = " ".join([str(s.text).strip() for s in group_scenes if str(s.text).strip()])
+                    
+                    if combined_text:
+                        logger.log(f"    🎙️ [Voz Continua] Pre-generando audio unificado para el grupo '{scene.group_id}'...")
+                        logger.log(f"       Texto agrupado: '{combined_text[:120]}...'")
+                        
+                        master_group_audio = os.path.join(temp_audio_dir, f"project_{project.id}_group_{scene.group_id}.wav")
+                        
+                        class DummyScene:
+                            def __init__(self):
+                                self.word_timings = []
+                                self.voice_intervals = []
+                                
+                        dummy = DummyScene()
+                        success = False
+                        eff_voice = scene.voice or project.voice_id or "es-MX-JorgeNeural"
+                        
+                        # Determinar engine
+                        engine_mode = getattr(project, 'engine', 'edge')
+                        if engine_mode in ['eleven', 'elevenlabs']:
+                            is_eleven = True
+                        elif engine_mode == 'edge':
+                            is_eleven = False
+                        else:
+                            is_eleven = (len(eff_voice) > 15 and '-' not in eff_voice and 'Neural' not in eff_voice)
+                            
+                        if is_eleven:
+                            api_key = os.getenv('ELEVENLABS_API_KEY')
+                            success = asyncio.run(generate_audio_elevenlabs(combined_text, master_group_audio, eff_voice, api_key))
+                        else:
+                            env_rate = os.getenv("EDGE_TTS_RATE", "+0%")
+                            speed_rate = f"+{int((scene.speed - 1.0) * 100)}%" if scene.speed != 1.0 else env_rate
+                            
+                            # Traducción si es necesario
+                            s_lang = getattr(scene, 'language', None)
+                            p_lang = project.language
+                            target_lang = s_lang if (s_lang and s_lang.strip()) else p_lang
+                            if not target_lang: target_lang = 'es'
+                            
+                            if target_lang == 'en' and eff_voice.startswith('es-'):
+                                eff_voice = "en-US-GuyNeural"
+                            elif target_lang == 'es' and eff_voice.startswith('en-'):
+                                eff_voice = "es-MX-JorgeNeural"
+                                
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            success = loop.run_until_complete(generate_audio_edge(combined_text, master_group_audio, eff_voice, speed_rate, pitch=scene.pitch or "+0Hz", scene=dummy))
+                            loop.close()
+                            
+                        if success and os.path.exists(master_group_audio):
+                            try:
+                                # Obtener duración del audio unificado
+                                try:
+                                    temp_m = AudioFileClip(master_group_audio)
+                                    master_duration = temp_m.duration
+                                    temp_m.close()
+                                except Exception as e:
+                                    logger.log(f"      ⚠️ Error leyendo duración del audio maestro: {e}")
+                                    master_duration = 1.0
+                                    
+                                # Contar palabras reales de cada escena limpia de etiquetas
+                                scene_word_counts = []
+                                for s in group_scenes:
+                                    clean_text = re.sub(r'(?i)\[(ZOOM|MOVE|FIT|AUDIO|SFX|PAN|VOICE|PITCH|TITLE|INSTRUCCIÓN|INSTRUCTION|SUB).*?\]', '', str(s.text))
+                                    clean_text = re.sub(r'\[.*?\]', '', clean_text)
+                                    clean_text = re.sub(r'\(.*?\)', '', clean_text)
+                                    words = clean_text.strip().split()
+                                    scene_word_counts.append(len(words))
+                                    
+                                timings = dummy.word_timings
+                                current_word_idx = 0
+                                current_audio_time = 0.0
+                                
+                                for idx, s in enumerate(group_scenes):
+                                    w_count = scene_word_counts[idx]
+                                    start_time_segment = current_audio_time
+                                    
+                                    # Determinar marca de tiempo de fin
+                                    target_end_word_idx = min(len(timings) - 1, current_word_idx + w_count - 1)
+                                    
+                                    if target_end_word_idx >= 0 and target_end_word_idx < len(timings):
+                                        end_time_segment = timings[target_end_word_idx]['end']
+                                    else:
+                                        # Fallback proporcional en base al conteo de palabras
+                                        if sum(scene_word_counts) > 0:
+                                            end_time_segment = start_time_segment + (w_count / sum(scene_word_counts)) * master_duration
+                                        else:
+                                            end_time_segment = start_time_segment + master_duration / len(group_scenes)
+                                            
+                                    if idx == len(group_scenes) - 1:
+                                        end_time_segment = master_duration # Último segmento hasta el final
+                                        
+                                    end_time_segment = max(start_time_segment + 0.1, min(master_duration, end_time_segment))
+                                    
+                                    # Copiar y ajustar word_timings de forma local a la escena
+                                    s.word_timings = []
+                                    for wt in timings[current_word_idx : current_word_idx + w_count]:
+                                        s.word_timings.append({
+                                            "start": max(0.0, wt["start"] - start_time_segment),
+                                            "end": max(0.0, wt["end"] - start_time_segment),
+                                            "word": wt["word"]
+                                        })
+                                        
+                                    # Recortar archivo con FFmpeg
+                                    s_audio_path = group_audio_paths[s]
+                                    
+                                    try:
+                                        ffmpeg_exe = 'ffmpeg'
+                                        try:
+                                            import imageio_ffmpeg
+                                            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                                        except ImportError: pass
+                                        
+                                        cmd = [
+                                            ffmpeg_exe, '-y',
+                                            '-ss', f"{start_time_segment:.6f}",
+                                            '-to', f"{end_time_segment:.6f}",
+                                            '-i', master_group_audio,
+                                            '-c', 'copy',
+                                            s_audio_path
+                                        ]
+                                        subprocess.run(cmd, capture_output=True, check=True)
+                                    except Exception as fe:
+                                        logger.log(f"      ⚠️ FFmpeg crop falló para {s.title}: {fe}. Usando MoviePy...")
+                                        try:
+                                            from moviepy import AudioFileClip
+                                            master_clip = AudioFileClip(master_group_audio)
+                                            sub_clip = master_clip.subclipped(start_time_segment, end_time_segment)
+                                            sub_clip.write_audiofile(s_audio_path, logger=None)
+                                            sub_clip.close()
+                                            master_clip.close()
+                                        except Exception as mpy_ex:
+                                            logger.log(f"      🚨 Error crítico recortando con MoviePy: {mpy_ex}")
+                                            
+                                    # Avanzar punteros
+                                    current_word_idx += w_count
+                                    current_audio_time = end_time_segment
+                                    
+                                # Borrar audio maestro para ahorrar espacio
+                                try: os.remove(master_group_audio)
+                                except: pass
+                                
+                                # Cargar el audio segmentado de la escena líder actual
+                                if os.path.exists(audio_path):
+                                    audio_files.append((scene, audio_path))
+                                    try:
+                                        temp_clip = AudioFileClip(audio_path)
+                                        audio_durations[scene] = temp_clip.duration
+                                        temp_clip.close()
+                                    except:
+                                        audio_durations[scene] = 1.0
+                                else:
+                                    audio_files.append((scene, None))
+                                    audio_durations[scene] = 1.0
+                                continue
+                            except Exception as group_err:
+                                logger.log(f"    🚨 Fallo general procesando voz continua del grupo: {group_err}")
+                                processed_continuous_groups.pop(scene.group_id, None)
+                    else:
+                        # Si no hay texto combinado (bloque mudo), seguimos
+                        pass
+
 
             # v5.2 Hook: Auto-Dubbing (Direct Transcription/Translation Pre-check)
             scene_dubbing = getattr(scene, 'dubbing_mode', None)
