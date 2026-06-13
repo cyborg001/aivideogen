@@ -673,11 +673,18 @@ def parse_avgl_json(json_text):
                 scene.text = clean_txt
                 scene.subtitles = extracted_subs or s_data.get("subtitles", [])
 
-                # Inheritance from Group Master Asset (v14.5 Refined)
-                raw_assets = s_data.get("assets", [])
+                # V5 Multilayer Parser (evita duplicidad de activos entre assets y layers)
                 layers = s_data.get("layers", {})
-                if layers and layers.get("background"):
-                     raw_assets.append(layers["background"])
+                if layers and (layers.get("background") or layers.get("main") or layers.get("overlay")):
+                    raw_assets = []
+                    if layers.get("background"):
+                        raw_assets.append(layers["background"])
+                    if layers.get("main"):
+                        raw_assets.append(layers["main"])
+                    if layers.get("overlay"):
+                        raw_assets.append(layers["overlay"])
+                else:
+                    raw_assets = s_data.get("assets", [])
 
                 if not raw_assets and master_asset:
                     raw_assets = [master_asset]
