@@ -1,0 +1,157 @@
+{
+  "title": "One Piece: La Odisea y la Ilíada de Nuestra Era",
+  "voice": "es-ES-AlvaroNeural",
+  "voice_speed": "+15%",
+  "dynamic_subtitles": true,
+  "background_music": "geopolitica_tension.mp3",
+  "music_volume": 0.15,
+  "settings": {
+    "dynamic_subtitles": true,
+    "ducking_threshold": 0.05,
+    "audio_merge_threshold": 0.5,
+    "aspect_ratio": "portrait"
+  },
+  "blocks": [
+    {
+      "title": "Bloque 1: El Papiro y la Mitología Moderna",
+      "music": "geopolitica_tension.mp3",
+      "volume": 0.15,
+      "scenes": [],
+      "groups": [
+        {
+          "title": "Grupo 1: Escala y Tradición",
+          "continuous_voice": true,
+          "scenes": [
+            {
+              "title": "Escena 1 - El Manga y El Manuscrito",
+              "text": "¿Y si te dijera que la mayor epopeya de nuestra era no está escrita en griego antiguo, sino en las páginas de un manga?",
+              "assets": [
+                {
+                  "id": "op_manga_papiro.png",
+                  "zoom": "1.0:1.15",
+                  "move": "HOR:50:50 + VER:50:50"
+                }
+              ]
+            },
+            {
+              "title": "Escena 2 - La Escala del Mundo",
+              "text": "Igual que Homero construyó el Mediterráneo mitológico, Eiichiro Oda ha diseñado un mapa colosal que le ha tomado veinticinco años esculpir.",
+              "assets": [
+                {
+                  "id": "op_mapa_mitologico.png",
+                  "zoom": "1.1:1.0",
+                  "move": "HOR:10:90"
+                }
+              ]
+            },
+            {
+              "title": "Escena 3 - El Folclore del Siglo Vacío",
+              "text": "Un mundo con su propio folclore, dinastías prohibidas y un siglo de historia borrado que sus personajes deben descifrar.",
+              "assets": [
+                {
+                  "id": "op_joy_boy_leyenda.png",
+                  "zoom": "1.0:1.2",
+                  "move": "VER:100:0"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Bloque 2: La Odisea y la Búsqueda de la Libertad",
+      "music": "geopolitica_tension.mp3",
+      "volume": 0.15,
+      "scenes": [],
+      "groups": [
+        {
+          "title": "Grupo 2: Luffy y Odiseo",
+          "continuous_voice": true,
+          "scenes": [
+            {
+              "title": "Escena 4 - El Navegante Errante",
+              "text": "Esta es la Odisea del siglo veintiuno. Luffy es Odiseo, un capitán que navega un mar indomable y caótico desafiando el destino,",
+              "assets": [
+                {
+                  "id": "op_luffy_odiseo.png",
+                  "zoom": "1.0:1.12",
+                  "move": "HOR:50:50"
+                }
+              ]
+            },
+            {
+              "title": "Escena 5 - Ítaca contra Laugh Tale",
+              "text": "pero mientras el héroe griego buscaba regresar a su hogar en Ítaca, el pirata busca alcanzar la última isla, Laugh Tale, para ser el hombre más libre del mundo.",
+              "assets": [
+                {
+                  "id": "op_laugh_tale_mitica.png",
+                  "zoom": "1.0:1.15",
+                  "move": "VER:0:100"
+                }
+              ]
+            },
+            {
+              "title": "Escena 6 - Los Monstruos del Grand Line",
+              "text": "Ambos enfrentan monstruos mitológicos y deidades que gobiernan los mares, donde cada isla es un reino con sus propias leyes y peligros.",
+              "assets": [
+                {
+                  "id": "op_monstruos_mar.png",
+                  "zoom": "1.1:1.0",
+                  "move": "HOR:90:10"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Bloque 3: La Ilíada y los Héroes Trágicos",
+      "music": "geopolitica_tension.mp3",
+      "volume": 0.15,
+      "scenes": [],
+      "groups": [
+        {
+          "title": "Grupo 3: La Guerra de los Gigantes",
+          "continuous_voice": true,
+          "scenes": [
+            {
+              "title": "Escena 7 - Marineford y la Guerra de Troya",
+              "text": "Y si buscas la Ilíada, la tienes en la saga de Marineford. Un conflicto monumental donde chocan los héroes más grandes de una era.",
+              "assets": [
+                {
+                  "id": "op_marineford_troya.png",
+                  "zoom": "1.0:1.15",
+                  "move": "HOR:30:70"
+                }
+              ]
+            },
+            {
+              "title": "Escena 8 - El Aquiles de la Era Pirata",
+              "text": "Barbablanca es nuestro Aquiles. Un semidiós indomable que no lucha por el botín ni la gloria personal, sino por salvar a su familia, muriendo de pie en batalla.",
+              "assets": [
+                {
+                  "id": "op_barbablanca_tragico.png",
+                  "zoom": "1.1:1.0",
+                  "move": "VER:50:50"
+                }
+              ]
+            },
+            {
+              "title": "Escena 9 - El Legado de Homero y Oda",
+              "text": "Con más de mil capítulos, Eiichiro Oda ha escrito la mitología de nuestra generación. ¿Es One Piece literatura eterna o exagero? Comenta.",
+              "assets": [
+                {
+                  "id": "op_corona_sombrero.png",
+                  "zoom": "1.0:1.12",
+                  "move": "HOR:50:50"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
