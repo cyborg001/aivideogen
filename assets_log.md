@@ -3,7 +3,8 @@
 ## Sesión: 2026-06-15
 
 ### Imágenes Generadas (Rejuvenecimiento Humano - Minidocumental)
-*   **Imagen (Miniatura)**: `bg_lab_rejuvenation.png` - Fondo de laboratorio biológico futurista con luces de neón azul y cian y holograma de ADN.
+*   **Imagen (Miniatura)**: `caratula_mrbeast_rejuv.png` - Carátula de alto impacto estilo MrBeast, mostrando el rostro del creador impactado en primer plano, el fondo de laboratorio futurista y texto 3D amarillo "¿REAL?".
+*   **Imagen**: `bg_lab_rejuvenation.png` - Fondo de laboratorio biológico futurista con luces de neón azul y cian y holograma de ADN.
 *   **Imagen**: `rejuv_01_hook.png` - (Nueva) Reloj de arena futurista metálico con arena de neón cian cayendo y reloj digital holográfico en reversa.
 *   **Imagen**: `rejuv_02_epigenetics.png` - (Reutilizada de `dna_helix_glow.png`) Hélice de ADN brillante.
 *   **Imagen**: `rejuv_03_cell_aging.png` - (Reutilizada de `asset_celulas.png`) Células bajo microscopio.
