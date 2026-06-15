@@ -1,5 +1,10 @@
 # Registro de Assets - AVGL v4.0
 
+## Sesión: 2026-06-15
+
+### Imágenes Generadas (Rejuvenecimiento Humano)
+*   **Imagen**: `bg_lab_rejuvenation.png` - Fondo de laboratorio biológico futurista con luces de neón azul y cian y un holograma de ADN, para compositar la miniatura con el rostro del creador.
+
 ## Sesión: 2026-06-13
 
 ### Imágenes Generadas (Saga One Piece/Epopeya)
