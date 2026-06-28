@@ -337,8 +337,8 @@ def apply_ken_burns(image_path, duration, target_size, zoom="1.0:1.3", move="HOR
             off_x += drift_x
             off_y += drift_y
 
-        # Shake Effect (Intense)
-        if shake:
+        # Shake Effect (Intense) - Bypassed if Organic Human Signature is active
+        if shake and not h_noise_active:
             freq = 12.0
             intensity = safe_eval_math(shake_intensity, 5.0)
             amp = intensity * 2.0 # Pixels
@@ -2105,7 +2105,7 @@ def generate_video_avgl(project):
                                     
                                     if success:
                                         from moviepy import VideoFileClip
-                                        clip = VideoFileClip(temp_scene_video)
+                                        clip = VideoFileClip(temp_scene_video).without_audio()
                                         if clips_to_close is not None: clips_to_close.append(clip)
                                         if clip.size != target_size: clip = clip.resized(target_size)
                                         is_fast_success = True
@@ -2559,7 +2559,8 @@ def generate_video_avgl(project):
 
                 # v14.0 Audio Mixing: Mix Voice + Original Video Sound (if volume > 0)
                 # v36.20.3: Use ACTUAL_VOICE (the unified modular source)
-                if actual_voice and clip.audio:
+                # v43.1: Prevent double-mixing if voice is already the video's integrated track
+                if actual_voice and clip.audio and voice_source != "VIDEO_INTEGRATED":
                     from moviepy import CompositeAudioClip
                     mixed_audio = CompositeAudioClip([actual_voice, clip.audio])
                     clip = clip.with_audio(mixed_audio)
