@@ -2083,7 +2083,7 @@ def generate_video_avgl(project):
                                 else:
                                     logger.log(f"    ⚡ [FastAssembly] Modo Inyección Directa Activado para: {os.path.basename(asset_path)}")
                                     # 1. Prepare scene audio (Voice or Silence)
-                                    temp_scene_audio = os.path.join(temp_audio_dir, f"fast_audio_{s_idx}.aac")
+                                    temp_scene_audio = os.path.join(temp_audio_dir, f"fast_audio_{s_idx}.mp3")
                                     
                                     if audio_clip:
                                         audio_clip.write_audiofile(temp_scene_audio, logger=None)
