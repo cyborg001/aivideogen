@@ -11,6 +11,7 @@
 - **Ritmo Acelerado**: Cambio de estímulo visual (assets/zooms/movimientos agresivos) cada 8-10 segundos en formato documental y cada 1.5-3 segundos en shorts.
 - **Estilo Visual Limpio (Sin Neón)**: Evitar el exceso de neones o tonos artificiales de color (ej. cian/magenta) en las imágenes generadas por IA, a menos que el tema sea explícitamente Cyberpunk. Buscar un fotorrealismo cinematográfico de alto contraste con tonos y texturas orgánicas naturales.
 - **Etiqueta Fonética [PHO]**: Usar siempre `[PHO]pronunciación exacta|texto visual[/PHO]` para términos en inglés (ej. *David Sinclair*, *Altman*, *Life Biosciences*) o técnicos/siglas (ej. *OSK*, *IBM*, *SRAM*, *0.7 nm*) para guiar la pronunciación del motor Álvaro Neural.
+- **Interrupción Temprana (CTA)**: Insertar siempre una interrupción rápida de llamada a la acción (suscripción, like y comentario) justo después del gancho inicial (típicamente entre las escenas 2 y 4) para asegurar conversiones antes de que ocurra la mayor caída en la retención.
 
 ## 📁 Registro de Assets Recientes
 

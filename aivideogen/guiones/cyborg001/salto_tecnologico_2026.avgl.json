@@ -117,7 +117,44 @@
           ]
         },
         {
-          "title": "Escena 3 - El Glaucoma y el Nervio Óptico",
+          "title": "Escena 3 - Interrupción Temprana CTA",
+          "text": "¡Un segundo! Si te apasiona el futuro de la ciencia, suscríbete, dale like y deja un comentario para vencer al algoritmo.",
+          "subtitle": "¡SUSCRÍBETE Y COMPARTE!",
+          "subDur": 5,
+          "pause": 0.3,
+          "duration": 0,
+          "force_duration": false,
+          "silent": false,
+          "voice": "",
+          "audio": "",
+          "pitch": "+0Hz",
+          "voice_start": 0.0,
+          "voice_duration": 0.0,
+          "language": "",
+          "dubbing_mode": "",
+          "sfx": [],
+          "assets": [
+            {
+              "id": "suscribete.mp4",
+              "overlay": "",
+              "zoom": "1.0:1.0",
+              "move": "HOR:50:50",
+              "fit": false,
+              "video_volume": 0.0,
+              "shake": false,
+              "shake_intensity": 5,
+              "rotate": "",
+              "w_rotate": "",
+              "start_time": 0.0,
+              "end_time": "",
+              "fast_assembly": true,
+              "human_signature": false,
+              "human_amplitude": 1.0
+            }
+          ]
+        },
+        {
+          "title": "Escena 4 - El Glaucoma y el Nervio Óptico",
           "text": "Mientras el glaucoma destruye silenciosamente el nervio óptico de millones de personas dejándolas a oscuras...",
           "subtitle": "EL DESTRUCTOR SILENCIOSO",
           "subDur": 5,
@@ -154,7 +191,7 @@
           ]
         },
         {
-          "title": "Escena 4 - El Cóctel OSK",
+          "title": "Escena 5 - El Cóctel OSK",
           "text": "...un revolucionario cóctel genético llamado [PHO]o ese ka|OSK[/PHO] ha entrado en escena para reescribir su destino celular.",
           "subtitle": "CÓCTEL GENÉTICO OSK",
           "subDur": 5,
@@ -191,7 +228,7 @@
           ]
         },
         {
-          "title": "Escena 5 - El Origen de Yamanaka",
+          "title": "Escena 6 - El Origen de Yamanaka",
           "text": "Esta técnica se basa en el descubrimiento del premio Nobel Shinya Yamanaka, quien descubrió cómo resetear cualquier célula.",
           "subtitle": "EL DESCUBRIMIENTO NOBEL",
           "subDur": 5,
@@ -228,7 +265,7 @@
           ]
         },
         {
-          "title": "Escena 6 - Limpieza Epigenética",
+          "title": "Escena 7 - Limpieza Epigenética",
           "text": "De esta manera, las células envejecidas limpian su memoria de desgaste y recuperan su vitalidad perdida.",
           "subtitle": "LIMPIEZA DEL EPIGENOMA",
           "subDur": 5,
@@ -265,7 +302,7 @@
           ]
         },
         {
-          "title": "Escena 7 - El Vector AAV2",
+          "title": "Escena 8 - El Vector AAV2",
           "text": "Para lograr esto en humanos, los científicos inyectan un vector viral [PHO]a a ve dos|AAV2[/PHO] seguro que introduce las instrucciones rejuvenecedoras.",
           "subtitle": "EL VEHÍCULO VIRAL",
           "subDur": 5,
@@ -302,7 +339,7 @@
           ]
         },
         {
-          "title": "Escena 8 - Intervención Directa",
+          "title": "Escena 9 - Intervención Directa",
           "text": "Y por otro lado, un cirujano aplica este tratamiento directamente en el nervio óptico del paciente.",
           "subtitle": "INYECCIÓN AL NERVIO",
           "subDur": 5,
@@ -339,7 +376,7 @@
           ]
         },
         {
-          "title": "Escena 9 - Interruptor de Doxiciclina",
+          "title": "Escena 10 - Interruptor de Doxiciclina",
           "text": "Sin embargo, para evitar riesgos, la terapia cuenta con un interruptor químico activado solo por una pastilla de [PHO]doxiciclina|doxiciclina[/PHO].",
           "subtitle": "INTERRUPTOR DE SEGURIDAD",
           "subDur": 5,
@@ -376,7 +413,7 @@
           ]
         },
         {
-          "title": "Escena 10 - Regeneración Axonal",
+          "title": "Escena 11 - Regeneración Axonal",
           "text": "Como resultado, las fibras nerviosas comienzan a crecer de nuevo en una intrincada red interconectada.",
           "subtitle": "CRECIMIENTO DE AXONES",
           "subDur": 5,
@@ -413,7 +450,7 @@
           ]
         },
         {
-          "title": "Escena 11 - Visión Restaurada",
+          "title": "Escena 12 - Visión Restaurada",
           "text": "Mientras que el paciente experimenta cómo un mundo antes borroso recupera nitidez y color real.",
           "subtitle": "DE VUELTA A LA LUZ",
           "subDur": 5,
@@ -450,7 +487,7 @@
           ]
         },
         {
-          "title": "Escena 12 - David Sinclair y su Visión",
+          "title": "Escena 13 - David Sinclair y su Visión",
           "text": "Este hito es liderado por el renombrado genetista [PHO]deivid sincler|David Sinclair[/PHO], quien busca retrasar el envejecimiento biológico general.",
           "subtitle": "DAVID SINCLAIR",
           "subDur": 5,
@@ -499,7 +536,7 @@
       "master_asset": "",
       "scenes": [
         {
-          "title": "Escena 13 - Carrera Multimillonaria",
+          "title": "Escena 14 - Carrera Multimillonaria",
           "text": "Pero este avance biológico ha desatado una carrera multimillonaria sin precedentes en [PHO]silicon vali|Silicon Valley[/PHO].",
           "subtitle": "CARRERA MULTIMILLONARIA",
           "subDur": 5,
@@ -536,7 +573,7 @@
           ]
         },
         {
-          "title": "Escena 14 - Inversión de Gigantes",
+          "title": "Escena 15 - Inversión de Gigantes",
           "text": "De hecho, magnates como [PHO]yef besos|Jeff Bezos[/PHO] y [PHO]sam oltman|Sam Altman[/PHO] están inyectando cientos de millones de dólares en laboratorios.",
           "subtitle": "BEZOS Y SAM ALTMAN",
           "subDur": 5,
@@ -573,7 +610,7 @@
           ]
         },
         {
-          "title": "Escena 15 - La Alternativa de mRNA",
+          "title": "Escena 16 - La Alternativa de mRNA",
           "text": "A su vez, nuevas empresas compiten usando tecnología de [PHO]a erre ene mensajero|mRNA[/PHO] para rejuvenecer la piel y órganos.",
           "subtitle": "REPROGRAMACIÓN POR mRNA",
           "subDur": 5,
@@ -622,7 +659,7 @@
       "master_asset": "",
       "scenes": [
         {
-          "title": "Escena 16 - La informática entra en juego",
+          "title": "Escena 17 - La informática entra en juego",
           "text": "Mientras la biología retrocede el reloj, en la informática [PHO]i be eme|IBM[/PHO] acaba de romper las leyes de la física.",
           "subtitle": "IBM ROMPE LEYES FÍSICAS",
           "subDur": 5,
@@ -659,7 +696,7 @@
           ]
         },
         {
-          "title": "Escena 17 - El Límite de 0.7 Nanómetros",
+          "title": "Escena 18 - El Límite de 0.7 Nanómetros",
           "text": "Y es que han fabricado el primer chip de la historia a una escala de [PHO]cero coma siete nanómetros|0.7 nm[/PHO].",
           "subtitle": "CHIP DE 0.7 NANÓMETROS",
           "subDur": 5,
@@ -696,7 +733,7 @@
           ]
         },
         {
-          "title": "Escena 18 - El Efecto Túnel Cuántico",
+          "title": "Escena 19 - El Efecto Túnel Cuántico",
           "text": "Hasta ahora, esto era imposible porque a ese nivel los electrones se escapan por efecto túnel cuántico.",
           "subtitle": "EFECTO TÚNEL CUÁNTICO",
           "subDur": 5,
@@ -733,7 +770,7 @@
           ]
         },
         {
-          "title": "Escena 19 - La Arquitectura Nanostack",
+          "title": "Escena 20 - La Arquitectura Nanostack",
           "text": "Sin embargo, [PHO]i be eme|IBM[/PHO] lo solucionó apilando transistores en tres dimensiones mediante su arquitectura [PHO]nanostak|Nanostack[/PHO].",
           "subtitle": "ARQUITECTURA NANOSTACK",
           "subDur": 5,
@@ -770,7 +807,7 @@
           ]
         },
         {
-          "title": "Escena 20 - Cien Mil Millones de Transistores",
+          "title": "Escena 21 - Cien Mil Millones de Transistores",
           "text": "De esta manera, logran duplicar la densidad del transistor, metiendo [PHO]cien mil millones|100 mil millones[/PHO] en el espacio de una uña.",
           "subtitle": "100 BILLONES DE TRANSISTORES",
           "subDur": 5,
@@ -807,7 +844,7 @@
           ]
         },
         {
-          "title": "Escena 21 - Rendimiento de Computación",
+          "title": "Escena 22 - Rendimiento de Computación",
           "text": "Como consecuencia directa de esta arquitectura, obtenemos un incremento del [PHO]cincuenta por ciento|50%[/PHO] en rendimiento bruto.",
           "subtitle": "+50% RENDIMIENTO BRUTO",
           "subDur": 5,
@@ -844,7 +881,7 @@
           ]
         },
         {
-          "title": "Escena 22 - Ahorro de Energía",
+          "title": "Escena 23 - Ahorro de Energía",
           "text": "Y por otro lado, reduce a la vez el consumo eléctrico en un impresionante [PHO]setenta por ciento|70%[/PHO].",
           "subtitle": "-70% CONSUMO ELÉCTRICO",
           "subDur": 5,
@@ -881,7 +918,7 @@
           ]
         },
         {
-          "title": "Escena 23 - Optimización de Caché SRAM",
+          "title": "Escena 24 - Optimización de Caché SRAM",
           "text": "A su vez, esta escala mejora un [PHO]cuarenta por ciento|40%[/PHO] la memoria [PHO]ese ram|SRAM[/PHO], acelerando las Inteligencias Artificiales de nube.",
           "subtitle": "+40% MEMORIA SRAM",
           "subDur": 5,
@@ -918,7 +955,7 @@
           ]
         },
         {
-          "title": "Escena 24 - El Complejo de Albany",
+          "title": "Escena 25 - El Complejo de Albany",
           "text": "Todo esto fue desarrollado y comprobado en el complejo laboratorio de semiconductores de [PHO]olbani, nueva york|Albany, Nueva York[/PHO].",
           "subtitle": "ALBANY, NUEVA YORK",
           "subDur": 5,
@@ -955,7 +992,7 @@
           ]
         },
         {
-          "title": "Escena 25 - Producción en 5 Años",
+          "title": "Escena 26 - Producción en 5 Años",
           "text": "Aunque la producción a gran escala de estas obleas de silicio comenzará oficialmente en [PHO]cinco años|5 años[/PHO].",
           "subtitle": "PRODUCCIÓN HACIA 2031",
           "subDur": 5,
@@ -1004,7 +1041,7 @@
       "master_asset": "",
       "scenes": [
         {
-          "title": "Escena 26 - La Fusión Bio-Digital",
+          "title": "Escena 27 - La Fusión Bio-Digital",
           "text": "Al final, la edición genética y el poder cuántico de procesamiento se están fusionando hoy mismo.",
           "subtitle": "FUSIÓN BIO-DIGITAL",
           "subDur": 5,
@@ -1041,7 +1078,7 @@
           ]
         },
         {
-          "title": "Escena 27 - Outro & Pregunta",
+          "title": "Escena 28 - Outro & Pregunta",
           "text": "Esto abre el mayor debate ético: ¿usarías estas tecnologías para expandir tu vida? Deja tu opinión abajo.",
           "subtitle": "¿TE LO APLICARÍAS?",
           "subDur": 5,
