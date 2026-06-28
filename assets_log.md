@@ -1,9 +1,55 @@
 # Registro de Assets - AVGL v4.0
 
+## Sesión: 2026-06-28
+
+### Imágenes Generadas (Salto Histórico 2026 - Cyborg 001)
+*   **Imagen**: `caratula_subnanomicos_ibm.png` - Carátula oficial estilo MrBeast del documental, mostrando el logo de IBM y obleas de silicio.
+*   **Imagen**: `news_bio_digital_hook.png` (y otros 16 assets IA) - Colección de assets conceptuales para el documental.
+
+## Sesión: 2026-06-24
+
+### Imágenes Generadas (La Encrucijada de Pino - Short)
+*   **Imagen**: `ergo_pino_raul_home.png` - Pino sirviendo té en un salón minimalista y estéril a Raul Harrison, estilo 2D cell-shaded de Manglobe.
+*   **Imagen**: `ergo_raul_tragedy.png` - Primer plano dramático del rostro demacrado y obsesivo de Raul Harrison en una sala de control militar, tonos oscuros.
+*   **Imagen**: `ergo_pino_drawing.png` - Dibujo infantil arrugado tirado en la nieve, mostrando a Pino y Raul tomados de la mano bajo copos de nieve.
+*   **Imagen**: `ergo_pino_crossroads_thumbnail.png` - Carátula oficial del Short, mostrando a Pino dividida con la mirada de Raul al fondo y el título del video.
+
+## Sesión: 2026-06-23
+
+### Imágenes Generadas (¿Por qué ver Ergo Proxy? - Minidocumental)
+*   **Imagen**: `ergo_proxy_thumbnail_new.png` - Carátula oficial 2D del anime, mostrando a Re-l Mayer y Vincent Law a contraluz con el texto neón azul "¿POR QUÉ ERGO PROXY?".
+*   **Imagen**: `ergo_proxy_scene1_hook.png` - Primer plano cell-shaded de Re-l Mayer con delineador azul y mirada de desdén.
+*   **Imagen**: `ergo_proxy_scene2_shonen_contrast.png` - Escena de contraste con siluetas coloridas shonen versus un yermo lluvioso desaturado.
+*   **Imagen**: `ergo_proxy_scene3_romdeau_gate.png` - La gran entrada monumental de metal a la cúpula futurista de Romdeau.
+*   **Imagen**: `ergo_proxy_scene4_autoreiv_daily.png` - Androides sirvientes AutoReiv realizando tareas domésticas en las calles estériles de la cúpula.
+*   **Imagen**: `ergo_proxy_scene5_cogito_awakening.png` - Primer plano de los ojos de un AutoReiv parpadeando en rojo por la infección del virus Cogito.
+*   **Imagen**: `ergo_proxy_scene6_autoreiv_prayer.png` - Un AutoReiv de rodillas rezando en un pasillo oscuro bajo un rayo de luz celestial.
+*   **Imagen**: `ergo_proxy_scene7_descartes_meditation.png` - René Descartes escribiendo con pluma en su escritorio junto a un holograma de cerebro digital.
+*   **Imagen**: `ergo_proxy_scene8_library_hologram.png` - Biblioteca gótica con estanterías antiguas de donde emana código binario brillante.
+*   **Imagen**: `ergo_proxy_scene9_existential_spiral.png` - Composición abstracta de un humano cayendo en un vacío existencial de circuitos y glitches.
+*   **Imagen**: `ergo_proxy_scene10_vincent_waste.png` - Vincent Law caminando de espaldas por la tierra baldía exterior de cenizas.
+*   **Imagen**: `ergo_proxy_scene11_dying_flower.png` - Una flor robótica oxidada marchitándose en el yermo infértil exterior.
+*   **Imagen**: `ergo_proxy_scene12_law_transformation.png` - Vincent Law con ojos brillantes de energía y la sombra del Proxy de la Muerte proyectándose detrás.
+*   **Imagen**: `ergo_proxy_scene13_rel_snow_walk.png` - Re-l Mayer caminando con dificultad en medio de una tormenta de nieve exterior.
+
+## Sesión: 2026-06-22
+
+### Imágenes Generadas (La Trampa de Versalles - Trump-Irán)
+*   **Imagen**: `TRAMPA_TRUMP_2026/trump_hyperrealistic_command_center_2026.png` - Trump en un centro de mando militar moderno, pantallas tácticas de alta tecnología iluminando la sala oscura con tonos azules y naranjas.
+*   **Imagen**: `TRAMPA_TRUMP_2026/hormuz_strait_tanker_blockade_2026.png` - Estrecho de Ormuz con cargueros petroleros gigantes rodeados por buques de guerra bajo un atardecer nublado de tensión geopolítica.
+*   **Imagen**: `TRAMPA_TRUMP_2026/us_shale_oil_dominance_night_2026.png` - Complejo de extracción de petróleo shale estadounidense iluminado con luces industriales de noche.
+*   **Imagen**: `TRAMPA_TRUMP_2026/trump_signing_executive_order_2026.png` - Primer plano dramático y contrastado de Donald Trump firmando una orden ejecutiva en el Despacho Oval.
+*   **Imagen**: `TRAMPA_TRUMP_2026/swift_financial_disconnection_digital_2026.png` - Concepto digital abstracto de la desconexión del sistema SWIFT, con cadenas de código binario rompiéndose en tonos azules y rojos.
+*   **Imagen**: `TRAMPA_TRUMP_2026/trump_victory_portrait_cinematic_2026.png` - Retrato cinematográfico y editorial de Donald Trump frente a banderas estadounidenses.
+*   **Imagen**: `TRAMPA_TRUMP_2026/iranian_protests_inflation_2026.png` - Representación de protestas populares e inestabilidad económica en Teherán con fuego y humo.
+*   **Imagen**: `TRAMPA_TRUMP_2026/destroyed_s300_radar_desert_2026.png` - Radar del sistema S-300 destruido y calcinado en el desierto tras ataque aéreo táctico.
+*   **Imagen**: `TRAMPA_TRUMP_2026/mossad_cyber_warfare_screen_2026.png` - Terminal de ciberseguridad del Mossad mostrando mapas de instalaciones nucleares de Irán.
+
 ## Sesión: 2026-06-15
 
 ### Imágenes Generadas (Rejuvenecimiento Humano - Minidocumental)
-*   **Imagen (Miniatura)**: `caratula_mrbeast_rejuv.png` - Carátula de alto impacto estilo MrBeast, mostrando el rostro del creador impactado en primer plano, el fondo de laboratorio futurista y textos "¿REAL?" en amarillo y "REJUVENECIMIENTO" en blanco.
+*   **Imagen (Miniatura - Creador)**: `caratula_mrbeast_rejuv_creador.png` - Carátula de alto impacto estilo MrBeast, mostrando el rostro del creador impactado en primer plano (color de lengua natural corregido), fondo de laboratorio y texto "¿REAL? REJUVENECIMIENTO".
+*   **Imagen (Miniatura - Álvaro)**: `caratula_mrbeast_rejuv_alvaro.png` - Carátula de alto impacto estilo MrBeast con el rostro del creador impactado y flecha blanca integrada que guía la mirada de forma dinámica.
 *   **Imagen**: `bg_lab_rejuvenation.png` - Fondo de laboratorio biológico futurista con luces de neón azul y cian y holograma de ADN.
 *   **Imagen**: `rejuv_01_hook.png` - (Nueva) Reloj de arena futurista metálico con arena de neón cian cayendo y reloj digital holográfico en reversa.
 *   **Imagen**: `rejuv_02_epigenetics.png` - (Reutilizada de `dna_helix_glow.png`) Hélice de ADN brillante.

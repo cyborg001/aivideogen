@@ -25,7 +25,7 @@
     "audio_early_finish": 0.1,
     "language": "es",
     "dubbing_mode": "",
-    "thumbnail": "caratula_resumen_mayo_mrbeast.png",
+    "thumbnail": "caratula_subnanomicos_ibm.png",
     "social_title": "2026: La Era del Rejuvenecimiento Celular y el Hito de IBM",
     "social_description": "Explicación detallada del primer ensayo de rejuvenecimiento ocular en humanos y el revolucionario chip de 0.7nm de IBM.",
     "social_tags": "rejuvenecimiento, ibm, tecnología, ciencia, longevidad, 0.7nm, cyborg001",
@@ -807,7 +807,44 @@
           ]
         },
         {
-          "title": "Escena 21 - Cien Mil Millones de Transistores",
+          "title": "Escena 21 - El Impacto en la Ley de Moore",
+          "text": "De hecho, este diseño tridimensional resucita la famosa Ley de [PHO]mur|Moore[/PHO], superando los límites físicos bidimensionales al escalar transistores de forma vertical.",
+          "subtitle": "SALVANDO LA LEY DE MOORE",
+          "subDur": 5,
+          "pause": 0.3,
+          "duration": 0,
+          "force_duration": false,
+          "silent": false,
+          "voice": "",
+          "audio": "",
+          "pitch": "+0Hz",
+          "voice_start": 0.0,
+          "voice_duration": 0.0,
+          "language": "",
+          "dubbing_mode": "",
+          "sfx": [],
+          "assets": [
+            {
+              "id": "news_0_7nm_transistor.png",
+              "overlay": "grain",
+              "zoom": "1.15:1.0",
+              "move": "HOR:30:70",
+              "fit": false,
+              "video_volume": null,
+              "shake": false,
+              "shake_intensity": 5,
+              "rotate": "",
+              "w_rotate": "",
+              "start_time": 0.0,
+              "end_time": "",
+              "fast_assembly": false,
+              "human_signature": true,
+              "human_amplitude": 1.0
+            }
+          ]
+        },
+        {
+          "title": "Escena 22 - Cien Mil Millones de Transistores",
           "text": "De esta manera, logran duplicar la densidad del transistor, metiendo [PHO]cien mil millones|100 mil millones[/PHO] en el espacio de una uña.",
           "subtitle": "100 BILLONES DE TRANSISTORES",
           "subDur": 5,
@@ -844,7 +881,7 @@
           ]
         },
         {
-          "title": "Escena 22 - Rendimiento de Computación",
+          "title": "Escena 23 - Rendimiento de Computación",
           "text": "Como consecuencia directa de esta arquitectura, obtenemos un incremento del [PHO]cincuenta por ciento|50%[/PHO] en rendimiento bruto.",
           "subtitle": "+50% RENDIMIENTO BRUTO",
           "subDur": 5,
@@ -881,7 +918,7 @@
           ]
         },
         {
-          "title": "Escena 23 - Ahorro de Energía",
+          "title": "Escena 24 - Ahorro de Energía",
           "text": "Y por otro lado, reduce a la vez el consumo eléctrico en un impresionante [PHO]setenta por ciento|70%[/PHO].",
           "subtitle": "-70% CONSUMO ELÉCTRICO",
           "subDur": 5,
@@ -918,7 +955,7 @@
           ]
         },
         {
-          "title": "Escena 24 - Optimización de Caché SRAM",
+          "title": "Escena 25 - Optimización de Caché SRAM",
           "text": "A su vez, esta escala mejora un [PHO]cuarenta por ciento|40%[/PHO] la memoria [PHO]ese ram|SRAM[/PHO], acelerando las Inteligencias Artificiales de nube.",
           "subtitle": "+40% MEMORIA SRAM",
           "subDur": 5,
@@ -955,7 +992,7 @@
           ]
         },
         {
-          "title": "Escena 25 - El Complejo de Albany",
+          "title": "Escena 26 - El Complejo de Albany",
           "text": "Todo esto fue desarrollado y comprobado en el complejo laboratorio de semiconductores de [PHO]olbani, nueva york|Albany, Nueva York[/PHO].",
           "subtitle": "ALBANY, NUEVA YORK",
           "subDur": 5,
@@ -992,7 +1029,7 @@
           ]
         },
         {
-          "title": "Escena 26 - Producción en 5 Años",
+          "title": "Escena 27 - Producción en 5 Años",
           "text": "Aunque la producción a gran escala de estas obleas de silicio comenzará oficialmente en [PHO]cinco años|5 años[/PHO].",
           "subtitle": "PRODUCCIÓN HACIA 2031",
           "subDur": 5,
@@ -1041,7 +1078,7 @@
       "master_asset": "",
       "scenes": [
         {
-          "title": "Escena 27 - La Fusión Bio-Digital",
+          "title": "Escena 28 - La Fusión Bio-Digital",
           "text": "Al final, la edición genética y el poder cuántico de procesamiento se están fusionando hoy mismo.",
           "subtitle": "FUSIÓN BIO-DIGITAL",
           "subDur": 5,
@@ -1078,7 +1115,7 @@
           ]
         },
         {
-          "title": "Escena 28 - Outro & Pregunta",
+          "title": "Escena 29 - Outro & Pregunta",
           "text": "Esto abre el mayor debate ético: ¿usarías estas tecnologías para expandir tu vida? Deja tu opinión abajo.",
           "subtitle": "¿TE LO APLICARÍAS?",
           "subDur": 5,
