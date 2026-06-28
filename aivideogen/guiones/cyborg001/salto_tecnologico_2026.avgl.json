@@ -1,5 +1,5 @@
 {
-  "title": "Salto Histórico 2026: La Era Bio-Digital",
+  "title": "IBM: Semiconductores Subnanómicos y la Ley de Moore (Salto 2026)",
   "version": "4.0",
   "settings": {
     "engine": "edge",
@@ -30,7 +30,8 @@
     "social_description": "Explicación detallada del primer ensayo de rejuvenecimiento ocular en humanos y el revolucionario chip de 0.7nm de IBM.",
     "social_tags": "rejuvenecimiento, ibm, tecnología, ciencia, longevidad, 0.7nm, cyborg001",
     "social_pinned_comment": "¿Te aplicarías una terapia de reprogramación celular para rejuvenecer o te da temor? Te leo en los comentarios. 👇",
-    "auto_upload": false
+    "auto_upload": false,
+    "title": "IBM: Semiconductores Subnanómicos y la Ley de Moore (Salto 2026)"
   },
   "blocks": [
     {
