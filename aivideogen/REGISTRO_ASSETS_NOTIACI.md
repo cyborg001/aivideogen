@@ -55,6 +55,7 @@
 | `news_mrna_reprogramming.png` | Hitos 2026 | **NUEVO (IA)** | Cadenas de mRNA en espiral interactuando con células de la piel. |
 | `news_ibm_announcement.png` | Hitos 2026 | **NUEVO (IA)** | Gran logotipo brillante de IBM sobre obleas de silicio. |
 | `news_0_7nm_transistor.png` | Hitos 2026 | **NUEVO (IA)** | Transistor a nivel atómico en rejilla cuántica brillante, menor a 1nm. |
+| `caratula_ibm_subnanometrico.png` | IBM 2026 | **NUEVO (CTR 11%+)** | Miniatura de creador sorprendido con chip de IBM en color amarillo, estilo MrBeast y advertencia. |
 
 > [!IMPORTANT]
 > El Arquitecto debe asegurar que las carátulas e imágenes generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
