@@ -588,10 +588,24 @@ def upload_recording(request):
             filename = f"rec_{timestamp}.webm"
             file_path = os.path.join(recordings_dir, filename)
             
-            # 3. Save physical file
+            # 3. Save physical file with WebM/EBML stabilization to prevent corruption
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            audio_data = audio_file.read()
+            ebml_signature = b'\x1a\x45\xdf\xa3'
+            sig_index = audio_data.find(ebml_signature)
+            
+            if sig_index != -1:
+                if sig_index > 0:
+                    logger.info(f"[Audio Stabilizer] Cleaned {sig_index} bytes of pre-EBML garbage from upload.")
+                cleaned_data = audio_data[sig_index:]
+            else:
+                logger.warning("[Audio Stabilizer] WebM EBML signature not found in uploaded audio. Saving raw data.")
+                cleaned_data = audio_data
+                
             with open(file_path, 'wb+') as destination:
-                for chunk in audio_file.chunks():
-                    destination.write(chunk)
+                destination.write(cleaned_data)
             
             # 4. Create Asset in DB with relative path
             relative_path = f"assets/recordings/{filename}"
@@ -1137,8 +1151,18 @@ def get_project_script_json(request, project_id):
                     scene['voice_path'] = f"{settings.MEDIA_URL}{voice_rel}"
                 scene_counter += 1
     
-    # --- SYNC PROJECT SETTINGS ---
-    # Inject current project settings into the JSON so the editor starts with the "Truth"
+    # v4.4: Sync social fields from JSON to DB if DB is currently empty
+    settings_dict = data.get('settings', {})
+    db_updated = False
+    for field in ['social_title', 'social_description', 'social_tags', 'social_pinned_comment']:
+        val = settings_dict.get(field) or data.get(field)
+        if val and not getattr(project, field):
+            setattr(project, field, val)
+            db_updated = True
+    if db_updated:
+        project.save(update_fields=['social_title', 'social_description', 'social_tags', 'social_pinned_comment'])
+
+    # v18.2: Resolve background music path
     bg_music_path = ""
     if project.background_music:
         if project.background_music.file:
@@ -1158,7 +1182,7 @@ def get_project_script_json(request, project_id):
         'subtitles_y_position': getattr(project, 'subtitles_y_position', 0.70),
         'auto_upload': project.auto_upload_youtube,
         'dubbing_mode': getattr(project, 'dubbing_mode', 'hq'),
-        'thumbnail': getattr(project, 'thumbnail_path', ''),
+        'thumbnail': normalize_asset_path(getattr(project, 'thumbnail_path', '')),
         'human_signature': getattr(project, 'human_signature', True),
         'human_amplitude': getattr(project, 'human_amplitude', 1.0),
         # v20.2: Audio Console
@@ -1397,7 +1421,7 @@ def save_project_script_json(request, project_id):
                     except: pass
             
             if 'thumbnail' in settings_data:
-                project.thumbnail_path = settings_data['thumbnail']
+                project.thumbnail_path = normalize_asset_path(settings_data['thumbnail'])
             
             if 'human_signature' in settings_data:
                 project.human_signature = bool(settings_data['human_signature'])
