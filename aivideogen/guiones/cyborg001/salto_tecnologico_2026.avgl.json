@@ -4,7 +4,7 @@
   "settings": {
     "engine": "edge",
     "voice_id": "es-ES-AlvaroNeural",
-    "background_music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+    "background_music": "Frame-Dragging_-_The_Grey_Room___Density__Time.mp3",
     "music_volume": 0.12,
     "music_volume_lock": false,
     "aspect_ratio": "landscape",
@@ -36,7 +36,7 @@
     {
       "id": "b1_rejuvenecimiento",
       "title": "BLOQUE 1: REJUVENECIMIENTO OCULAR",
-      "music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+      "music": "Frame-Dragging_-_The_Grey_Room___Density__Time.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -529,7 +529,7 @@
     {
       "id": "b2_carrera_longevidad",
       "title": "BLOQUE 2: LA FIEBRE DE LA LONGEVIDAD",
-      "music": "Laniakea - The Grey Room _ Density & Time.mp3",
+      "music": "Laniakea_-_The_Grey_Room___Density__Time.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -652,7 +652,7 @@
     {
       "id": "b3_ibm_cuantico",
       "title": "BLOQUE 3: EL HITO CUÁNTICO DE IBM",
-      "music": "Nebula - The Grey Room _ Density & Time.mp3",
+      "music": "Nebula_-_The_Grey_Room___Density__Time.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -1071,7 +1071,7 @@
     {
       "id": "b4_convergencia",
       "title": "BLOQUE 4: LA CONVERGENCIA HUMANA",
-      "music": "On The Eve - The Grey Room _ Density & Time.mp3",
+      "music": "On_The_Eve_-_The_Grey_Room___Density__Time.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
