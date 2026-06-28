@@ -9,6 +9,8 @@
 - **Conectores de Continuidad**: Cada escena debe enlazarse fluidamente con la anterior mediante conjunciones o frases de transición (ej: *"Y por otro lado..."*, *"Mientras esto ocurre..."*, *"Sin embargo, para lograr esto..."*, *"Es aquí donde entra..."*). Evitar que las escenas se sientan como datos aislados.
 - **Hook-First (0-3s)**: Plantear el dilema o hecho insólito inmediatamente en los primeros 1.5 segundos. El logotipo o branding entra después del gancho.
 - **Ritmo Acelerado**: Cambio de estímulo visual (assets/zooms/movimientos agresivos) cada 8-10 segundos en formato documental y cada 1.5-3 segundos en shorts.
+- **Estilo Visual Limpio (Sin Neón)**: Evitar el exceso de neones o tonos artificiales de color (ej. cian/magenta) en las imágenes generadas por IA, a menos que el tema sea explícitamente Cyberpunk. Buscar un fotorrealismo cinematográfico de alto contraste con tonos y texturas orgánicas naturales.
+- **Etiqueta Fonética [PHO]**: Usar siempre `[PHO]pronunciación exacta|texto visual[/PHO]` para términos en inglés (ej. *David Sinclair*, *Altman*, *Life Biosciences*) o técnicos/siglas (ej. *OSK*, *IBM*, *SRAM*, *0.7 nm*) para guiar la pronunciación del motor Álvaro Neural.
 
 ## 📁 Registro de Assets Recientes
 
