@@ -990,7 +990,7 @@ def resolve_scene_audio_layer(scene, local_audio_clip, video_asset_clip=None, lo
                 return audio_engine.PCMRadar.analyze_custom_audio(clip, logger=logger, threshold=threshold)
         
         # Autodetectacion inteligente por defecto
-        if 'TTS' in src_type:
+        if 'TTS' in src_type or 'PROCESSED' in src_type:
             return audio_engine.PCMRadar.analyze_ia_voice(clip, logger=logger, threshold=threshold)
         else:
             return audio_engine.PCMRadar.analyze_custom_audio(clip, logger=logger, threshold=threshold)
