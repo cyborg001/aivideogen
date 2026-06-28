@@ -5,6 +5,11 @@
 - **Tipografía**: Texto gigante, legible, **SIEMPRE en Amarillo Brillante**.
 - **Composición**: Foco en la narrativa de "La Gran Mentira" / Geopolítica.
 
+## 📝 Reglas de Oro para Retención de Guiones (Retención 70%+)
+- **Conectores de Continuidad**: Cada escena debe enlazarse fluidamente con la anterior mediante conjunciones o frases de transición (ej: *"Y por otro lado..."*, *"Mientras esto ocurre..."*, *"Sin embargo, para lograr esto..."*, *"Es aquí donde entra..."*). Evitar que las escenas se sientan como datos aislados.
+- **Hook-First (0-3s)**: Plantear el dilema o hecho insólito inmediatamente en los primeros 1.5 segundos. El logotipo o branding entra después del gancho.
+- **Ritmo Acelerado**: Cambio de estímulo visual (assets/zooms/movimientos agresivos) cada 8-10 segundos en formato documental y cada 1.5-3 segundos en shorts.
+
 ## 📁 Registro de Assets Recientes
 
 | Asset | Proyecto | Estado | Descripción |
@@ -30,5 +35,23 @@
 | `urgente_iran_helicoptero.avgl.json` | Conflicto Irán 2026 | Guion Creado | Guion del Short de urgencia al estilo MrBeast. |
 | `caratula_noticia_apache_1781045339064.png` | Conflicto Irán 2026 | **NUEVO (CTR 11%+)** | Miniatura de Trump sorprendido con el helicóptero Apache en llamas en el Estrecho de Ormuz, estilo MrBeast. |
 
+| `news_bio_digital_hook.png` | Hitos 2026 | **NUEVO (IA)** | Ojo de alta tecnología fusionado con luz dorada de circuitos y ADN. |
+| `news_blindness_struggle.png` | Hitos 2026 | **NUEVO (IA)** | Persona en penumbra con las manos en el rostro, evocando pérdida visual. |
+| `news_optic_nerve_damage.png` | Hitos 2026 | **NUEVO (IA)** | Diagrama médico futurista de un nervio óptico dañado. |
+| `news_reprogramming_osk.png` | Hitos 2026 | **NUEVO (IA)** | Espiral de ADN brillante con tres nodos de luz (OCT4, SOX2, KLF4). |
+| `news_yamanaka_discovery.png` | Hitos 2026 | **NUEVO (IA)** | Científico Shinya Yamanaka en laboratorio observando células madre. |
+| `news_cell_rejuvenation.png` | Hitos 2026 | **NUEVO (IA)** | Célula pasando de arrugada y oscura a esférica, brillante y joven. |
+| `news_aav2_vector.png` | Hitos 2026 | **NUEVO (IA)** | Cápsides virales inyectando genes de luz en la retina. |
+| `news_glaucoma_treatment.png` | Hitos 2026 | **NUEVO (IA)** | Operación oftalmológica láser en clínica cibernética con luces verdes. |
+| `news_doxycycline_switch.png` | Hitos 2026 | **NUEVO (IA)** | Cápsula dorada en bandeja de laboratorio de alta tecnología. |
+| `news_axon_growth.png` | Hitos 2026 | **NUEVO (IA)** | Fibras neuronales expandiéndose como constelaciones en el cerebro. |
+| `news_restored_vision.png` | Hitos 2026 | **NUEVO (IA)** | Paisaje borroso que adquiere un enfoque nítido, colorido y ultra-definido. |
+| `news_sinclair_beast_style.png` | Hitos 2026 | **NUEVO (IA)** | Retrato de David Sinclair en laboratorio con luces de contraste amarillas. |
+| `news_biotech_carrera.png` | Hitos 2026 | **NUEVO (IA)** | Logotipo de Altos Labs flotando sobre gráfico de bolsa de valores. |
+| `news_bezos_altman.png` | Hitos 2026 | **NUEVO (IA)** | Siluetas de inversores multimillonarios ante matraces de laboratorio. |
+| `news_mrna_reprogramming.png` | Hitos 2026 | **NUEVO (IA)** | Cadenas de mRNA en espiral interactuando con células de la piel. |
+| `news_ibm_announcement.png` | Hitos 2026 | **NUEVO (IA)** | Gran logotipo brillante de IBM sobre obleas de silicio. |
+| `news_0_7nm_transistor.png` | Hitos 2026 | **NUEVO (IA)** | Transistor a nivel atómico en rejilla cuántica brillante, menor a 1nm. |
+
 > [!IMPORTANT]
-> El Arquitecto debe asegurar que las carátulas generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
+> El Arquitecto debe asegurar que las carátulas e imágenes generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
