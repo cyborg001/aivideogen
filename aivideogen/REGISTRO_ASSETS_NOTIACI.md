@@ -56,6 +56,17 @@
 | `news_ibm_announcement.png` | Hitos 2026 | **NUEVO (IA)** | Gran logotipo brillante de IBM sobre obleas de silicio. |
 | `news_0_7nm_transistor.png` | Hitos 2026 | **NUEVO (IA)** | Transistor a nivel atómico en rejilla cuántica brillante, menor a 1nm. |
 | `caratula_ibm_subnanometrico.png` | IBM 2026 | **NUEVO (CTR 11%+)** | Miniatura de creador sorprendido con chip de IBM en color amarillo, estilo MrBeast y advertencia. |
+| `caratula_spudcell_mrbeast.png` | SpudCell 2026 | **NUEVO (CTR 11%+)** | Miniatura de científico sorprendido apuntando a célula artificial brillante, con letrero amarillo '¡CREARON VIDA!'. |
+| `spudcell_religious_science_debate.png` | SpudCell 2026 | **NUEVO (IA)** | Manos de luz divina frente a brazos mecánicos con cadenas de ADN (ciencia vs religión). |
+| `wohler_urea_synthesis_1828.png` | SpudCell 2026 | **NUEVO (IA)** | Friedrich Wöhler en su laboratorio de 1828 rodeado de matraces (fin del vitalismo). |
+| `spudcell_microscopic_division.png` | SpudCell 2026 | **NUEVO (IA)** | Célula artificial SpudCell en pleno proceso microscópico de división binaria. |
+| `synthetic_biology_bottom_up.png` | SpudCell 2026 | **NUEVO (IA)** | Moléculas no vivas auto-ensamblándose para formar una membrana celular. |
+| `spudcell_replication_dna.png` | SpudCell 2026 | **NUEVO (IA)** | Genoma sintético de 90kb replicándose en espiral luminosa dentro de la célula. |
+| `scientific_biotech_curing_disease.png` | SpudCell 2026 | **NUEVO (IA)** | Holograma futurista de una célula sintética curando una célula natural. |
+| `biological_threat_laboratory.png` | SpudCell 2026 | **NUEVO (IA)** | Matraz sellado con líquido verde y luces de alarma en laboratorio oscuro (amenaza biológica). |
+| `perfect_body_synthetic_design.png` | SpudCell 2026 | **NUEVO (IA)** | Maniquí anatómico con órganos perfectos y código de ADN cibernético (cuerpo perfecto). |
+| `cyborg_subscribers_cta.png` | SpudCell 2026 | **NUEVO (IA)** | Letrero 3D de Cyborg001 con neón 'SUSCRÍBETE' en amarillo brillante sobre metal. |
+| `philosophical_human_convergencia.png` | SpudCell 2026 | **NUEVO (IA)** | Silueta humana contemplando un horizonte cósmico de estrellas y código de datos. |
 
 > [!IMPORTANT]
 > El Arquitecto debe asegurar que las carátulas e imágenes generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
