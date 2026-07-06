@@ -458,8 +458,9 @@ def format_exam_md(version_name, selected_questions, selected_problems):
 """
     for idx, q in enumerate(selected_questions, 1):
         md += f"{idx}. **{q['text']}**\n"
-        for opt in q['opts']:
-            md += f"   * {opt}\n"
+        letters = ["A", "B", "C", "D"]
+        for opt_idx, opt in enumerate(q['opts']):
+            md += f"   * **{letters[opt_idx]})** {opt}\n"
         md += "\n"
         
     md += """---
@@ -470,8 +471,9 @@ def format_exam_md(version_name, selected_questions, selected_problems):
 """
     for idx, p in enumerate(selected_problems, 1):
         md += f"{idx}. **{p['text']}**\n"
-        for opt in p['opts']:
-            md += f"   * {opt}\n"
+        letters = ["A", "B", "C", "D"]
+        for opt_idx, opt in enumerate(p['opts']):
+            md += f"   * **{letters[opt_idx]})** {opt}\n"
         md += "\n"
         
     return md
@@ -597,11 +599,17 @@ def build_exams():
         solucionario_md += f"## Examen Versión {v}\n\n"
         solucionario_md += "### I. Teoría\n"
         for idx, q in enumerate(v_questions, 1):
-            solucionario_md += f"{idx}. **Respuesta:** {q['ans']} (Pregunta: *{q['text']}*)\n"
+            letters = ["A", "B", "C", "D"]
+            ans_idx = q['opts'].index(q['ans'])
+            ans_letter = letters[ans_idx]
+            solucionario_md += f"{idx}. **Respuesta:** {ans_letter}) {q['ans']} (Pregunta: *{q['text']}*)\n"
             
         solucionario_md += "\n### II. Problemas Prácticos\n"
         for idx, p in enumerate(v_problems, 1):
-            solucionario_md += f"{idx}. **Respuesta:** {p['ans']}\n"
+            letters = ["A", "B", "C", "D"]
+            ans_idx = p['opts'].index(p['ans'])
+            ans_letter = letters[ans_idx]
+            solucionario_md += f"{idx}. **Respuesta:** {ans_letter}) {p['ans']}\n"
             solucionario_md += f"   * *Problema:* {p['text']}\n"
             solucionario_md += f"   * *Cálculo:* {p['calc']}\n"
         solucionario_md += "\n---\n\n"
@@ -611,13 +619,19 @@ def build_exams():
         solucionario_tex += r"\textbf{I. Teoría:}"
         solucionario_tex += r"\begin{enumerate}"
         for q in v_questions:
-            solucionario_tex += f"    \\item \\textbf{{Respuesta:}} {q['ans']} \\\\ \\textit{{{q['text']}}}\n"
+            letters = ["a", "b", "c", "d"]
+            ans_idx = q['opts'].index(q['ans'])
+            ans_letter = letters[ans_idx]
+            solucionario_tex += f"    \\item \\textbf{{Respuesta:}} {ans_letter}) {q['ans']} \\\\ \\textit{{{q['text']}}}\n"
         solucionario_tex += r"\end{enumerate}"
         
         solucionario_tex += r"\textbf{II. Problemas Prácticos:}"
         solucionario_tex += r"\begin{enumerate}"
         for p in v_problems:
-            solucionario_tex += f"    \\item \\textbf{{Respuesta:}} {p['ans']} \\\\\n"
+            letters = ["a", "b", "c", "d"]
+            ans_idx = p['opts'].index(p['ans'])
+            ans_letter = letters[ans_idx]
+            solucionario_tex += f"    \\item \\textbf{{Respuesta:}} {ans_letter}) {p['ans']} \\\\\n"
             solucionario_tex += f"    \\textit{{{p['text']}}} \\\\\n"
             solucionario_tex += f"    \\textbf{{Desarrollo:}} {p['calc']}\n"
         solucionario_tex += r"\end{enumerate}"
