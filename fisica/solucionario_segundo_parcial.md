@@ -3,60 +3,84 @@
 ## Examen Versión A
 
 ### I. Teoría
-1. **Respuesta:** Permanecerá en reposo o en movimiento rectilíneo uniforme. (Pregunta: *De acuerdo con la Primera Ley de Newton, si la fuerza neta que actúa sobre un cuerpo es nula, el cuerpo necesariamente:*)
-2. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
-3. **Respuesta:** Masa. (Pregunta: *La propiedad física de un cuerpo que mide cuantitativamente su inercia (resistencia al cambio en su estado de movimiento) es la:*)
-4. **Respuesta:** Es la fuerza de atracción gravitatoria que ejerce la Tierra sobre él ($w = m \cdot g$). (Pregunta: *A diferencia de la masa, el peso de un objeto:*)
-5. **Respuesta:** El coeficiente de fricción cinética ($\mu_c$) es siempre menor que el coeficiente de fricción estática ($\mu_e$). (Pregunta: *Con respecto a la fuerza de fricción entre dos superficies secas en contacto, se cumple que:*)
-6. **Respuesta:** La pendiente de la recta tangente a la curva en ese punto. (Pregunta: *En un gráfico de posición en función del tiempo ($x$ vs $t$), la velocidad instantánea en un tiempo determinado equivale a:*)
-7. **Respuesta:** $45^\circ$ (Pregunta: *Despreciando la resistencia del aire, el ángulo de disparo respecto a la horizontal que produce el máximo alcance horizontal para un proyectil es:*)
+1. **Respuesta:** Es la fuerza de atracción gravitatoria que ejerce la Tierra sobre él ($w = m \cdot g$). (Pregunta: *A diferencia de la masa, el peso de un objeto:*)
+2. **Respuesta:** El cuerpo B ejerce sobre A una fuerza de igual magnitud, misma dirección y sentido contrario ($\vec{F}_{BA} = -\vec{F}_{AB}$). (Pregunta: *De acuerdo con la Tercera Ley de Newton (Acción-Reacción), si un cuerpo A ejerce una fuerza $\vec{F}_{AB}$ sobre un cuerpo B, entonces:*)
+3. **Respuesta:** La pendiente de la recta tangente a la curva en ese punto. (Pregunta: *En un gráfico de posición en función del tiempo ($x$ vs $t$), la velocidad instantánea en un tiempo determinado equivale a:*)
+4. **Respuesta:** $45^\circ$ (Pregunta: *Despreciando la resistencia del aire, el ángulo de disparo respecto a la horizontal que produce el máximo alcance horizontal para un proyectil es:*)
+5. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
+6. **Respuesta:** Masa. (Pregunta: *La propiedad física de un cuerpo que mide cuantitativamente su inercia (resistencia al cambio en su estado de movimiento) es la:*)
+7. **Respuesta:** Permanecerá en reposo o en movimiento rectilíneo uniforme. (Pregunta: *De acuerdo con la Primera Ley de Newton, si la fuerza neta que actúa sobre un cuerpo es nula, el cuerpo necesariamente:*)
 8. **Respuesta:** Directamente proporcional a la fuerza neta e inversamente proporcional a su masa. (Pregunta: *La Segunda Ley de Newton establece matemáticamente que la aceleración de un cuerpo es:*)
 
 ### II. Problemas Prácticos
-1. **Respuesta:** $12.5 \text{ m}$ (Problema: *Un estudiante deja caer un tomate (desde el reposo) desde la azotea de un edificio y mide que tarda exactamente $1.60 \text{ s}$ en golpear el suelo. Despreciando la resistencia del aire y usando $g = 9.80 \text{ m/s}^2$, calcule la altura del edificio:*)
-2. **Respuesta:** $10.0 \text{ N}$ (Problema: *Determine la magnitud de la fuerza neta sobre una partícula que recibe la acción de las fuerzas $\vec{F}_1 = (5.00 \text{ N}, 4.00 \text{ N})$ y $\vec{F}_2 = (3.00 \text{ N}, 2.00 \text{ N})$:*)
-3. **Respuesta:** $100 \text{ rad/s}$ (Problema: *Un estudiante mide que las aspas de un abanico de techo realizan exactamente $40 \text{ vueltas}$ en un intervalo de $2.50 \text{ s}$. Calcule la velocidad angular $\omega$ del abanico en rad/s (utilice $\pi \approx 3.14$):*)
-4. **Respuesta:** $28.4 \text{ m}$ (Problema: *Un automóvil que viaja en línea recta a $50.0 \text{ km/h}$ ($13.9 \text{ m/s}$) pisa los frenos durante $3.00 \text{ s}$ reduciendo su velocidad de forma uniforme hasta $18.0 \text{ km/h}$ ($5.00 \text{ m/s}$). Calcule la distancia recorrida ($\Delta x$) durante el frenado:*)
+1. **Respuesta:** $80.00 \text{ m}$
+   * *Problema:* Un automóvil que viaja en línea recta a 90.0 \text{ km/h} (25.0 \text{ m/s}) pisa los frenos durante 4.00 \text{ s} reduciendo su velocidad de forma uniforme hasta 54.0 \text{ km/h} (15.0 \text{ m/s}). Calcule la distancia recorrida ($\Delta x$) durante el frenado:
+   * *Cálculo:* Fórmula de MRUV: $\Delta x = \frac{v_0 + v}{2} \cdot t = \frac{25.0 + 15.0}{2} \cdot 4.00 = 80.00\text{ m}$.
+2. **Respuesta:** $7.14 \text{ m}$
+   * *Problema:* Una caja se desliza por una rampa inclinada con una aceleración constante de 2.44 \text{ m/s}^2$ partiendo con una velocidad inicial de 1.13 \text{ m/s}. Calcule el desplazamiento de la caja al cabo de 2.00 \text{ s}$:
+   * *Cálculo:* Fórmula de MRUV: $\Delta x = v_0 t + \frac{1}{2} a t^2 = 1.13(2.00) + 0.5(2.44)(2.00)^2 = 7.14\text{ m}$.
+3. **Respuesta:** $3.11 \text{ N}$
+   * *Problema:* Calcule la magnitud de la fuerza neta que actúa sobre un bloque de masa $m = 3.27 \text{ kg}$ si este se mueve con una aceleración constante de 0.95 \text{ m/s}^2$:
+   * *Cálculo:* Aplicamos la segunda ley de Newton: $F = m \cdot a = 3.27 \text{ kg} \cdot 0.95 \text{ m/s}^2 = 3.11\text{ N}$.
+4. **Respuesta:** $5.00 \text{ kg}$
+   * *Problema:* Determine la masa de un cuerpo que se mueve con una aceleración de 2.00 \text{ m/s}^2$ sabiendo que la fuerza neta que actúa sobre él es $\vec{F}_{\text{neta}} = (6.00 \text{ N}, 8.00 \text{ N})$:
+   * *Cálculo:* Primero magnitud de la fuerza: $F = \sqrt{6.00^2 + 8.00^2} = 10.00\text{ N}$. Luego masa: $m = F / a = 10.00 / 2.00 = 5.00\text{ kg}$.
 
 ---
 
 ## Examen Versión B
 
 ### I. Teoría
-1. **Respuesta:** Permanecerá en reposo o en movimiento rectilíneo uniforme. (Pregunta: *De acuerdo con la Primera Ley de Newton, si la fuerza neta que actúa sobre un cuerpo es nula, el cuerpo necesariamente:*)
-2. **Respuesta:** El cuerpo B ejerce sobre A una fuerza de igual magnitud, misma dirección y sentido contrario ($\vec{F}_{BA} = -\vec{F}_{AB}$). (Pregunta: *De acuerdo con la Tercera Ley de Newton (Acción-Reacción), si un cuerpo A ejerce una fuerza $\vec{F}_{AB}$ sobre un cuerpo B, entonces:*)
-3. **Respuesta:** $45^\circ$ (Pregunta: *Despreciando la resistencia del aire, el ángulo de disparo respecto a la horizontal que produce el máximo alcance horizontal para un proyectil es:*)
-4. **Respuesta:** Masa. (Pregunta: *La propiedad física de un cuerpo que mide cuantitativamente su inercia (resistencia al cambio en su estado de movimiento) es la:*)
-5. **Respuesta:** El coeficiente de fricción cinética ($\mu_c$) es siempre menor que el coeficiente de fricción estática ($\mu_e$). (Pregunta: *Con respecto a la fuerza de fricción entre dos superficies secas en contacto, se cumple que:*)
-6. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
-7. **Respuesta:** Es la fuerza de atracción gravitatoria que ejerce la Tierra sobre él ($w = m \cdot g$). (Pregunta: *A diferencia de la masa, el peso de un objeto:*)
-8. **Respuesta:** Directamente proporcional a la fuerza neta e inversamente proporcional a su masa. (Pregunta: *La Segunda Ley de Newton establece matemáticamente que la aceleración de un cuerpo es:*)
+1. **Respuesta:** El cuerpo B ejerce sobre A una fuerza de igual magnitud, misma dirección y sentido contrario ($\vec{F}_{BA} = -\vec{F}_{AB}$). (Pregunta: *De acuerdo con la Tercera Ley de Newton (Acción-Reacción), si un cuerpo A ejerce una fuerza $\vec{F}_{AB}$ sobre un cuerpo B, entonces:*)
+2. **Respuesta:** El coeficiente de fricción cinética ($\mu_c$) es siempre menor que el coeficiente de fricción estática ($\mu_e$). (Pregunta: *Con respecto a la fuerza de fricción entre dos superficies secas en contacto, se cumple que:*)
+3. **Respuesta:** Permanecerá en reposo o en movimiento rectilíneo uniforme. (Pregunta: *De acuerdo con la Primera Ley de Newton, si la fuerza neta que actúa sobre un cuerpo es nula, el cuerpo necesariamente:*)
+4. **Respuesta:** Es la fuerza de atracción gravitatoria que ejerce la Tierra sobre él ($w = m \cdot g$). (Pregunta: *A diferencia de la masa, el peso de un objeto:*)
+5. **Respuesta:** La pendiente de la recta tangente a la curva en ese punto. (Pregunta: *En un gráfico de posición en función del tiempo ($x$ vs $t$), la velocidad instantánea en un tiempo determinado equivale a:*)
+6. **Respuesta:** $45^\circ$ (Pregunta: *Despreciando la resistencia del aire, el ángulo de disparo respecto a la horizontal que produce el máximo alcance horizontal para un proyectil es:*)
+7. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
+8. **Respuesta:** El centro de la trayectoria circular. (Pregunta: *En un Movimiento Circular Uniforme (MCU), aunque la rapidez es constante, la velocidad cambia de dirección, lo que implica una aceleración centrípeta dirigida hacia:*)
 
 ### II. Problemas Prácticos
-1. **Respuesta:** $2.43 \text{ N}$ (Problema: *Un cuerpo pesa $14.7 \text{ N}$ en la Tierra ($g = 9.80 \text{ m/s}^2$). ¿Cuánto pesará este mismo cuerpo en la superficie de la Luna, donde la aceleración de la gravedad es de $1.62 \text{ m/s}^2$?:*)
-2. **Respuesta:** $-6.60 \text{ N}$ (Problema: *Un cuerpo de masa $m = 3.00 \text{ kg}$ acelera horizontalmente a razón de $a_x = +0.800 \text{ m/s}^2$ (hacia la derecha). Si actúan dos fuerzas sobre el eje $x$ y una de ellas es $F_{2x} = +9.00 \text{ N}$, determine la componente de la otra fuerza $F_{1x}$:*)
-3. **Respuesta:** $-1.60 \text{ m/s}^2$ (Problema: *Una bola de golf se desliza por el césped con una velocidad inicial de $6.00 \text{ m/s}$ y llega al hoyo a $2.00 \text{ m/s}$ después de recorrer una distancia de $10.0 \text{ m}$ en línea recta. Determine su aceleración constante:*)
-4. **Respuesta:** $12.5 \text{ m}$ (Problema: *Un estudiante deja caer un tomate (desde el reposo) desde la azotea de un edificio y mide que tarda exactamente $1.60 \text{ s}$ en golpear el suelo. Despreciando la resistencia del aire y usando $g = 9.80 \text{ m/s}^2$, calcule la altura del edificio:*)
+1. **Respuesta:** $9.85 \text{ N}$
+   * *Problema:* Calcule la magnitud de la fuerza neta que actúa sobre un bloque de masa $m = 6.44 \text{ kg}$ si este se mueve con una aceleración constante de 1.53 \text{ m/s}^2$:
+   * *Cálculo:* Aplicamos la segunda ley de Newton: $F = m \cdot a = 6.44 \text{ kg} \cdot 1.53 \text{ m/s}^2 = 9.85\text{ N}$.
+2. **Respuesta:** $12.54 \text{ m}$
+   * *Problema:* Un estudiante deja caer un objeto (desde el reposo) desde la azotea de un edificio y mide que tarda exactamente 1.60 \text{ s} en golpear el suelo. Despreciando la resistencia del aire y usando $g = 9.80 \text{ m/s}^2$, calcule la altura del edificio:
+   * *Cálculo:* Altura en caída libre desde reposo: $h = \frac{1}{2} g t^2 = 0.5(9.80)(1.60)^2 = 12.54\text{ m}$.
+3. **Respuesta:** $10.00 \text{ N}$
+   * *Problema:* Determine la magnitud de la fuerza neta sobre una partícula que recibe la acción de las fuerzas $\vec{F}_1 = (2.99 \text{ N}, 6.26 \text{ N})$ y $\vec{F}_2 = (3.01 \text{ N}, 1.74 \text{ N})$:
+   * *Cálculo:* Primero sumamos las fuerzas: $\vec{F}_{\text{neta}} = (2.99+3.01, 6.26+1.74) = (6.00\text{ N}, 8.00\text{ N})$. Luego, su magnitud es: $F = \sqrt{6.00^2 + 8.00^2} = 10.00\text{ N}$.
+4. **Respuesta:** $-1.37 \text{ m/s}^2$
+   * *Problema:* Una bola de golf se desliza por el césped con una velocidad inicial de 6.04 \text{ m/s} y llega al hoyo a 1.04 \text{ m/s} después de recorrer una distancia de 12.93 \text{ m} en línea recta. Determine su aceleración constante:
+   * *Cálculo:* Usamos la relación $v^2 = v_0^2 + 2 a \Delta x \implies a = \frac{v^2 - v_0^2}{2 \Delta x} = \frac{1.04^2 - 6.04^2}{2(12.93)} = -1.37\text{ m/s}^2$.
 
 ---
 
 ## Examen Versión C
 
 ### I. Teoría
-1. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
-2. **Respuesta:** Directamente proporcional a la fuerza neta e inversamente proporcional a su masa. (Pregunta: *La Segunda Ley de Newton establece matemáticamente que la aceleración de un cuerpo es:*)
-3. **Respuesta:** El coeficiente de fricción cinética ($\mu_c$) es siempre menor que el coeficiente de fricción estática ($\mu_e$). (Pregunta: *Con respecto a la fuerza de fricción entre dos superficies secas en contacto, se cumple que:*)
-4. **Respuesta:** $45^\circ$ (Pregunta: *Despreciando la resistencia del aire, el ángulo de disparo respecto a la horizontal que produce el máximo alcance horizontal para un proyectil es:*)
-5. **Respuesta:** El centro de la trayectoria circular. (Pregunta: *En un Movimiento Circular Uniforme (MCU), aunque la rapidez es constante, la velocidad cambia de dirección, lo que implica una aceleración centrípeta dirigida hacia:*)
-6. **Respuesta:** Permanecerá en reposo o en movimiento rectilíneo uniforme. (Pregunta: *De acuerdo con la Primera Ley de Newton, si la fuerza neta que actúa sobre un cuerpo es nula, el cuerpo necesariamente:*)
-7. **Respuesta:** Masa. (Pregunta: *La propiedad física de un cuerpo que mide cuantitativamente su inercia (resistencia al cambio en su estado de movimiento) es la:*)
-8. **Respuesta:** El cuerpo B ejerce sobre A una fuerza de igual magnitud, misma dirección y sentido contrario ($\vec{F}_{BA} = -\vec{F}_{AB}$). (Pregunta: *De acuerdo con la Tercera Ley de Newton (Acción-Reacción), si un cuerpo A ejerce una fuerza $\vec{F}_{AB}$ sobre un cuerpo B, entonces:*)
+1. **Respuesta:** Es la fuerza de atracción gravitatoria que ejerce la Tierra sobre él ($w = m \cdot g$). (Pregunta: *A diferencia de la masa, el peso de un objeto:*)
+2. **Respuesta:** La pendiente de la recta tangente a la curva en ese punto. (Pregunta: *En un gráfico de posición en función del tiempo ($x$ vs $t$), la velocidad instantánea en un tiempo determinado equivale a:*)
+3. **Respuesta:** El centro de la trayectoria circular. (Pregunta: *En un Movimiento Circular Uniforme (MCU), aunque la rapidez es constante, la velocidad cambia de dirección, lo que implica una aceleración centrípeta dirigida hacia:*)
+4. **Respuesta:** El coeficiente de fricción cinética ($\mu_c$) es siempre menor que el coeficiente de fricción estática ($\mu_e$). (Pregunta: *Con respecto a la fuerza de fricción entre dos superficies secas en contacto, se cumple que:*)
+5. **Respuesta:** Vectorial. (Pregunta: *La fuerza es una magnitud física de carácter:*)
+6. **Respuesta:** Masa. (Pregunta: *La propiedad física de un cuerpo que mide cuantitativamente su inercia (resistencia al cambio en su estado de movimiento) es la:*)
+7. **Respuesta:** El cuerpo B ejerce sobre A una fuerza de igual magnitud, misma dirección y sentido contrario ($\vec{F}_{BA} = -\vec{F}_{AB}$). (Pregunta: *De acuerdo con la Tercera Ley de Newton (Acción-Reacción), si un cuerpo A ejerce una fuerza $\vec{F}_{AB}$ sobre un cuerpo B, entonces:*)
+8. **Respuesta:** Directamente proporcional a la fuerza neta e inversamente proporcional a su masa. (Pregunta: *La Segunda Ley de Newton establece matemáticamente que la aceleración de un cuerpo es:*)
 
 ### II. Problemas Prácticos
-1. **Respuesta:** $0.262 \text{ m/s}$ (Problema: *Una cápsula de pasajeros en una rueda de la fortuna de $150 \text{ m}$ de diámetro gira a rapidez constante y le toma exactamente $30.0 \text{ minutos}$ ($1800 \text{ s}$) completar una vuelta entera. Calcule su rapidez lineal:*)
-2. **Respuesta:** $-6.60 \text{ N}$ (Problema: *Un cuerpo de masa $m = 3.00 \text{ kg}$ acelera horizontalmente a razón de $a_x = +0.800 \text{ m/s}^2$ (hacia la derecha). Si actúan dos fuerzas sobre el eje $x$ y una de ellas es $F_{2x} = +9.00 \text{ N}$, determine la componente de la otra fuerza $F_{1x}$:*)
-3. **Respuesta:** $100 \text{ rad/s}$ (Problema: *Un estudiante mide que las aspas de un abanico de techo realizan exactamente $40 \text{ vueltas}$ en un intervalo de $2.50 \text{ s}$. Calcule la velocidad angular $\omega$ del abanico en rad/s (utilice $\pi \approx 3.14$):*)
-4. **Respuesta:** $10.0 \text{ N}$ (Problema: *Determine la magnitud de la fuerza neta sobre una partícula que recibe la acción de las fuerzas $\vec{F}_1 = (5.00 \text{ N}, 4.00 \text{ N})$ y $\vec{F}_2 = (3.00 \text{ N}, 2.00 \text{ N})$:*)
+1. **Respuesta:** $-0.19 \text{ N}$
+   * *Problema:* Un bloque en una superficie horizontal recibe tres fuerzas paralelas al eje $x$: $F_{1x} = -5.54 \text{ N}$, $F_{2x} = +8.69 \text{ N}$ y $F_{3x} = -3.34 \text{ N}$. Determine el valor de la fuerza neta horizontal:
+   * *Cálculo:* Fuerza neta: $F_{x} = (-5.54) + (+8.69) + (-3.34) = -0.19\text{ N}$.
+2. **Respuesta:** $126.8 \text{ rad/s}$
+   * *Problema:* Un estudiante mide que las aspas de un ventilador realizan exactamente 45 \text{ vueltas} en un intervalo de 2.23 \text{ s}. Calcule la velocidad angular $\omega$ del ventilador en rad/s (utilice $\pi \approx 3.14$):
+   * *Cálculo:* Frecuencia $f = N/t = 45/2.23 = 20.18\text{ Hz}$. Velocidad angular: $\omega = 2 \pi f = 2 \cdot 3.14 \cdot 20.18 = 126.8\text{ rad/s}$.
+3. **Respuesta:** $0.209 \text{ m/s}$
+   * *Problema:* Una cápsula de pasajeros en una rueda de la fortuna de 140 \text{ m} de diámetro gira a rapidez constante y le toma exactamente 35.0 \text{ minutos} (2100 \text{ s}) completar una vuelta entera. Calcule su rapidez lineal:
+   * *Cálculo:* Radio $R = D/2 = 70.0\text{ m}$. Período $T = 35.0 \cdot 60 = 2100\text{ s}$. Rapidez lineal: $v = \frac{2 \pi R}{T} = \frac{2 \cdot 3.1416 \cdot 70.0}{2100} = 0.209\text{ m/s}$.
+4. **Respuesta:** $3.91 \text{ N}$
+   * *Problema:* Un cuerpo pesa 12.9 \text{ N} en la Tierra ($g = 9.80 \text{ m/s}^2$). ¿Cuánto pesará este mismo cuerpo en la superficie de un asteroide donde la aceleración de la gravedad es de 2.97 \text{ m/s}^2$?
+   * *Cálculo:* Masa del cuerpo: $m = W_E / g_E = 12.9 / 9.80 = 1.3163\text{ kg}$. Peso local: $W_L = m \cdot g_L = 1.3163 \cdot 2.97 = 3.91\text{ N}$.
 
 ---
 
