@@ -1,4 +1,4 @@
-# Solucionario de Exámenes Finales (Versiones A, B, C)
+# Solucionario de Exámenes de Segundo Parcial (Versiones A, B, C)
 
 ## Examen Versión A
 

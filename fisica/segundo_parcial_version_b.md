@@ -1,4 +1,4 @@
-# Examen Final de Física Básica - Versión B
+# Segundo Parcial de Física Básica - Versión B
 
 **Estudiante:** ______________________________________  **Matrícula:** ______________  
 **Fecha:** ________________________  **Calificación:** ______ / 8.0 puntos

@@ -125,7 +125,7 @@
 </head>
 
     <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }}, '{{ engine|default:'edge'|escapejs }}', {{ project.audio_ducking_ratio|default:0.17 }}, {{ project.audio_attack_time|default:0.15 }}, {{ project.audio_release_time|default:0.4 }}, {{ project.audio_merge_threshold|default:1.5 }}, {{ project.audio_block_fade|default:1.0 }}, {{ project.audio_early_finish|default:0.1 }}, {{ project.subtitles_y_position|default:0.7|stringformat:'.2f' }}, '{{ project.language|default:'' }}', '{{ project.dubbing_mode|default:'' }}', '{{ project.thumbnail_path|default:''|escapejs }}')">
+    x-data="scriptEditor({{ project.id|default:'null' }}, '{{ project.title|default:'Nuevo Guion'|escapejs }}', {{ project.music_volume|default:0.15 }}, '{{ project.background_music.file.name|default:''|escapejs }}', '{{ project.voice_id|default:''|escapejs }}', {{ project.auto_upload_youtube|yesno:'true,false' }}, {{ is_standalone|yesno:'true,false' }}, '{{ project.aspect_ratio|default:'landscape' }}', '{{ project.render_mode|default:'cpu' }}', {{ project.music_volume_lock|yesno:'true,false' }}, {{ project.render_workers|default:4 }}, {{ project.dynamic_subtitles|yesno:'true,false' }}, '{{ engine|default:'edge'|escapejs }}', {{ project.audio_ducking_ratio|default:0.17 }}, {{ project.audio_attack_time|default:0.15 }}, {{ project.audio_release_time|default:0.4 }}, {{ project.audio_merge_threshold|default:1.5 }}, {{ project.audio_block_fade|default:1.0 }}, {{ project.audio_early_finish|default:0.1 }}, {{ project.subtitles_y_position|default:0.7|stringformat:'.2f' }}, '{{ project.language|default:'' }}', '{{ project.dubbing_mode|default:'' }}', '{{ project.thumbnail_path|default:''|escapejs }}', '{{ project.social_title|default:''|escapejs }}', '{{ project.social_description|default:''|escapejs }}', '{{ project.social_tags|default:''|escapejs }}', '{{ project.social_pinned_comment|default:''|escapejs }}')">
 
     <!-- NAV (Simplified) -->
     <nav class="bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shrink-0">
@@ -2258,7 +2258,7 @@
     </div>
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false, initialEngine = 'edge', initialDucking = 0.17, initialAttack = 0.15, initialRelease = 0.4, initialMerge = 1.5, initialFade = 1.0, initialEarly = 0.1, initialSubtitlesY = 0.70, initialLanguage = '', initialDubbingMode = '', initialThumbnail = '') => ({
+            Alpine.data('scriptEditor', (projectId, initialTitle, initialVol, initialMusicName, initialVoice, initialAutoUpload, isStandalone = false, initialAspectRatio = 'landscape', initialRenderMode = 'cpu', initialMusicLock = false, initialWorkers = 4, initialDynamic = false, initialEngine = 'edge', initialDucking = 0.17, initialAttack = 0.15, initialRelease = 0.4, initialMerge = 1.5, initialFade = 1.0, initialEarly = 0.1, initialSubtitlesY = 0.70, initialLanguage = '', initialDubbingMode = '', initialThumbnail = '', initialSocialTitle = '', initialSocialDesc = '', initialSocialTags = '', initialSocialPinned = '') => ({
                 projectId: projectId,
                 isStandalone: isStandalone,
                 script: {},
@@ -2290,6 +2290,8 @@
                 showGroupModal: false,
                 showBulkModal: false,
                 showRecordModal: false,
+                currentBlockTitle: '', // v36.5: Teleprompter enhancements
+                currentSceneTitle: '', // v36.5: Teleprompter enhancements
                 showAudioMasterModal: false,
                 recordingText: '', // v20.3: Para el Teleprompter
                 editIndex: null,
@@ -2339,10 +2341,10 @@
                     human_signature: true, // v11.3: Default ON for anti-detection
                     thumbnail: initialThumbnail,
                     // v36.40: Social Metadata Initialization
-                    social_title: '',
-                    social_description: '',
-                    social_tags: '',
-                    social_pinned_comment: '',
+                    social_title: initialSocialTitle,
+                    social_description: initialSocialDesc,
+                    social_tags: initialSocialTags,
+                    social_pinned_comment: initialSocialPinned,
                     fuentes: '',
                     tags: '',
                     hashtags: ''
@@ -2605,12 +2607,26 @@
                     this.audioChunks = [];
 
                     // v20.3: Teleprompter Logic
+                    const activeBlock = this.script.blocks[this.editBlockIndex];
+                    this.currentBlockTitle = activeBlock ? activeBlock.title : 'General';
+
                     if (this.showModal) {
+                        let activeScene = null;
+                        if (activeBlock) {
+                            if (this.editGroupIndex !== null && activeBlock.groups && activeBlock.groups[this.editGroupIndex]) {
+                                activeScene = activeBlock.groups[this.editGroupIndex].scenes[this.editIndex];
+                            } else if (activeBlock.scenes) {
+                                activeScene = activeBlock.scenes[this.editIndex];
+                            }
+                        }
+                        this.currentSceneTitle = activeScene ? (activeScene.title || ('Escena ' + (this.editIndex + 1))) : 'Escena';
                         this.recordingText = this.formData.text || '';
                     } else if (this.showGroupModal) {
                         // For groups, we might want to show the group title or description if exists
+                        this.currentSceneTitle = this.groupForm.title || 'Grupo Master Shot';
                         this.recordingText = "Grabando para Grupo: " + (this.groupForm.title || "Sin título");
                     } else {
+                        this.currentSceneTitle = 'General';
                         this.recordingText = "Grabando audio general...";
                     }
                     this.showRecordModal = true;
@@ -2619,7 +2635,13 @@
                 async startRecording() {
                     try {
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        this.mediaRecorder = new MediaRecorder(stream);
+                        // v38.0: Explicit mimeType and codec config for stability
+                        let options = { mimeType: 'audio/webm;codecs=opus' };
+                        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                            console.warn("[MediaRecorder] mimeType not supported, falling back to default");
+                            options = {};
+                        }
+                        this.mediaRecorder = new MediaRecorder(stream, options);
                         this.audioChunks = [];
                         this.isRecording = true;
                         this.recordingTimer = 0;
@@ -2645,7 +2667,8 @@
                             });
                         };
 
-                        this.mediaRecorder.start(200); // v13.5: Use 200ms timeslice for better reliability
+                        // v38.0: Remove 200ms timeslice to let the browser compile a single, perfectly aligned WebM chunk
+                        this.mediaRecorder.start();
                         if (this.recordingInterval) clearInterval(this.recordingInterval);
                         this.recordingInterval = setInterval(() => { this.recordingTimer++; }, 1000);
                     } catch (err) {
@@ -4490,16 +4513,22 @@
                     class="text-gray-500 hover:text-white transition-colors">&times;</button>
             </div>
 
-            <div class="p-0 flex flex-col items-center">
+            <div class="p-0 flex flex-col items-center w-full">
+                <!-- INFO BAR (v36.5) -->
+                <div class="w-full bg-[#07070a] px-6 py-2.5 border-b border-white/5 flex justify-between text-[11px] text-gray-500 font-mono">
+                    <div><span class="text-red-500/70 font-bold uppercase tracking-wider">Bloque:</span> <span class="text-gray-300 font-sans" x-text="currentBlockTitle"></span></div>
+                    <div><span class="text-red-500/70 font-bold uppercase tracking-wider">Escena:</span> <span class="text-gray-300 font-sans" x-text="currentSceneTitle"></span></div>
+                </div>
+
                 <!-- TELEPROMPTER SECTION (v20.3) -->
-                <div class="w-full bg-black/40 p-10 border-b border-white/5 relative group/tele">
+                <div class="w-full bg-black/40 p-6 md:p-8 border-b border-white/5 relative group/tele">
                     <div
                         class="absolute top-2 left-6 text-[8px] font-bold text-red-500/50 uppercase tracking-[0.3em] font-mono">
                         Teleprompter Active</div>
-                    <div class="max-h-64 overflow-y-auto custom-scrollbar pr-4 text-center">
-                        <p class="text-2xl md:text-3xl font-bold text-gray-100 leading-relaxed selection:bg-red-500/30"
+                    <div class="max-h-96 overflow-y-auto custom-scrollbar pr-4 text-center">
+                        <p class="text-lg md:text-xl font-medium text-gray-100 leading-relaxed selection:bg-red-500/30"
                             x-text="recordingText || 'No hay texto definido para esta escena.'"
-                            :class="isRecording ? 'text-white' : 'text-gray-400'"></p>
+                            :class="isRecording ? 'text-white font-bold' : 'text-gray-400'"></p>
                     </div>
                     <!-- Focus guides -->
                     <div
