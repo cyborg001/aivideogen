@@ -636,6 +636,56 @@ def build_exams():
         
     print("Generated Solucionario files with UNIQUE development keys.")
 
+def clean_math_for_html(text):
+    # Reemplazar vectores y componentes
+    text = text.replace(r"\vec{F}_1", "F₁")
+    text = text.replace(r"\vec{F}_2", "F₂")
+    text = text.replace(r"\vec{F}_{AB}", "F_AB")
+    text = text.replace(r"\vec{F}_{BA}", "F_BA")
+    text = text.replace(r"\vec{F}_{\text{neta}}", "F_neta")
+    text = text.replace(r"\vec{F}", "F")
+    text = text.replace(r"\vec{a}", "a")
+    
+    # Reemplazar letras griegas
+    text = text.replace(r"\mu_c", "μ_c")
+    text = text.replace(r"\mu_e", "μ_e")
+    text = text.replace(r"\omega", "ω")
+    text = text.replace(r"\pi", "π")
+    text = text.replace(r"\Delta x", "Δx")
+    
+    # Reemplazar unidades comunes y formatear sin LaTeX
+    text = text.replace(r"\text{ N}", " N")
+    text = text.replace(r"\text{ s}", " s")
+    text = text.replace(r"\text{ m/s}^2", " m/s²")
+    text = text.replace(r"\text{ m/s}", " m/s")
+    text = text.replace(r"\text{ kg}", " kg")
+    text = text.replace(r"\text{ m}", " m")
+    text = text.replace(r"\text{ km/h}", " km/h")
+    text = text.replace(r"\text{ rad/s}", " rad/s")
+    text = text.replace(r"\text{ minutos}", " minutos")
+    text = text.replace(r"\text{ vueltas}", " vueltas")
+    
+    # Eliminar otros \text{} genéricos
+    text = re.sub(r'\\text\{(.*?)\}', r'\1', text)
+    
+    # Reemplazar operaciones matemáticas
+    text = text.replace(r"\cdot", "·")
+    text = text.replace(r"\frac{1}{2}", "1/2")
+    text = text.replace(r"\frac{2\pi R}{T}", "2πR / T")
+    text = text.replace(r"\frac{2\pi}{T}", "2π / T")
+    text = text.replace(r"\frac{v^2}{R}", "v² / R")
+    text = text.replace(r"\frac{v^2 - v_0^2}{2 \Delta x}", "(v² - v₀²) / (2Δx)")
+    
+    # Superíndices y grados
+    text = text.replace(r"^\circ", "°")
+    text = text.replace(r"^2", "²")
+    text = text.replace(r"_0", "₀")
+    
+    # Eliminar signos de dólar
+    text = text.replace("$", "")
+    
+    return text
+
 def compile_all_pdfs():
     files = ["segundo_parcial_version_a", "segundo_parcial_version_b", "segundo_parcial_version_c", "solucionario_segundo_parcial"]
     
@@ -657,70 +707,56 @@ def compile_all_pdfs():
 <head>
 <meta charset="utf-8">
 <title>{title_tag}</title>
-<script>
-window.MathJax = {{
-  tex: {{
-    inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-    displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
-  }},
-  svg: {{
-    fontCache: 'global'
-  }}
-}};
-</script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 body {{
     font-family: 'Outfit', sans-serif;
     margin: 40px;
     color: #1a1a1a;
-    line-height: 1.5;
-    font-size: 13px;
+    line-height: 1.6;
+    font-size: 13.5px;
 }}
 h1 {{
     text-align: center;
     color: #0f172a;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     margin-bottom: 25px;
     text-transform: uppercase;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 8px;
 }}
 h2 {{
     color: #1e3a8a;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     border-bottom: 1.5px solid #cbd5e1;
-    padding-bottom: 3px;
-    margin-top: 20px;
-    margin-bottom: 10px;
+    padding-bottom: 4px;
+    margin-top: 25px;
+    margin-bottom: 12px;
 }}
 h3 {{
     color: #0f172a;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    margin-top: 15px;
-    margin-bottom: 5px;
+    margin-top: 18px;
+    margin-bottom: 6px;
 }}
 hr {{
     border: none;
     border-top: 1px dashed #cbd5e1;
     margin: 20px 0;
 }}
-ul, ol {{
-    margin-left: 20px;
-    padding-left: 0;
-}}
-li {{
-    margin-bottom: 6px;
+p {{
+    margin: 8px 0;
 }}
 .options-list {{
-    list-style-type: none;
-    padding-left: 15px;
+    margin-left: 20px;
     margin-top: 4px;
+    margin-bottom: 12px;
 }}
-.options-list li {{
-    margin-bottom: 3px;
+.option-item {{
+    margin-bottom: 4px;
 }}
 @media print {{
     body {{
@@ -737,28 +773,33 @@ li {{
             line_strip = line.strip()
             if not line_strip:
                 continue
+            
+            # Limpiar notación matemática de LaTeX para el HTML
+            line_cleaned = clean_math_for_html(line_strip)
                 
             if line_strip.startswith('# '):
-                html += f"<h1>{line_strip[2:]}</h1>\n"
+                html += f"<h1>{line_cleaned}</h1>\n"
             elif line_strip.startswith('## '):
-                html += f"<h2>{line_strip[3:]}</h2>\n"
+                html += f"<h2>{line_cleaned}</h2>\n"
             elif line_strip.startswith('### '):
-                html += f"<h3>{line_strip[4:]}</h3>\n"
+                html += f"<h3>{line_cleaned}</h3>\n"
             elif line_strip.startswith('---'):
                 html += "<hr/>\n"
             elif re.match(r'^\d+\.', line_strip):
-                match = re.match(r'^(\d+)\.\s+(.*)', line_strip)
-                q_num = match.group(1)
-                q_text = match.group(2)
-                q_text = re.sub(r'\*\frac', r'\\frac', q_text) # Fix double escaping in regex if any
-                q_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', q_text)
-                html += f"<p><strong>{q_num}. {q_text}</strong></p>\n"
+                match = re.match(r'^(\d+)\.\s+(.*)', line_cleaned)
+                if match:
+                    q_num = match.group(1)
+                    q_text = match.group(2)
+                    q_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', q_text)
+                    html += f"<p><strong>{q_num}. {q_text}</strong></p>\n"
+                else:
+                    html += f"<p><strong>{line_cleaned}</strong></p>\n"
             elif line_strip.startswith('* '):
-                opt_text = line_strip[2:]
+                opt_text = line_cleaned[2:]
                 opt_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', opt_text)
                 html += f"<div class='options-list'>&nbsp;&nbsp;&nbsp;&nbsp;{opt_text}</div>\n"
             else:
-                p_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line_strip)
+                p_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line_cleaned)
                 html += f"<p>{p_text}</p>\n"
 
         html += "</body>\n</html>"
