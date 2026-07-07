@@ -1,17 +1,29 @@
 # 📑 Registro de Assets y Reglas de Oro (NotiACI)
 
-## 🏆 Regla de Oro de Miniaturas (CTR 11%+)
-- **Estilo**: Formato MrBeast (Sujetos en primer plano, alto contraste, fondos dinámicos).
-- **Tipografía**: Texto gigante, legible, **SIEMPRE en Amarillo Brillante**.
-- **Composición**: Foco en la narrativa de "La Gran Mentira" / Geopolítica.
+## 🏆 Regla de Oro de Miniaturas (CTR 11%+) - Psicología de Carátula
+*   **Reducción de Carga Cognitiva (Minimalismo):**
+    *   **Regla de los 3 elementos:** Sujeto principal en primer plano, objeto de interés y fondo.
+    *   **Regla de los 12 caracteres:** Texto grande de un máximo de 3 a 5 palabras, **SIEMPRE en Amarillo Brillante** (fuentes gruesas como Impact/Montserrat), que complemente al título sin repetirlo.
+*   **Teoría del Color y Contraste Extremo:**
+    *   Uso de colores complementarios opuestos (Azul-Naranja, Amarillo-Morado) para generar tensión visual inmediata.
+    *   Aislamiento: Recortar al sujeto principal, aumentar su brillo/saturación y desenfocar levemente el fondo.
+*   **Evolución del "YouTube Face":**
+    *   Priorizar autenticidad y microexpresiones reales. Evitar caras con boca abierta exageradas genéricas para mantener la confianza si el video no es hiperactivo.
 
-## 📝 Reglas de Oro para Retención de Guiones (Retención 70%+)
-- **Conectores de Continuidad**: Cada escena debe enlazarse fluidamente con la anterior mediante conjunciones o frases de transición (ej: *"Y por otro lado..."*, *"Mientras esto ocurre..."*, *"Sin embargo, para lograr esto..."*, *"Es aquí donde entra..."*). Evitar que las escenas se sientan como datos aislados.
-- **Hook-First (0-3s)**: Plantear el dilema o hecho insólito inmediatamente en los primeros 1.5 segundos. El logotipo o branding entra después del gancho.
-- **Ritmo Acelerado**: Cambio de estímulo visual (assets/zooms/movimientos agresivos) cada 8-10 segundos en formato documental y cada 1.5-3 segundos en shorts.
-- **Estilo Visual Limpio (Sin Neón)**: Evitar el exceso de neones o tonos artificiales de color (ej. cian/magenta) en las imágenes generadas por IA, a menos que el tema sea explícitamente Cyberpunk. Buscar un fotorrealismo cinematográfico de alto contraste con tonos y texturas orgánicas naturales.
-- **Etiqueta Fonética [PHO]**: Usar siempre `[PHO]pronunciación exacta|texto visual[/PHO]` para términos en inglés (ej. *David Sinclair*, *Altman*, *Life Biosciences*) o técnicos/siglas (ej. *OSK*, *IBM*, *SRAM*, *0.7 nm*) para guiar la pronunciación del motor Álvaro Neural.
-- **Interrupción Temprana (CTA)**: Insertar siempre una interrupción rápida de llamada a la acción (suscripción, like y comentario) justo después del gancho inicial (típicamente entre las escenas 2 y 4) para asegurar conversiones antes de que ocurra la mayor caída en la retención.
+## 📝 Reglas de Oro para Retención de Guiones (Retención 70%+) - Psicología de Retención
+*   **Cumplir la Promesa en 5 Segundos:**
+    *   Alinear visualmente el gancho con la carátula (si sale un objeto en la miniatura, se muestra en los primeros segundos).
+*   **Bucles Subconscientes (Open Loops):**
+    *   Abrir hilos narrativos inacabados que causen intriga inmediata (ej: *"Compré esta isla... pero lo que pasó a mitad de la noche nos obligó a llamar a la policía"*).
+*   **Gancho de la Completación (Phantom Completion):**
+    *   Retener el clímax y demorar la resolución final de listas o dilemas; no revelar el número 1 o el desenlace lineal de entrada.
+*   **Interrupciones de Patrón (Pattern Interrupts):**
+    *   Cambiar estímulos visuales o de audio cada 60-90 segundos (cambios de cámara, SFX, alteraciones de música o silencios repentinos). En shorts, ritmo acelerado cada 1.5 a 3 segundos.
+*   **Directrices Técnicas NotiACI/Cyborg001:**
+    *   **Conectores de Continuidad:** Enlazar fluidamente las escenas con frases de transición (ej: *"Y por otro lado..."*, *"Mientras esto ocurre..."*).
+    *   **Etiqueta Fonética [PHO]:** Usar siempre `[PHO]pronunciación exacta|texto visual[/PHO]` para términos en inglés o siglas técnicas para guiar al motor Álvaro Neural.
+    *   **Interrupción Temprana (CTA):** Insertar llamada a la acción rápida entre las escenas 2 y 4 para asegurar suscripciones.
+    *   **Estilo Visual Limpio (Sin Neón):** Evitar exceso de luces artificiales (cian/magenta) buscando fotorrealismo de alto contraste con tonos orgánicos, salvo temas cyberpunk.
 
 ## 📁 Registro de Assets Recientes
 
