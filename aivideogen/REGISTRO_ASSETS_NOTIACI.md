@@ -79,6 +79,13 @@
 | `perfect_body_synthetic_design.png` | SpudCell 2026 | **NUEVO (IA)** | Maniquí anatómico con órganos perfectos y código de ADN cibernético (cuerpo perfecto). |
 | `cyborg_subscribers_cta.png` | SpudCell 2026 | **NUEVO (IA)** | Letrero 3D de Cyborg001 con neón 'SUSCRÍBETE' en amarillo brillante sobre metal. |
 | `philosophical_human_convergencia.png` | SpudCell 2026 | **NUEVO (IA)** | Silueta humana contemplando un horizonte cósmico de estrellas y código de datos. |
+| `caratula_ciencia_2026_mrbeast.png` | Ciencia 2026 | **NUEVO (CTR 11%+)** | Miniatura MrBeast de 3 elementos: científico asombrado, reloj cuántico brillante y letrero amarillo '¡TIEMPO AL REVÉS!'. |
+| `quantum_time_reversal.png` | Ciencia 2026 | **NUEVO (IA)** | Reloj cuántico brillante con manecillas girando a la izquierda (inversión de flecha temporal). |
+| `quasars_euclid_space.png` | Ciencia 2026 | **NUEVO (IA)** | Telescopio espacial Euclid capturando un quásar primitivo de color rojo en el vacío. |
+| `exosome_brain_barrier.png` | Ciencia 2026 | **NUEVO (IA)** | Microcápsula de exosoma cruzando la barrera hematoencefálica del cerebro con genes dorados. |
+| `direct_lithium_extraction.png` | Ciencia 2026 | **NUEVO (IA)** | Reactor de columnas industriales extrayendo litio líquido azul brillante en laboratorio. |
+| `hydrogenobody_microscopic.png` | Ciencia 2026 | **NUEVO (IA)** | Célula microbiana bajo microscopio revelando el orgánulo 'hydrogenobody' y burbujas de hidrógeno. |
+| `existential_human_limits.png` | Ciencia 2026 | **NUEVO (IA)** | Silueta humana ante un muro con códigos de datos que se rompe y muestra un firmamento estelar. |
 
 > [!IMPORTANT]
 > El Arquitecto debe asegurar que las carátulas e imágenes generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
