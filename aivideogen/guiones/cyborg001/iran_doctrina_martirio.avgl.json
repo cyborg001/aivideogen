@@ -356,7 +356,7 @@
           "sfx": [],
           "assets": [
             {
-              "id": "trump_speeches/trump_iran_threat_merged.mp4",
+              "id": "trump_speeches/trump_warns_iran.mp4",
               "overlay": "",
               "zoom": "1.0:1.0",
               "move": "",
@@ -366,8 +366,8 @@
               "shake_intensity": 5,
               "rotate": "",
               "w_rotate": null,
-              "start_time": 94.88,
-              "end_time": 99.88,
+              "start_time": 5.0,
+              "end_time": 10.0,
               "fast_assembly": false,
               "human_signature": true,
               "human_amplitude": 1.0
