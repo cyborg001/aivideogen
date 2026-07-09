@@ -4,7 +4,7 @@
   "settings": {
     "engine": "edge",
     "voice_id": "es-ES-AlvaroNeural",
-    "background_music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+    "background_music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
     "music_volume": 0.12,
     "music_volume_lock": false,
     "aspect_ratio": "landscape",
@@ -36,7 +36,7 @@
     {
       "id": "b1_apertura_fuego",
       "title": "BLOQUE 1: EL FIN DE LA TREGUA Y LA ESCALADA",
-      "music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+      "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -159,7 +159,7 @@
     {
       "id": "b2_economia_congelada",
       "title": "BLOQUE 2: COLAPSO ECONÓMICO Y POBLACIÓN CIVIL",
-      "music": "Laniakea_-_The_Grey_Room___Density__Time.mp3",
+      "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -245,7 +245,7 @@
     {
       "id": "b3_represion_interna",
       "title": "BLOQUE 3: OLA HISTÓRICA DE EJECUCIONES",
-      "music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+      "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
       "volume": 0.22,
       "voice": "",
       "voice_speed": "",
@@ -331,7 +331,7 @@
     {
       "id": "b4_respuesta_trump",
       "title": "BLOQUE 4: LA ADVERTENCIA DE TRUMP Y REPRESALIAS",
-      "music": "Frame-Dragging - The Grey Room _ Density & Time.mp3",
+      "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
@@ -417,7 +417,7 @@
     {
       "id": "b5_cierre_pregunta",
       "title": "BLOQUE 5: CONCLUSIÓN Y DEBATE",
-      "music": "On_The_Eve_-_The_Grey_Room___Density__Time.mp3",
+      "music": "Viral_Dirge_-_Ryan_Stasik_TgjMSWd.mp3",
       "volume": 0.2,
       "voice": "",
       "voice_speed": "",
