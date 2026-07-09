@@ -86,6 +86,12 @@
 | `direct_lithium_extraction.png` | Ciencia 2026 | **NUEVO (IA)** | Reactor de columnas industriales extrayendo litio líquido azul brillante en laboratorio. |
 | `hydrogenobody_microscopic.png` | Ciencia 2026 | **NUEVO (IA)** | Célula microbiana bajo microscopio revelando el orgánulo 'hydrogenobody' y burbujas de hidrógeno. |
 | `existential_human_limits.png` | Ciencia 2026 | **NUEVO (IA)** | Silueta humana ante un muro con códigos de datos que se rompe y muestra un firmamento estelar. |
+| `caratula_iran_doctrina.png` | Conflicto Irán 2026 | **NUEVO (CTR 11%+)** | Miniatura de Trump serio, carguero en llamas y gráfico ascendente de ejecuciones, con letrero amarillo '¡COLAPSO TOTAL!'. |
+| `strait_hormuz_attack.png` | Conflicto Irán 2026 | **NUEVO (IA)** | Carguero ardiendo en el Estrecho de Ormuz bajo un cielo rojizo. |
+| `iran_martyrdom_doctrine.png` | Conflicto Irán 2026 | **NUEVO (IA)** | Multitud en Teherán con banderas bajo destellos dorados del sol que aluden al martirio. |
+| `iranian_currency_collapse.png` | Conflicto Irán 2026 | **NUEVO (IA)** | Familia de Teherán preocupada frente a teléfono con gráfica financiera a la baja y riales. |
+| `iran_executions_chart.png` | Conflicto Irán 2026 | **NUEVO (IA)** | Pantalla de datos oscuros con una línea de gráfica roja ascendente indicando estadísticas de ejecuciones. |
+| `iran_courtroom_repression.png` | Conflicto Irán 2026 | **NUEVO (IA)** | Tribunal de Teherán con custodios armados y una silueta imponente del juez en la penumbra. |
 
 > [!IMPORTANT]
 > El Arquitecto debe asegurar que las carátulas e imágenes generadas por la IA se encuentren en `media/assets/` para su correcto renderizado en el servidor.
