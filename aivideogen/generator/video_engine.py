@@ -2664,13 +2664,20 @@ def generate_video_avgl(project):
                             bg_audio = AudioFileClip(music_to_use)
                             clips_to_close.append(bg_audio)
                         elif music_to_use:
-                             # Try media-relative
-                             potential_path = os.path.join(settings.MEDIA_ROOT, music_to_use)
-                             if os.path.exists(potential_path):
-                                 has_local_music = True
-                                 logger.log(f"  [Audio] Musica especifica bloque (media): {os.path.basename(music_to_use)}")
-                                 bg_audio = AudioFileClip(potential_path)
-                                 clips_to_close.append(bg_audio)
+                             # Try media-relative (v42.0: Robust multi-folder resolution)
+                             possible_paths = [
+                                 os.path.join(settings.MEDIA_ROOT, music_to_use),
+                                 os.path.join(settings.MEDIA_ROOT, 'assets', music_to_use),
+                                 os.path.join(settings.MEDIA_ROOT, 'music', music_to_use),
+                                 os.path.join(settings.MEDIA_ROOT, 'assets', 'ciencia', music_to_use)
+                             ]
+                             for p_path in possible_paths:
+                                 if os.path.exists(p_path):
+                                     has_local_music = True
+                                     logger.log(f"  [Audio] Musica especifica bloque (media): {os.path.basename(music_to_use)} en {p_path}")
+                                     bg_audio = AudioFileClip(p_path)
+                                     clips_to_close.append(bg_audio)
+                                     break
 
                         if has_local_music:
                             # v4.8: Local Volume Calculation (Unified)
@@ -2847,12 +2854,19 @@ def generate_video_avgl(project):
                     bg_audio = AudioFileClip(global_music_name)
                     clips_to_close.append(bg_audio)
                 elif global_music_name:
-                    # Try media-relative path as last resort
-                    potential_path = os.path.join(settings.MEDIA_ROOT, global_music_name)
-                    if os.path.exists(potential_path):
-                        logger.log(f"🎵 Aplicando Música Global (Media): {os.path.basename(global_music_name)}")
-                        bg_audio = AudioFileClip(potential_path)
-                        clips_to_close.append(bg_audio)
+                    # Try media-relative path as last resort (v42.0: Robust multi-folder resolution)
+                    possible_paths = [
+                        os.path.join(settings.MEDIA_ROOT, global_music_name),
+                        os.path.join(settings.MEDIA_ROOT, 'assets', global_music_name),
+                        os.path.join(settings.MEDIA_ROOT, 'music', global_music_name),
+                        os.path.join(settings.MEDIA_ROOT, 'assets', 'ciencia', global_music_name)
+                    ]
+                    for p_path in possible_paths:
+                        if os.path.exists(p_path):
+                            logger.log(f"🎵 Aplicando Música Global (Media): {os.path.basename(global_music_name)} en {p_path}")
+                            bg_audio = AudioFileClip(p_path)
+                            clips_to_close.append(bg_audio)
+                            break
                 else:
                     logger.log(f"⚠️ No se pudo encontrar el archivo de música: {global_music_name}")
                     bg_audio = None

@@ -15,9 +15,11 @@ Yo (Bill, tu asistente IA) me activo cuando usted inicia una sesión conmigo. Mi
 2.  **Detección de Pendientes**: Si hay misiones de hace 3 horas (o 3 días), las identifico inmediatamente.
 3.  **Ejecución**: Le informo: *"Arquitecto, he encontrado estas misiones pendientes en el inbox. Procedo a ejecutarlas..."*.
 
-## 3. ¿Cómo lograr autonomía total?
-Si usted desea que Bill trabaje **mientras usted no está frente a la PC**, podemos activar el **Workflow: Misión Confianza**:
-- Yo puedo dejar scripts preparados que se ejecuten solos (via Task Scheduler de Windows) para realizar tareas repetitivas.
-- Pero para misiones creativas o complejas de código, yo "pienso" cuando usted me invoca.
+## 4. Protocolo Pre-Flight de Audio y Producción (Cero Retrasos)
+Antes de enviar o ejecutar la renderización de un video, Bill aplicará la **Lista de Chequeo Pre-Flight**:
+1. **Verificación Física de Audio**: Comprobar que todas las pistas referenciadas (`settings.background_music` y `block.music`) existan físicamente en disco (`media/assets/` o `media/music/`).
+2. **Auto-Sincronización DB**: Ejecutar `python sync_media.py` para asegurar que Django y la base de datos tengan indexadas las pistas de música.
+3. **Chequeo de Autoducking**: Validar la existencia de `audio_ducking_ratio` y `music_volume` para evitar videos mudos o saturados.
 
 **Resumen**: Escríbame a cualquier hora. Su mensaje se guardará en el `inbox` y yo lo procesaré **lo primero de todo** en cuanto retomemos nuestra sesión. 🫡
+

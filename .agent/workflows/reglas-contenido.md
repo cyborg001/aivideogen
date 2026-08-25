@@ -67,9 +67,16 @@ Soporta direcciones ortogonales y combinadas. Valores en porcentaje (0-100).
 3.  **Ritmo Visual**: Cambios de asset/zoom cada 3-5 segundos.
 4.  **Dinamismo**: Usar `zoom` y `move` en el 100% de los assets estáticos.
 
-## 4. Referencia de Voces
-- `es-ES-AlvaroNeural` (Narrador Principal)
-- `es-MX-JorgeNeural` (Narrador Alternativo / CIENTIFICO)
-- `es-DO-EmilioNeural` (CHARLI / CARLOS)
-- `es-US-AlonsoNeural` (ETHAN / JOVEN)
-- `es-MX-DaliaNeural` (SONY)
+## 5. Protocolo Pre-Flight de Audio & Assets (Verificación Preventiva)
+
+Antes de generar o lanzar cualquier proyecto de video, **Bill debe ejecutar obligatoriamente**:
+
+1. **Verificación de Existencia Física de Audio**:
+   - Para la pista global (`settings.background_music`) y cada pista por bloque (`block.music`), comprobar su presencia en `media/assets/`, `media/music/` o `media/`.
+   - Si la pista no existe físicamente en disco, copiarla o generarla antes de iniciar la renderización.
+2. **Sincronización de Base de Datos**:
+   - Ejecutar la sincronización automática de medios (`sync_media.py`) para registrar las pistas en el modelo `Music` de Django y asegurar su disponibilidad en la interfaz web y el motor.
+3. **Calibración de Autoducking & Volúmenes**:
+   - Verificar que `music_volume` (rango recomendado: `0.12` a `0.20`) y `audio_ducking_ratio` (rango recomendado: `0.08` a `0.17`) estén explícitamente definidos y activos en los ajustes del guion.
+   - Confirmar que ningún bloque tenga `volume = 0` por accidente salvo silencio intencional.
+
