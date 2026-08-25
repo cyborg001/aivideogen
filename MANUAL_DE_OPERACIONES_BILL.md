@@ -20,6 +20,8 @@ Antes de enviar o ejecutar la renderización de un video, Bill aplicará la **Li
 1. **Verificación Física de Audio**: Comprobar que todas las pistas referenciadas (`settings.background_music` y `block.music`) existan físicamente en disco (`media/assets/` o `media/music/`).
 2. **Auto-Sincronización DB**: Ejecutar `python sync_media.py` para asegurar que Django y la base de datos tengan indexadas las pistas de música.
 3. **Chequeo de Autoducking**: Validar la existencia de `audio_ducking_ratio` y `music_volume` para evitar videos mudos o saturados.
+4. **Modo CPU Obligatorio**: Configurar siempre `"render_mode": "cpu"` (nunca `"gpu"`) en los ajustes de todo guion JSON creado.
+
 
 **Resumen**: Escríbame a cualquier hora. Su mensaje se guardará en el `inbox` y yo lo procesaré **lo primero de todo** en cuanto retomemos nuestra sesión. 🫡
 

@@ -79,4 +79,7 @@ Antes de generar o lanzar cualquier proyecto de video, **Bill debe ejecutar obli
 3. **Calibración de Autoducking & Volúmenes**:
    - Verificar que `music_volume` (rango recomendado: `0.12` a `0.20`) y `audio_ducking_ratio` (rango recomendado: `0.08` a `0.17`) estén explícitamente definidos y activos en los ajustes del guion.
    - Confirmar que ningún bloque tenga `volume = 0` por accidente salvo silencio intencional.
+4. **Modo de Renderizado CPU Obligatorio**:
+   - En los ajustes de todo guion (`settings.render_mode`), establecer **SIEMPRE** `"render_mode": "cpu"` y **NUNCA** `"gpu"`.
+
 
