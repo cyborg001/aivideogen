@@ -1,0 +1,292 @@
+{
+    "title": "La Guerra Microbiana: El Avance Canadiense que Devora el Cáncer (Versión Unibloque)",
+    "version": "5.0",
+    "fuentes": "Universidad de Waterloo (Dr. Marc Aucoin, Dr. Brian Ingalls), Polytechnique Montréal (Dr. Sylvain Martel), ScienceDaily, Nature Nanotechnology.",
+    "tags": "cáncer, biotecnología, bacterias, medicina, ciencia 2026, notiaci, robótica médica, unibloque",
+    "hashtags": "#Ciencia #Medicina #Biotecnologia #Cancer #NotiACI",
+    "thumbnail": "ciencia/tumor_microscopic_attack.png",
+    "social_title": "¡Bacterias reprogramadas devoran tumores de cáncer desde adentro! 🧬🇨🇦 (Locución Continua)",
+    "social_description": "Científicos canadienses en la Universidad de Waterloo y Polytechnique Montréal han logrado un avance médico histórico: bacterias reprogramadas genéticamente con 'Quorum Sensing' y bio-robots magnéticos que entran en el centro de los tumores y los destruyen sin dañar tejido sano. Ensayo de locución continua en un solo bloque.",
+    "social_tags": "bacterias cancer, avance cancer canada, quorum sensing cancer, biotecnologia 2026, notiaci ciencia, clostridium sporogenes, nanorobots medicos",
+    "social_pinned_comment": "🧬 ¿Crees que la biología reprogramable reemplace a la quimioterapia tradicional en los próximos años? ¡Déjanos tu opinión en los comentarios!",
+    "settings": {
+        "engine": "edge",
+        "voice_id": "es-ES-AlvaroNeural",
+        "background_music": "Revive The Light - Ryan Stasik, Kanika Moore.mp3",
+        "music_volume": 0.15,
+        "music_volume_lock": false,
+        "aspect_ratio": "landscape",
+        "render_mode": "cpu",
+        "stability": 0.45,
+        "similarity_boost": 0.75,
+        "speed": 1.05,
+        "voice_speed": "+5%",
+        "dynamic_subtitles": true,
+        "subtitles_y_position": 0.75,
+        "human_signature": true,
+        "human_amplitude": 1.0,
+        "audio_ducking_ratio": 0.08,
+        "audio_attack_time": 0.15,
+        "audio_release_time": 0.40,
+        "audio_merge_threshold": 1.5,
+        "audio_block_fade": 1.0,
+        "audio_early_finish": 0.1,
+        "fuentes": "Universidad de Waterloo (Dr. Marc Aucoin, Dr. Brian Ingalls), Polytechnique Montréal (Dr. Sylvain Martel), ScienceDaily, Nature Nanotechnology.",
+        "tags": "cáncer, biotecnología, bacterias, medicina, ciencia 2026, notiaci, robótica médica",
+        "hashtags": "#Ciencia #Medicina #Biotecnologia #Cancer #NotiACI",
+        "thumbnail": "ciencia/tumor_microscopic_attack.png",
+        "social_title": "¡Bacterias reprogramadas devoran tumores de cáncer desde adentro! 🧬🇨🇦",
+        "social_description": "Científicos canadienses en la Universidad de Waterloo y Polytechnique Montréal han logrado un avance médico histórico: bacterias reprogramadas genéticamente con 'Quorum Sensing' y bio-robots magnéticos que entran en el centro de los tumores y los destruyen sin dañar tejido sano.",
+        "social_tags": "bacterias cancer, avance cancer canada, quorum sensing cancer, biotecnologia 2026, notiaci ciencia, clostridium sporogenes, nanorobots medicos",
+        "social_pinned_comment": "🧬 ¿Crees que la biología reprogramable reemplace a la quimioterapia tradicional en los próximos años? ¡Déjanos tu opinión en los comentarios!"
+    },
+    "blocks": [
+        {
+            "id": "b1_unibloque",
+            "title": "BLOQUE ÚNICO CONTINUO: DOCUMENTAL COMPLETO",
+            "music": "Revive The Light - Ryan Stasik, Kanika Moore.mp3",
+            "volume": 0.15,
+            "scenes": [],
+            "groups": [
+                {
+                    "title": "Apertura e Impacto Inicial",
+                    "master_asset": "ciencia/tumor_microscopic_attack.png",
+                    "continuous_voice": true,
+                    "scenes": [
+                        {
+                            "title": "El Gancho Científico",
+                            "text": "¿Es posible convertir a uno de los organismos más antiguos del planeta en un cazador letal contra el cáncer? La respuesta de la ciencia canadiense es un contundente sí.",
+                            "subtitle": "¿BACTERIAS CONTRA EL CÁNCER?",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/tumor_microscopic_attack.png",
+                                    "zoom": "1.0:1.2",
+                                    "move": "HOR:0:40",
+                                    "overlay": "dust"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "El Dilema de la Medicina Tradicional",
+                            "text": "Durante décadas, el mayor desafío en la oncología ha sido la falta de precisión. Tratamientos como la quimioterapia clásica destruyen las células cancerosas, pero también devastan el tejido sano circundante.",
+                            "subtitle": "EL DESAFÍO DE LA ONCOLOGÍA TRADICIONAL",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/chemotherapy_cell_damage.png",
+                                    "zoom": "1.1:1.0",
+                                    "move": "VER:100:0",
+                                    "overlay": "grain"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "La Revolución Canadiense",
+                            "text": "Hoy, dos equipos de investigadores en Canadá han demostrado que es posible programar bacterias vivas para navegar de forma autónoma dentro del cuerpo humano y destruir tumores malignos desde su propio corazón.",
+                            "subtitle": "REVOLUCIÓN CIENTÍFICA EN CANADÁ",
+                            "pause": 0.4,
+                            "assets": [
+                                {
+                                    "id": "ciencia/canadian_lab_biotech.png",
+                                    "zoom": "1.0:1.15",
+                                    "move": "HOR:50:50",
+                                    "overlay": "light leaks"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Clostridium y el Núcleo del Tumor",
+                    "master_asset": "ciencia/clostridium_sporogenes_microscope.png",
+                    "continuous_voice": true,
+                    "scenes": [
+                        {
+                            "title": "La Bacteria del Suelo",
+                            "text": "En la Universidad de Waterloo, un equipo multidisciplinario dirigido por los doctores Marc Aucoin y Brian Ingalls enfocó su atención en una bacteria de suelo llamada Clostridium sporogenes.",
+                            "subtitle": "CLOSTRIDIUM SPOROGENES: LA BACTERIA CLAVE",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/clostridium_sporogenes_microscope.png",
+                                    "zoom": "1.0:1.2",
+                                    "move": "HOR:20:60"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "El Entorno Anaeróbico del Cáncer",
+                            "text": "Esta bacteria posee un rasgo biológico extraordinario: es anaeróbica estricta. Solo puede sobrevivir y proliferar en entornos totalmente desprovistos de oxígeno.",
+                            "subtitle": "VIDA SIN OXÍGENO EN EL NÚCLEO TUMORAL",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/tumor_hypoxic_core.png",
+                                    "zoom": "1.15:1.0",
+                                    "move": "VER:0:100",
+                                    "overlay": "grain"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "La Colonización Interna",
+                            "text": "Y precisamente, el núcleo de los tumores sólidos es una zona hipóxica, ahogada y repleta de células muertas. Al ser inyectada, la bacteria busca de forma natural este centro tumoral y comienza a consumir el tejido de adentro hacia afuera.",
+                            "subtitle": "CONSUMIENDO EL TUMOR DESDE ADENTRO",
+                            "pause": 0.4,
+                            "assets": [
+                                {
+                                    "id": "ciencia/bacteria_eating_tumor.png",
+                                    "zoom": "1.0:1.25",
+                                    "move": "HOR:0:100"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Ingeniería Genética y Seguridad",
+                    "master_asset": "ciencia/genetic_quorum_sensing.png",
+                    "continuous_voice": true,
+                    "scenes": [
+                        {
+                            "title": "El Muro en la Frontera de Oxígeno",
+                            "text": "Sin embargo, los científicos enfrentaron una barrera fundamental: las bacterias morían prematuramente al llegar al borde externo del tumor, donde los vasos sanguíneos aportan pequeñas cantidades de oxígeno.",
+                            "subtitle": "EL OBSTÁCULO DE LA FRONTERA OXIGENADA",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/blood_vessel_tumor_border.png",
+                                    "zoom": "1.0:1.15",
+                                    "move": "HOR:50:50"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "La Modificación Genética",
+                            "text": "Para solucionarlo, el equipo de Waterloo insertó un gen de tolerancia al oxígeno en el ADN de la bacteria. Pero esto planteaba un gran peligro: ¿qué evitaría que la bacteria atacase también los órganos sanos?",
+                            "subtitle": "GEN DE TOLERANCIA AL OXÍGENO",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/dna_editing_crispr.png",
+                                    "zoom": "1.2:1.0",
+                                    "move": "VER:100:0",
+                                    "overlay": "light leaks"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "El Interruptor Quorum Sensing",
+                            "text": "La genialidad canadiense residió en crear un circuito de Quorum Sensing. Este interruptor genético actúa como un sensor de población: la resistencia al oxígeno solo se activa cuando millones de bacterias se han agrupado densamente dentro del tumor.",
+                            "subtitle": "CIRCUITO SENSOR DE DENSIDAD POBLACIONAL",
+                            "pause": 0.4,
+                            "assets": [
+                                {
+                                    "id": "ciencia/genetic_quorum_sensing.png",
+                                    "zoom": "1.0:1.2",
+                                    "move": "HOR:0:50"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Bacterias Magnetotácticas",
+                    "master_asset": "ciencia/magnetic_bacteria_navigation.png",
+                    "continuous_voice": true,
+                    "scenes": [
+                        {
+                            "title": "Polytechnique Montréal y el Campo Magnético",
+                            "text": "En paralelo, en la Polytechnique Montréal, el profesor Sylvain Martel desarrolló un enfoque revolucionario utilizando bacterias magnetotácticas, organismos que contienen cadenas de microcristales de hierro.",
+                            "subtitle": "BACTERIAS MAGNETOTÁCTICAS CON HIERRO",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/magnetic_bacteria_navigation.png",
+                                    "zoom": "1.0:1.2",
+                                    "move": "HOR:50:50"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Navegación Magnética de Precisión",
+                            "text": "Mediante la aplicación de campos magnéticos externos, los investigadores son capaces de guiar flotas enteras de estos micro-robots biológicos a través del torrente sanguíneo directamente hacia las arterias del tumor.",
+                            "subtitle": "GUIADO MAGNÉTICO EN EL TORRENTE SANGUÍNEO",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/magnetic_field_guidance.png",
+                                    "zoom": "1.1:1.0",
+                                    "move": "VER:0:100",
+                                    "overlay": "dust"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Cargas Útiles de Quimioterapia",
+                            "text": "Cada bacteria viaja cargada con vesículas de medicamentos. Una vez dentro de la masa cancerosa, liberan la dosis exacta de quimioterapia sin tocar ni una sola célula sana del cuerpo.",
+                            "subtitle": "ENTREGA DE FÁRMACOS DE PRECISIÓN QUIRÚRGICA",
+                            "pause": 0.4,
+                            "assets": [
+                                {
+                                    "id": "ciencia/nanoparticle_drug_delivery.png",
+                                    "zoom": "1.0:1.15",
+                                    "move": "HOR:10:60"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Hacia la Era Clínica",
+                    "master_asset": "ciencia/future_oncology_lab.png",
+                    "continuous_voice": true,
+                    "scenes": [
+                        {
+                            "title": "Una Nueva Era en la Oncología",
+                            "text": "La combinación de la biología sintética de Waterloo y la nanotecnología magnética de Montreal marca el inicio de una nueva era: la biomedicina viva y programable.",
+                            "subtitle": "LA ERA DE LA BIOMEDICINA PROGRAMABLE",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/future_oncology_lab.png",
+                                    "zoom": "1.0:1.15",
+                                    "move": "HOR:50:50",
+                                    "overlay": "light leaks"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "El Futuro de los Ensayos Clínicos",
+                            "text": "Aunque aún se encuentran en fases avanzadas de laboratorio y modelos de ensayo, estos avances representan una esperanza real para convertir el cáncer en una enfermedad controlable y erradicable.",
+                            "subtitle": "ENSAYOS AVANZADOS Y ESPERANZA REAL",
+                            "pause": 0.3,
+                            "assets": [
+                                {
+                                    "id": "ciencia/clinical_trials_future.png",
+                                    "zoom": "1.15:1.0",
+                                    "move": "VER:100:0"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Cierre y Llamado a la Acción",
+                            "text": "La naturaleza y la tecnología se han unido en Canadá para cambiar la medicina para siempre. Déjanos tu opinión en los comentarios y suscríbete a NotiACI para descubrir los mayores hitos de la ciencia mundial.",
+                            "subtitle": "SUSCRÍBETE A NOTIACI CIENCIA",
+                            "pause": 0.5,
+                            "assets": [
+                                {
+                                    "id": "notiaci_suscribete.png",
+                                    "zoom": "1.0:1.10",
+                                    "move": "HOR:50:50",
+                                    "overlay": "vignette"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
