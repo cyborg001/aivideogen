@@ -13,7 +13,7 @@
         "engine": "edge",
         "voice_id": "es-ES-AlvaroNeural",
         "background_music": "Revive The Light - Ryan Stasik, Kanika Moore.mp3",
-        "music_volume": 0.15,
+        "music_volume": 0.30,
         "music_volume_lock": false,
         "aspect_ratio": "landscape",
         "render_mode": "cpu",
@@ -45,7 +45,7 @@
             "id": "b1_unibloque",
             "title": "BLOQUE ÚNICO CONTINUO: DOCUMENTAL COMPLETO",
             "music": "Revive The Light - Ryan Stasik, Kanika Moore.mp3",
-            "volume": 0.15,
+            "volume": 0.30,
             "scenes": [],
             "groups": [
                 {
