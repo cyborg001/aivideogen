@@ -2,7 +2,7 @@
 
 ## Junio de 2114
 
-*El Fénix* estaba dejando de ser un montón de chatarra apilada para convertirse en una obra de arte funcional. Bajo la luz amarillenta del taller, las líneas de su chasis ahora fluían con una elegancia depredadora. Yeisly había pasado noches enteras trabajando en el diseño de los costados: un fénix cuyas alas de fuego azul parecía desplegarse hacia atrás, fundiéndose con los difusores de calor. Pero Ethan, mientras pasaba una gamuza por el asiento de polímero, sentía una inquietud que no lo dejaba descansar.
+*El Fénix* estaba dejando de ser un montón de chatarra apilada para convertirse en una obra de arte funcional. Bajo la luz amarillenta del taller, las líneas de su chasis ahora fluían con una elegancia depredadora. Eva había pasado noches enteras trabajando en el diseño de los costados: un fénix cuyas alas de fuego azul parecía desplegarse hacia atrás, fundiéndose con los difusores de calor. Pero Ethan, mientras pasaba una gamuza por el asiento de polímero, sentía una inquietud que no lo dejaba descansar.
 
 Tenía la máquina. Tenía el apoyo. Pero le faltaba el alma del piloto. Podía hacer que la moto levitara, sí; podía realizar giros básicos y aceleraciones cortas, pero en las grabaciones de las carreras profesionales veía algo diferente. Veía pilotos que no luchaban contra el aire, sino que parecían ser parte de él.
 
@@ -52,7 +52,7 @@ El entrenamiento fue una pesadilla geométrica. Tomás no le enseñó a acelerar
 
 —¡Siente la geodésica, maldita sea! —gritaba Tomás por la radio, su voz distorsionada por la estática—. ¡Deja de pelear con la moto! El espacio no es recto, Ethan. ¡Se curva! ¡Si luchas contra la curva, el Efecto Honda te va a escupir contra el muro!
 
-Ethan se estrelló catorce veces el primer día. El carenado del fénix, tan cuidadosamente pintado por Yeisly, ahora tenía cicatrices de concreto y metal. Al final de la tarde, Ethan apenas podía sostener el manillar; sus músculos gritaban de fatiga y su mente era un caos de vectores y fuerzas G.
+Ethan se estrelló catorce veces el primer día. El carenado del fénix, tan cuidadosamente pintado por Eva, ahora tenía cicatrices de concreto y metal. Al final de la tarde, Ethan apenas podía sostener el manillar; sus músculos gritaban de fatiga y su mente era un caos de vectores y fuerzas G.
 
 —No puedo... no veo lo que quieres que vea —jadeó Ethan, desplomándose sobre el suelo de ceniza.
 

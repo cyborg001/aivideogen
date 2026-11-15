@@ -37,18 +37,20 @@
 - **Personalidad**: 
   - Determinado y soñador
   - Talento natural para la mecánica
-  - **Habilidad especial**: Puede "sentir" la gravedad antes de que cambie
-  - **Don único**: Tiene la capacidad de "ver" las geodésicas (caminos curvos en el espacio-tiempo)
-    - Este don es extremadamente raro (solo 2 personas conocidas en 30 años: Luna Reyes y Ethan)
-    - Se manifiesta como una percepción extrasensorial de la geometría del espacio-tiempo
-    - **Visiones del Velo**: Sufre de sueños confusos y fragmentados que parecen visiones en primera persona desde una cabina de mando avanzada (HUD cian). Estos sueños son un misterio recurrente; solo cobran sentido una vez que Ethan se enfrenta a la realidad de la carrera o del cataclismo.
-    - Es la base que le permite aprender El Surfeo de Geodésicas
+  - **Habilidad especial / El Despertar Gravitacional**:
+    - **Sinestesia Gravitacional (El Despertar Neurovestibular)**: No se trata de magia ni de percepción mística; es una adaptación neurológica y evolutiva extremadamente rara (inspirada en la evolución de los *Newtypes* adaptados a nuevos entornos físicos). 
+    - Tras casi un siglo de exposición humana a los inversores gravitacionales masivos de Goglee City, el cerebro de ciertos individuos excepcionales sufre una reconfiguración neurosensorial: el sistema vestibular (equilibrio) se enlaza directamente con la corteza visual.
+    - **Cómo funciona**: Su cerebro procesa los gradientes invisibles de curvatura del espacio-tiempo traduciéndolos instantáneamente en estímulos visuales (líneas de tensión, filamentos luminosos, valles y crestas). Lo que para los instrumentos de una máquina requiere cientos de cálculos por segundo, el cerebro de Ethan lo "ve" y anticipa de manera intuitiva y orgánica.
+    - **El Mito del Distrito RD**: En los talleres clandestinos y en las leyendas de las carreras se habla de esto como una suerte de profecía de resistencia: *la misma gravedad artificial que los domos usan para aplastar a la periferia está forzando a la humanidad a evolucionar para superarla*. Luna Reyes fue la pionera trágica de este despertar en 2084; Ethan es el primer piloto en el que la mutación se estabiliza.
+    - **Visiones del Velo**: Sufre de sueños fragmentados y migrañas con destellos en HUD cian desde su adolescencia. Son los primeros síntomas de su red neuronal reconectándose y buscando un interfaz visual para interpretar la física deformada que lo rodea.
+    - Esta capacidad es la base biológica que le permite ejecutar con éxito **El Surfeo de Geodésicas**.
   - Leal a sus raíces pero anhela un futuro mejor
 - **Historia personal**:
   - Madre desapareció cuando tenía ~5 años (2102)
   - Criado solo por su padre Carlos
-  - Recibió su primera motowave como regalo de cumpleaños (17 años)
-  - Pasó 10 meses transformándola en "El Fénix"
+  - **Experiencia de pilotaje previa**: Piloto empírico desde los 14 años. Como aprendiz en el taller, realizaba las pruebas dinámicas y calibraciones de deslizadores y motowaves utilitarias de clientes en los cañones de chatarra del Distrito RD. Es durante estos vuelos a ras de suelo donde su cerebro comenzó a experimentar micro-despertares sensoriales ante las distorsiones de gravedad.
+  - Recibió su primer chasis de competición propio como regalo de cumpleaños (17 años)
+  - Pasó 10 meses transformándola en "El Fénix" junto a su equipo (Unika, Rafa, Eva)
 - **Objetivo**: Ganar El Velo Gravitacional para conseguir ciudadanía y mejorar la vida de su padre y su gente
 - **Arco narrativo**: De soñador ingenuo a líder revolucionario
 
@@ -82,7 +84,7 @@
 
 ### CÍRCULO CERCANO DE ETHAN (PERIODO DE APRENDIZAJE)
 
-#### YEISLY RAMÍREZ
+#### EVA RAMÍREZ
 - **Relación**: Prima de Ethan (hija de hermano/hermana de Carlos)
 - **Edad**: 18 años (1 año mayor que Ethan)
 - **Fecha de nacimiento**: ~2096
@@ -184,7 +186,7 @@
 - **Rol en la historia**: 
   - Ingeniera de sistemas (especialista en el Inversor G)
   - Optimiza "El Fénix" con tecnología de grado corporativo modificada.
-  - Amiga cercana de Yeisly.
+  - Amiga cercana de Eva.
 - **Relación con Ethan**: Amistad técnica profunda. Ella guarda sentimientos románticos secretos. Es su apoyo intelectual y técnico fundamental.
 
 #### MARCOS
@@ -264,7 +266,7 @@
 - **Subplot potencial**: ¿Fue reclutada por corporación? ¿Murió? ¿Se fue voluntariamente?
 
 #### FAMILIA EXTENDIDA RAMÍREZ
-- **Padre/Madre de Yeisly**: Hermano/hermana de Carlos
+- **Padre/Madre de Eva**: Hermano/hermana de Carlos
 - **Otros primos**: Posible comunidad familiar más amplia en Distrito RD
 - **Abuelos de Ethan**: Refugiados originales de República Dominicana (fallecidos)
 
@@ -471,11 +473,11 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 | **Velas de Espacio-Tiempo** | Pequeños alerones electromagnéticos que "muerden" la curvatura para maniobrar sin necesidad de aire |
 | **Núcleo Gravitacional** | Genera campo de protección contra distorsiones extremas |
 
-**Cómo se siente:**
+**Cómo se siente (La Sinestesia del Despertar):**
 
 - Luna Reyes: *"Es como escuchar una canción que nadie más puede oír. Ves valles y crestas donde otros solo ven aire vacío."*
-- Tomás: *"El universo entero se vuelve visible. Puedes ver cómo el espacio se dobla, se retuerce, te llama."*
-- Requiere la habilidad de **"sentir" la geometría del espacio-tiempo** instintivamente
+- Tomás: *"El universo entero se vuelve visible. Puedes ver cómo el espacio se dobla, se retuerce, te llama. Para los de arriba es una anomalía médica; para nosotros, es la prueba de que el ser humano se niega a ser aplastado."*
+- Requiere la condición biológica de **Sinestesia Gravitacional**: el cerebro procesa de forma neurosensorial la geometría del espacio-tiempo, proyectando halos y geodésicas en el campo visual del piloto.
 
 **Peligros mortales:**
 
@@ -785,20 +787,20 @@ Los círculos flotantes de El Velo no son solo metas, sino **generadores de micr
 ### ELEMENTOS A DESARROLLAR
 
 - [ ] Descripción física detallada de Ethan
-- [ ] Descripción física de Yeisly, Rafa, Unica, Marcos
+- [ ] Descripción física de Eva, Rafa, Unika, Marcos
 - [ ] Nombre y backstory completa de la madre de Ethan
 - [ ] Mecanismo técnico de propulsores gravitacionales
 - [ ] Mecanismo técnico de estabilizadores de fase
 - [ ] Música y comida del Distrito RD
-- [x] Personajes del círculo cercano de Ethan (Yeisly, Rafa, Tomás, Unika, Marcos)
+- [x] Personajes del círculo cercano de Ethan (Eva, Rafa, Tomás, Unika, Marcos)
 - [ ] Detalles de la pista de El Velo
 - [ ] Estructura política de Goglee City
 - [ ] Otras ciudades-domo en el mundo
 - [ ] Desarrollo de la revolución post-rechazo
 - [ ] Historia completa de Tomás "El Viejo Toro" Vega (su victoria en 2082, castigo, pérdidas)
-- [ ] Familia extendida Ramírez (padres de Yeisly, otros primos)
-- [ ] Subplot del arte de Yeisly como resistencia
-- [ ] Desarrollo de la posible tensión romántica Ethan-Unica (admiración secreta de ella)
+- [ ] Familia extendida Ramírez (padres de Eva, otros primos)
+- [ ] Subplot del arte de Eva como resistencia
+- [ ] Desarrollo de la posible tensión romántica Ethan-Unika (admiración secreta de ella)
 
 ### PREGUNTAS ABIERTAS
 

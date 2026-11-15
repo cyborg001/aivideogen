@@ -2,55 +2,55 @@
 
 ## 3 de febrero de 2114
 
-Ethan Ramírez despertó con el sabor amargo y seco de la calima industrial pegado a la lengua. El aire del Distrito RD no era solo aire; era una suspensión pesada cargada de residuos de procesado y humedad ácida, donde la dispersión de Rayleigh se rendía ante una bruma permanente que convertía el sol en un disco amarillento, una pupila enferma que observaba desde el otro lado de la polución. Diecisiete años. Hoy cumplía diecisiete años, una cifra que en la periferia no se medía en pasteles ni deseos, sino en la capacidad de los pulmones para seguir filtrando el óxido de la existencia cotidiana.
+Ethan Ramírez despertó con el corazón martilleando contra las costillas, arrastrando un vértigo que venía de muy lejos, ajeno a su pequeña habitación en el Distrito RD. Acababa de salir de *ese* sueño otra vez. Esta vez, la visión había sido más nítida, casi tangible: se veía a sí mismo —o a alguien que usaba sus manos— dentro de una cabina de mando avanzada. A través de la placa frontal de un casco futurista, una red de datos y vectores parpadeaba en una interfaz HUD que inundaba su campo de visión con luz cian. Frente a él, el espacio-tiempo se retorcía, colapsando en un túnel de geometría imposible, un agujero de gusano que rugía con un silencio absoluto mientras la nave se lanzaba hacia su centro. El latido de la máquina y el suyo propio eran una sola frecuencia. Sacudió la cabeza, tratando de atrapar la lógica de la visión, pero los fragmentos del casco y la cabina se le escapaban entre los dedos, dejando solo un rastro de inquietud fría en la nuca.
 
-Se incorporó en su pequeño catre, que chirrió en protesta. Se frotó los ojos, tratando de quitarse el cansancio que parecía haberse filtrado en sus huesos durante la noche. A través de la ventana rota de su habitación, sellada parcialmente con cinta plástica que vibraba con el viento, podía ver el brillo insultante del domo de Goglee City a lo lejos. Era una semiesfera perfecta de cristal y nanotecnología, una luna artificial cautiva que bañaba a los privilegiados en una luz blanca y pura, recordándole a cada segundo que había un mundo de aire filtrado y cielos azules al que él nunca tendría invitación.
+Ethan se levantó con el sabor amargo y seco de la calima industrial pegado a la lengua. El aire del Distrito RD no era solo aire; era una suspensión pesada cargada de residuos de procesado y humedad ácida, donde la dispersión de Rayleigh se rendía ante una bruma permanente que convertía el sol en un disco amarillento, una pupila enferma que observaba desde el otro lado de la polución. Diecisiete años. Hoy cumplía diecisiete años, una cifra que en la periferia no se medía en pasteles ni deseos, sino en la capacidad de los pulmones para seguir filtrando el óxido de la existencia cotidiana.
 
-—¡Ethan! —La voz de Carlos, profunda y rasposa como el papel de lija, retumbó desde el taller de abajo—. ¡Despierta, mijo! ¡Baja, que lo que te tengo no espera!
+Se incorporó en su pequeño catre, que chirrió con una frecuencia metálica y cansada. A través de la ventana rota, sellada con cinta de polímero que vibraba con un zumbido de baja frecuencia, el domo de Goglee City brillaba a lo lejos con una pureza insultante. Era una semiesfera de cristal reforzado y campos de fuerza, una luna artificial que albergaba un mundo de presión atmosférica controlada y cielos de un azul espectral al que Ethan, por nacimiento y genética, nunca tendría invitación.
 
-Ethan se vistió en silencio, poniéndose la misma camiseta de tirantes gastada y los pantalones de carga manchados de grasa que eran casi una segunda piel. Al final de la escalera de metal, el calor del taller ya empezaba a subir, trayendo consigo el aroma reconfortante del aceite de motor y el ozono de las soldaduras.
+—¡Ethan! —La voz de Carlos, profunda y con la rugosidad de quien ha inhalado demasiado ozono de soldadura, retumbó desde el taller—. ¡Despierta, mijo! ¡Baja, que tengo algo que mostrarte!
 
-El taller de Carlos era su santuario. Era un espacio angosto, encajado entre edificios condenados, donde el techo goteaba cuando la lluvia ácida caía con fuerza, pero para Ethan era el centro del universo. Entre pilas de transmisiones rotas y cables de fibra óptica deshilachados, su padre obraba milagros. Carlos le había enseñado que una pieza de metal no estaba muerta mientras pudieras sentir su vibración. "Escucha el motor, Ethan", solía decirle, "él te dirá dónde le duele antes de que se rompa".
+Ethan se vistió con la eficiencia del hábito: la camiseta de tirantes gastada y los pantalones de carga manchados con lubricante sintético. Al bajar la escalera de metal, el calor del taller lo envolvió como un abrazo físico, trayendo consigo el aroma reconfortante del aceite de motor y el olor a tormenta de los sistemas de inducción.
 
-Carlos lo esperaba en medio del caos organizado de herramientas. A sus cincuenta y seis años, sus manos eran un mapa de cicatrices y quemaduras, pero sus ojos oscuros conservaban un brillo de picardía que el Distrito no había logrado apagar. Carlos era un hombre forjado en la lógica del metal; para él, el universo era una máquina compleja regida por leyes físicas que no necesitaban oraciones para cumplirse. Aunque usaba la bendición por puro hábito cultural, su verdadera fe residía en la precisión de un motor bien alineado.
+El taller de Carlos era un oasis de entropía organizada. Encajado entre estructuras condenadas del viejo mundo, era el único lugar donde Ethan sentía que la realidad se podía doblar si tenías las herramientas adecuadas. Su padre siempre lo decía: "Una pieza de metal no está muerta mientras su resonancia sea pura". Para Carlos Ramírez, los motores hablaban una lengua de vibraciones que Ethan empezaba a descifrar.
 
-Detrás de él, envuelta en una lona de polímero manchada de mil batallas mecánicas, se erguía una silueta inconfundible. Una promesa de velocidad grabada en sus líneas ocultas. Algo que Ethan solo había visto en los hologramas de las carreras de la ciudad alta.
+Carlos lo esperaba junto al banco de trabajo. A sus cincuenta y seis años, sus manos eran un catálogo de la historia del Distrito: quemaduras por plasma, cicatrices de engranajes y piel curtida por el trabajo. Carlos era un hombre de lógica férrea y pragmatismo absoluto; para él, el universo no era más que una máquina vasta cuya única religión era el mantenimiento preventivo. Aunque repartía bendiciones por puro sedimento cultural caribeño, su verdadera fe residía en la precisión de un tornillo bien apretado. El taller estaba ahora vivo con el brillo azul de interfaces holográficas avanzadas que flotaban sobre las mesas de metal.
 
-—Cion papi. Papi!... —Ethan se detuvo, sintiendo un nudo en la garganta—. ¿No me digas que...?
+Detrás de él, bajo una lona de polímero que ocultaba su forma, se erguía una silueta aerodinámica, una promesa de movimiento. Algo que Ethan conocía bien por los rugidos de las carreras clandestinas del Distrito RD, pero que nunca había soñado con tocar.
 
-Carlos sonrió. —¡Jajaja! Dios te bendiga, mijo. —Era una expresión de orgullo que le restó diez años de encima.
+—Cion papi. Papi!... —Ethan se detuvo, sintiendo una fluctuación extraña en su ritmo cardíaco—. ¿Es lo que creo que es?
 
-—Feliz cumple, mijo. No es una de esas máquinas brillantes que usan los *popis* de la ciudad alta, pero tiene un núcleo de inducción gravitacional Clase 3 que rescaté de un carguero estrellado. Es puro hierro, Ethan. Del bueno.
+Carlos sonrió. —¡Jajaja! Dios te bendiga, mijo. —Por un segundo, el peso de la gravedad pareció aliviarse en sus hombros.
 
-Ethan se acercó como si temiera que la visión se desvaneciera. Al retirar la lona, el polvo bailó en la luz mortecina. El chasis estaba rayado y el asiento de cuero sintético tenía parches, pero bajo la carcasa de aleación, Ethan podía sentir el pulso de algo poderoso. Era el regalo más valioso que alguien en el Distrito RD podía recibir: un par de alas de metal.
+—Feliz cumple, mijo. No es una de esas máquinas de lujo con estabilizadores de neuronas que pilotan en la ciudad alta, pero tiene un núcleo de inducción Clase 3 que rescaté de los restos de un carguero. Es puro hierro, Ethan. Latido puro.
 
-—Es... es increíble, papi —susurró Ethan, pasando los dedos por el manillar. Notó la resistencia familiar de los controles, la firmeza de la horquilla—. ¿Cómo conseguiste las piezas para el inversor G?
+Ethan se acercó como si temiera que la visión se desvaneciera. Al retirar la lona, el polvo bailó en la luz mortecina. El chasis estaba rayado y el asiento de cuero sintético tenía parches, pero bajo la carcasa de aleación, Ethan podía sentir el pulso de algo poderoso. Era el regalo más valioso que alguien en el Distrito RD podía recibir: un motor operativo, un par de alas de metal que aún no recordaban cómo volar.
 
-—Eso es secreto profesional, mijo —rio Carlos, aunque luego tosió brevemente, ocultando la boca—. La he estado armando por piezas estas últimas noches. No levita todavía, el sistema de fase está muerto, pero el motor ruge como un toro. El resto... el resto lo vas a poner tú. Es tu proyecto ahora.
+—Es... es increíble, papi —susurró Ethan, pasando los dedos por el manillar. Notó la resistencia familiar de los controles, la firmeza de la horquilla—. El núcleo vibra... está viva.
 
-Carlos suspiró, clavando la vista en un viejo monitor que mostraba telemetría astronómica llena de estática. Sus ojos, antes brillantes, se sombrearon por un instante.
+—Está viva, mijo. Llevas desde los catorce probando los deslizadores de carga y las motowaves rotas de los clientes en los callejones del vertedero, jugando al piloto con hierros ajenos. Ya era hora de que tuvieras una máquina propia, una que no tengas que devolver al caer la noche. La he estado armando por piezas estas últimas semanas. El motor de combustión y el sistema de tracción por cadena están al cien; puedes rodarla por el asfalto del Distrito ahora mismo si quieres. Pero no levita todavía, Ethan. El sistema de fase está muerto y los propulsores gravitacionales son puro peso muerto por ahora. El resto... el resto lo vas a poner tú. Es tu proyecto ahora.
 
-—Hay algo en esa data que no me cuadra, Ethan. No me gusta. —Carlos señaló el monitor, donde una línea de telemetría oscilaba con una arritmia inquietante—. La Cúpula dice que es simple ruido, pero un mecánico sabe cuando una máquina va a reventar aunque el panel diga que todo está en verde. Por otro lado hijo, aprende a sentir el espacio-tiempo si tanto te gustan las motowaves. Puede que pronto necesites saber por dónde escapar cuando el cielo decida cerrarse.
+Carlos suspiró, clavando la vista en un complejo holograma que mostraba telemetría astronómica en tiempo real. Sus ojos, antes brillantes, se sombrearon por un instante.
 
-Ethan cerró los ojos y, por un momento, no vio las paredes desconchadas del taller. Vio las historias que su padre le contaba por las noches, cuando el ruido de la ciudad se calmaba. Historias de una isla llamada Quisqueya, donde el mar no era negro por el petróleo sino de un azul tan intenso que dolía mirarlo. Donde la gente no necesitaba máscaras para respirar y el sol te besaba la piel en lugar de quemarla.
+—Miro lo que otros ignoran, mijo. En el año 2100 vi un bamboleo de una estrella que no tenía sentido. Ahora, ese patrón se repite. Algo en estos datos no me gusta. Aprende a leer los vectores de escape si tanto te gustan las *Motowaves*. Los números no mienten, Ethan. En un vuelo crítico, lo único real es lo que marca el panel. No lo olvides.
 
-Esa herencia latía en él. Era lo que lo mantenía en pie. Se giró hacia su padre, buscando ese vínculo que era su única ancla.
+Ethan cerró los ojos y, por un momento, las historias de Carlos cobraron vida. Historias de Quisqueya, la isla que el mar se tragó en 2065. Vio mares que no eran de petróleo, sino de un azul tan profundo que desafía la descripción, y cielos donde el sol no quemaba, sino que acariciaba. Ese legado era su única ancla en un mundo que quería hundirlo.
 
-—Papi... Ción.
+Se giró hacia su padre, buscando el ritual que mantenía viva esa memoria.
 
-Ethan inclinó levemente la cabeza, un gesto de respeto antiguo que Carlos exigía no por ego, sino por memoria. Era el cordón umbilical que los unía a sus ancestros, a los que cruzaron el mar antes de que el mar se lo tragara todo.
+—Papi... Ción papi.
 
-Carlos puso su mano callosa sobre la cabeza de Ethan. El contacto fue cálido, cargado de una bendición que no necesitaba de iglesias para ser sagrada.
+Ethan inclinó la cabeza con respeto. No era una simple costumbre; era una transferencia de momento espiritual, el reconocimiento de que su historia no empezaba con él, sino con los que cruzaron el mar cuando el mundo se rompió.
 
-—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y que nunca se le olvide que, aunque estemos en el fango, nosotros somos gente de cielo.
+Carlos puso su mano callosa sobre el hombro de su hijo. El contacto fue cálido, una bendición grabada en el ADN de su gente.
 
-Ethan asintió, sintiendo el peso de la responsabilidad. Miró su moto de nuevo. No era solo chatarra recuperada. Era el inicio de algo.
+—Dios me lo bendiga y me lo haga un hombre de bien, mijo. Y nunca lo olvide: el conocimiento es la clave de todo, y en este mundo, la única verdad está en los datos. Aprenda a leerlos y nunca estará perdido.
 
-—La llamaré *El Fénix* —dijo con firmeza—. Porque va a salir de este agujero volando.
+Ethan asintió, sintiendo que su masa corporal ya no era un lastre. Miró la motowave. Ya tenía nombre en su mente, un nombre que evocaba el ciclo eterno de la materia.
 
-Carlos lo miró en silencio, con una mezcla de esperanza y un miedo que Ethan aún no alcanzaba a comprender. Sabía que al darle esa moto, le estaba dando un sueño. Y en el Distrito RD, los sueños solían tener un precio muy alto.
+—La llamaré *El Fénix* —sentenció—. Porque vamos a quemar el aire del Distrito para salir volando de aquí.
 
-Pero hoy no era día para pensar en precios. Hoy, Ethan Ramírez tenía diecisiete años y, por primera vez en su vida, sentía que la gravedad ya no pesaba tanto.
+Carlos lo observó en silencio, con una mezcla de orgullo y una sombra de advertencia que Ethan aún no comprendía del todo. Darle la motowave era darle un sueño, y en el Distrito RD, los sueños pesaban tanto como el plomo. Pero hoy, mientras Ethan sentía el pulso del motor bajo su palma, el universo entero parecía haber disminuido su constante gravitatoria solo para él.
 
 ---
 
@@ -88,7 +88,7 @@ Tres horas más tarde, Ethan estaba enfrascado en una batalla contra una maraña
 
 —¡Ethan! ¡Klk manín! ¿Estás metido en el hierro todavía?
 
-Esa voz, cargada de una energía eléctrica que rivalizaba con los condensadores del taller, solo podía ser de Rafa. Su mejor amigo cruzó el umbral moviendo los hombros al ritmo de una música imperceptible, cargando una mochila que traqueteaba con el sonido de componentes electrónicos.
+Esa voz, cargada de una energía eléctrica que rivalizaba con los condensadores del taller, solo podía ser de Rafa. Su mejor amigo cruzó el umbral moviendo los hilos al ritmo de una música imperceptible, cargando una mochila que traqueteaba con el sonido de componentes electrónicos.
 
 —¡Aquí atrás, Rafa! —respondió Ethan, emergiendo de entre las piezas con una mancha de aceite en la frente.
 
@@ -102,41 +102,41 @@ Ethan se rió, agradecido por la oferta. Rafa era un genio improvisando circuito
 
 ---
 
-Al mediodía, el calor se volvió denso y el aire en el taller se estancó. Yeisly llegó como un torbellino, cargando una bolsa que emanaba el aroma celestial del arroz con habichuelas.
+Al mediodía, el calor se volvió denso y el aire en el taller se estancó. Eva llegó como un torbellino, cargando una bolsa que emanaba el aroma celestial del arroz con habichuelas.
 
-—¡Mierda loco, qué jebi está esa vaina! —soltó Yeisly nada más ver la moto sobre el caballete—. ¡Dime que no es verdad, primo! ¿De verdad vamos a poner a volar este hierro?
+—¡Mierda loco, qué jebi está esa vaina! —soltó Eva nada más ver la moto sobre el caballete—. ¡Dime que no es verdad, primo! ¿De verdad vamos a poner a volar este hierro?
 
-—Esa es la idea, Yeisly —respondió Ethan, recibiendo la comida—. Pero todavía falta mucho.
+—Esa es la idea, Eva —respondió Ethan, recibiendo la comida—. Pero todavía falta mucho.
 
-Yeisly rodeó la moto con los ojos entrecerrados, como si estuviera encuadrando una pintura. Ella veía colores donde los demás veían óxido.
+Eva rodeó la moto con los ojos entrecerrados, como si estuviera encuadrando una pintura. Ella veía colores donde los demás veían óxido.
 
 —Tiene líneas potentes. De verdad. Cuando esté lista, yo le voy a meter un diseño que la gente va a creer que es una nave de la Ciudad Aérea. Quiero que el Fénix se vea desde el domo.
 
-Acompañando a Yeisly estaba Unica. Ella, al contrario que la prima de Ethan, se mantuvo en silencio unos instantes, observando la estructura con una mirada analítica y calmada.
+Acompañando a Eva estaba Unika. Ella, al contrario que la prima de Ethan, se mantuvo en silencio unos instantes, observando la estructura con una mirada analítica y calmada.
 
-—Ethan, las especificaciones del fabricante para este modelo sugieren que el chasis debe ser reforzado —comentó Unica con su voz educada y precisa—. Si planeas alcanzar velocidades de carrera, los puntos de anclaje de los propulsores sufrirán una fatiga estructural inaceptable.
+—Ethan, las especificaciones del fabricante para este modelo sugieren que el chasis debe ser reforzado —comentó Unika con su voz educada y precisa—. Si planeas alcanzar velocidades de carrera, los puntos de anclaje de los propulsores sufrirán una fatiga estructural inaceptable.
 
-—¿Titanio? —preguntó Ethan, reconociendo la lógica en las palabras de su amiga.
+ —¿Titanio? —preguntó Ethan, reconociendo la lógica en las palabras de su amiga.
 
-—Exactamente. Placas de refuerzo de titanio o, al menos, una aleación de cromo-molibdeno —continuó Unica, sin rastro de jerga en su discurso—. El costo en créditos es elevado, pero es una medida de seguridad necesaria si valoras tu integridad física.
+ —Exactamente. Placas de refuerzo de titanio o, al menos, una aleación de cromo-molibdeno —continuó Unika, sin rastro de jerga en su discurso—. El costo en créditos es elevado, pero es una medida de seguridad necesaria si valoras tu integridad física.
 
 Rafa levantó la vista de un mazo de cables que estaba pelando.
 
 —¿Y de dónde vamos a sacar los créditos? Esa vaina no cae del cielo.
 
-—Conseguiremos la chatarra —dijo Unica, saliendo de debajo de la moto con una pequeña linterna técnica—. Conozco a un proveedor en la Plaza que tiene excedentes de las fábricas corporativas. No será nuevo, pero con un poco de pulido, su integridad estructural será perfecta para lo que necesitamos.
+—Conseguiremos la chatarra —dijo Unika, saliendo de debajo de la moto con una pequeña linterna técnica—. Conozco a un proveedor en la Plaza que tiene excedentes de las fábricas corporativas. No será nuevo, pero con un poco de pulido, su integridad estructural será perfecta para lo que necesitamos.
 
 Carlos, que observaba la escena desde la puerta, intervino con voz tranquila pero firme.
 
 —Yo puedo dar unas clases extra de mecánica pesada en el muelle de carga. Entre todos sacaremos esto adelante.
 
-Ethan miró a su alrededor. Estaban todos allí: su padre, su mejor amigo, su prima artista y la mente técnica de Unica. Gente que no tenía nada, pero que estaba dispuesta a darle lo poco que tenían para que él pudiera volar.
+Ethan miró a su alrededor. Estaban todos allí: su padre, su mejor amigo, su prima artista y la mente técnica de Unika. Gente que no tenía nada, pero que estaba dispuesta a darle lo poco que tenían para que él pudiera volar.
 
 —Gracias —dijo Ethan, sintiendo que la garganta se le cerraba un poco. Su acento dominicano se volvió más suave, más sentido—. No sé cómo agradecerles esto.
 
 —No digas nada, manito —le cortó Rafa, dándole una palmada en la espalda—. Solo gana esa maldita carrera por nosotros.
 
-—¡Eso mismo! —añadió Yeisly con una carcajada—. Que si perdemos, vamos a tener que comer aire reciclado por tres meses para pagar los platos rotos.
+—¡Eso mismo! —añadió Eva con una carcajada—. Que si perdemos, vamos a tener que comer aire reciclado por tres meses para pagar los platos rotos.
 
 Esa noche, cuando el silencio finalmente reclamó el taller, Ethan se quedó solo frente a la carcasa desarmada de *El Fénix*. Con el cuaderno sobre las rodillas, miró su boceto. Ya no veía solo una moto vieja; veía el esfuerzo de su gente, la esperanza de un distrito entero que se negaba a ser olvidado. Se recostó contra la pared fría y cerró los ojos, imaginando el viento puro del domo golpeándole el rostro.
 
@@ -144,7 +144,7 @@ Esa noche, cuando el silencio finalmente reclamó el taller, Ethan se quedó sol
 
 Desde la sombra del pasillo, Carlos lo miraba. Sentía orgullo, sí, pero también un miedo gélido que le recorría la espalda. Sabía que El Velo Gravitacional no premiaba el talento tanto como castigaba la esperanza. Era una carrera diseñada por los de arriba para recordarles a los de abajo cuál era su lugar.
 
-Cerró los ojos y, en la oscuridad, elevó una plegaria silenciosa a los antiguos dioses de la isla.
+Cerró los ojos y, en la oscuridad, elevó una plegaria silenciosa al cielo invisible tras el smog, pidiendo por la memoria de la tierra perdida y de los suyos.
 
 *Protégelo. Por favor, que esta vez sea diferente.*
 
@@ -163,15 +163,15 @@ La Plaza de Chatarra nunca cerraba sus párpados de neón. Incluso a las tres de
 
 Ethan caminaba con paso firme, tratando de ignorar las pantallas holográficas que proyectaban anuncios de Goglee City, ahora distorsionados y llenos de estática. A su lado, Rafa se movía como si esquivara golpes invisibles, con los ojos bien abiertos. Habían trabajado como mulas durante ocho semanas, doblando turnos en el muelle y vendiendo cada gramo de cobre que lograban rescatar de los vertederos. Hoy, finalmente, el sueño de la levitación estaba al alcance de sus dedos.
 
-—Oye, manito, chequea esto —susurró Rafa, señalando su tableta agrietada—. El Tocayo dice que el cargamento de inductores ya llegó. Puesto 47-B, allá por el callejón de los Sifones. Si ese viejo no nos clava el cuchillo con el precio, hoy mismo *El Fénix* despega.
+—Oye, manito, chequea esto —susurró Rafa, señalando su tableta agrietada—. El Tocayo dice que el cargamento de inductores ya llegó. Puesto 47-B, allá por el callejón de los Sifones. Si ese viejo no nos clava el cuchillo con el precio, pronto *El Fénix* dejará de besar el suelo.
 
-Encontraron el puesto de El Tocayo oculto tras una cortina de cables eléctricos que escupían chispas ocasionales. El viejo comerciante, con una mandíbula de cromo que chirriaba al hablar, estaba sentado sobre un trono de memorias RAM obsoletas.
+Encontraron el puesto del Tocayo oculto tras una cortina de cables eléctricos que escupían chispas ocasionales. El viejo comerciante, un antiguo amigo de Carlos Ramírez con el que compartía nombre, tenía una mandíbula de cromo que chirriaba al hablar. Estaba sentado sobre un trono de memorias RAM obsoletas.
 
-—Los chicos de la motowave —gruñó El Tocayo, dejando escapar una nube de vapor químico de sus pulmones artificiales—. ¿Me trajeron el "cariño" o vinieron a hacerme perder el tiempo?
+—Los chicos de la motowave —gruñó el Tocayo, dejando escapar una nube de vapor químico de sus pulmones artificiales—. ¿Me trajeron el "cariño" o vinieron a hacerme perder el tiempo?
 
 Ethan sacó un fajo de créditos arrugados, el fruto de su sudor y sus noches en vela.
 
-—Quinientos créditos, El Tocayo. Lo prometido por el par de propulsores gravitacionales Clase 3.
+—Quinientos créditos, Tocayo. Lo prometido por el par de propulsores gravitacionales Clase 3.
 
 El Tocayo empezó a contar el dinero con una lentitud exasperante, pero antes de que pudiera terminar, una sombra se proyectó sobre el mostrador.
 
@@ -181,7 +181,7 @@ Ethan se giró. Frente a él estaba una chica que parecía haber nacido del mism
 
 —Oye, chico, busca tus piezas en otro lado —dijo ella, con un marcado acento cubano que le daba ritmo a su amenaza—. Esos inductores me pertenecen por reserva de palabra.
 
-—En la Plaza no hay palabras, niña —soltó El Tocayo con una risa metálica—. Solo hay créditos sobre la mesa. Y estos muchachos pagaron primero.
+—En la Plaza no hay palabras, niña —soltó el Tocayo con una risa metálica—. Solo hay créditos sobre la mesa. Y estos muchachos pagaron primero.
 
 La chica se acercó a Ethan, invadiendo su espacio personal. Era un poco más alta que él, y su presencia desprendía un olor a pólvora y lluvia ácida. Lo estudió de arriba abajo, deteniéndose en sus manos manchadas de aceite.
 
@@ -215,9 +215,9 @@ Rafa, que había estado conteniendo el aliento, soltó un silbido largo.
 
 Dos semanas más tarde, el taller de Carlos era un nido de tensión. Los nuevos propulsores estaban anclados al chasis de *El Fénix*, brillando con un azul cobalto que iluminaba las caras expectantes del equipo. Instalar inductores gravitacionales en un chasis viejo era como intentar meter el alma de un demonio en un cuerpo de madera; la alineación tenía que ser perfecta o la moto se desgarraría a sí misma en el aire.
 
-Carlos supervisaba cada soldadura, cada ajuste de software que Unica realizaba en la consola integrada.
+Carlos supervisaba cada soldadura, cada ajuste de software que Unika realizaba en la consola integrada.
 
-—La inducción está estable en un 92% —informó Unica, con su tono pausado y preciso—. Ethan, si elevamos el flujo ahora, el sistema de fase debería estabilizarse.
+—La inducción está estable en un 92% —informó Unika, con su tono pausado y preciso—. Ethan, si elevamos el flujo ahora, el sistema de fase debería estabilizarse.
 
 Ethan subió a la moto. El asiento, ahora reforzado, se sentía firme. Respiró hondo, cerró los ojos un segundo y activó el núcleo.
 
@@ -225,7 +225,7 @@ Un zumbido sordo empezó a vibrar en el taller. Las herramientas sobre las mesas
 
 —¡Wepa! ¡Lo logramos! —gritó Rafa, lanzando su gorra al aire.
 
-—¡Mierda, primo, que eso está volando de verdad! —exclamó Yeisly, grabando la escena con su terminal.
+—¡Mierda, primo, que eso está volando de verdad! —exclamó Eva, grabando la escena con su terminal.
 
 Ethan sentía la moto vibrar bajo él, como un animal salvaje que empezaba a despertar. La adrenalina le recorría el cuerpo. Ya no era solo un sueño; era una realidad que flotaba frente a sus ojos.
 
@@ -270,7 +270,7 @@ Ethan la observó irse, sintiendo que ahora tenía otra razón más para ganar. 
 
 ## Junio de 2114
 
-*El Fénix* estaba dejando de ser un montón de chatarra apilada para convertirse en una obra de arte funcional. Bajo la luz amarillenta del taller, las líneas de su chasis ahora fluían con una elegancia depredadora. Yeisly había pasado noches enteras trabajando en el diseño de los costados: un fénix cuyas alas de fuego azul parecía desplegarse hacia atrás, fundiéndose con los difusores de calor. Pero Ethan, mientras pasaba una gamuza por el asiento de polímero, sentía una inquietud que no lo dejaba descansar.
+*El Fénix* estaba dejando de ser un montón de chatarra apilada para convertirse en una obra de arte funcional. Bajo la luz amarillenta del taller, las líneas de su chasis ahora fluían con una elegancia depredadora. Eva había pasado noches enteras trabajando en el diseño de los costados: un fénix cuyas alas de fuego azul parecía desplegarse hacia atrás, fundiéndose con los difusores de calor. Pero Ethan, mientras pasaba una gamuza por el asiento de polímero, sentía una inquietud que no lo dejaba descansar.
 
 Tenía la máquina. Tenía el apoyo. Pero le faltaba el alma del piloto. Podía hacer que la moto levitara, sí; podía realizar giros básicos y aceleraciones cortas, pero en las grabaciones de las carreras profesionales veía algo diferente. Veía pilotos que no luchaban contra el aire, sino que parecían ser parte de él.
 
@@ -320,7 +320,7 @@ El entrenamiento fue una pesadilla geométrica. Tomás no le enseñó a acelerar
 
 —¡Siente la geodésica, maldita sea! —gritaba Tomás por la radio, su voz distorsionada por la estática—. ¡Deja de pelear con la moto! El espacio no es recto, Ethan. ¡Se curva! ¡Si luchas contra la curva, el Efecto Honda te va a escupir contra el muro!
 
-Ethan se estrelló catorce veces el primer día. El carenado del fénix, tan cuidadosamente pintado por Yeisly, ahora tenía cicatrices de concreto y metal. Al final de la tarde, Ethan apenas podía sostener el manillar; sus músculos gritaban de fatiga y su mente era un caos de vectores y fuerzas G.
+Ethan se estrelló catorce veces el primer día. El carenado del fénix, tan cuidadosamente pintado por Eva, ahora tenía cicatrices de concreto y metal. Al final de la tarde, Ethan apenas podía sostener el manillar; sus músculos gritaban de fatiga y su mente era un caos de vectores y fuerzas G.
 
 —No puedo... no veo lo que quieres que vea —jadeó Ethan, desplomándose sobre el suelo de ceniza.
 
@@ -380,7 +380,7 @@ Son los hijos de la diáspora, los nietos de la Gran Inundación. El Distrito RD
 
 En su taller, Ethan no permitía que la atmósfera opresiva entrara en su zona de trabajo. *El Fénix* descansaba en el centro del taller, ya no como la promesa oxidada de su cumpleaños, sino como una depredadora de metal pulido. Bajo la luz blanca de las lámparas LED, el chasis brillaba con una intensidad metálica que parecía absorber el humo del taller.
 
-—Ajuste del bus de datos al 99.8 por ciento —susurró Ethan, su voz suave pero cargada de una tensión eléctrica. Sus dedos, callosos pero precisos, ajustaban un micro-conector en el núcleo gravitacional—. Necesitas aguantar, pequeña. Los circuitos de El Velo no perdonan. Si el sistema de fase flaquea bajo la presión de un Martillo Gravitacional, no quedarán ni los tornillos para el entierro.
+—Ajuste del bus de datos al 99.8 por ciento —susurró Ethan, su voz suave pero cargada de una tensión eléctrica. Sus dedos, callosos pero precisos, ajustaban un micro-conector en el núcleo gravitacional—. Necesitas aguantar, pequeña. Los circuitos de El Velo ignoran el perdón. Si el sistema de fase flaquea bajo la presión de un Martillo Gravitacional, no quedarán ni los tornillos para el entierro.
 
 Rafa estaba casi sumergido dentro de la estructura de la moto, con los pies colgando sobre el motor de inducción. Su linterna frontal bailaba sobre una red de fibra óptica que emitía un suave pulso verde.
 
@@ -392,27 +392,27 @@ Ethan pasó la mano por el carenado frío. Sabía que Rafa tenía razón. Tomás
 
 —No tenemos otra opción, papi —respondió Ethan, aunque se le notaba la frustración en el tono—. Un T-9 cuesta más créditos de los que hemos visto juntos en toda la vida.
 
-—La fe no arregla la física, mijo —sentenció Carlos, acercándose y revisando el dial de presión gravitacional—. He oído que El Tocayo recibió una caja de "excedentes militares" del último transporte que falló en el domo. Dicen que hay tecnología de grado táctico. Si quieres una oportunidad real, deja de pulir el metal y ve a la Plaza. Ahora.
+—La fe no arregla la física, mijo —sentenció Carlos, acercándose y revisando el dial de presión gravitacional—. He oído que el Tocayo recibió una caja de "excedentes militares" del último transporte que falló en el domo. Dicen que hay tecnología de grado táctico. Si quieres una oportunidad real, deja de pulir el metal y ve a la Plaza. Ahora.
 
 ---
 
-La Plaza de Chatarra bajo la lluvia ácida era un infierno de vapor y estridencia. Ethan se movía entre los puestos, esquivando a los chatarreros que intentaban venderle filtros de aire usados y baterías descargadas. Su mente estaba fija en el puesto de El Tocayo.
+La Plaza de Chatarra bajo la lluvia ácida era un infierno de vapor y estridencia. Ethan se movía entre los puestos, esquivando a los chatarreros que intentaban venderle filtros de aire usados y baterías descargadas. Su mente estaba fija en el puesto del Tocayo.
 
 Cuando llegó, el viejo estaba sentado sobre una caja de municiones vacía, con su mandíbula de cromo chirriando mientras comía algo que Ethan prefirió no identificar.
 
-—Vienes por el T-9, ¿verdad? —gruñó El Tocayo antes de que Ethan dijera una palabra—. La noticia corre rápido en la basura.
+—Vienes por el T-9, ¿verdad? —gruñó el Tocayo antes de que Ethan dijera una palabra—. La noticia corre rápido en la basura.
 
 —¿Lo tienes? —Ethan trató de que su voz no temblara.
 
 El Tocayo escupió a un lado y pateó una lona negra. Debajo, descansaba una pieza de geometría compleja, con aletas de refrigeración de cerámica y un puerto de conexión dorado. Un estabilizador de fase T-9. Grado militar.
 
-—Es una belleza de la vieja Guardia —dijo El Tocayo—. Quinientos créditos. Y no acepto promesas, solo créditos fríos.
+—Es una belleza de la vieja Guardia —dijo el Tocayo—. Quinientos créditos. Y no acepto promesas, solo créditos fríos.
 
 —Casi no tenemos esa cantidad —dijo una voz a la espalda de Ethan.
 
 Sony estaba allí, protegida por un chubasquero de plástico que goteaba sobre el pavimento sucio. Se acercó a la pieza y la analizó con una mirada cargada de un cinismo experto.
 
-—Oye, El Tocayo, no te pases de listo con el chico —soltó Sony, su acento cubano cortando el ruido de la lluvia—. Esa pieza tiene los sellos de seguridad violados. Es material robado o "caído del camión". Si los recolectores corporativos la ven aquí, te queman el puesto.
+—Oye, Tocayo, no te pases de listo con el chico —soltó Sony, su acento cubano cortando el ruido de la lluvia—. Esa pieza tiene los sellos de seguridad violados. Es material robado o "caído del camión". Si los recolectores corporativos la ven aquí, te queman el puesto.
 
 El Tocayo gruñó, pero no se inmutó.
 
@@ -422,11 +422,11 @@ El Tocayo gruñó, pero no se inmutó.
 
 ---
 
-De vuelta en el santuario del taller, el silencio era casi absoluto, solo roto por el zumbido de la estática de la radio de Rafa. Ethan trabajaba con una intensidad febril, instalando el T-9 bajo la supervisión técnica de Unica, quien le dictaba los voltajes de calibración desde un monitor auxiliar.
+De vuelta en el santuario del taller, el silencio era casi absoluto, solo roto por el zumbido de la estática de la radio de Rafa. Ethan trabajaba con una intensidad febril, instalando el T-9 bajo la supervisión técnica de Unika, quien le dictaba los voltajes de calibración desde un monitor auxiliar.
 
-—Voltaje de pre-mantenimiento estable, Ethan —dijo Unica, su voz educada pero cargada de una extraña emoción contenida—. La resonancia de fase está en verde. Puedes iniciar el núcleo.
+—Voltaje de pre-mantenimiento estable, Ethan —dijo Unika, su voz educada pero cargada de una extraña emoción contenida—. La resonancia de fase está en verde. Puedes iniciar el núcleo.
 
-Ethan activó la secuencia. Esta vez, el sonido de *El Fénix* era diferente. Ya no era un zumbido, era un ronroneo profundo, una vibración subsónica que hacía que los pelos de la nuca se erizaran. La moto se elevó, pero esta vez lo hizo con una gracia absoluta, sin la más mínima oscilación.
+Ethan activó la secuencia. Esta vez, el sonido de *El Fénix* era diferente. Ya no era un zumbido, era un ronroneo profundo, una vibración subsónica que hacía que los hilos de la nuca se erizaran. La moto se elevó, pero esta vez lo hizo con una gracia absoluta, sin la más mínima oscilación.
 
 —¡Mierda, manito, parece que flota en seda! —exclamó Rafa, asombrado por la estabilidad.
 
@@ -487,9 +487,9 @@ Unika lo miró fijamente con sus ojos oscuros, llenos de una determinación frí
 
 —No quiero volver para vivir como ellos. Quiero que sientan lo que es perderlo todo ante alguien que ellos consideran "desecho". Por eso el Inversor G es perfecto. Porque es mi venganza empaquetada en un chip.
 
-De repente, Yeisly apareció por la esquina del taller, interrumpiendo el momento con una risotada.
+De repente, Eva apareció por la esquina del taller, interrumpiendo el momento con una risotada.
 
-—¡Muchachos! ¡Dejen la charla que ya tengo el diseño final! —Yeisly traía una lata de pintura especial de secado rápido—. Primo, le puse unos detalles en neón reactivo a los costados. Cuando aceleres, el fénix va a parecer que está quemando el aire. ¡Qué maldita vaina más jebi se va a ver!
+—¡Muchachos! ¡Dejen la charla que ya tengo el diseño final! —Eva traía una lata de pintura especial de secado rápido—. Primo, le puse unos detalles en neón reactivo a los costados. Cuando aceleres, el fénix va a parecer que está quemando el aire. ¡Qué maldita vaina más jebi se va a ver!
 
 Rafa llegó detrás, cargando una caja de herramientas.
 
@@ -519,7 +519,7 @@ El viaje hacia la frontera del domo fue una bofetada sensorial. A medida que se 
 
 La Puerta del Velo era un arco colosal de luz blanca. Un escáner biométrico revisó a Ethan mientras drones de seguridad orbitaban a su alrededor como avispas mecánicas. Al otro lado, la opulencia: boxes de cristal templado, mecánicos con uniformes impecables y motowaves que parecían diseñadas por joyeros.
 
-Un corredor con el logo de "Hyperion Dynamics" se detuvo junto a Ethan. Su casco reflejaba el entorno con un acabado de espejo.
+Un corredor con el logo de "Goglee Corp" se detuvo junto a Ethan. Su casco reflejaba el entorno con un acabado de espejo.
 
 —¿De qué vertedero sacaste ese juguete, rata del Distrito? —se burló el corredor a través del canal de proximidad abierto.
 
@@ -550,9 +550,9 @@ La pista del Velo era una serpiente caprichosa que se retorcía en el aire, desa
 
 —¡Calibración de fase al límite, Ethan! —la voz de Unika sonó en su casco, tensa pero precisa—. El núcleo está operando al 115 por ciento. No le pidas más o el inversor estallará.
 
-—¡Dale, manito, que ese Viper te tiene en la mira! —Rafa gritaba desde el taller clandestino, donde Yeisly y él monitoreaban la frecuencia pirateada—. ¡Cuidado con la maniobra de cierre, que ese tipo juega puerco!
+—¡Dale, manito, que ese Viper te tiene en la mira! —Rafa gritaba desde el taller clandestino, donde Eva y él monitoreaban la frecuencia pirateada—. ¡Cuidado con la maniobra de cierre, que ese tipo juega puerco!
 
-Viper, el piloto estrella de Hyperion Dynamics, era una sombra negra y dorada que se movía con una fluidez insultante. Embistió el flanco derecho de *El Fénix*, un impacto de metal contra metal que hizo saltar chispas de titanio y vibrar hasta el último tornillo de la moto artesanal. Pero la máquina de Ethan no estaba hecha de polímeros delicados de laboratorio; estaba forjada con la terquedad de los que no tienen nada que perder.
+Viper, el piloto estrella de Goglee Corp, era una sombra negra y dorada que se movía con una fluidez insultante. Embistió el flanco derecho de *El Fénix*, un impacto de metal contra metal que hizo saltar chispas de titanio y vibrar hasta el último tornillo de la moto artesanal. Pero la máquina de Ethan no estaba hecha de polímeros delicados de laboratorio; estaba forjada con la terquedad de los que no tienen nada que perder.
 
 —¡Martillos Gravitacionales activos en el Sector 4! —advirtió la IA de la pista.
 
@@ -592,7 +592,7 @@ Un funcionario corporativo de alto rango, con un traje de seda gris que parecía
 
 —Felicidades, Ciudadano Ramírez —dijo el funcionario con una sonrisa ensayada que no llegaba a sus ojos—. Has demostrado una aptitud excepcional. Bienvenido a la verdadera civilización. Tu vida en el barro ha terminado hoy.
 
-Ethan miró el pase. Era el sueño de Carlos. Era la seguridad para Unika. Era el fin del hambre para Rafa y Yeisly. Pero luego miró a través de los muros de cristal reforzado del domo. Allá abajo, el Distrito RD seguía oculto bajo la calima tóxica. Allá abajo, el fuego de la gente seguía ardiendo en medio de la oscuridad.
+Ethan miró el pase. Era el sueño de Carlos. Era la seguridad para Unika. Era el fin del hambre para Rafa y Eva. Pero luego miró a través de los muros de cristal reforzado del domo. Allá abajo, el Distrito RD seguía oculto bajo la calima tóxica. Allá abajo, el fuego de la gente seguía ardiendo en medio de la oscuridad.
 
 —¿Y qué pasa con mi gente? —preguntó Ethan, su voz ronca por el esfuerzo pero clara como el cristal.
 

@@ -8,9 +8,9 @@ La pista del Velo era una serpiente caprichosa que se retorcía en el aire, desa
 
 —¡Calibración de fase al límite, Ethan! —la voz de Unika sonó en su casco, tensa pero precisa—. El núcleo está operando al 115 por ciento. No le pidas más o el inversor estallará.
 
-—¡Dale, manito, que ese Viper te tiene en la mira! —Rafa gritaba desde el taller clandestino, donde Yeisly y él monitoreaban la frecuencia pirateada—. ¡Cuidado con la maniobra de cierre, que ese tipo juega puerco!
+—¡Dale, manito, que ese Viper te tiene en la mira! —Rafa gritaba desde el taller clandestino, donde Eva y él monitoreaban la frecuencia pirateada—. ¡Cuidado con la maniobra de cierre, que ese tipo juega puerco!
 
-Viper, el piloto estrella de Hyperion Dynamics, era una sombra negra y dorada que se movía con una fluidez insultante. Embistió el flanco derecho de *El Fénix*, un impacto de metal contra metal que hizo saltar chispas de titanio y vibrar hasta el último tornillo de la moto artesanal. Pero la máquina de Ethan no estaba hecha de polímeros delicados de laboratorio; estaba forjada con la terquedad de los que no tienen nada que perder.
+Viper, el piloto estrella de Goglee Corp, era una sombra negra y dorada que se movía con una fluidez insultante. Embistió el flanco derecho de *El Fénix*, un impacto de metal contra metal que hizo saltar chispas de titanio y vibrar hasta el último tornillo de la moto artesanal. Pero la máquina de Ethan no estaba hecha de polímeros delicados de laboratorio; estaba forjada con la terquedad de los que no tienen nada que perder.
 
 —¡Martillos Gravitacionales activos en el Sector 4! —advirtió la IA de la pista.
 
@@ -50,7 +50,7 @@ Un funcionario corporativo de alto rango, con un traje de seda gris que parecía
 
 —Felicidades, Ciudadano Ramírez —dijo el funcionario con una sonrisa ensayada que no llegaba a sus ojos—. Has demostrado una aptitud excepcional. Bienvenido a la verdadera civilización. Tu vida en el barro ha terminado hoy.
 
-Ethan miró el pase. Era el sueño de Carlos. Era la seguridad para Unika. Era el fin del hambre para Rafa y Yeisly. Pero luego miró a través de los muros de cristal reforzado del domo. Allá abajo, el Distrito RD seguía oculto bajo la calima tóxica. Allá abajo, el fuego de la gente seguía ardiendo en medio de la oscuridad.
+Ethan miró el pase. Era el sueño de Carlos. Era la seguridad para Unika. Era el fin del hambre para Rafa y Eva. Pero luego miró a través de los muros de cristal reforzado del domo. Allá abajo, el Distrito RD seguía oculto bajo la calima tóxica. Allá abajo, el fuego de la gente seguía ardiendo en medio de la oscuridad.
 
 —¿Y qué pasa con mi gente? —preguntó Ethan, su voz ronca por el esfuerzo pero clara como el cristal.
 

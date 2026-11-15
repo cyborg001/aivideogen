@@ -1,6 +1,6 @@
 import os
 
-base_path = r"c:\Users\Usuario\Documents\curso creacion contenido con ia\libros\el_velo_gravitacional"
+base_path = os.path.dirname(os.path.abspath(__file__))
 compiled_path = os.path.join(base_path, "COMPILADO_libro_completo.md")
 
 chapters = [

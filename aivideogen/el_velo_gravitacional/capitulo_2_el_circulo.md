@@ -58,9 +58,9 @@ Rafa, que había estado conteniendo el aliento, soltó un silbido largo.
 
 Dos semanas más tarde, el taller de Carlos era un nido de tensión. Los nuevos propulsores estaban anclados al chasis de *El Fénix*, brillando con un azul cobalto que iluminaba las caras expectantes del equipo. Instalar inductores gravitacionales en un chasis viejo era como intentar meter el alma de un demonio en un cuerpo de madera; la alineación tenía que ser perfecta o la moto se desgarraría a sí misma en el aire.
 
-Carlos supervisaba cada soldadura, cada ajuste de software que Unica realizaba en la consola integrada.
+Carlos supervisaba cada soldadura, cada ajuste de software que Unika realizaba en la consola integrada.
 
-—La inducción está estable en un 92% —informó Unica, con su tono pausado y preciso—. Ethan, si elevamos el flujo ahora, el sistema de fase debería estabilizarse.
+—La inducción está estable en un 92% —informó Unika, con su tono pausado y preciso—. Ethan, si elevamos el flujo ahora, el sistema de fase debería estabilizarse.
 
 Ethan subió a la moto. El asiento, ahora reforzado, se sentía firme. Respiró hondo, cerró los ojos un segundo y activó el núcleo.
 
@@ -68,7 +68,7 @@ Un zumbido sordo empezó a vibrar en el taller. Las herramientas sobre las mesas
 
 —¡Wepa! ¡Lo logramos! —gritó Rafa, lanzando su gorra al aire.
 
-—¡Mierda, primo, que eso está volando de verdad! —exclamó Yeisly, grabando la escena con su terminal.
+—¡Mierda, primo, que eso está volando de verdad! —exclamó Eva, grabando la escena con su terminal.
 
 Ethan sentía la moto vibrar bajo él, como un animal salvaje que empezaba a despertar. La adrenalina le recorría el cuerpo. Ya no era solo un sueño; era una realidad que flotaba frente a sus ojos.
 

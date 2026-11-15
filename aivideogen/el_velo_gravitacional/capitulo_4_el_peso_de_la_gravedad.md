@@ -54,9 +54,9 @@ El Tocayo gruñó, pero no se inmutó.
 
 ---
 
-De vuelta en el santuario del taller, el silencio era casi absoluto, solo roto por el zumbido de la estática de la radio de Rafa. Ethan trabajaba con una intensidad febril, instalando el T-9 bajo la supervisión técnica de Unica, quien le dictaba los voltajes de calibración desde un monitor auxiliar.
+De vuelta en el santuario del taller, el silencio era casi absoluto, solo roto por el zumbido de la estática de la radio de Rafa. Ethan trabajaba con una intensidad febril, instalando el T-9 bajo la supervisión técnica de Unika, quien le dictaba los voltajes de calibración desde un monitor auxiliar.
 
-—Voltaje de pre-mantenimiento estable, Ethan —dijo Unica, su voz educada pero cargada de una extraña emoción contenida—. La resonancia de fase está en verde. Puedes iniciar el núcleo.
+—Voltaje de pre-mantenimiento estable, Ethan —dijo Unika, su voz educada pero cargada de una extraña emoción contenida—. La resonancia de fase está en verde. Puedes iniciar el núcleo.
 
 Ethan activó la secuencia. Esta vez, el sonido de *El Fénix* era diferente. Ya no era un zumbido, era un ronroneo profundo, una vibración subsónica que hacía que los hilos de la nuca se erizaran. La moto se elevó, pero esta vez lo hizo con una gracia absoluta, sin la más mínima oscilación.
 

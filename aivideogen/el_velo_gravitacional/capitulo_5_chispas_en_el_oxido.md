@@ -36,9 +36,9 @@ Unika lo miró fijamente con sus ojos oscuros, llenos de una determinación frí
 
 —No quiero volver para vivir como ellos. Quiero que sientan lo que es perderlo todo ante alguien que ellos consideran "desecho". Por eso el Inversor G es perfecto. Porque es mi venganza empaquetada en un chip.
 
-De repente, Yeisly apareció por la esquina del taller, interrumpiendo el momento con una risotada.
+De repente, Eva apareció por la esquina del taller, interrumpiendo el momento con una risotada.
 
-—¡Muchachos! ¡Dejen la charla que ya tengo el diseño final! —Yeisly traía una lata de pintura especial de secado rápido—. Primo, le puse unos detalles en neón reactivo a los costados. Cuando aceleres, el fénix va a parecer que está quemando el aire. ¡Qué maldita vaina más jebi se va a ver!
+—¡Muchachos! ¡Dejen la charla que ya tengo el diseño final! —Eva traía una lata de pintura especial de secado rápido—. Primo, le puse unos detalles en neón reactivo a los costados. Cuando aceleres, el fénix va a parecer que está quemando el aire. ¡Qué maldita vaina más jebi se va a ver!
 
 Rafa llegó detrás, cargando una caja de herramientas.
 
@@ -68,7 +68,7 @@ El viaje hacia la frontera del domo fue una bofetada sensorial. A medida que se 
 
 La Puerta del Velo era un arco colosal de luz blanca. Un escáner biométrico revisó a Ethan mientras drones de seguridad orbitaban a su alrededor como avispas mecánicas. Al otro lado, la opulencia: boxes de cristal templado, mecánicos con uniformes impecables y motowaves que parecían diseñadas por joyeros.
 
-Un corredor con el logo de "Hyperion Dynamics" se detuvo junto a Nathan. Su casco reflejaba el entorno con un acabado de espejo.
+Un corredor con el logo de "Goglee Corp" se detuvo junto a Ethan. Su casco reflejaba el entorno con un acabado de espejo.
 
 —¿De qué vertedero sacaste ese juguete, rata del Distrito? —se burló el corredor a través del canal de proximidad abierto.
 

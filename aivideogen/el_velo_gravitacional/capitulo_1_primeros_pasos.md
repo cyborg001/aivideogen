@@ -38,41 +38,41 @@ Ethan se rió, agradecido por la oferta. Rafa era un genio improvisando circuito
 
 ---
 
-Al mediodía, el calor se volvió denso y el aire en el taller se estancó. Yeisly llegó como un torbellino, cargando una bolsa que emanaba el aroma celestial del arroz con habichuelas.
+Al mediodía, el calor se volvió denso y el aire en el taller se estancó. Eva llegó como un torbellino, cargando una bolsa que emanaba el aroma celestial del arroz con habichuelas.
 
-—¡Mierda loco, qué jebi está esa vaina! —soltó Yeisly nada más ver la moto sobre el caballete—. ¡Dime que no es verdad, primo! ¿De verdad vamos a poner a volar este hierro?
+—¡Mierda loco, qué jebi está esa vaina! —soltó Eva nada más ver la moto sobre el caballete—. ¡Dime que no es verdad, primo! ¿De verdad vamos a poner a volar este hierro?
 
-—Esa es la idea, Yeisly —respondió Ethan, recibiendo la comida—. Pero todavía falta mucho.
+—Esa es la idea, Eva —respondió Ethan, recibiendo la comida—. Pero todavía falta mucho.
 
-Yeisly rodeó la moto con los ojos entrecerrados, como si estuviera encuadrando una pintura. Ella veía colores donde los demás veían óxido.
+Eva rodeó la moto con los ojos entrecerrados, como si estuviera encuadrando una pintura. Ella veía colores donde los demás veían óxido.
 
 —Tiene líneas potentes. De verdad. Cuando esté lista, yo le voy a meter un diseño que la gente va a creer que es una nave de la Ciudad Aérea. Quiero que el Fénix se vea desde el domo.
 
-Acompañando a Yeisly estaba Unica. Ella, al contrario que la prima de Ethan, se mantuvo en silencio unos instantes, observando la estructura con una mirada analítica y calmada.
+Acompañando a Eva estaba Unika. Ella, al contrario que la prima de Ethan, se mantuvo en silencio unos instantes, observando la estructura con una mirada analítica y calmada.
 
-—Ethan, las especificaciones del fabricante para este modelo sugieren que el chasis debe ser reforzado —comentó Unica con su voz educada y precisa—. Si planeas alcanzar velocidades de carrera, los puntos de anclaje de los propulsores sufrirán una fatiga estructural inaceptable.
+—Ethan, las especificaciones del fabricante para este modelo sugieren que el chasis debe ser reforzado —comentó Unika con su voz educada y precisa—. Si planeas alcanzar velocidades de carrera, los puntos de anclaje de los propulsores sufrirán una fatiga estructural inaceptable.
 
  —¿Titanio? —preguntó Ethan, reconociendo la lógica en las palabras de su amiga.
 
- —Exactamente. Placas de refuerzo de titanio o, al menos, una aleación de cromo-molibdeno —continuó Unica, sin rastro de jerga en su discurso—. El costo en créditos es elevado, pero es una medida de seguridad necesaria si valoras tu integridad física.
+ —Exactamente. Placas de refuerzo de titanio o, al menos, una aleación de cromo-molibdeno —continuó Unika, sin rastro de jerga en su discurso—. El costo en créditos es elevado, pero es una medida de seguridad necesaria si valoras tu integridad física.
 
 Rafa levantó la vista de un mazo de cables que estaba pelando.
 
 —¿Y de dónde vamos a sacar los créditos? Esa vaina no cae del cielo.
 
-—Conseguiremos la chatarra —dijo Unica, saliendo de debajo de la moto con una pequeña linterna técnica—. Conozco a un proveedor en la Plaza que tiene excedentes de las fábricas corporativas. No será nuevo, pero con un poco de pulido, su integridad estructural será perfecta para lo que necesitamos.
+—Conseguiremos la chatarra —dijo Unika, saliendo de debajo de la moto con una pequeña linterna técnica—. Conozco a un proveedor en la Plaza que tiene excedentes de las fábricas corporativas. No será nuevo, pero con un poco de pulido, su integridad estructural será perfecta para lo que necesitamos.
 
 Carlos, que observaba la escena desde la puerta, intervino con voz tranquila pero firme.
 
 —Yo puedo dar unas clases extra de mecánica pesada en el muelle de carga. Entre todos sacaremos esto adelante.
 
-Ethan miró a su alrededor. Estaban todos allí: su padre, su mejor amigo, su prima artista y la mente técnica de Unica. Gente que no tenía nada, pero que estaba dispuesta a darle lo poco que tenían para que él pudiera volar.
+Ethan miró a su alrededor. Estaban todos allí: su padre, su mejor amigo, su prima artista y la mente técnica de Unika. Gente que no tenía nada, pero que estaba dispuesta a darle lo poco que tenían para que él pudiera volar.
 
 —Gracias —dijo Ethan, sintiendo que la garganta se le cerraba un poco. Su acento dominicano se volvió más suave, más sentido—. No sé cómo agradecerles esto.
 
 —No digas nada, manito —le cortó Rafa, dándole una palmada en la espalda—. Solo gana esa maldita carrera por nosotros.
 
-—¡Eso mismo! —añadió Yeisly con una carcajada—. Que si perdemos, vamos a tener que comer aire reciclado por tres meses para pagar los platos rotos.
+—¡Eso mismo! —añadió Eva con una carcajada—. Que si perdemos, vamos a tener que comer aire reciclado por tres meses para pagar los platos rotos.
 
 Esa noche, cuando el silencio finalmente reclamó el taller, Ethan se quedó solo frente a la carcasa desarmada de *El Fénix*. Con el cuaderno sobre las rodillas, miró su boceto. Ya no veía solo una moto vieja; veía el esfuerzo de su gente, la esperanza de un distrito entero que se negaba a ser olvidado. Se recostó contra la pared fría y cerró los ojos, imaginando el viento puro del domo golpeándole el rostro.
 
@@ -80,7 +80,7 @@ Esa noche, cuando el silencio finalmente reclamó el taller, Ethan se quedó sol
 
 Desde la sombra del pasillo, Carlos lo miraba. Sentía orgullo, sí, pero también un miedo gélido que le recorría la espalda. Sabía que El Velo Gravitacional no premiaba el talento tanto como castigaba la esperanza. Era una carrera diseñada por los de arriba para recordarles a los de abajo cuál era su lugar.
 
-Cerró los ojos y, en la oscuridad, elevó una plegaria silenciosa a los antiguos dioses de la isla.
+Cerró los ojos y, en la oscuridad, elevó una plegaria silenciosa al cielo invisible tras el smog, pidiendo por la memoria de la tierra perdida y de los suyos.
 
 *Protégelo. Por favor, que esta vez sea diferente.*
 
